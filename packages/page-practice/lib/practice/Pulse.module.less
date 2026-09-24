@@ -1055,3 +1055,415 @@
   align-items: center;
   margin-block-start: 0.1rem;
 }
+
+// ── THE KIDS' CLASSIC SCREEN: THE CHIP STRIP ─────────────────────────────
+//
+// See the kids branch in Pulse.tsx, and the approved stats-bar mock (day and
+// night). Two lines: the speed and its road to the goal, then every other
+// figure as a centred row of compact chips. Each chip is tinted all over — no
+// one-sided strips or borders (owner: rejected) — and headed by a small
+// glossy tile carrying a white glyph in the chip's own gradient.
+//
+// Every chip reads three custom properties: its tint, and the two ends of
+// its tile's gradient. Night swaps the tints and keeps the tiles.
+.kidsRoot {
+  --kids-ink: #1b2140;
+  --kids-ink-soft: #6b7090;
+
+  padding-block: 0.85rem 1rem;
+  color: var(--kids-ink);
+}
+
+.kidsTop {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  // Room for the tools tile riding in the island's top-right corner.
+  padding-inline-end: 3.5rem;
+
+  .chip {
+    padding: 0.3rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 900;
+  }
+}
+
+.kidsSpeed {
+  display: flex;
+  flex: none;
+  gap: 0.375rem;
+  align-items: baseline;
+  min-inline-size: 7rem;
+
+  b {
+    color: transparent;
+    background: linear-gradient(120deg, #3a6bff, #7b3dff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    font-family: var(--value-font-family);
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .liveDot {
+    align-self: center;
+  }
+}
+
+.kidsUnit {
+  color: var(--kids-ink-soft);
+  font-family: var(--value-font-family);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.kidsWarm {
+  flex: none;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(120deg, #ffb03a, #ff6a3d);
+  font-family: var(--value-font-family);
+  font-size: 0.5625rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+// The goal as a glowing meter; the white marker is the latest speed.
+.kidsTrack {
+  display: block;
+  position: relative;
+  flex: 1 1 auto;
+  min-inline-size: 5rem;
+  block-size: 0.375rem;
+  border-radius: 999px;
+  background: #e8ebf4;
+}
+
+.kidsFill {
+  display: block;
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6ea4ff, #3a6bff 55%, #9b3dff);
+  box-shadow: 0 0 8px rgb(123 61 255 / 30%);
+  transition: inline-size 0.4s ease;
+}
+
+.kidsKnob {
+  display: block;
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  margin-inline-start: -0.4375rem;
+  margin-block-start: -0.4375rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 1px 4px rgb(27 33 64 / 30%),
+    0 0 0 3px rgb(155 61 255 / 35%);
+  transition: inset-inline-start 0.4s ease;
+}
+
+// The target, as a tinted green pill with its flag.
+.kidsGoal {
+  display: flex;
+  flex: none;
+  gap: 0.375rem;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  color: #178a55;
+  background: #e3f7ee;
+  font-family: var(--value-font-family);
+  font-size: 0.875rem;
+  font-weight: 900;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+
+  .pct {
+    color: color-mix(in srgb, currentColor 70%, transparent);
+    font-size: 0.55rem;
+  }
+}
+
+// Crossed: the pill fills with its own green.
+.kidsGoalLit {
+  color: #ffffff;
+  background: linear-gradient(180deg, #5fe0a8, #23c483);
+  box-shadow: 0 2px 6px rgb(35 196 131 / 35%);
+}
+
+.kidsFlag {
+  flex: none;
+  inline-size: 1rem;
+  block-size: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.kidsChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  align-items: center;
+  justify-content: center;
+  margin-block-start: 0.875rem;
+}
+
+// One chip, tinted all over. Compact: 38px tall, as in the mock.
+.kidsChip {
+  --chip-bg: #f4f6fb;
+  --tile-a: #c4c8d8;
+  --tile-b: #9aa0b8;
+
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  block-size: 1.875rem;
+  padding-inline: 0.6rem;
+  border-radius: 0.6rem;
+  color: var(--kids-ink);
+  background: var(--chip-bg);
+  font-family: var(--value-font-family);
+  font-size: 0.75rem;
+  font-weight: 900;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+
+  b {
+    font-weight: 900;
+  }
+
+  .up {
+    color: #178a55;
+    font-size: 0.75rem;
+    font-weight: 800;
+  }
+
+  .down {
+    color: #d4485a;
+    font-size: 0.75rem;
+    font-weight: 800;
+  }
+}
+
+.kidsKey {
+  --chip-bg: #f1ebfc;
+  --tile-a: #b08cf0;
+  --tile-b: #8a63d2;
+
+  padding-inline-start: 0.25rem;
+}
+
+// The focused key as a small white keycap with a violet lip.
+.kidsKeycap {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.4rem;
+  block-size: 1.4rem;
+  margin-block-end: 2px;
+  border-radius: 0.45rem;
+  color: #1b2140;
+  background: linear-gradient(180deg, #ffffff, #eef2fb);
+  box-shadow: 0 2px 0 #c9bfe8;
+  font-family: var(--value-font-family);
+  font-size: 0.8rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+// The key's own road to unlocking, small, inside its chip.
+.kidsMini {
+  display: block;
+  flex: none;
+  inline-size: 2rem;
+  block-size: 0.3rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgb(27 33 64 / 10%);
+
+  span {
+    display: block;
+    block-size: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #b08cf0, #7b3dff);
+  }
+}
+
+.kidsJoin {
+  color: #6b4aa8;
+  font-size: 0.75rem;
+  font-weight: 800;
+
+  b {
+    color: var(--kids-ink);
+    font-weight: 900;
+  }
+}
+
+.kidsSub,
+.kidsLab {
+  color: var(--kids-ink-soft);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.kidsMint {
+  --chip-bg: #e3f7ee;
+  --tile-a: #5fe0a8;
+  --tile-b: #23c483;
+}
+
+.kidsSun {
+  --chip-bg: #fff0e5;
+  --tile-a: #ffb070;
+  --tile-b: #ff8a3d;
+}
+
+.kidsLilac {
+  --chip-bg: #f1ebfc;
+  --tile-a: #b08cf0;
+  --tile-b: #8a63d2;
+}
+
+.kidsGrey {
+  --chip-bg: #f4f6fb;
+  --tile-a: #c4c8d8;
+  --tile-b: #9aa0b8;
+
+  .mood {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+}
+
+// The streak — see StreakWhisper.
+.kidsStreak {
+  --chip-bg: #ffeef0;
+  --tile-a: #ff9f6b;
+  --tile-b: #ff5a8a;
+}
+
+// Today's goal — TodayWhisper draws the figures; the chip only dresses them.
+.kidsSky {
+  --chip-bg: #e8f0ff;
+  --tile-a: #6ea4ff;
+  --tile-b: #2d7cff;
+
+  > span {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .lab {
+    margin: 0;
+    color: var(--kids-ink-soft);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+}
+
+// ── THE CHIP STRIP AT NIGHT ──────────────────────────────────────────────
+//
+// The night mock: each chip is its hue sunk deep into the navy card with the
+// ink gone light; the tiles keep their day gradients; the headline gradients
+// soften so nothing glares.
+:global(body[data-kids-classic="night"]) .kidsRoot {
+  --kids-ink: #f2f2fc;
+  --kids-ink-soft: #b0b4d0;
+
+  .kidsSpeed b {
+    background: linear-gradient(120deg, #86a8ff, #b39cff);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .kidsWarm {
+    background: linear-gradient(120deg, #c9862e, #bd5530);
+  }
+
+  .kidsTrack {
+    background: #1d2340;
+  }
+
+  .kidsFill {
+    background: linear-gradient(90deg, #4c78c8, #3453ad 55%, #6a3fb8);
+    box-shadow: 0 0 14px rgb(123 61 255 / 20%);
+  }
+
+  .kidsGoal {
+    color: #6fe0b4;
+    background: #1b3f3a;
+  }
+
+  .kidsFlag {
+    stroke: #178a55;
+  }
+
+  .kidsGoalLit {
+    color: #ffffff;
+    background: linear-gradient(180deg, #3fae80, #1d8f62);
+    box-shadow: none;
+
+    .kidsFlag {
+      stroke: currentColor;
+    }
+  }
+
+  .kidsMini {
+    background: rgb(255 255 255 / 14%);
+  }
+
+  // The mock's day violet is too dark to read on the night chip; lifted.
+  .kidsJoin {
+    color: #b99cf0;
+  }
+
+  .kidsChip .up {
+    color: #6fe0b4;
+  }
+
+  .kidsChip .down {
+    color: #ff8fa0;
+  }
+
+  .kidsKey,
+  .kidsLilac {
+    --chip-bg: #34295a;
+  }
+
+  .kidsMint {
+    --chip-bg: #1b3f3a;
+  }
+
+  .kidsSun {
+    --chip-bg: #45301f;
+  }
+
+  .kidsGrey {
+    --chip-bg: #2e3558;
+  }
+
+  .kidsStreak {
+    --chip-bg: #4a2533;
+  }
+
+  .kidsSky {
+    --chip-bg: #22335e;
+  }
+}

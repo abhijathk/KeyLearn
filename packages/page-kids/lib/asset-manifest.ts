@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "481b82a5d7b8";
+export const ASSET_VERSION = "e39ea1ff3d81";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -337,10 +337,20 @@ export const ASSET_MAP: Readonly<
     "b": 95260,
     "g": "village"
   },
-  "classic-hands.png": {
-    "u": "vf9ec3344/classic-hands.png",
-    "b": 1406187,
-    "g": "shared"
+  "cards/world-dino.webp": {
+    "u": "v71e7c224/cards/world-dino.webp",
+    "b": 15338,
+    "g": "village"
+  },
+  "cards/world-hero.webp": {
+    "u": "v3db24d33/cards/world-hero.webp",
+    "b": 11524,
+    "g": "village"
+  },
+  "cards/world-village.webp": {
+    "u": "v1ad8f016/cards/world-village.webp",
+    "b": 5636,
+    "g": "village"
   },
   "env/day.hdr": {
     "u": "vfd94c849/env/day.hdr",
@@ -362,6 +372,16 @@ export const ASSET_MAP: Readonly<
     "b": 1393622,
     "g": "shared"
   },
+  "faces/Abee.webp": {
+    "u": "vbf7303ed/faces/Abee.webp",
+    "b": 4532,
+    "g": "village"
+  },
+  "faces/Apatosaurus.webp": {
+    "u": "v31efabc8/faces/Apatosaurus.webp",
+    "b": 4580,
+    "g": "village"
+  },
   "faces/Buffalo.webp": {
     "u": "va8aa2278/faces/Buffalo.webp",
     "b": 5156,
@@ -377,6 +397,16 @@ export const ASSET_MAP: Readonly<
     "b": 5658,
     "g": "village"
   },
+  "faces/Knight.webp": {
+    "u": "v25be9da8/faces/Knight.webp",
+    "b": 8334,
+    "g": "village"
+  },
+  "faces/Parasaurolophus.webp": {
+    "u": "ve394b1d6/faces/Parasaurolophus.webp",
+    "b": 6266,
+    "g": "village"
+  },
   "faces/Peeli.webp": {
     "u": "v76ef4942/faces/Peeli.webp",
     "b": 6390,
@@ -390,6 +420,31 @@ export const ASSET_MAP: Readonly<
   "faces/Robot.webp": {
     "u": "vfd737722/faces/Robot.webp",
     "b": 5408,
+    "g": "village"
+  },
+  "faces/Skeleton_Warrior.webp": {
+    "u": "vcca92392/faces/Skeleton_Warrior.webp",
+    "b": 10312,
+    "g": "village"
+  },
+  "faces/Stegosaurus.webp": {
+    "u": "vc52bb39b/faces/Stegosaurus.webp",
+    "b": 7372,
+    "g": "village"
+  },
+  "faces/TRex.webp": {
+    "u": "v89bd9c55/faces/TRex.webp",
+    "b": 5460,
+    "g": "village"
+  },
+  "faces/Triceratops.webp": {
+    "u": "v4f75d1bc/faces/Triceratops.webp",
+    "b": 6064,
+    "g": "village"
+  },
+  "faces/Velociraptor.webp": {
+    "u": "v9a0471c6/faces/Velociraptor.webp",
+    "b": 5816,
     "g": "village"
   },
   "hands.png": {
@@ -542,6 +597,11 @@ export const ASSET_MAP: Readonly<
     "b": 116140,
     "g": "dino"
   },
+  "models/dino/Sign.glb": {
+    "u": "va87a38c9/models/dino/Sign.glb",
+    "b": 113256,
+    "g": "dino"
+  },
   "models/dino/Stegosaurus.glb": {
     "u": "v712f09d6/models/dino/Stegosaurus.glb",
     "b": 151608,
@@ -615,6 +675,11 @@ export const ASSET_MAP: Readonly<
   "models/hero/Rogue_Hooded.glb": {
     "u": "vb8cb9daa/models/hero/Rogue_Hooded.glb",
     "b": 259008,
+    "g": "hero"
+  },
+  "models/hero/Sign.glb": {
+    "u": "vff3a9470/models/hero/Sign.glb",
+    "b": 137452,
     "g": "hero"
   },
   "models/hero/Skeleton_Mage.glb": {
@@ -788,13 +853,13 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "models/village-folk/Cow.glb": {
-    "u": "v77fbf689/models/village-folk/Cow.glb",
-    "b": 878416,
+    "u": "v57b1b0f3/models/village-folk/Cow.glb",
+    "b": 536500,
     "g": "village"
   },
   "models/village-folk/Cow_Calf.glb": {
-    "u": "v8ab0e6c4/models/village-folk/Cow_Calf.glb",
-    "b": 873412,
+    "u": "vb7ec7ba9/models/village-folk/Cow_Calf.glb",
+    "b": 540472,
     "g": "village"
   },
   "models/village-folk/FarmerWoman.glb": {
@@ -813,8 +878,8 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "models/village-folk/VillageBoy.glb": {
-    "u": "vdfce34ae/models/village-folk/VillageBoy.glb",
-    "b": 1264700,
+    "u": "vdab889af/models/village-folk/VillageBoy.glb",
+    "b": 1277640,
     "g": "village"
   },
   "models/village-plants/Arecanut_Palm.glb": {
@@ -867,6 +932,11 @@ export const ASSET_MAP: Readonly<
     "b": 78904,
     "g": "village"
   },
+  "models/village-plants/Mangrove_Kandal.glb": {
+    "u": "v0c7df7d7/models/village-plants/Mangrove_Kandal.glb",
+    "b": 116512,
+    "g": "village"
+  },
   "models/village-plants/Palmyra_Karimpana.glb": {
     "u": "vd5aef27c/models/village-plants/Palmyra_Karimpana.glb",
     "b": 95876,
@@ -895,6 +965,11 @@ export const ASSET_MAP: Readonly<
   "models/village-plants/Taro_Chembu.glb": {
     "u": "v93b32913/models/village-plants/Taro_Chembu.glb",
     "b": 26392,
+    "g": "village"
+  },
+  "models/village-sign/Sign.glb": {
+    "u": "vf12426d7/models/village-sign/Sign.glb",
+    "b": 123400,
     "g": "village"
   },
   "models/village-stone/Ancient_Milestone_Blank.glb": {
@@ -1027,6 +1102,26 @@ export const ASSET_MAP: Readonly<
     "b": 154485,
     "g": "shared"
   },
+  "textures/dino_drygrass_diff.jpg": {
+    "u": "v1dbf3329/textures/dino_drygrass_diff.jpg",
+    "b": 39746,
+    "g": "dino"
+  },
+  "textures/dino_fern_diff.jpg": {
+    "u": "v3aa44fd7/textures/dino_fern_diff.jpg",
+    "b": 42074,
+    "g": "dino"
+  },
+  "textures/dino_soil_diff.jpg": {
+    "u": "vc9685847/textures/dino_soil_diff.jpg",
+    "b": 38823,
+    "g": "dino"
+  },
+  "textures/dino_trail_diff.jpg": {
+    "u": "vb1cf7600/textures/dino_trail_diff.jpg",
+    "b": 30176,
+    "g": "dino"
+  },
   "textures/forest_floor_diff.jpg": {
     "u": "vddf154dd/textures/forest_floor_diff.jpg",
     "b": 160984,
@@ -1036,6 +1131,26 @@ export const ASSET_MAP: Readonly<
     "u": "ved709545/textures/forest_floor_nor.jpg",
     "b": 135964,
     "g": "shared"
+  },
+  "textures/hero_clover_diff.jpg": {
+    "u": "v2827b987/textures/hero_clover_diff.jpg",
+    "b": 41209,
+    "g": "hero"
+  },
+  "textures/hero_meadow_diff.jpg": {
+    "u": "v2281d7f2/textures/hero_meadow_diff.jpg",
+    "b": 44683,
+    "g": "hero"
+  },
+  "textures/hero_moss_diff.jpg": {
+    "u": "v268a291e/textures/hero_moss_diff.jpg",
+    "b": 39985,
+    "g": "hero"
+  },
+  "textures/hero_path_diff.jpg": {
+    "u": "v84487ac2/textures/hero_path_diff.jpg",
+    "b": 38334,
+    "g": "hero"
   },
   "textures/laterite_mud_diff.jpg": {
     "u": "v96d3da25/textures/laterite_mud_diff.jpg",

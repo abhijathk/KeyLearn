@@ -7,6 +7,7 @@ import { Popup, Portal } from "@keylearn/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
 import * as styles from "./Indicators.module.less";
 import { KeyExtendedDetails } from "./KeyExtendedDetails.tsx";
+import { useKidsPractice } from "./kids-flavour.ts";
 import { Pulse } from "./Pulse.tsx";
 import { type LessonState } from "./state/index.ts";
 
@@ -94,6 +95,7 @@ export const JourneyStrip = memo(function JourneyStrip({
     | { type: "visible"; key: LessonKey; elem: Element }
     | { type: "visible-out"; key: LessonKey; elem: Element }
   >;
+  const kids = useKidsPractice();
   const [hover, setHover] = useState<HoverState>({ type: "hidden" });
   useEffect(() => {
     const tasks = new Tasks();
@@ -140,22 +142,35 @@ export const JourneyStrip = memo(function JourneyStrip({
       />
       {(hover.type === "visible" || hover.type === "visible-out") && (
         <Portal>
-          <Popup
-            anchor={hover.elem}
-            onMouseEnter={() => {
-              setHover({ ...hover, type: "visible" });
-            }}
-            onMouseLeave={() => {
-              setHover({ ...hover, type: "visible-out" });
-            }}
-          >
-            <KeyExtendedDetails
-              lessonKey={hover.key}
-              keyStats={keyStatsMap.get(hover.key.letter)}
-            />
-          </Popup>
+          {wrapKidsPopup(
+            kids,
+            <Popup
+              anchor={hover.elem}
+              onMouseEnter={() => {
+                setHover({ ...hover, type: "visible" });
+              }}
+              onMouseLeave={() => {
+                setHover({ ...hover, type: "visible-out" });
+              }}
+            >
+              <KeyExtendedDetails
+                lessonKey={hover.key}
+                keyStats={keyStatsMap.get(hover.key.letter)}
+              />
+            </Popup>,
+          )}
         </Portal>
       )}
     </div>
   );
 });
+
+/**
+ * On Classic the key-details card brings its own rounded frame, so the
+ * Popup's square panel is re-skinned to match it: the Popup reads its
+ * colours from custom properties, which this wrapper overrides. The grown-up
+ * page gets the Popup exactly as before, unwrapped.
+ */
+function wrapKidsPopup(kids: boolean, popup: ReactNode): ReactNode {
+  return kids ? <div className={styles.kidsKeyPopup}>{popup}</div> : popup;
+}

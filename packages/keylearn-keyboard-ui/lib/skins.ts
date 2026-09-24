@@ -150,6 +150,52 @@ export const ROUND: Geom = {
   homingDy: 13,
 };
 
+/**
+ * What a per-key painter is told about one cap.
+ *
+ * Just enough to decide a colour, and all of it known when the cap is built,
+ * so the painter runs once per key per board rather than on every keystroke.
+ */
+export type CapFacts = {
+  readonly id: string;
+  /** The finger zone the shape names — `pinky`, `leftIndex`… — if any. */
+  readonly finger: string | null;
+  /** The primary legend as printed (usually a capital), or null. */
+  readonly legend: string | null;
+  /**
+   * A key of the board's frame rather than one that types a character: the
+   * modifiers, the space bar, and anything without a legend of its own.
+   */
+  readonly frame: boolean;
+};
+
+/**
+ * One cap's own colours, for a skin that paints per key.
+ *
+ * Every value is a CSS colour — a hex, a `var(--token, fallback)` or a
+ * `color-mix()` — and is applied as a style rather than as a presentation
+ * attribute, which is what lets it resolve a custom property (see the note on
+ * `grad` in SkinDefs).
+ */
+export type CapPaint = {
+  readonly top: string;
+  /** The wall, which on a skin with no face inset shows only as the lip. */
+  readonly skirt: string;
+  readonly ink: string;
+  /** A ring just inside the face edge, `ringWidth` wide. Absent: no ring. */
+  readonly ring?: string;
+  /**
+   * What changes while the finger colours are on (`keyboard.colors`). A
+   * field left out keeps the value above, so a cap that has no finger, or a
+   * skin that shows the finger in only one place, says so by omission.
+   */
+  readonly zone?: {
+    readonly skirt?: string;
+    readonly ink?: string;
+    readonly ring?: string;
+  };
+};
+
 export type Skin = {
   readonly id: string;
   /** The accent this keyset cues the next key in. */
@@ -187,6 +233,44 @@ export type Skin = {
   readonly accentInkLight?: string;
   readonly size: number;
   readonly weight: number;
+
+  /* ── per-key finishes ─────────────────────────────────────────────
+     Every skin above colours a cap by its CLASS — alpha, modifier, accent —
+     which is how a real keyset is moulded. The two kids finishes cannot be
+     said that way: Crayon rings every cap in its own finger's colour, and
+     Rainbow sorts the caps into four groups by what the key IS. So a skin
+     may name a painter instead, and the fields after it are the handful of
+     things those finishes print differently. All optional: a skin that sets
+     none of them renders exactly as it did before they existed. Only the
+     flat-geometry renderer reads them; the round branch has no such skin. */
+
+  /** Colours each cap itself; the class gradients above are then unused. */
+  readonly paint?: (cap: CapFacts) => CapPaint;
+  /** Width of `CapPaint.ring`, in board units. */
+  readonly ringWidth?: number;
+  /**
+   * The light along the top edge of the face: its opacity and its width.
+   * Absent, the flat renderer's own hairline. Zero draws none.
+   */
+  readonly hairline?: { readonly opacity: number; readonly width: number };
+  /**
+   * The next key FILLS with the cue colour and prints its legend in this ink,
+   * rather than only ringing the cap and tinting the legend. How the kids
+   * boards have always shown it — and on a board that is already every colour
+   * of the finger chart, a cue ring is one more coloured outline among many.
+   */
+  readonly cueInk?: string;
+  /**
+   * Modifier words replaced by signs, keyed by the printed word (`back`,
+   * `enter`…). For readers who cannot yet read the word.
+   */
+  readonly modSigns?: Readonly<Record<string, string>>;
+  /**
+   * The shifted legend small in the top-right corner, the primary one large
+   * and centred — rather than the two stacked. The reference board prints
+   * them this way, and stacked on a cap this size both come out too small.
+   */
+  readonly cornerShift?: boolean;
 };
 
 /** The mechanical board at night: charcoal alphas. */
@@ -474,3 +558,298 @@ export const ROUND_SKINS: Record<string, Skin> = {
  * a different hat.
  */
 export const ROUND_GLOW = "#ffe3ad";
+
+/* ── the kids finishes ───────────────────────────────────────────────
+   The two boards the kids trail draws in HTML (KidsPage.tsx, `Key`, and the
+   `.key` / `.kbRainbow` rules in kids.module.less), ported to the grown-up
+   SVG keyboard so the kids Classic mode can keep the grown-up keyboard and
+   its hands while wearing the board a child already knows.
+
+   Every hex here is copied from kids.module.less, and every mix is the one
+   that file writes as `color-mix(in srgb, …)`, computed here so the values
+   read against that file line for line. Measurements are the kids board's
+   `--ku` units carried over by proportion: a kids cap is 3.2ku tall and a
+   board cap is 34 units, so one ku is 34 / 3.2 ≈ 10.6 units. */
+
+/** `color-mix(in srgb, a p%, b)`, for two hexes. */
+function mixSrgb(a: string, p: number, b: string): string {
+  const ch = (hex: string, i: number) =>
+    Number.parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  let out = "#";
+  for (let i = 0; i < 3; i++) {
+    const v = Math.round(ch(a, i) * p + ch(b, i) * (1 - p));
+    out += v.toString(16).padStart(2, "0");
+  }
+  return out;
+}
+
+/**
+ * The kids finger zones, by the grown-up shape's finger names.
+ *
+ * The trail calls them rose, sage, sand, seafoam, terra and clay; the board
+ * names the finger. The mapping is the trail's own (keyboard-data.ts,
+ * ZONE_OF): little finger rose, ring sage, middle sand, left index seafoam,
+ * right index terra, and the thumb on clay like its space bar. These hues are
+ * "the one thing no theme may move" in the kids stylesheet, and they do not
+ * move at night either.
+ */
+export const KIDS_ZONE: Readonly<Record<string, string>> = {
+  pinky: "#f5a8b8",
+  ring: "#8fce7e",
+  middle: "#f2c94c",
+  leftIndex: "#5fc9a7",
+  rightIndex: "#f5a25f",
+  thumb: "#c9b8a8",
+};
+
+/** The kids neutral: frame keys, and every cap with the finger colours off. */
+const CLAY = "#c9b8a8";
+
+/**
+ * The kids board's flat cap: no inset face, no foreshortening, no dish — a
+ * rounded tile standing on a lip of solid colour, which is the kids `.key`'s
+ * `box-shadow: 0 3.5px 0 …` drawn as geometry.
+ */
+const KIDS_FLAT: Omit<Geom, "lip" | "rxBase" | "rxFace" | "travel"> = {
+  faceInX: 0,
+  rowSquash: [1, 1, 1, 1, 1],
+  shDy: 0,
+  shOp: 0, // the lip is the only shadow the kids caps cast
+  dish: false,
+  topLegends: false,
+  foreshorten: 1,
+};
+
+/**
+ * Crayon: a white cap ringed in its finger's colour, on a lip of the same
+ * colour darkened towards grey (`color-mix(in srgb, var(--kz) 78%, #6a6a5a)`).
+ * The frame keys — tab, caps, shift, enter, back and the space bar — are
+ * ringed in clay, never a finger: they are what the letters sit in. With the
+ * finger colours off, every cap is clay, as on the trail.
+ *
+ * The cap and its legends take the page's own tokens rather than fixed hexes,
+ * and that is deliberate: the kids Classic frame re-points `--primary-l2` and
+ * `--secondary` to exactly the kids key ground and key ink — #ffffff and
+ * #3a3a4e by day, #333a5e and #f2f2fc at night, the trail's `--key-bg` and
+ * `--kink` — so the one skin is right on both without asking what time it is.
+ * The fallbacks are the day values, for a page that sets neither token.
+ *
+ * The legend stays ink, not a finger colour: the ring already says the finger,
+ * and the trail prints its crayon legends plain.
+ */
+export const KIDS_CRAYON_SKIN: Skin = {
+  id: "kids-crayon",
+  cue: "var(--accent, #2f8f66)",
+  cueInk: "var(--accent-ink, #ffffff)",
+  geom: {
+    ...KIDS_FLAT,
+    lip: 2.3, // 3.5px under a 3.2ku cap
+    rxBase: 9.6, // 0.9ku
+    rxFace: 9.6,
+    travel: 0.86, // the trail's press leaves 0.5px of its 3.5px lip showing
+  },
+  grain: false,
+  matte: true,
+  gloss: 0,
+  lightCaps: true,
+  // Unused while `paint` is set, but SkinDefs defines them unconditionally.
+  alphaTop: ["#ffffff"],
+  alphaSkirt: [mixSrgb(CLAY, 0.78, "#6a6a5a")],
+  modTop: ["#ffffff"],
+  modSkirt: [mixSrgb(CLAY, 0.78, "#6a6a5a")],
+  accentTop: null,
+  accentSkirt: null,
+  accentIds: [],
+  ink: "var(--secondary, #3a3a4e)",
+  modInk: "var(--secondary-l2, #7a7a90)",
+  accentInk: "var(--secondary, #3a3a4e)",
+  size: 14,
+  weight: 700,
+  ringWidth: 1.7, // 2.5px
+  hairline: { opacity: 0, width: 0 },
+  paint: ({ finger, frame }) => {
+    const zone = frame || finger == null ? null : (KIDS_ZONE[finger] ?? null);
+    return {
+      top: "var(--primary-l2, #ffffff)",
+      skirt: mixSrgb(CLAY, 0.78, "#6a6a5a"),
+      ring: CLAY,
+      ink: frame ? "var(--secondary-l2, #7a7a90)" : "var(--secondary, #3a3a4e)",
+      ...(zone != null
+        ? { zone: { ring: zone, skirt: mixSrgb(zone, 0.78, "#6a6a5a") } }
+        : {}),
+    };
+  },
+};
+
+/**
+ * Rainbow's four groups, as the kids stylesheet names them: g for the frame,
+ * r for the numbers and punctuation, b for the alphabet, v for the vowels.
+ * Held a tenth back from poster primaries there, for the reason given there.
+ */
+const RAINBOW = {
+  g: ["#4ab86a", "#2f9a4e"],
+  r: ["#e35d51", "#c13e33"],
+  b: ["#4a5fb8", "#33448f"],
+  v: ["#6fb8e4", "#4b95c4"],
+} as const;
+
+/**
+ * The vowels Rainbow sets apart. The trail's board is English-only and says
+ * `aeiou`; the grown-up board carries every Latin layout, so the accented
+ * vowels those layouts print on their own caps come too — a French learner's
+ * é is as much a vowel as their e. Not y: the trail leaves it out, and a
+ * board for five-year-olds is not the place to argue it.
+ */
+const VOWEL = /^[aeiouàáâãäåæèéêëìíîïòóôõöøœùúûü]$/iu;
+
+/**
+ * Rainbow: the primary-colour learning board.
+ *
+ * The cap says what KIND of key this is — green frame, red numbers and
+ * punctuation, blue letters, lighter blue vowels — and the legend says which
+ * finger owns it, carried most of the way to white
+ * (`color-mix(in srgb, var(--kl, #fff) 68%, #fff)`) so it still reads on a
+ * saturated cap. The frame keys have no finger on the trail, so their legends
+ * are plain white; so is every legend with the finger colours off.
+ *
+ * One face on both themes, as on the trail: the plastic is the plastic.
+ */
+export const KIDS_RAINBOW_SKIN: Skin = {
+  id: "kids-rainbow",
+  cue: "var(--accent, #2f8f66)",
+  cueInk: "var(--accent-ink, #ffffff)",
+  geom: {
+    ...KIDS_FLAT,
+    lip: 3.6, // 0.34ku
+    rxBase: 6.6, // 0.62ku
+    rxFace: 6.6,
+    travel: 1, // the trail's rainbow cap goes all the way down
+  },
+  grain: false,
+  matte: true,
+  gloss: 0,
+  lightCaps: false,
+  alphaTop: [RAINBOW.b[0]],
+  alphaSkirt: [RAINBOW.b[1]],
+  modTop: [RAINBOW.g[0]],
+  modSkirt: [RAINBOW.g[1]],
+  accentTop: null,
+  accentSkirt: null,
+  accentIds: [],
+  // Also the resting hands' ink over the board (VirtualKeyboard publishes it
+  // as --hand-ink): white is the one colour that reads on all four groups.
+  ink: "#ffffff",
+  modInk: "#ffffff",
+  accentInk: "#ffffff",
+  size: 15,
+  weight: 700,
+  // `inset 0 0.12ku 0 rgb(255 255 255 / 28%)`: the moulded top edge.
+  hairline: { opacity: 0.28, width: 1.3 },
+  modSigns: {
+    back: "←",
+    tab: "⇥",
+    caps: "⇪",
+    enter: "↵",
+    shift: "↑",
+  },
+  cornerShift: true,
+  paint: ({ finger, legend, frame }) => {
+    const group = frame
+      ? RAINBOW.g
+      : legend == null || !/^\p{L}$/u.test(legend)
+        ? RAINBOW.r
+        : VOWEL.test(legend)
+          ? RAINBOW.v
+          : RAINBOW.b;
+    const zone = frame || finger == null ? null : (KIDS_ZONE[finger] ?? null);
+    return {
+      top: group[0],
+      skirt: group[1],
+      ink: "#ffffff",
+      ...(zone != null
+        ? { zone: { ink: mixSrgb(zone, 0.68, "#ffffff") } }
+        : {}),
+    };
+  },
+};
+
+/** One cap's look, as CSS values an HTML element can wear. */
+export type CapLook = {
+  /** A `background` value: a colour, or the face gradient. */
+  readonly face: string;
+  /** The wall — what shows as the lip under the cap. */
+  readonly edge: string;
+  readonly ink: string;
+  /** Crayon's finger ring, or null for a skin that draws none. */
+  readonly ring: string | null;
+  /** Width of that ring as a fraction of the cap's height. */
+  readonly ringRatio: number;
+  /** Corner radius as a fraction of the cap's height; 0.5 is a stadium. */
+  readonly radiusRatio: number;
+};
+
+/** The height of a board cap, which every ratio above is measured against. */
+const CAP_H = 34;
+
+/**
+ * How a skin dresses one key, for something outside the SVG board that wants
+ * to look like that key — the "press Enter to start" invitation is the case
+ * this exists for.
+ *
+ * It answers the same questions `makeSkinnedKeyComponent` answers for a
+ * cap on the board, from the same fields, so the two cannot disagree: a key
+ * the skin names as an accent wears the accent; a painted skin paints it;
+ * otherwise a frame key wears the modifier colours and the rest the alpha
+ * ones. `cap` says what the key is — for Enter,
+ * `{ id: "Enter", finger: "pinky", legend: null, frame: true }` — and
+ * `zoneOn` is the `keyboard.colors` setting.
+ */
+export function capLook(skin: Skin, cap: CapFacts, zoneOn = true): CapLook {
+  const G = skin.geom;
+  const radiusRatio = G.round === true ? 0.5 : G.rxFace / CAP_H;
+  const ringRatio = (skin.ringWidth ?? 1.5) / CAP_H;
+  const gradient = (stops: readonly string[]) =>
+    `linear-gradient(180deg, ${stops[0]}, ${stops[stops.length - 1]})`;
+  if (skin.paint != null) {
+    const paint = skin.paint(cap);
+    return {
+      face: paint.top,
+      edge: (zoneOn ? paint.zone?.skirt : undefined) ?? paint.skirt,
+      ink: (zoneOn ? paint.zone?.ink : undefined) ?? paint.ink,
+      ring: (zoneOn ? paint.zone?.ring : undefined) ?? paint.ring ?? null,
+      ringRatio,
+      radiusRatio,
+    };
+  }
+  if (
+    skin.accentIds.includes(cap.id) &&
+    skin.accentTop != null &&
+    skin.accentSkirt != null
+  ) {
+    return {
+      face: gradient(skin.accentTop),
+      edge: skin.accentSkirt[0],
+      ink: skin.accentInk,
+      ring: null,
+      ringRatio,
+      radiusRatio,
+    };
+  }
+  return cap.frame
+    ? {
+        face: gradient(skin.modTop),
+        edge: skin.modSkirt[0],
+        ink: skin.modInk,
+        ring: null,
+        ringRatio,
+        radiusRatio,
+      }
+    : {
+        face: gradient(skin.alphaTop),
+        edge: skin.alphaSkirt[0],
+        ink: skin.ink,
+        ring: null,
+        ringRatio,
+        radiusRatio,
+      };
+}

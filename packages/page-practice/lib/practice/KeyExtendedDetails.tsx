@@ -5,6 +5,7 @@ import { useSettings } from "@keylearn/settings";
 import { type CSSProperties, type ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
 import * as styles from "./KeyExtendedDetails.module.less";
+import { useKidsPractice } from "./kids-flavour.ts";
 
 /**
  * The KeyLearn key-details hover card: a confidence-coloured key tile with a
@@ -18,8 +19,9 @@ export function KeyExtendedDetails({
   readonly lessonKey: LessonKey;
   readonly keyStats: KeyStats;
 }): ReactNode {
+  const kids = useKidsPractice();
   const { settings } = useSettings();
-  const { formatSpeed } = useFormatter();
+  const { formatSpeed, speedUnit } = useFormatter();
   const { confidenceColor } = useKeyStyles();
   const target = new Target(settings);
   const learningRate = LearningRate.from(keyStats.samples, target);
@@ -46,6 +48,138 @@ export function KeyExtendedDetails({
     confidence != null
       ? { backgroundColor: String(confidenceColor(conf)) }
       : undefined;
+  if (kids) {
+    const speedOf = (time: number | null) =>
+      time != null ? formatSpeed(60000 / time, { unit: false }) : "—";
+    return (
+      <div className={styles.kidsRoot}>
+        <div className={styles.kidsHead}>
+          <span className={styles.kidsKeycap}>{label}</span>
+          <span className={styles.kidsHeadText}>
+            <span className={styles.kidsKicker}>
+              <FormattedMessage
+                id="kids.keyDetails.kicker"
+                defaultMessage="Key stats"
+              />
+            </span>
+            <span className={styles.kidsTitle}>
+              <FormattedMessage
+                id="kids.keyDetails.title"
+                defaultMessage="Your {label} stats"
+                values={{ label }}
+              />
+            </span>
+          </span>
+        </div>
+        <div className={styles.kidsBody}>
+          <div className={styles.kidsCards}>
+            <KidsStat
+              tone={styles.kidsToneRecent}
+              glyph={<path d="M13 2L4 14h7l-1 8 9-12h-7z" />}
+              label={
+                <FormattedMessage
+                  id="keyDetails.last"
+                  defaultMessage="Recent"
+                />
+              }
+              value={speedOf(timeToType)}
+              unit={timeToType != null ? speedUnit.id : null}
+              fill={confidence}
+              note={<OfTarget pct={confidence} />}
+            />
+            <KidsStat
+              tone={styles.kidsToneBest}
+              glyph={
+                <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
+              }
+              label={
+                <FormattedMessage id="keyDetails.top" defaultMessage="Best" />
+              }
+              value={speedOf(bestTimeToType)}
+              unit={bestTimeToType != null ? speedUnit.id : null}
+              fill={bestConfidence}
+              note={<OfTarget pct={bestConfidence} />}
+            />
+            <KidsStat
+              tone={styles.kidsToneTrend}
+              glyph={<TrendGlyph />}
+              label={
+                <FormattedMessage id="keyDetails.rate" defaultMessage="Trend" />
+              }
+              value={
+                rate != null
+                  ? `${rate >= 0 ? "+" : "−"}${formatSpeed(Math.abs(rate), { unit: false })}`
+                  : "—"
+              }
+              unit={rate != null ? speedUnit.id : null}
+              // A lesson that adds a tenth of the target speed is as steep
+              // as a learning curve gets; the bar fills against that.
+              fill={
+                rate != null && rate > 0 ? rate / (target.targetSpeed * 0.1) : 0
+              }
+              note={
+                rate != null ? (
+                  <FormattedMessage
+                    id="kids.keyDetails.perLesson"
+                    defaultMessage="per lesson"
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="kids.keyDetails.noTrend"
+                    defaultMessage="not enough data yet"
+                  />
+                )
+              }
+            />
+          </div>
+          <div className={styles.kidsRow}>
+            <svg
+              className={styles.kidsRowGlyph}
+              viewBox="0 0 24 24"
+              aria-hidden={true}
+            >
+              <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
+            </svg>
+            <span>
+              {forecast != null ? (
+                <FormattedMessage
+                  id="keyDetails.remainingLessons"
+                  defaultMessage="≈ {count} lessons until target speed"
+                  values={{ count: forecast }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="keyDetails.needData"
+                  defaultMessage="Keep practicing — we need more data before we can forecast this."
+                />
+              )}
+            </span>
+          </div>
+          {speeds.length > 1 ? (
+            <div className={styles.kidsCurveBox}>
+              <Curve speeds={speeds} target={target.targetSpeed} />
+            </div>
+          ) : (
+            <div className={styles.kidsRow}>
+              <svg
+                className={styles.kidsRowGlyph}
+                viewBox="0 0 24 24"
+                aria-hidden={true}
+              >
+                <TrendGlyph />
+              </svg>
+              <span>
+                <FormattedMessage
+                  id="keyDetails.noChart"
+                  defaultMessage="Finish a few more lessons to reveal your learning curve."
+                />
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={styles.root}>
       <div className={styles.head}>
@@ -120,6 +254,65 @@ export function KeyExtendedDetails({
         </div>
       )}
     </div>
+  );
+}
+
+function KidsStat({
+  tone,
+  glyph,
+  label,
+  value,
+  unit,
+  fill,
+  note,
+}: {
+  readonly tone: string;
+  readonly glyph: ReactNode;
+  readonly label: ReactNode;
+  readonly value: ReactNode;
+  readonly unit: string | null;
+  readonly fill: number | null;
+  readonly note: ReactNode;
+}): ReactNode {
+  const width = `${Math.round(Math.max(0, Math.min(1, fill ?? 0)) * 100)}%`;
+  return (
+    <div className={`${styles.kidsStat} ${tone}`}>
+      <div className={styles.kidsStatLabel}>
+        <svg viewBox="0 0 24 24" aria-hidden={true}>
+          {glyph}
+        </svg>
+        <span>{label}</span>
+      </div>
+      <span className={styles.kidsStatValue}>
+        {value}
+        {unit != null && <span className={styles.kidsStatUnit}>{unit}</span>}
+      </span>
+      <div className={styles.kidsBar}>
+        <div className={styles.kidsBarFill} style={{ inlineSize: width }} />
+      </div>
+      <span className={styles.kidsStatNote}>{note}</span>
+    </div>
+  );
+}
+
+function OfTarget({ pct }: { readonly pct: number | null }): ReactNode {
+  return pct != null ? (
+    <FormattedMessage
+      id="kids.keyDetails.ofTarget"
+      defaultMessage="{pct}% of target"
+      values={{ pct: Math.round(Math.min(1, pct) * 100) }}
+    />
+  ) : (
+    <FormattedMessage id="t_Uncertain" defaultMessage="Not sure yet" />
+  );
+}
+
+function TrendGlyph(): ReactNode {
+  return (
+    <>
+      <path d="M3 17l6-6 4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </>
   );
 }
 

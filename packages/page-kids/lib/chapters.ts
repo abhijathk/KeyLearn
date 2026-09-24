@@ -21,6 +21,7 @@
 import { type Lesson, LESSONS, SEGMENT_COUNT } from "./chapter1.ts";
 import { LESSONS_2 } from "./chapter2.ts";
 import { LESSONS_3 } from "./chapter3.ts";
+import { LESSONS_4 } from "./chapter4.ts";
 
 export type Chapter = {
   /** 1-based, and the same number the card shows. */
@@ -43,6 +44,21 @@ export type Chapter = {
   readonly blurb: string;
   /** Its lessons, in order. Empty until the chapter is authored. */
   readonly lessons: readonly Lesson[];
+  /**
+   * WHICH AUTHORED ROAD IT IS BUILT FROM, 1-based — the scenery.
+   *
+   * The same as `n` for the chapters that are written; a later chapter that
+   * walks an earlier road again (see `chapterNo`) carries the number of the
+   * road it borrows. The world is built from THIS, and never from `n`: every
+   * "is this the river chapter" test in world.ts is a question about the
+   * scenery, and Chapter 8 is the river chapter as surely as Chapter 4 is.
+   */
+  readonly scenery: number;
+  /**
+   * Names for the later times this road comes round, in order: the first
+   * entry is the second time through, and so on. See `chapterNo`.
+   */
+  readonly again?: readonly { readonly name: string; readonly blurb: string }[];
 };
 
 /**
@@ -66,6 +82,21 @@ export const CHAPTERS: readonly Chapter[] = [
       "A road through a village, long ago — past the paddy fields and the" +
       " old banyan tree, through the market, and out the other side.",
     lessons: LESSONS,
+    scenery: 1,
+    again: [
+      {
+        name: "The Paddy Village",
+        blurb:
+          "Another village along the road — green paddy, tall palms and a" +
+          " great banyan, a busy market, and the way out beyond it.",
+      },
+      {
+        name: "The Palm Village",
+        blurb:
+          "The road runs into a village again — fields of rice, a banyan" +
+          " with a stone seat round it, the market, and on past the houses.",
+      },
+    ],
   },
   {
     n: 2,
@@ -75,6 +106,21 @@ export const CHAPTERS: readonly Chapter[] = [
       " and field walls, a little shrine under a great tree, a river to" +
       " cross, and open grazing beyond it.",
     lessons: LESSONS_2,
+    scenery: 2,
+    again: [
+      {
+        name: "The Orchard Road",
+        blurb:
+          "Out past the houses again, through orchards and field walls — a" +
+          " small shrine under a big tree, a river to cross, and cows beyond.",
+      },
+      {
+        name: "The Far Fields",
+        blurb:
+          "The fields open up once more — fruit trees, stone walls, a quiet" +
+          " shrine, a bridge over the river and wide grass for the herd.",
+      },
+    ],
   },
   {
     n: 3,
@@ -84,6 +130,45 @@ export const CHAPTERS: readonly Chapter[] = [
       " and a temple street, where somebody plays among the trees before" +
       " the road grows quiet again.",
     lessons: LESSONS_3,
+    scenery: 3,
+    again: [
+      {
+        name: "The Temple Town",
+        blurb:
+          "A big village again, full of houses — a crowded market and a" +
+          " temple street, and someone hiding in the trees who likes to play.",
+      },
+      {
+        name: "The Market Town",
+        blurb:
+          "Houses close in on both sides, then a great market and the temple" +
+          " road — and somebody playful following, until the road goes quiet.",
+      },
+    ],
+  },
+  {
+    n: 4,
+    name: "The Wild Crossing",
+    blurb:
+      "Beyond the village, the road winds through trees and grassy hills" +
+      " to a wide river — over a wooden bridge to a little island, then" +
+      " another bridge into the woods and the open green land beyond.",
+    lessons: LESSONS_4,
+    scenery: 4,
+    again: [
+      {
+        name: "The River Journey",
+        blurb:
+          "Into the trees again and over the hills, down to a wide river —" +
+          " a bridge to an island with a great banyan, and woods beyond.",
+      },
+      {
+        name: "The Long Crossing",
+        blurb:
+          "Through a shady forest and up over grassy hills, then the big" +
+          " river again — across the island and on into the green land.",
+      },
+    ],
   },
 ];
 
@@ -91,73 +176,91 @@ export const CHAPTERS: readonly Chapter[] = [
 export const CHAPTER_STONES = SEGMENT_COUNT;
 
 /**
- * WHICH CHAPTER A CHILD IS STANDING IN — as opposed to which one is next.
+ * CHAPTER n, FOR ANY n — THE ROAD NEVER RUNS OUT.
  *
- * Those are two different questions and conflating them put "Lesson 1" and a
- * blank name on the scoreboard the moment a child reached the tenth stone:
- * the arithmetic said Chapter 2, Chapter 2 has no lessons to name, and the
- * road under their feet was still Chapter 1's. A child is in the last
- * chapter that has actually been BUILT, because that is the road they are
- * walking; what comes next is `chapterDueAt`, and it is the card's business
- * rather than the scoreboard's.
+ * Four chapters are authored, and a child who finishes the fourth walks on
+ * into Chapter 5: Lessons 41 to 50, Milestones 40 to 50. The count never
+ * starts again — a stone reading 41 follows the one reading 40, because the
+ * road did not end and neither did the child's progress — but the SCENERY
+ * comes round again: Chapter 5 is built on Chapter 1's road, 6 on 2's, and
+ * so on for as long as the child keeps walking.
  *
- * So this clamps to the last WALKABLE chapter, not the last declared one. The
- * day Chapter 2 is authored the clamp moves on its own, because the thing it
- * clamps to is whether there is anything to walk through.
+ * A repeat is a new chapter to the child, not a replay: it gets its own
+ * number, its own name and its own card. The names come from each road's
+ * `again` list and cycle once that runs out, so the fifth time through the
+ * village is called what the second time was — by then it has been a long
+ * while.
+ *
+ * WHEN MORE CHAPTERS ARE WRITTEN they simply join `CHAPTERS`, and the cycle
+ * widens to include them on its own: nothing below counts to four.
+ */
+export function chapterNo(n: number): Chapter {
+  const k = Math.max(1, Math.floor(n));
+  const roads = CHAPTERS.filter(isWalkable);
+  if (roads.length === 0) {
+    return CHAPTERS[0]!;
+  }
+  const authored = CHAPTERS[k - 1];
+  if (authored != null && isWalkable(authored)) {
+    return authored;
+  }
+  // Past the written chapters: which road, and which time round it.
+  const road = roads[(k - 1) % roads.length]!;
+  const lap = Math.floor((k - 1) / roads.length); // 1 = second time through
+  const names = road.again ?? [];
+  const alias = names.length > 0 ? names[(lap - 1) % names.length]! : null;
+  return {
+    ...road,
+    n: k,
+    name: alias?.name ?? road.name,
+    blurb: alias?.blurb ?? road.blurb,
+  };
+}
+
+/**
+ * WHICH CHAPTER A CHILD IS STANDING IN.
+ *
+ * Milestones 0 to 9 are Chapter 1, 40 to 49 are Chapter 5, and so on without
+ * end — see `chapterNo`. There is no longer a last chapter to clamp to: the
+ * road comes round again instead of stopping.
  */
 export function chapterAt(stones: number): Chapter {
-  const i = Math.floor(Math.max(0, stones) / CHAPTER_STONES);
-  const here = CHAPTERS[i];
-  if (here != null && isWalkable(here)) {
-    return here;
-  }
-  const walkable = CHAPTERS.filter(isWalkable);
-  return walkable[walkable.length - 1] ?? CHAPTERS[0]!;
+  return chapterNo(Math.floor(Math.max(0, stones) / CHAPTER_STONES) + 1);
 }
 
 /**
  * The chapter whose opening card falls on exactly this stone, if any.
  *
- * Deliberately NOT clamped to what is walkable: this is the announcement, and
- * a chapter has to be announceable before it is finished — the card at the
- * tenth stone is how a child learns there is more road, whether or not it has
- * been built yet. `isWalkable` decides what happens when they press Enter.
+ * Every tenth stone opens one, repeats included: the child who reaches
+ * Milestone 40 is shown Chapter 5's card, with its own name, before walking
+ * on into it.
  */
 export function chapterDueAt(stones: number): Chapter | null {
-  return (
-    CHAPTERS.find((c) => chapterOpensAt(c) === Math.max(0, stones)) ?? null
-  );
+  const s = Math.max(0, Math.floor(stones));
+  return s % CHAPTER_STONES === 0 ? chapterNo(s / CHAPTER_STONES + 1) : null;
 }
 
 /**
  * WHICH LESSON, COUNTED ALONG THE WHOLE ROAD.
  *
  * Lesson n starts at Milestone n-1, so a child with four stones is on Lesson
- * 5 — and one with fourteen is on Lesson 15. The numbering is CONTINUOUS
- * across chapters: Chapter 1 is Lessons 1 to 10 and Chapter 2 is Lessons 11
- * to 20, which is how the reference documents are written, how the
- * milestones are carved, and how it is talked about.
- *
- * I had this counting within the chapter, on the reasoning that a child
- * counts from the start of the thing they are in. That was wrong about this
- * road: the milestones do not reset at the chapter line — Milestone 14 is
- * Milestone 14 — so a chip reading "Lesson 4" beside a stone reading 14
- * disagrees with the thing the child is standing next to.
+ * 5 — and one with forty-four is on Lesson 45. Continuous across chapters
+ * and never capped: the milestones do not reset at a chapter line, so the
+ * chip beside Milestone 44 has to say Lesson 45.
  */
 export function lessonAtStones(stones: number): number {
-  const total = CHAPTERS.reduce((n, c) => n + c.lessons.length, 0);
-  return Math.min(Math.max(1, total), Math.max(0, stones) + 1);
+  return Math.max(0, Math.floor(stones)) + 1;
 }
 
 /**
  * Where that lesson sits in its own chapter's table, 0-based.
  *
- * The number a child reads runs 1..20; the table it is looked up in runs
- * 0..9 twice. This is the one place that conversion happens.
+ * The number a child reads runs on for ever; the table it is looked up in
+ * runs 0..9. This is the one place that conversion happens.
  */
 export function lessonIndexAt(stones: number): number {
   const c = chapterAt(stones);
-  const within = Math.max(0, stones) - (c.n - 1) * CHAPTER_STONES;
+  const within = Math.max(0, stones) - chapterOpensAt(c);
   return Math.max(0, Math.min(c.lessons.length - 1, within));
 }
 
@@ -174,24 +277,22 @@ export function chapterOpensAt(c: Chapter): number {
 }
 
 /**
- * `?lesson=14` → Chapter 2, Lesson 4.
+ * `?lesson=14` → Chapter 2, Lesson 4; `?lesson=47` → Chapter 5, Lesson 7.
  *
  * THE FLAG COUNTS ALONG THE WHOLE ROAD, because that is how the reference
- * documents talk: Chapter 2 is "Lesson 11 through Lesson 20", and a reviewer
- * reading the brief and wanting to look at the river types the number in
- * front of them. The scoreboard still counts within the chapter — those are
- * different audiences and it is worth them disagreeing.
+ * documents talk, and it runs on past the written chapters the way the road
+ * does: `?lesson=47` is the island on the second time round.
  *
- * Null for anything that is not a real lesson of a real chapter.
+ * Null for anything that is not a positive whole lesson number.
  */
 export function addressLesson(
   n: number,
 ): { readonly chapter: Chapter; readonly lesson: number } | null {
-  if (!Number.isInteger(n) || n < 1 || n > CHAPTER_STONES * CHAPTERS.length) {
+  if (!Number.isInteger(n) || n < 1) {
     return null;
   }
-  const chapter = CHAPTERS[Math.floor((n - 1) / CHAPTER_STONES)];
-  if (chapter == null || !isWalkable(chapter)) {
+  const chapter = chapterNo(Math.floor((n - 1) / CHAPTER_STONES) + 1);
+  if (!isWalkable(chapter)) {
     return null;
   }
   return { chapter, lesson: ((n - 1) % CHAPTER_STONES) + 1 };

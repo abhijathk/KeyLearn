@@ -417,3 +417,24 @@ test("a tombstone for a key this device never had is not resurrected as one", as
     restore();
   }
 });
+
+test("a signed-out guest makes no sync calls at all", async () => {
+  // A guest has no account to carry anything to; every call used to come
+  // back 403, on boot and again on every settings change.
+  localStorage.clear();
+  localStorage.setItem("kids.prefs", '{"world":"dino"}');
+  const g = globalThis as any;
+  const had = g.__PAGE_DATA__;
+  g.__PAGE_DATA__ = { user: null };
+  const { calls, restore } = withFetch(() => json({}));
+  try {
+    isFalse(await pullLocal());
+    await pushLocal();
+    equal(calls.length, 0);
+    // And the device's own copy is left exactly as it was.
+    equal(localStorage.getItem("kids.prefs"), '{"world":"dino"}');
+  } finally {
+    restore();
+    g.__PAGE_DATA__ = had;
+  }
+});

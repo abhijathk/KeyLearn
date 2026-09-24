@@ -20,7 +20,12 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 
-const [origPath, outPath] = process.argv.slice(2);
+const [origPath, outPath] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+// `--cattle` authors the cow's own Walk in place of the source take, and a
+// cattle-shaped Idle and Graze; `--calf` makes those a calf's. The buffalo
+// runs without either and is authored exactly as before.
+const CATTLE = process.argv.includes("--cattle") || process.argv.includes("--calf");
+const CALF = process.argv.includes("--calf");
 const src = readFileSync(origPath);
 let off = 12, json = null, bin = null;
 while (off + 8 <= src.length) {
@@ -329,9 +334,14 @@ for (const k in LEGS) for (const n of LEGS[k]) {
 }
 
 let PLANTED_LEGS = new Set();
+let LEVEL_LIFT = null;
+let DEV_SLACK = 1;
+let NO_ENVELOPE = false;
 let SETTLE = false;
+let SETTLE_HEAD = false;
 // The barrel - what actually takes an animal's weight when it lies on its side.
 let TORSO_SET = null;
+let BARREL_SET = null;
 const planted = (k) => PLANTED_LEGS.has(k);
 // Legs allowed to fold freely for this clip. The deviation clamp exists to stop
 // a leg flipping to the wrong branch, which is only ambiguous when the target is
@@ -435,7 +445,37 @@ function solveLeg(local, k, target) {
     // hyperextension on the rear-stomp descent.
     const maxR = LEG_REACH[k] * (REACH_CAP[k] ?? (planted(k) ? 0.94 : 0.97)), minR = LEG_REACH[k] * 0.45;
     if (dist > maxR) target = vadd(hip, vscale(d, maxR / dist));
-    else if (dist < minR) target = vadd(hip, vscale(d, minR / dist));
+    else if (dist < minR) {
+      // A LEG THAT CANNOT FOLD ANY FURTHER STEPS OUT. IT DOES NOT PUSH
+      // THROUGH THE FLOOR.
+      //
+      // This used to scale the target along the hip->target direction, which
+      // for a foot on the ground points mostly DOWN — so the moment a
+      // descending body brought its own ground contact inside the leg's
+      // minimum fold, the clamp drove the target below the floor and the IK
+      // dutifully followed. Measured on the grazing cow with her pelvis
+      // pitched 26 degrees nose-down: 125 frames of penetration, the front
+      // hooves and pasterns up to 0.0006 under, which is 39% of her hip
+      // height. It is also why lowering the forehand to reach the grass
+      // always had to be abandoned.
+      //
+      // A real animal in that position takes its forefeet FORWARD and stands
+      // over them — which is exactly what a grazing bovid does. So the
+      // target stays on the ground plane and slides horizontally out to the
+      // distance the leg can actually hold.
+      const h = hip[1] - target[1];                      // how far the root is above it
+      const flat = Math.hypot(d[0], d[2]);
+      if (minR > Math.abs(h) && flat > 1e-9) {
+        const want = Math.sqrt(minR * minR - h * h);
+        const kx = want / flat;
+        target = [hip[0] + d[0] * kx, target[1], hip[2] + d[2] * kx];
+      } else {
+        // The root is lower than the leg can fold to at all; nothing on the
+        // ground plane is reachable, so fall back to the old behaviour and
+        // let the reporting pick it up rather than pretending otherwise.
+        target = vadd(hip, vscale(d, minR / dist));
+      }
+    }
   }
   // Anatomical fold guard.
   //
@@ -484,7 +524,7 @@ function solveLeg(local, k, target) {
     const c0 = local.get(jb);
     local.set(jb, { r: qnorm(qmul(qmul(qmul(qconj(parentRot), q), parentRot), c0.r)), t: c0.t });
   };
-  const foldGuard = () => { clampEnvelope(local, k, 0); clampEnvelope(local, k, 1); };
+  const foldGuard = () => { if (NO_ENVELOPE) return; clampEnvelope(local, k, 0); clampEnvelope(local, k, 1); };
   for (let iter=0; iter<60; iter++) {
     const W = fk(local); const end = W.pos.get(chain[chain.length-1]);
     if (vlen(vsub(end, target)) < 2e-5) break;
@@ -510,7 +550,7 @@ function solveLeg(local, k, target) {
       const sr = (planted(k) && legAnchor.has(jb)) ? legAnchor.get(jb) : stand.get(jb).r;
       const dev = 2 * Math.acos(Math.min(1, Math.abs(nr[0]*sr[0]+nr[1]*sr[1]+nr[2]*sr[2]+nr[3]*sr[3]))) * 180/Math.PI;
       const base = Math.max(12, (WALK_SWING.get(jb) ?? 45) * (SWING_MARGIN[b] ?? 1.6));
-      const lim = FREE_FOLD.has(k) ? base * 2.4 : base;
+      const lim = (FREE_FOLD.has(k) ? base * 2.4 : base) * DEV_SLACK;
       if (dev > lim) nr = qnorm(slerp(sr, nr, lim / dev));
       // ...and a hard cap on how far the bone may leave its REST orientation.
       // This is what keeps the stride distal: the shoulder is held near the
@@ -518,7 +558,7 @@ function solveLeg(local, k, target) {
       // reach, instead of the whole limb being swung from the top.
       {
         const rr = restR(jb);
-        const cap = (WALK_REST_SWING.get(jb) ?? 60) * (SWING_MARGIN[b] ?? 1.6) * (FREE_FOLD.has(k) ? 2.4 : 1);
+        const cap = (WALK_REST_SWING.get(jb) ?? 60) * (SWING_MARGIN[b] ?? 1.6) * (FREE_FOLD.has(k) ? 2.4 : 1) * DEV_SLACK;
         const dr = 2 * Math.acos(Math.min(1, Math.abs(nr[0]*rr[0]+nr[1]*rr[1]+nr[2]*rr[2]+nr[3]*rr[3]))) * 180 / Math.PI;
         if (dr > cap) nr = qnorm(slerp(rr, nr, cap / dr));
       }
@@ -532,7 +572,7 @@ function solveLeg(local, k, target) {
   // 42-50 degree shoulder swing while every other clip came down to ~28.
   for (let b = 0; b < chain.length - 1; b++) {
     const jb = chain[b], rr = restR(jb), cur = local.get(jb);
-    const cap = (WALK_REST_SWING.get(jb) ?? 60) * (SWING_MARGIN[b] ?? 1.6) * (FREE_FOLD.has(k) ? 2.4 : 1);
+    const cap = (WALK_REST_SWING.get(jb) ?? 60) * (SWING_MARGIN[b] ?? 1.6) * (FREE_FOLD.has(k) ? 2.4 : 1) * DEV_SLACK;
     const dr = 2 * Math.acos(Math.min(1, Math.abs(cur.r[0]*rr[0]+cur.r[1]*rr[1]+cur.r[2]*rr[2]+cur.r[3]*rr[3]))) * 180 / Math.PI;
     if (dr > cap) local.set(jb, { r: qnorm(slerp(rr, cur.r, cap / dr)), t: cur.t });
   }
@@ -542,7 +582,19 @@ function solveLeg(local, k, target) {
 // "pitch the head down" means down in the world, not down in whatever
 // orientation this particular bone was modelled with.
 function applyVisual(local, name, pitch, yaw, roll) {
-  const id = idByName[name], base = stand.get(id), pw = parentWorld(id), pwi = qconj(pw);
+  const id = idByName[name], base = stand.get(id);
+  // A BONE THIS RIG DOES NOT HAVE IS NOT AN ERROR.
+  //
+  // The clip authoring here is written against bone NAMES, and the names are
+  // shared across this pack's quadrupeds — which is what lets the cow and the
+  // calf be authored by the same tool. They are not identical rigs though:
+  // the buffalo carries `neck0` and `neck1`, the cattle do not, so posing the
+  // neck threw on a rig that is otherwise a perfect match. Skipping the bone
+  // leaves that part of the pose to the bones which DO exist (here, the
+  // chest and the head between them), which is the right answer and the only
+  // one that keeps this usable for the next animal in the pack.
+  if (id == null || base == null) { return null; }
+  const pw = parentWorld(id), pwi = qconj(pw);
   let q = base.r;
   if (pitch) q = qmul(qaxis(qrot(pwi, LEFT), -pitch), q);
   if (yaw)   q = qmul(qaxis(qrot(pwi, UP), yaw), q);
@@ -563,6 +615,7 @@ function poser(local) {
     body(name, {pitch=0,yaw=0,roll=0}={}) { applyVisual(local, name, pitch, yaw, roll); },
     hips({dz=0,dfwd=0,dleft=0,pitch=0,yaw=0,roll=0}={}) {
       const q = applyVisual(local, "Hips", pitch, yaw, roll);
+      if (q == null) { return; }
       const base = stand.get(idByName.Hips);
       // Move the root by a visual-space offset, expressed in its local frame.
       const off = vadd(vadd(vscale(UP,dz), vscale(FWD,dfwd)), vscale(LEFT,dleft));
@@ -602,7 +655,12 @@ function levelHooves(local, legTargets) {
     // Eased, and over a WIDE window. Switching the levelling off sharply snapped
     // the hoof bone through 150 degrees in a single frame on the faster gaits -
     // the biggest velocity spike anywhere in the library.
-    const lift = LIFT[k] > 1e-9 ? (t[1] - GROUND) / (1.2 * LIFT[k]) : 0;
+    // Faded over THIS clip's lift when it sets one. The source's lift is
+    // 0.29 hip heights; the cattle Walk lifts a third of that, and measured
+    // against the source's the levelling never let go — the hoof stayed
+    // flat through the whole swing.
+    const L = LEVEL_LIFT?.[k] ?? LIFT[k];
+    const lift = L > 1e-9 ? (t[1] - GROUND) / (1.2 * L) : 0;
     const w = 1 - smooth(Math.max(0, Math.min(1, lift)));
     if (w < 1e-4) continue;
     const id = hoofId[k], pid = parent.get(id);
@@ -687,7 +745,18 @@ function buildClip(frames, fn, loop) {
         const up = FLOOR - lowestSkin(p, HEAD_GROUP).y;
         if (up > 1e-9) liftBody(p, up);
       }
-      // Then the neck gives out and the head falls until the cheek is on the
+      // THE NECK GIVING OUT IS DEATH'S, AND ONLY DEATH'S.
+      //
+      // `SETTLE` bundled two unrelated things: a lift-only floor correction,
+      // which any pose that ends up on the ground wants, and this — the head
+      // dropping until the cheek is on the floor, which is what dying looks
+      // like and nothing else. Turning the flag on for `Rest` to get the
+      // first quietly brought the second: the resting cow held her head up
+      // for half the loop and then slowly laid it down in the dirt, never
+      // lifting it again, so the clip did not even close on itself. Measured
+      // at -21 degrees of head pitch at frame 0 against -8 at the end.
+      if (!SETTLE_HEAD) continue;
+      // The neck gives out and the head falls until the cheek is on the
       // ground - found by search on the roll angle, since after a 78 degree
       // topple the way down is across the body, not along its pitch axis.
       const w = smooth(Math.max(0, Math.min(1, (f / period - 0.52) / 0.34)));
@@ -899,6 +968,55 @@ function idle(f,T,P){ const t=f/T, br=0.5-0.5*Math.cos(TAU*t);
   const fl=Math.max(0,sin(TAU*2*t-0.6))**6;
   const fr=Math.max(0,sin(TAU*2*t+1.4))**6;
   TAIL.forEach((n,i)=>P.body(n,{yaw:(6+i*2.2)*sin(TAU*t-i*0.6), pitch:-2.6*sin(TAU*t)})); }
+// ── the cattle's Idle: looking, not sweeping ────────────────────────────
+//
+// The shared `idle` swings the head on a sine, side to side, for ever. That
+// is the one thing an animal standing in a field never does: it LOOKS —
+// turns to something, holds on it, turns back — and between looks it is
+// nearly still. Continuous motion reads as a machine; move-and-hold reads as
+// attention. So this is a sequence of held poses with eased moves between
+// them, over a loop long enough (8s) that the pattern is not the first
+// thing you notice.
+//
+// Each key: [time, neck yaw, head yaw, head pitch (+ up), neck pitch, head roll].
+// The HEAD LEADS: it arrives at each pose a beat before the neck, the way an
+// animal's eyes and ears go first and the weight of the neck follows.
+const COW_LOOK = [
+  [0.00,   0,   0,  0,   0,  0],
+  [0.10,   0,   0,  0,   0,  0],
+  [0.19,  11,   9,  3,   1,  2.5],   // something off to the left
+  [0.38,  12,  10,  2,   1,  2.5],
+  [0.47,   2,   1, -7,  -7,  0],     // back round, and down to sniff the grass
+  [0.57,   1,   0, -8,  -8,  0],
+  [0.66, -10, -12,  5,   2, -3],     // up and right: a sound
+  [0.83, -11, -12,  4,   2, -3],
+  [0.93,   0,   0,  0,   0,  0],
+  [1.00,   0,   0,  0,   0,  0],
+];
+function lookAt(t) {
+  let u = ((t % 1) + 1) % 1, i = 0;
+  while (i < COW_LOOK.length - 2 && COW_LOOK[i + 1][0] <= u) i++;
+  const a = COW_LOOK[i], b = COW_LOOK[i + 1];
+  const w = smooth((u - a[0]) / Math.max(1e-6, b[0] - a[0]));
+  return a.map((x, j) => x + (b[j] - x) * w);
+}
+function cowIdle(f, T, P) {
+  const t = f / T;
+  // Breathing: three breaths across 8s, about 22 a minute, which is a cow at
+  // rest. The barrel rises; the withers follow a little.
+  const br = 0.5 - 0.5 * Math.cos(TAU * 3 * t);
+  // Weight moves once across the loop, from one side to the other and back.
+  P.hips({ dz: 0.012 * HIP_H * (br - 0.5), dleft: 0.012 * HIP_H * sin(TAU * t), pitch: 0.6 * br, roll: 0.9 * sin(TAU * t) });
+  P.body("chest", { pitch: -1.2 * br, roll: -0.5 * sin(TAU * t) });
+  const head = lookAt(t), neck = lookAt(t - 0.035);
+  // A held pose is not a frozen one: a tiny drift, at whole-number rates so
+  // the loop still closes, keeps the head alive through each hold.
+  const drift = 0.6 * sin(TAU * 5 * t + 0.4) + 0.4 * sin(TAU * 7 * t + 1.9);
+  P.body("neck0", { yaw: 0.55 * neck[1], pitch: 0.6 * neck[4] + 1.2 * br, roll: 0.3 * neck[5] });
+  P.body("neck1", { yaw: 0.45 * neck[1], pitch: 0.4 * neck[4] + 0.8 * br });
+  P.body("head",  { yaw: head[2] + 0.5 * drift, pitch: head[3] + 0.6 * drift, roll: head[5] });
+  TAIL.forEach((n, i) => P.body(n, { yaw: (3 + i * 1.6) * sin(TAU * 2 * t - i * 0.6), pitch: -1.5 * sin(TAU * 2 * t) }));
+}
 function idleAlert(f,T,P){ const t=f/T, br=0.5-0.5*Math.cos(TAU*t);
   // The alarm response is documented directly: bison "stop and stared for
   // several seconds with ears brought forwards and head directed towards the
@@ -912,19 +1030,26 @@ function idleAlert(f,T,P){ const t=f/T, br=0.5-0.5*Math.cos(TAU*t);
   const stir = 1 - hold;                       // motion is allowed only outside the stare
   P.hips({dz:0.005*HIP_H*br*stir, dfwd:0.012*HIP_H*snapIn, pitch:-2.2*snapIn,
           roll:0.9*sin(TAU*2*t)*stir});
-  P.body("chest",{pitch:(-7.0-0.5*br)*snapIn});
+  // The withers come up with the head, for the same reason and the same sign.
+  P.body("chest",{pitch:(7.0+0.5*br)*snapIn});
   // Head carried clearly HIGHER than the calm idle — that raised, oriented
   // head is the whole read of "something has its attention". Restrained
   // otherwise: this is alertness, not aggression, so no pawing or rearing.
   // Head up and squarely ON the disturbance, and it STAYS there. The head-up
   // carriage is the alert signal; a swinging head would read as scanning, which
   // is a different behaviour.
-  P.body("head",{pitch:-21*snapIn + 1.2*sin(TAU*2*t)*stir, yaw:9*sin(TAU*t)*stir});
+  // SIGN CORRECTED. This read `-21`, and on this rig a negative pitch LOWERS
+  // the muzzle — the graze function documents that explicitly, having been
+  // caught by the same thing from the other direction. So the alert pose did
+  // the exact opposite of the paragraph above it: an alarmed animal dropped
+  // its head 21 degrees. Measured against the calm idle, the alert muzzle sat
+  // BELOW it, which is the posture of an animal going back to eating.
+  P.body("head",{pitch:21*snapIn + 1.2*sin(TAU*2*t)*stir, yaw:9*sin(TAU*t)*stir});
   // Even a frozen animal is not inert: the neck holds tension and trembles
   // slightly. Tiny amplitude on purpose - enough that the silhouette is alive
   // without breaking the stare that the alarm response is built on.
-  P.body("neck0",{ pitch: -9*snapIn + 0.5*sin(TAU*7*t)*hold, yaw: 4*sin(TAU*t)*stir });
-  P.body("neck1",{ pitch: -7*snapIn + 0.4*sin(TAU*7.6*t)*hold, yaw: 3*sin(TAU*t)*stir });
+  P.body("neck0",{ pitch: 9*snapIn + 0.5*sin(TAU*7*t)*hold, yaw: 4*sin(TAU*t)*stir });
+  P.body("neck1",{ pitch: 7*snapIn + 0.4*sin(TAU*7.6*t)*hold, yaw: 3*sin(TAU*t)*stir });
   // Both ears rotate forward and lock - forward/above the neckline is the
   // high-arousal posture. The twitching is damped out through the stare too.
   // a sharp tail flick once per loop
@@ -935,8 +1060,18 @@ function idleAlert(f,T,P){ const t=f/T, br=0.5-0.5*Math.cos(TAU*t);
   const flick=Math.max(0,sin(TAU*t-3.0))**2;
   TAIL.forEach((n,i)=>P.body(n,{yaw:((3+i*1.5)*sin(TAU*1.5*t-i*0.5)+18*flick*(0.5+0.5*i/4))*stir,
                                 pitch:-4-9*snapIn})); }
-const NECK0_G = -34, NECK1_G = -34;
-const HEAD_AIM = -25;   // nose angled 38 deg below level, reaching forward into the grass   // degrees below level that the nose points while feeding
+const NECK0_G = -55, NECK1_G = -12;
+// How far the forehand comes down to graze. On the cattle this is the whole
+// reach: their neck is 0.31 hip heights from withers to poll and is already
+// past vertical at NECK0_G — bending it further RAISES the nose (measured,
+// -55 to -80 lifted it 0.04) — and aiming the head changes the nose height by
+// under 0.05. So the body pitch is the one number that puts the mouth in
+// the grass. -20 did (nose 0.01 above the floor) at the cost of fore legs
+// folded to half their reach, which read as a bull dropping to charge; -16
+// keeps the nose in the grass at 0.07 and straightens them. Anything lighter
+// needs a longer neck in the rig, not a different number here.
+const GRAZE_PITCH = CATTLE ? -16 : -20;
+const HEAD_AIM = -52;   // nose angled 38 deg below level, reaching forward into the grass   // degrees below level that the nose points while feeding
 function graze(f,T,P,LT,local){ const t=f/T; const ts = t*6.0;   // seconds within the 6s clip
   // ── Phase 1 (0.0-1.2s): lower the head to the grass ─────────────────────
   // The skull and horns are heavy, so this is not one neck joint rotating:
@@ -1004,7 +1139,7 @@ function graze(f,T,P,LT,local){ const t=f/T; const ts = t*6.0;   // seconds with
   P.hips({ dz:-0.02*HIP_H*down + 0.006*HIP_H*sin(TAU*g)*down,
            dfwd: 0.014*HIP_H*down,
            dleft: 0.012*HIP_H*sin(TAU*g)*down,
-           pitch: -16*down, roll: 1.4*sin(TAU*g)*down });
+           pitch: GRAZE_PITCH*down, roll: 1.4*sin(TAU*g)*down });
   P.body("chest",{ pitch: 0*down });
   // THE NECK does the work now, not the skull. Two neck joints were added to
   // the rig (scripts/buffalo-add-neck.mjs) precisely because this clip could
@@ -1169,6 +1304,181 @@ function walkBack(f,T,P,LT){ const t=f/T; gaitTargets(t,{LF:0.13,RB:0.38,RF:0.63
   P.body("neck0",{ pitch: -6, yaw: 5*sin(2*PI*t - 0.3) });
   P.body("neck1",{ pitch: -4, yaw: 4*sin(2*PI*t - 0.5) });
   TAIL.forEach((n,i)=>P.body(n,{yaw:5*sin(2*PI*t-i*0.5)})); }
+
+// ── the cattle's own Walk ────────────────────────────────────────────────
+//
+// THE SOURCE TAKE IS NOT A COW WALKING. It is the one clip the cattle arrived
+// with, and every other clip here is judged against it — but watched side-on
+// it has three faults no amount of layering on top can hide. The hind hooves
+// are thrown up almost to the hock on every step (0.29 hip heights of lift;
+// a cow clears the ground by a hand's breadth, nearer 0.08). The hind legs
+// cross under the body, so on two frames in eight they read as one knotted
+// limb. And the head and neck are rigid for the whole cycle, the body a plank
+// carried along by the legs. It reads as a prance.
+//
+// So the cattle walk is authored here like every other clip: hooves on
+// ground targets, legs solved with IK, the body posed on top. The source
+// stays the REFERENCE — the stance points, the joint envelope and the ground
+// speed are all still measured from it — it just no longer ships.
+//
+// LATERAL SEQUENCE, which `WALK_PH` is not. Read through `gaitTargets`, whose
+// phase is `t + phase`, that table puts the touchdowns in the order
+// LH, RF, RH, LF — a diagonal-sequence walk, which is a primate's and not a
+// bovid's. Cattle set the fore foot down just after the hind on the SAME
+// side: LH, LF, RH, RF, a quarter-cycle apart. That ordering is why a cow's
+// walk reads as a rolling side-to-side sway rather than a trot slowed down.
+const COW_TD = { LB: 0.0, LF: 0.25, RB: 0.5, RF: 0.75 };
+// GROUND SPEED IS A CONTRACT WITH THE GAME, not a property of the source.
+//
+// A planted hoof must travel backward at exactly the speed the game carries
+// the animal forward, or it skates. The game moves cattle at
+// `CATTLE_PACE × height` per second (world.ts, where a cow gives way to the
+// buffalo), and the source take's hooves travelled at 3.3 times that — so
+// in the village every step slid backward under her, the treadmill look, on
+// top of everything wrong with the take itself. The two numbers are now the
+// same number, stated here in the rig's own units and there in the world's.
+// Change one and change the other.
+const CATTLE_PACE = 0.32;
+// Body height as the game measures it: the standing skin, top to bottom.
+const SKIN_H = (() => { const W = fk(freshLocal()); let lo = Infinity, hi = -Infinity;
+  for (const [id, pts] of SHAPE) { const p = W.pos.get(id), r = W.rot.get(id); if (!p) continue;
+    for (const o of pts) { const y = p[1] + qrot(r, o)[1]; lo = Math.min(lo, y); hi = Math.max(hi, y); } }
+  return hi - lo; })();
+const COW_SPEED = CATTLE_PACE * SKIN_H;
+function cowWalkTargets(t, LT, { duty, liftF, liftH, speed, dur }) {
+  const stride = speed * dur * duty;             // stance travel at ground speed
+  const hoofCurl = {};
+  for (const k in COW_TD) {
+    let p = (t - COW_TD[k]) % 1; if (p < 0) p += 1;
+    const fore = k[1] === "F";
+    const base = stanceHoof[k];
+    // Centred a little forward of the stance point, as `gaitTargets` does,
+    // so the leg is never asked to hold the ground behind its own reach.
+    // The FORE window sits further back than the hind. The source take's
+    // fore stance point is where its over-reaching fore legs landed, and a
+    // shoulder held inside the envelope that take itself uses cannot hold a
+    // hoof that far forward: measured, the fore hooves fell 0.2 hip heights
+    // short of target through stance and hovered instead of planting.
+    const c = fore ? -0.1 : 0.08;
+    const zA = stride * (0.5 + c), zB = stride * (-0.5 + c);
+    let z, up = 0, curl = 0;
+    if (p < duty) {
+      z = zA + (zB - zA) * (p / duty);
+    } else {
+      const W = 1 - duty, u = (p - duty) / W;
+      const m = (zB - zA) / duty * W;
+      const u2 = u * u, u3 = u2 * u;
+      z = (2*u3 - 3*u2 + 1) * zB + (u3 - 2*u2 + u) * m + (-2*u3 + 3*u2) * zA + (u3 - u2) * m;
+      // A FORE hoof breaks over and lifts early, as the knee folds, then
+      // reaches forward low and straight to land; a HIND hoof is carried
+      // lower and more evenly, the hock doing less. Skewing the peak is what
+      // separates the two, and the ends stay smooth so touchdown and
+      // lift-off carry no vertical velocity spike.
+      const w = fore ? u + 0.10 * sin(TAU * u) : u + 0.03 * sin(TAU * u);
+      up = (fore ? liftF : liftH) * HIP_H * sin(PI * w);
+      // The fetlock flexes through swing — the sole turns to face backward
+      // and the toe trails. A hoof held flat through swing reads as a foot
+      // on a stick.
+      curl = sin(PI * Math.min(1, u * 1.15)) ** 1.4;
+    }
+    LT[k] = [base[0], GROUND + up, base[2] + z];
+    hoofCurl[k] = curl;
+  }
+  return hoofCurl;
+}
+const HOOF_BONE = { LF: "frontleg2", RF: "R_frontleg2", LB: "backleg2", RB: "R_backleg2" };
+function cowWalk(f, T, P, LT, local) {
+  const t = f / T;
+  const calf = CALF;
+  const curl = cowWalkTargets(t, LT, {
+    duty: calf ? 0.60 : 0.64,
+    liftF: calf ? 0.15 : 0.11,
+    liftH: calf ? 0.12 : 0.085,
+    speed: COW_SPEED,
+    dur: WALK_SECS,
+  });
+  // NEGATIVE pitch curls the toe back on this rig's hoof bones. Positive
+  // was tried first and turned the hind toe FORWARD through swing, which with
+  // the hock flexed laid the whole lower leg flat along the floor.
+  //
+  // Curled FROM THE PLANTED POSE, and set on every frame including the ones
+  // where the curl is zero. `P.body` starts from `stand`, which is the source
+  // take's frame 0 — mid-stride, left hind folded — so a curl that began
+  // there jumped from the planted hoof to a folded one the instant the foot
+  // left the ground: measured, the left hind hoof spun 83 degrees in one
+  // frame at every lift-off.
+  for (const k in curl) {
+    const id = hoofId[k];
+    local.set(id, { r: visualOn(id, legAnchor.get(id), { pitch: -(k[1] === "F" ? 38 : 30) * curl[k] }), t: local.get(id).t });
+  }
+  // EACH END OF THE BODY VAULTS OVER ITS OWN LEGS. A walking quadruped is
+  // two inverted pendulums, fore and hind, a quarter-cycle apart: the
+  // withers are highest as a fore leg passes vertical under them (t = 0.07,
+  // 0.57, mid-stance of RF and LF) and the croup as a hind leg does (0.32,
+  // 0.82). So the body does not so much bob as ROCK, fore and aft, twice per
+  // stride. Moving the whole body up and down instead — which is what this
+  // first did — put the withers at their LOWEST exactly when each fore leg
+  // was straightest, and the fore hooves could not stay planted under them.
+  const rock = Math.cos(TAU * 2 * (t - 0.07));   // +1 withers up, -1 croup up
+  const vault = Math.cos(TAU * 2 * (t - 0.20));                  // what little the whole body lifts
+  // THE SWAY IS THE WALK. With a lateral sequence, the weight moves over
+  // each side in turn as that side's two feet are down together, so the
+  // pelvis rolls and shifts once per stride. The hip on the side of the
+  // swinging hind leg drops (hind swing LB 0.64-1.0, RB 0.14-0.5).
+  const side = sin(TAU * (t - 0.07));
+  P.hips({
+    dz: WALK_DZ * HIP_H + (calf ? 0.010 : 0.006) * HIP_H * vault,
+    dleft: 0.012 * HIP_H * side,
+    roll: 2.2 * side,
+    yaw: 1.6 * sin(TAU * (t + 0.18)),
+    pitch: WALK_PITCH + (calf ? 2.6 : 2.0) * rock,
+  });
+  // The shoulders roll AGAINST the pelvis — the spine twists between them —
+  // and lag it by a quarter, following the fore feet.
+  P.body("chest", { roll: -1.4 * sin(TAU * (t - 0.32)), yaw: -1.2 * sin(TAU * (t - 0.07)) });
+  // THE NECK AND HEAD. Carried a little lower than standing — a walking cow
+  // leads with her head near withers height — and moving as a chain:
+  //
+  //  * a small symmetric nod, twice per stride, just after each FORE foot
+  //    lands (t = 0.25, 0.75) and the forehand accepts the weight. It must be
+  //    even on both beats: an ASYMMETRIC head nod is the scored sign of a
+  //    lame cow, so the two dips are deliberately identical;
+  //  * a lateral swing once per stride, carried by the neck and following
+  //    the shoulders, and the head turning slightly AGAINST it so the eyes
+  //    stay on the path — animals stabilise gaze, a rigid head on a swinging
+  //    neck reads as a toy;
+  //  * the calf's head higher and busier, the adult's steady.
+  const nod = -Math.cos(TAU * 2 * (t - 0.30));
+  const swing = sin(TAU * (t - 0.36));
+  P.body("neck0", { pitch: (calf ? -1 : -5) + (calf ? 1.6 : 1.2) * nod, yaw: 3.2 * swing, roll: 1.2 * swing });
+  P.body("neck1", { pitch: (calf ? 0 : -2.5) + (calf ? 1.4 : 1.0) * nod, yaw: 2.4 * sin(TAU * (t - 0.42)) });
+  P.body("head", { pitch: (calf ? 2 : 4.5) - (calf ? 1.2 : 0.8) * nod, yaw: -2.6 * sin(TAU * (t - 0.40)),
+                   roll: -1.0 * swing });
+  // The tail swings with the pelvis as a pendulum, each joint lagging the one
+  // above it; the runtime layer adds the swats.
+  TAIL.forEach((n, i) => P.body(n, { yaw: (2.4 + i * 1.6) * sin(TAU * (t + 0.18) - 0.7 - i * 0.55),
+                                    pitch: 1.5 * rock * (i / 4) }));
+}
+const WALK_SECS = 1.2;
+// Where the hips ride relative to the standing frame, in hip heights, and
+// the nose-up carriage of the body in degrees. Found by sweeping both against
+// the stance error the probe reports (PROBE=Walk): lower, and the fore legs
+// could not stay straight enough to hold the ground; higher or more nose-up,
+// and the fore legs locked out at their 0.94 reach cap and lifted instead.
+// At these values every hoof holds its mark within 0.01 hip heights through
+// stance and the stance legs sit at 0.83-0.93 of reach — straight, not
+// locked, which is how a cow walks.
+const WALK_DZ = CALF ? 0 : 0.02;
+const WALK_PITCH = CALF ? 0 : 1;
+// How far past the source take's own joint ranges the walk's legs may go.
+// Those ranges were measured on a take whose left and right fore legs were
+// planted at different points of their strides, so the left fore inherited
+// a narrower window than the right: held to it, it could not stay on its
+// mark and hovered through a third of every stance. 1.3 gives both the same
+// working room; measured stance error is then under 0.01 hip heights on all
+// four.
+const WALK_SLACK = 1.3;
+if (CATTLE) console.log(`  cattle walk: ${WALK_SECS}s cycle, ground speed ${(COW_SPEED/HIP_H).toFixed(2)} hip heights/s, stride ${(COW_SPEED*WALK_SECS/HIP_H).toFixed(2)} hip heights`);
 
 // A cow or buffalo does not pivot on sliding feet. It shuffles: a foot is set
 // down, the body turns AROUND it while it stays put, then that foot is picked
@@ -1744,6 +2054,167 @@ function rearStomp(f, period, P, LT, local) {
     }
   }
 }
+// ── LYING DOWN ──────────────────────────────────────────────────────────
+//
+// A looping clip of the animal already down and chewing, not the act of
+// getting there — the village wants a field of cattle that are resting at
+// two in the morning, and the going-down is a cross-fade into this.
+//
+// AUTHORED THE SAME WAY `death` IS, AND FOR THE SAME REASON. The first
+// attempt at this posed the fold by hand: a fixed angle per bone applied
+// additively at runtime, four legs jackknifed by numbers tuned by eye. It
+// cannot work, and failed in three separate ways before this replaced it.
+// The hind profile is not the mirror of the front, because a hock bends the
+// opposite way to a knee — mirroring it straightened the hind legs and left
+// the animal kneeling with its rump in the air. The body's drop cannot be a
+// fraction of its height, because what it has to equal is how much room
+// folding actually frees, which is a property of the rig. And nothing in a
+// hand-posed fold knows where the floor is, so the brisket hung above it or
+// sank through it depending on the animal.
+//
+// Here the body comes down FIRST, is planted on the floor by its own skin,
+// and the legs are then solved by IK against ground targets gathered in
+// under the barrel. Contact is a result, not a hope — which is the whole
+// argument of this file, and it applies to an animal lying down at least as
+// much as to one walking.
+const REST_DROP = 0.52;     // how far the hips come down, in hip heights
+const REST_GATHER = 0.30;   // how far the hooves gather in under the body
+function lieDown(f, T, P, LT, local) {
+  const t = f / T;
+  // Breathing is the only large motion: a resting animal's barrel is the
+  // thing that moves. Slow — about five seconds a breath.
+  const br = 0.5 - 0.5 * Math.cos(TAU * t);
+  // Chewing the cud, and it never stops: this is the single most
+  // recognisable thing a cow does lying down. Roughly a jaw cycle a second,
+  // which at this clip length is several per loop.
+  // `T` here is the clip's length in FRAMES, not seconds — so the original
+  // `t * T * 0.9` asked for 136 chew cycles per loop, far above the frame
+  // rate. It aliased into a value that jumped about frame to frame and never
+  // closed on itself. Eight cycles over a five-second loop is a real jaw
+  // rhythm and divides the loop exactly.
+  const chew = sin(TAU * t * 8);
+  P.hips({ dz: -HIP_H * REST_DROP + 0.010 * HIP_H * br, pitch: 2.5 + 1.1 * br });
+  P.body("chest", { pitch: -4.5 - 2.0 * br });
+  // The head stays UP. A cow resting is not a cow collapsed — the neck is
+  // raised and the jaw is working, and dropping the muzzle to the floor here
+  // is what reads as a dead animal.
+  // Held level, jaw working. Positive pitch here LIFTS the muzzle — the same
+  // sign that had to be corrected in `death` — and a big positive value
+  // points a resting cow's nose at the sky.
+  // Held up and steady. The wander was large enough that the muzzle swung
+  // down to the floor on a third of the loop, which reads as an animal
+  // nodding off rather than one chewing.
+  // MEASURED, NOT CHOSEN. These pitches are relative to the standing pose,
+  // and this rig stands with its head already 29 degrees nose-down — so a
+  // plausible-looking `+8` still left the resting cow staring at the floor
+  // in front of her. +27 puts the muzzle within a couple of degrees of
+  // level, which is where a cow chewing her cud holds it.
+  // EVERY OSCILLATOR HERE COMPLETES A WHOLE NUMBER OF CYCLES PER LOOP.
+  //
+  // The head's yaw ran at half a cycle and the tail's at seven tenths. Both
+  // return to the same POSE at the seam — sin(0) and sin(PI) are both zero,
+  // so the loop-pose check reads a clean 0.0 degrees — while arriving there
+  // travelling the opposite way. QA caught it as a 41 deg/frame loop
+  // VELOCITY gap, which on screen is the resting cow twitching once every
+  // five seconds, forever.
+  P.body("head", { pitch: 27 + 1.6 * chew + 0.8 * sin(TAU * t), yaw: 2.5 * sin(TAU * t) });
+  // The tail curls along the flank rather than hanging: from a body this low
+  // a hanging tail is buried to the dock.
+  // THE TAIL BARELY MOVES, AND THE ANGLES DO NOT COMPOUND.
+  //
+  // This ran 7 degrees of yaw on EVERY segment of a five-bone chain, and a
+  // chain multiplies: measured, the tail TIP travelled 0.00146 against a hip
+  // height of 0.00157 — it swept 93% of the animal's own height, five times
+  // what the calm idle does, on an animal that is lying down asleep. Read
+  // from across the field that is not a tail, it is the whole rear end
+  // apparently thrashing.
+  //
+  // So the swing is divided down the chain rather than repeated along it,
+  // and it is small: a resting cow's tail lies against her flank and twitches
+  // occasionally. The pitch that lifts it clear of the ground stays.
+  TAIL.forEach((n, i) => P.body(n, {
+    pitch: 27 - i * 4,
+    yaw: (0.9 / (1 + i)) * sin(TAU * t - i * 0.5),
+  }));
+
+  // THE LEGS ARE FOLDED, NOT SOLVED.
+  //
+  // The first version of this gave each hoof a target on the floor and let
+  // IK solve for it, the way every standing and walking clip here does. It
+  // is the wrong tool for this pose and produced exactly the artefact the
+  // header of `death` warns about: a limb that is folding is not reaching
+  // for a ground contact, so IK has nothing to solve and only fights the
+  // tuck. Told to reach the floor from a body half a hip-height lower, each
+  // leg stayed near-straight and became a PROP — the cow knelt on four stiff
+  // legs with her brisket driven down between them and her rump in the air,
+  // which is what "the rest is awful" was looking at.
+  //
+  // A cow in sternal recumbency is not held up by her legs at all. Her
+  // weight is on her sternum and her belly; the legs are folded away
+  // underneath, carrying nothing. So they are posed directly, by blending
+  // toward the most-folded pose the ANIMATOR made in the source Walk —
+  // `foldR`, the frame where that leg is most collapsed. Blending between
+  // two poses a person authored keeps the limb anatomically correct at every
+  // value, which is the same argument this file already makes for the
+  // rear-stomp's forelegs.
+  for (const k in LEGS) {
+    const isFront = k[1] === "F";
+    // The forelegs fold further than the hind: a cow's carpus comes right up
+    // under her chest, while the hind leg tucks alongside the flank with the
+    // hock still open.
+    // PAST THE ANIMATOR'S FOLD, DELIBERATELY. `foldR` is the most-collapsed
+    // frame of the source WALK, and a walking leg at its tightest is nowhere
+    // near as folded as a lying animal's — a cow at rest has her carpus
+    // under her chest and her hock against her flank. Slerp extrapolates
+    // cleanly past 1, and it stays on the same arc the animator drew, so the
+    // limb is still anatomically correct; it is simply further along.
+    const fold = isFront ? 1.34 : 1.26;
+    for (const n of LEGS[k]) {
+      const id = idByName[n];
+      const a = standR.get(id), b = foldR.get(id);
+      if (!a || !b) continue;
+      local.set(id, { r: qnorm(slerp(a, b, fold)), t: local.get(id).t });
+    }
+    // Drawn in under the body from the shoulder and the hip, so the folded
+    // limb sits beneath the barrel rather than out beside it.
+    //
+    // POSITIVE PITCH SWINGS THE LIMB FORWARD here — the same sign the
+    // rear-stomp uses to throw a foreleg out on the strike. The first values
+    // had it backwards on both ends: +26 on the shoulder shot the forelegs
+    // straight out in front like a stretching dog, and -20 on the hip threw
+    // the hind legs up and back so the hocks stood in the air behind the
+    // rump. A resting cow's forelegs stay under her chest and her hind legs
+    // come FORWARD alongside her flank.
+    P.body(k === "LF" ? "frontleg" : k === "RF" ? "R_frontleg"
+           : k === "LB" ? "backleg" : "R_backleg",
+           { pitch: isFront ? 4 : 16 });
+    LT[k] = null;                       // posed above — keep IK off it
+  }
+
+  // Now put the barrel on the floor, with the legs already where they will
+  // be. This is deliberately AFTER the fold and not before it: the body has
+  // to settle onto the shape the folded animal actually is, and the legs are
+  // no longer holding it up.
+  {
+    const raw = FLOOR - lowestSkin(local, null, BARREL_SET).y;
+    if (Math.abs(raw) > 1e-9) liftBody(local, raw);
+  }
+
+  // THE LIFT IS NOT RE-SOLVED EVERY FRAME.
+  //
+  // `liftChainAboveGround` and the skin pass under it both SEARCH for a
+  // correction, and a search run independently on each frame of an
+  // essentially static pose returns slightly different answers each time.
+  // That showed up as the resting tail tip travelling 0.00073 against a hip
+  // height of 0.00157 — a twitch with no cause, on an animal asleep, and the
+  // larger half of what looked like the whole rear end moving.
+  //
+  // The pose above now carries the tail clear of the ground on its own, so
+  // there is nothing left for a search to correct and it is simply not run.
+  // If a future change lowers the body far enough to bury the tail again,
+  // the QA's penetration check is what will say so.
+}
+
 // ── build all clips ──────────────────────────────────────────────────────
 const CLIPS = [
   ["Idle", 4.0, idle, true], ["Idle_Alert", 3.0, idleAlert, true], ["Graze", 6.0, graze, false], ["Run", 0.62, run, true],
@@ -1752,8 +2223,16 @@ const CLIPS = [
   ["Charge_Loop", 0.6, chargeLoop, true], ["Attack_Horn", 1.3, attackHorn, false],
   ["Attack_Stomp", 1.5, attackStomp, false], ["Aggressive_Threat", 2.6, threat, false],
   ["Hit_Reaction", 0.8, hit, false], ["Death", 4.0, death, false],
+  ["Rest", 5.0, lieDown, true],
   ["Supernatural_Rear_Stomp", 6.0, rearStomp, false],
 ];
+// The cattle get their own Walk, authored like the rest, in place of the
+// source take (which is kept in the file only as `Walk_Source`, for the
+// build to drop — see the rename below).
+if (CATTLE) {
+  CLIPS.unshift(["Walk", WALK_SECS, cowWalk, true]);
+  CLIPS[CLIPS.findIndex((c) => c[0] === "Idle")] = ["Idle", 8.0, cowIdle, true];
+}
 // The true floor: the lowest the SKIN ever gets in the approved Walk. Joint-
 // level GROUND sits 0.02 above it, which is the hoof geometry hanging below
 // the last joint - the exact amount every authored clip was sinking by.
@@ -1774,6 +2253,39 @@ function liftBody(local, dy) {
   const r = lowestSkin(l);
   console.log(`  [shape] joints with skin: ${SHAPE.size}, standing lowest skin y=${r.y.toFixed(5)} vs GROUND=${GROUND.toFixed(5)} (delta ${(r.y-GROUND).toFixed(5)}, HIP_H=${HIP_H.toFixed(4)})`);
 }
+// What the tuning numbers above are tuned AGAINST: per leg, how straight the
+// limb is (hoof-to-root over its full reach) and how high its hoof rises; and
+// where the muzzle is — the lowest head-weighted skin — above the floor.
+// The nose tip: of the skin the head carries, the point furthest forward in
+// the standing pose. "Lowest head skin" is not it — on the cattle that is
+// the jaw and dewlap, which barely move when the head goes down.
+const NOSE = (() => { const id = idByName.head, W = fk(freshLocal());
+  let best = null, bz = -Infinity;
+  for (const o of SHAPE.get(id) ?? []) { const z = W.pos.get(id)[2] + qrot(W.rot.get(id), o)[2]; if (z > bz) { bz = z; best = o; } }
+  return best; })();
+const noseY = (W) => { const id = idByName.head; return NOSE ? W.pos.get(id)[1] + qrot(W.rot.get(id), NOSE)[1] : NaN; };
+function reportPose(name, poses) {
+  const HEADS = new Set(["head"].map((n) => idByName[n]).filter((i) => i != null));
+  const ext = {}, clr = {};
+  let mzLo = Infinity, mzHi = -Infinity, hipLo = Infinity, hipHi = -Infinity;
+  for (const p of poses) {
+    const W = fk(p);
+    for (const k in hoofId) {
+      const ch = chainOf(k);
+      const e = vlen(vsub(W.pos.get(ch[3]), W.pos.get(ch[0]))) / LEG_REACH[k];
+      (ext[k] ??= [Infinity, -Infinity]); ext[k][0] = Math.min(ext[k][0], e); ext[k][1] = Math.max(ext[k][1], e);
+      clr[k] = Math.max(clr[k] ?? 0, (W.pos.get(ch[3])[1] - GROUND) / HIP_H);
+    }
+    const m = noseY(W);
+    mzLo = Math.min(mzLo, m); mzHi = Math.max(mzHi, m);
+    const h = (W.pos.get(idByName.Hips)[1] - GROUND) / HIP_H;
+    hipLo = Math.min(hipLo, h); hipHi = Math.max(hipHi, h);
+  }
+  const f2 = (x) => x.toFixed(2);
+  console.log(`\n    [${name}] ext ${Object.entries(ext).map(([k, v]) => `${k} ${f2(v[0])}-${f2(v[1])}`).join("  ")}`
+    + `\n    [${name}] hoof clearance (hip heights) ${Object.entries(clr).map(([k, v]) => `${k} ${f2(v)}`).join("  ")}`
+    + `\n    [${name}] hips ${f2(hipLo)}-${f2(hipHi)} hip heights; nose ${f2((mzLo - FLOOR) / HIP_H)}-${f2((mzHi - FLOOR) / HIP_H)} above floor`);
+}
 const authored = [];
 const CORRECTING = new Set(["Graze","Charge_Loop","Turn_Left_90","Turn_Right_90"]);
 for (const [name, secs, fn, loop] of CLIPS) {
@@ -1793,7 +2305,8 @@ for (const [name, secs, fn, loop] of CLIPS) {
   PLANTED_LEGS = name === "Supernatural_Rear_Stomp" ? new Set(["LB","RB"])   // forelegs must fold
     : new Set(["LF","RF","LB","RB"]);
   FREE_FOLD = name === "Supernatural_Rear_Stomp" ? new Set(["LF","RF"]) : new Set();
-  SETTLE = name === "Death";
+  SETTLE = name === "Death" || name === "Rest";
+  SETTLE_HEAD = name === "Death";
   if (TORSO_SET == null) {
     // Barrel AND legs. A body that falls on its side comes to rest ON its own
     // down-side legs, not through them - settling on the barrel alone drove
@@ -1802,16 +2315,55 @@ for (const [name, secs, fn, loop] of CLIPS) {
     TORSO_SET = new Set(["Hips","chest",
       ...Object.values(LEGS).flat()].map((n)=>idByName[n]).filter((i)=>i!=null));
   }
+  if (BARREL_SET == null) {
+    // The barrel on its own, for a pose that settles onto its BELLY with the
+    // legs folded beneath it. No legs, and no head: the muzzle would jack the
+    // whole animal back up off the ground.
+    BARREL_SET = new Set(["Hips","chest"].map((n)=>idByName[n]).filter((i)=>i!=null));
+  }
   // A galloping leg is near-straight at the extremes of its stance - that is
   // what reaching and driving look like. Holding it to the standing 0.97 cap
   // made the reach clamp lift the planted hoof at the end of stance, tearing a
   // second false suspension into the stride.
   REACH_CAP = name === "Supernatural_Rear_Stomp" ? { LF: 0.90, RF: 0.90, LB: 0.965, RB: 0.965 }
             : /^(Run|Charge_)/.test(name) ? { LF: 0.985, RF: 0.985, LB: 0.985, RB: 0.985 } : {};
+  DEV_SLACK = name === "Walk" && CATTLE ? WALK_SLACK : 1;
+  // THE CATTLE WALK IS NOT HELD TO THE SOURCE'S JOINT ENVELOPE. That
+  // envelope was measured on the take this walk replaces, and correcting a
+  // leg into it rotates the limb about its own root-to-hoof axis — which
+  // moves no hoof, so no contact check can see it, and is chosen afresh
+  // every frame. On the left fore it chose differently from one frame to the
+  // next: measured, the shoulder twisted 10-29 degrees a frame, a visible
+  // twitch through every swing. The fold guard still keeps every knee and
+  // hock bending the right way; without the envelope the worst leg bone
+  // turns 12 degrees a frame and every hoof holds its target within 0.01.
+  NO_ENVELOPE = name === "Walk" && CATTLE;
+  LEVEL_LIFT = name === "Walk" && CATTLE
+    ? { LF: 1.6 * (CALF ? 0.15 : 0.11) * HIP_H, RF: 1.6 * (CALF ? 0.15 : 0.11) * HIP_H,
+        LB: 1.6 * (CALF ? 0.12 : 0.085) * HIP_H, RB: 1.6 * (CALF ? 0.12 : 0.085) * HIP_H }
+    : null;
   const frames = Math.round(secs*FPS) + 1;
   process.stdout.write(`  ${name} ${frames}f… `);
   const poses = buildClip(frames, fn, loop);
   authored.push({ name, frames, poses });
+  if (CATTLE && (name === "Walk" || name === "Graze" || name === "Idle")) reportPose(name, poses);
+  // PROBE=Walk prints how far each hoof is from its target, stance and swing
+  // separately, in hip heights — the number the walk's constants are tuned to.
+  if (process.env.PROBE === name && name === "Walk") {
+    const st = {}, sw = {};
+    for (let f = 0; f < poses.length - 1; f++) {
+      const W = fk(poses[f]); const LT = {};
+      cowWalkTargets(f / (frames - 1), LT, { duty: CALF ? 0.60 : 0.64, liftF: CALF ? 0.15 : 0.11, liftH: CALF ? 0.12 : 0.085, speed: COW_SPEED, dur: WALK_SECS });
+      for (const k in hoofId) {
+        const e = vlen(vsub(W.pos.get(hoofId[k]), LT[k])) / HIP_H;
+        const b = LT[k][1] <= GROUND + 1e-9 ? st : sw;
+        (b[k] ??= []).push(e);
+      }
+    }
+    const sm = (a) => a ? `${(a.reduce((x, y) => x + y, 0) / a.length).toFixed(3)}/${Math.max(...a).toFixed(2)}` : "-";
+    console.log(`PROBE stance ${Object.keys(hoofId).map((k) => k + " " + sm(st[k])).join("  ")} | swing ${Object.keys(hoofId).map((k) => k + " " + sm(sw[k])).join("  ")}`);
+  }
+
   console.log("ok");
 }
 
@@ -1853,7 +2405,7 @@ for (const clip of authored) {
 }
 // rename the original take
 for (const a of json.animations) if (a.name === walk.name && a !== json.animations[json.animations.length-1]) { }
-json.animations[0].name = "Walk";
+json.animations[0].name = CATTLE ? "Walk_Source" : "Walk";
 
 // ── repair the source Walk ──────────────────────────────────────────────
 // Walk was the ONLY clip in the file carrying scale tracks, and it pinned the

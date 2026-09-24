@@ -26,6 +26,7 @@ import {
 import { useIntl } from "react-intl";
 import { Controller } from "./Controller.tsx";
 import { GoalCeremony, type GoalMode } from "./GoalCeremony.tsx";
+import { useKidsPractice } from "./kids-flavour.ts";
 import { SessionAward } from "./SessionAward.tsx";
 import { type LessonEvent, Progress } from "./state/index.ts";
 import { UnlockCeremony } from "./UnlockCeremony.tsx";
@@ -59,6 +60,9 @@ type Ceremony = {
   readonly label: string;
   readonly result: Result;
   readonly prev: Result | null;
+  readonly unlocked: number;
+  readonly total: number;
+  readonly nextLabel: string | null;
 };
 
 type GoalStats = {
@@ -68,6 +72,7 @@ type GoalStats = {
   readonly topSpeed: number;
   readonly accuracy: number;
   readonly weeklySpeeds: readonly number[];
+  readonly weeklyDays: readonly number[];
   readonly slowestKeys: readonly string[];
   readonly isPersonalBest: boolean;
   readonly mode: GoalMode;
@@ -78,6 +83,10 @@ type GoalStats = {
 // fine-motor accuracy fatigues), so the window flips from "keep going" to
 // "time to rest". Kept as a single constant so it's easy to tune.
 const REST_CEILING_MINUTES = 45;
+// Children's Classic screen: the same nudge at 30 minutes. It stays a
+// recommendation — "keep practising anyway" is still there — and still
+// appears at most once a day.
+const KIDS_REST_CEILING_MINUTES = 30;
 
 // The goal ceremony fires once per calendar day, even across page reloads.
 const goalCelebratedKey = () => profileStorageKey("keylearn.goalCelebrated");
@@ -128,10 +137,16 @@ function buildGoalStats(
       ? today.reduce((sum, { accuracy }) => sum + accuracy, 0) / today.length
       : 0;
   // Top speed for each of the last practice days (skipped days don't count).
-  const weeklySpeeds = [...map]
+  const lastDays = [...map]
     .sort((a, b) => (String(a.date) < String(b.date) ? -1 : 1))
-    .slice(-7)
-    .map((d) => d.results.reduce((m, r) => Math.max(m, r.speed), 0));
+    .slice(-7);
+  const weeklySpeeds = lastDays.map((d) =>
+    d.results.reduce((m, r) => Math.max(m, r.speed), 0),
+  );
+  // The same days as timestamps (local midnight), for labelling the bars.
+  const weeklyDays = lastDays.map(({ date }) =>
+    new Date(date.year, date.month - 1, date.dayOfMonth).getTime(),
+  );
   // The slowest keys practised so far — highest filtered time-to-type.
   const slowestKeys = [...progress.keyStatsMap]
     .filter((k) => k.timeToType != null)
@@ -156,6 +171,7 @@ function buildGoalStats(
     topSpeed,
     accuracy,
     weeklySpeeds,
+    weeklyDays,
     slowestKeys,
     isPersonalBest,
     mode,
@@ -167,6 +183,9 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
   const assessment = useAssessment();
   const { results, appendResults } = useResults();
   const pageData = usePageData();
+  const restCeiling = useKidsPractice()
+    ? KIDS_REST_CEILING_MINUTES
+    : REST_CEILING_MINUTES;
   const [progress, { total, current }] = useProgress(lesson, results);
   const [ceremony, setCeremony] = useState<Ceremony | null>(null);
   const [goal, setGoal] = useState<GoalStats | null>(null);
@@ -217,16 +236,28 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
               progress.append(result, (event) => {
                 if (event.type === "new-letter") {
                   // The unlock ceremony replaces the plain toast for new keys.
+                  // The alphabet as it now stands, for the kids window's
+                  // "keys unlocked" meter and its next-key hint. Guided
+                  // lessons unlock in alphabet order, so the first key still
+                  // locked is the next one to earn.
+                  const keys = [
+                    ...progress.lesson.update(progress.keyStatsMap),
+                  ];
+                  const included = keys.filter((k) => k.isIncluded).length;
+                  const next = keys.find((k) => !k.isIncluded) ?? null;
                   setCeremony({
                     label: event.lessonKey.letter.label,
                     result,
                     prev,
+                    unlocked: included,
+                    total: keys.length,
+                    nextLabel: next?.letter.label ?? null,
                   });
                 } else if (event.type === "daily-goal") {
                   // Crossing the daily goal earns the full report window.
                   if (!markedToday(goalCelebratedKey())) {
                     markToday(goalCelebratedKey());
-                    const rest = todayMinutes(all) >= REST_CEILING_MINUTES;
+                    const rest = todayMinutes(all) >= restCeiling;
                     if (rest) {
                       markToday(restNudgedKey());
                     }
@@ -288,7 +319,7 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
               if (
                 markedToday(goalCelebratedKey()) &&
                 !markedToday(restNudgedKey()) &&
-                todayMinutes(all) >= REST_CEILING_MINUTES
+                todayMinutes(all) >= restCeiling
               ) {
                 markToday(restNudgedKey());
                 setGoal(buildGoalStats(all, progress, goalMinutes, "rest"));
@@ -316,6 +347,9 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
             label={ceremony.label}
             result={ceremony.result}
             prev={ceremony.prev}
+            unlocked={ceremony.unlocked}
+            total={ceremony.total}
+            nextLabel={ceremony.nextLabel}
             onContinue={() => {
               setCeremony(null);
             }}
@@ -332,6 +366,7 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
             topSpeed={goal.topSpeed}
             accuracy={goal.accuracy}
             weeklySpeeds={goal.weeklySpeeds}
+            weeklyDays={goal.weeklyDays}
             slowestKeys={goal.slowestKeys}
             isPersonalBest={goal.isPersonalBest}
             mode={goal.mode}

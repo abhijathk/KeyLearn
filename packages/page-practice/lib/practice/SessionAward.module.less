@@ -79,3 +79,222 @@
     animation: none;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Kids Classic: a vivid card per record, a white icon disc and a countdown
+// ring that drains over the toast's lifetime (--kids-award-life, set from
+// SessionAward.tsx to match PracticeScreen's timer). No close button.
+// Compact — about 340px wide — and never wider than the window allows.
+// ---------------------------------------------------------------------------
+
+.kidsCard {
+  --kids-award-from: #ffb03a;
+  --kids-award-to: #ff6a3d;
+  --kids-award-ink: #ff8a3d;
+
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  box-sizing: border-box;
+  inline-size: min(21.25rem, calc(100vi - 2rem));
+  padding: 0.625rem 1rem 0.625rem 0.625rem;
+  border-radius: 1rem;
+  color: #fff;
+  background: linear-gradient(
+    125deg,
+    var(--kids-award-from),
+    var(--kids-award-to)
+  );
+  box-shadow:
+    0 0.75rem 1.5rem rgb(12 16 38 / 22%),
+    inset 0 1px 0 rgb(255 255 255 / 25%);
+  font-family: var(--value-font-family);
+  pointer-events: auto;
+  animation: kids-award-card-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes kids-award-card-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.9rem) scale(0.92);
+  }
+}
+
+.kidsToneSpeed {
+  --kids-award-from: #ffb03a;
+  --kids-award-to: #ff6a3d;
+  --kids-award-ink: #ff8a3d;
+}
+
+.kidsToneScore {
+  --kids-award-from: #ffd23a;
+  --kids-award-to: #ff9f1c;
+  --kids-award-ink: #e08a00;
+}
+
+.kidsToneAccuracy {
+  --kids-award-from: #2fd89a;
+  --kids-award-to: #11a37a;
+  --kids-award-ink: #23c483;
+}
+
+.kidsToneSmooth {
+  --kids-award-from: #b08cff;
+  --kids-award-to: #7b4dff;
+  --kids-award-ink: #a98bff;
+}
+
+.kidsToneBeat {
+  --kids-award-from: #4dc3ff;
+  --kids-award-to: #2d6cf0;
+  --kids-award-ink: #4d9bff;
+}
+
+.kidsToneClose {
+  --kids-award-from: #ff7eb3;
+  --kids-award-to: #ff4f6e;
+  --kids-award-ink: #ff6b8a;
+}
+
+// Night: the same hues, dimmed so they don't glare off a dark room.
+:global(body[data-kids-classic="night"]) {
+  .kidsToneSpeed {
+    --kids-award-from: #c9862e;
+    --kids-award-to: #bd5530;
+  }
+
+  .kidsToneScore {
+    --kids-award-from: #c7a133;
+    --kids-award-to: #c07c1c;
+  }
+
+  .kidsToneAccuracy {
+    --kids-award-from: #27a57a;
+    --kids-award-to: #0f7a5d;
+  }
+
+  .kidsToneSmooth {
+    --kids-award-from: #8a6ccc;
+    --kids-award-to: #5b3cc0;
+  }
+
+  .kidsToneBeat {
+    --kids-award-from: #3b93c4;
+    --kids-award-to: #2453b8;
+  }
+
+  .kidsToneClose {
+    --kids-award-from: #c4608a;
+    --kids-award-to: #c0404f;
+  }
+}
+
+.kidsBadge {
+  display: grid;
+  position: relative;
+  flex: none;
+  place-items: center;
+  inline-size: 3.25rem;
+  block-size: 3.25rem;
+}
+
+.kidsRing {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  transform: rotate(-90deg);
+}
+
+.kidsRingTrack,
+.kidsRingLeft {
+  fill: none;
+  stroke-width: 3.5;
+}
+
+.kidsRingTrack {
+  stroke: rgb(255 255 255 / 28%);
+}
+
+.kidsRingLeft {
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-dasharray: 100 100;
+  animation: kids-award-ring-drain var(--kids-award-life, 3500ms) linear
+    forwards;
+}
+
+@keyframes kids-award-ring-drain {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: 100;
+  }
+}
+
+.kidsDisc {
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: 50%;
+  background-color: #fff;
+  animation: kids-award-disc-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  & > svg {
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    fill: none;
+    stroke: var(--kids-award-ink);
+    stroke-width: 2.6;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+}
+
+@keyframes kids-award-disc-pop {
+  0% {
+    transform: scale(0.4) rotate(-10deg);
+  }
+}
+
+.kidsText {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 0.125rem;
+  min-inline-size: 0;
+}
+
+.kidsKicker {
+  color: rgb(255 255 255 / 85%);
+  font-size: 0.5625rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.kidsTitle {
+  color: #fff;
+  font-size: 1.0625rem;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kidsSub {
+  color: rgb(255 255 255 / 85%);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kidsCard,
+  .kidsDisc {
+    animation: none;
+  }
+}

@@ -34,6 +34,7 @@ const KEYBOARD = defineMessages({
 });
 import { views } from "../views.tsx";
 import * as styles from "./Controls.module.less";
+import { useKidsPractice } from "./kids-flavour.ts";
 
 /**
  * A quiet toolbar tucked into the corner above the practice text. Only the
@@ -58,6 +59,7 @@ export const Controls = memo(function Controls({
   const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
   const { setView } = useView(views);
+  const kids = useKidsPractice();
   const [open, setOpen] = useState(false);
   const keyboardHidden = settings.get(uiProps.hideKeyboard);
   // Picking a tool folds the menu back up; the text-size slider is the one
@@ -109,6 +111,7 @@ export const Controls = memo(function Controls({
   };
   const restartButton = (
     <IconButton
+      data-chip="restart"
       icon={<StrokeIcon name="restart" />}
       title={formatMessage({
         id: "practice.widget.resetLesson.description",
@@ -120,7 +123,11 @@ export const Controls = memo(function Controls({
   return (
     <div
       id={names.controls}
-      className={clsx(styles.controls, open && styles.open)}
+      className={clsx(
+        styles.controls,
+        open && styles.open,
+        kids && styles.kids,
+      )}
     >
       {open && (
         <div
@@ -128,15 +135,18 @@ export const Controls = memo(function Controls({
           onPointerDown={() => scheduleClose()}
           onPointerMove={() => scheduleClose()}
         >
-          <IconButton
-            icon={<StrokeIcon name="help" />}
-            title={formatMessage({
-              id: "practice.widget.showTour.description",
-              defaultMessage:
-                "Open a guided tour with helpful walkthrough slides.",
-            })}
-            onClick={pick(onHelp)}
-          />
+          {!kids && (
+            <IconButton
+              data-chip="help"
+              icon={<StrokeIcon name="help" />}
+              title={formatMessage({
+                id: "practice.widget.showTour.description",
+                defaultMessage:
+                  "Open a guided tour with helpful walkthrough slides.",
+              })}
+              onClick={pick(onHelp)}
+            />
+          )}
           {/* Paired so the arrows read outward in either direction; alone
               when skipping is turned off, since `Dir` swaps a pair and there
               is nothing to swap with. */}
@@ -144,6 +154,7 @@ export const Controls = memo(function Controls({
             <Dir swap="icon">
               {restartButton}
               <IconButton
+                data-chip="skip"
                 icon={<StrokeIcon name="skip" />}
                 title={formatMessage({
                   id: "practice.widget.skipLesson.description",
@@ -157,6 +168,7 @@ export const Controls = memo(function Controls({
             restartButton
           )}
           <IconButton
+            data-chip="keyboard"
             icon={
               <StrokeIcon name={keyboardHidden ? "keyboardOff" : "keyboard"} />
             }
@@ -200,6 +212,7 @@ export const Controls = memo(function Controls({
 
       <span className={clsx(styles.toggle, open && styles.toggleOpen)}>
         <IconButton
+          data-chip="tune"
           ref={toggleRef}
           icon={<StrokeIcon name="tune" />}
           title={formatMessage({
@@ -219,17 +232,21 @@ export const Controls = memo(function Controls({
         />
       </span>
 
-      <IconButton
-        icon={<StrokeIcon name="settings" />}
-        title={formatMessage({
-          id: "practice.widget.settings.description",
-          defaultMessage:
-            "Adjust lesson settings, language, keyboard layout, and more.",
-        })}
-        onClick={() => {
-          setView("settings");
-        }}
-      />
+      {/* Classic is always guided practice, and its settings live in the
+          kids sheet behind the header's gear. */}
+      {!kids && (
+        <IconButton
+          icon={<StrokeIcon name="settings" />}
+          title={formatMessage({
+            id: "practice.widget.settings.description",
+            defaultMessage:
+              "Adjust lesson settings, language, keyboard layout, and more.",
+          })}
+          onClick={() => {
+            setView("settings");
+          }}
+        />
+      )}
     </div>
   );
 });

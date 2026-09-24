@@ -136,6 +136,13 @@ const restSub = defineMessages({
 
 export const ROLL_LINES: MessageDescriptor[] = Object.values(roll);
 export const REST_MAIN_LINES: MessageDescriptor[] = Object.values(restMain);
+/**
+ * The kids' Classic screen asks for a break at thirty minutes, not forty-five,
+ * so the one line that says "over an hour" would be untrue there.
+ */
+export const KIDS_REST_MAIN_LINES: MessageDescriptor[] = REST_MAIN_LINES.filter(
+  ({ id }) => id !== "goalReport.rest.main.1",
+);
 export const REST_SUB_LINES: MessageDescriptor[] = Object.values(restSub);
 
 // Motivational quotes — kept in the original language, with attribution.

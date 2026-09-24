@@ -13,6 +13,7 @@ import {
   useWindowEvent,
 } from "@keylearn/widget";
 import { memo, type ReactNode, useMemo, useRef, useState } from "react";
+import { useKidsPractice } from "./kids-flavour.ts";
 import { Presenter } from "./Presenter.tsx";
 import {
   type LastLesson,
@@ -28,6 +29,7 @@ export const Controller = memo(function Controller({
   readonly progress: Progress;
   readonly onResult: (result: Result) => void;
 }): ReactNode {
+  const kids = useKidsPractice();
   const {
     state,
     handleResetLesson,
@@ -35,7 +37,7 @@ export const Controller = memo(function Controller({
     handleKeyDown,
     handleKeyUp,
     handleInput,
-  } = useLessonState(progress, onResult);
+  } = useLessonState(progress, onResult, kids ? KIDS_IDLE_MS : IDLE_MS);
   const { settings, updateSettings } = useSettings();
   // A timed run rarely ends on a line break. What is already typed when the
   // clock stops is measured the same way a finished line is.
@@ -84,14 +86,26 @@ export const Controller = memo(function Controller({
       onKeyUp={handleKeyUp}
       onInput={handleInput}
       startWithTourOpen={!settings.get(uiProps.tourSeen)}
+      kids={kids}
       onTourClose={() => updateSettings(settings.set(uiProps.tourSeen, true))}
     />
   );
 });
 
+/** How long a line may sit untouched before it starts over. */
+const IDLE_MS = 10000;
+/**
+ * The same on the kids' Classic screen, three times as long. A child stops to
+ * find a key on the board or to think far more often than an adult does, and
+ * a line that restarts under them reads as having done something wrong. A
+ * real break still restarts it, so the speed stays honest.
+ */
+const KIDS_IDLE_MS = 30000;
+
 function useLessonState(
   progress: Progress,
   onResult: (result: Result) => void,
+  idleMs: number,
 ) {
   const keyboard = useKeyboard();
   const timeout = useTimeout();
@@ -210,7 +224,7 @@ function useLessonState(
               }),
             );
           }
-          timeout.schedule(() => handleResetLesson("idle"), 10000);
+          timeout.schedule(() => handleResetLesson("idle"), idleMs);
         },
       },
     );
@@ -222,5 +236,5 @@ function useLessonState(
       handleKeyUp: onKeyUp,
       handleInput: onInput,
     };
-  }, [progress, keyboard, timeout, key]);
+  }, [progress, keyboard, timeout, key, idleMs]);
 }

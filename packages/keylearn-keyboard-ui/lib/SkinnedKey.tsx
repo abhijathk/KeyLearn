@@ -134,6 +134,26 @@ export function makeSkinnedKeyComponent(
 
   const rowSquash = G.rowSquash[Math.round(shape.y)] ?? G.foreshorten;
 
+  // A skin that paints per key (the kids finishes) decides the whole cap here,
+  // once, from what the cap is — the renderer below only chooses between the
+  // finger-colours-on and -off halves of the answer, which is a render-time
+  // setting. See `Skin.paint`.
+  const paint =
+    skin.paint?.({
+      id,
+      finger: shape.finger ?? null,
+      legend: prim,
+      frame: isMod || (prim == null && shifted == null),
+    }) ?? null;
+  const modSign = modText != null ? (skin.modSigns?.[modText] ?? null) : null;
+  const ringWidth = skin.ringWidth ?? 1.5;
+  // The light along the face's top edge. The skins before the kids ones never
+  // said, and this is the hairline they have always had.
+  const hairline = skin.hairline ?? {
+    opacity: skin.lightCaps ? 0.5 : 0.09,
+    width: 1,
+  };
+
   function SkinnedKey({
     depressed,
     toggled,
@@ -149,24 +169,55 @@ export function makeSkinnedKeyComponent(
     const fx = G.faceInX;
     const fw = w - G.faceInX * 2;
 
-    const topFill = isAccent
-      ? `url(#kt-${skin.id})`
-      : isMod
-        ? `url(#mt-${skin.id})`
-        : `url(#at-${skin.id})`;
-    const bodyFill = isAccent
-      ? `url(#ks-${skin.id})`
-      : isMod
-        ? `url(#ms-${skin.id})`
-        : `url(#as-${skin.id})`;
+    const zoneOn = showColors === true;
+    // A skin with a cue ink fills the next key with the cue rather than only
+    // tinting its legend — see `Skin.cueInk`.
+    const cueFilled = cued === true && skin.cueInk != null;
 
-    const baseInk = isAccent ? skin.accentInk : isMod ? skin.modInk : skin.ink;
+    const topFill = cueFilled
+      ? skin.cue
+      : paint != null
+        ? paint.top
+        : isAccent
+          ? `url(#kt-${skin.id})`
+          : isMod
+            ? `url(#mt-${skin.id})`
+            : `url(#at-${skin.id})`;
+    const bodyFill = cueFilled
+      ? // The kids next key stands on a lip of the accent's own deeper tone.
+        `color-mix(in oklab, ${skin.cue} 72%, #000)`
+      : paint != null
+        ? ((zoneOn ? paint.zone?.skirt : undefined) ?? paint.skirt)
+        : isAccent
+          ? `url(#ks-${skin.id})`
+          : isMod
+            ? `url(#ms-${skin.id})`
+            : `url(#as-${skin.id})`;
+    const ring =
+      cueFilled || paint == null
+        ? null
+        : ((zoneOn ? paint.zone?.ring : undefined) ?? paint.ring ?? null);
+
+    const baseInk =
+      paint != null
+        ? ((zoneOn ? paint.zone?.ink : undefined) ?? paint.ink)
+        : isAccent
+          ? skin.accentInk
+          : isMod
+            ? skin.modInk
+            : skin.ink;
     // The next key always wins the colour contest: it wears the cue colour, so
-    // the one key you must not miss is never also wearing a finger colour.
+    // the one key you must not miss is never also wearing a finger colour. A
+    // painted cap has already put its finger colour where it belongs, so the
+    // legend table is not consulted for it.
     const ink =
       cued === true
-        ? skin.cue
-        : ((showColors === true ? zoneInk : null) ?? baseInk);
+        ? cueFilled
+          ? (skin.cueInk ?? skin.cue)
+          : skin.cue
+        : paint != null
+          ? baseInk
+          : ((zoneOn ? zoneInk : null) ?? baseInk);
 
     // Legends sit high on a mechanical cap and centred on a flat one.
     const cy = G.topLegends ? faceY + h * 0.33 : faceY + h / 2;
@@ -400,7 +451,9 @@ export function makeSkinnedKeyComponent(
               height={h + 3 * k}
               rx={rx + 1.5 * k}
               fill="none"
-              stroke={skin.cue}
+              // As a style: a cue may be a `var()`, which an attribute will
+              // not resolve.
+              style={{ stroke: skin.cue }}
               strokeWidth={2.4 * k}
             />
           )}
@@ -419,189 +472,258 @@ export function makeSkinnedKeyComponent(
         overflow="visible"
         data-key={id}
       >
-        <rect
-          x={0}
-          y={G.shDy}
-          width={w}
-          height={h + G.lip}
-          rx={G.rxBase}
-          fill="#000000"
-          opacity={depressed === true ? G.shOp * 0.4 : G.shOp}
-        />
-        {/* The wall runs the FULL height of the cap with the face inset inside
-            it, so it shows as a hairline down each side and a lip along the
-            bottom. Starting it below the face leaves the top of every cap with
-            nothing behind it, which reads as detached. */}
-        <rect
-          x={0}
-          y={0}
-          width={w}
-          height={h + G.lip}
-          rx={G.rxBase}
-          fill={bodyFill}
-        />
-        <rect
-          x={fx}
-          y={faceY}
-          width={fw}
-          height={h}
-          rx={G.rxFace}
-          fill={topFill}
-        />
-        {G.dish && (
+        {/* The kids boards' next key pulses — grows a little and glows, once
+            a second — the way the trail's own keyboard has always shown it.
+            On a group, because a nested svg takes no CSS transform. */}
+        <g className={cueFilled ? styles.cueBlink : undefined}>
+          <rect
+            x={0}
+            y={G.shDy}
+            width={w}
+            height={h + G.lip}
+            rx={G.rxBase}
+            fill="#000000"
+            opacity={depressed === true ? G.shOp * 0.4 : G.shOp}
+          />
+          {/* The wall runs the FULL height of the cap with the face inset inside
+              it, so it shows as a hairline down each side and a lip along the
+              bottom. Starting it below the face leaves the top of every cap with
+              nothing behind it, which reads as detached. */}
+          <rect
+            x={0}
+            y={0}
+            width={w}
+            height={h + G.lip}
+            rx={G.rxBase}
+            // Styles, not attributes, for the same reason as the gradient stops
+            // in SkinDefs: a painted cap's colour may be a `var()`.
+            style={{ fill: bodyFill }}
+          />
           <rect
             x={fx}
             y={faceY}
             width={fw}
             height={h}
             rx={G.rxFace}
-            fill={`url(#dish-${skin.id})`}
+            style={{ fill: topFill }}
           />
-        )}
-        {!skin.matte && (
-          <rect
-            x={fx}
-            y={faceY}
-            width={fw}
-            height={h * 0.32}
-            rx={G.rxFace}
-            fill={`url(#gl-${skin.id})`}
-          />
-        )}
-        {/* A hairline along the top edge only. Stroking the whole face outline
-            rings the cap in light, which is what makes it read as an embossed
-            button rather than as a keycap with depth. */}
-        <path
-          d={`M ${fx + G.rxFace} ${faceY + 0.5} H ${fx + fw - G.rxFace}`}
-          stroke="#ffffff"
-          strokeOpacity={skin.lightCaps ? 0.5 : 0.09}
-          strokeWidth={1}
-          fill="none"
-        />
-        {/* Only when the board is dark. With the backlight on, the light IS
-            the cue and a ring as well would be two markers for one
-            instruction. */}
-        {cuedRing === true && (
-          <rect
-            x={fx - 1}
-            y={faceY - 1}
-            width={fw + 2}
-            height={h + 2}
-            rx={G.rxFace + 1}
-            fill="none"
-            stroke={skin.cue}
-            strokeWidth={2}
-          />
-        )}
-        {modText != null ? (
-          <text
-            className={clsx(styles.legend, cued === true && styles.cueInk)}
-            x={lx}
-            y={cy}
-            transform={persp(cy)}
-            textAnchor={modEndFlat ? "end" : "start"}
-            dominantBaseline="central"
-            style={{ fill: ink }}
-            fontSize={skin.size - 2.5}
-            fontWeight={skin.weight}
-            letterSpacing=".02em"
-          >
-            {modText}
-          </text>
-        ) : shifted != null && G.topLegends ? (
-          <>
+          {G.dish && (
+            <rect
+              x={fx}
+              y={faceY}
+              width={fw}
+              height={h}
+              rx={G.rxFace}
+              fill={`url(#dish-${skin.id})`}
+            />
+          )}
+          {!skin.matte && (
+            <rect
+              x={fx}
+              y={faceY}
+              width={fw}
+              height={h * 0.32}
+              rx={G.rxFace}
+              fill={`url(#gl-${skin.id})`}
+            />
+          )}
+          {/* A hairline along the top edge only. Stroking the whole face outline
+              rings the cap in light, which is what makes it read as an embossed
+              button rather than as a keycap with depth. */}
+          {hairline.opacity > 0 && (
+            <path
+              d={`M ${fx + G.rxFace} ${faceY + hairline.width / 2} H ${fx + fw - G.rxFace}`}
+              stroke="#ffffff"
+              strokeOpacity={hairline.opacity}
+              strokeWidth={hairline.width}
+              fill="none"
+            />
+          )}
+          {/* Crayon's finger ring, drawn INSIDE the face edge the way the
+              trail's `inset 0 0 0 2.5px` box-shadow is, so the cap keeps its
+              size and the ring never touches the neighbour's. */}
+          {ring != null && (
+            <rect
+              x={fx + ringWidth / 2}
+              y={faceY + ringWidth / 2}
+              width={fw - ringWidth}
+              height={h - ringWidth}
+              rx={Math.max(0, G.rxFace - ringWidth / 2)}
+              fill="none"
+              style={{ stroke: ring }}
+              strokeWidth={ringWidth}
+            />
+          )}
+          {/* Only when the board is dark. With the backlight on, the light IS
+              the cue and a ring as well would be two markers for one
+              instruction. */}
+          {cuedRing === true && (
+            <rect
+              x={fx - 1}
+              y={faceY - 1}
+              width={fw + 2}
+              height={h + 2}
+              rx={G.rxFace + 1}
+              fill="none"
+              style={{ stroke: skin.cue }}
+              strokeWidth={2}
+            />
+          )}
+          {modSign != null ? (
+            // A sign is read at a glance, so it is centred and drawn at the
+            // size of a letter rather than at the size of the word it replaces.
             <text
               className={clsx(styles.legend, cued === true && styles.cueInk)}
-              x={lx - 1.7}
+              x={w / 2}
               y={cy}
-              transform={persp(cy)}
-              textAnchor="end"
-              dominantBaseline="central"
-              style={{ fill: ink }}
-              fillOpacity={alnum(leftText) ? 1 : 0.55}
-              fontSize={skin.size - 1.5}
-              fontWeight={skin.weight}
-            >
-              {leftText}
-            </text>
-            <text
-              className={clsx(styles.legend, cued === true && styles.cueInk)}
-              x={lx + 1.7}
-              y={cy}
-              transform={persp(cy)}
-              textAnchor="start"
-              dominantBaseline="central"
-              style={{ fill: ink }}
-              fillOpacity={alnum(rightText) ? 1 : 0.55}
-              fontSize={skin.size - 1.5}
-              fontWeight={skin.weight}
-            >
-              {rightText}
-            </text>
-          </>
-        ) : shifted != null ? (
-          <>
-            <text
-              className={clsx(styles.legend, cued === true && styles.cueInk)}
-              x={lx}
-              y={cy - 5.9}
-              transform={persp(cy - 5.9)}
               textAnchor="middle"
               dominantBaseline="central"
               style={{ fill: ink }}
-              fillOpacity={0.66}
-              fontSize={skin.size - 3}
+              fontSize={skin.size + 1}
               fontWeight={skin.weight}
             >
-              {shifted}
+              {modSign}
             </text>
+          ) : modText != null ? (
             <text
               className={clsx(styles.legend, cued === true && styles.cueInk)}
               x={lx}
-              y={cy + 4.9}
-              transform={persp(cy + 4.9)}
+              y={cy}
+              transform={persp(cy)}
+              textAnchor={modEndFlat ? "end" : "start"}
+              dominantBaseline="central"
+              style={{ fill: ink }}
+              fontSize={skin.size - 2.5}
+              fontWeight={skin.weight}
+              letterSpacing=".02em"
+            >
+              {modText}
+            </text>
+          ) : shifted != null && skin.cornerShift === true ? (
+            <>
+              <text
+                className={clsx(styles.legend, cued === true && styles.cueInk)}
+                x={lx}
+                y={cy}
+                transform={persp(cy)}
+                textAnchor="middle"
+                dominantBaseline="central"
+                style={{ fill: ink }}
+                fontSize={skin.size - 1}
+                fontWeight={skin.weight}
+              >
+                {prim}
+              </text>
+              <text
+                className={clsx(styles.legend, cued === true && styles.cueInk)}
+                x={fx + fw - 4}
+                y={faceY + 7.5}
+                textAnchor="end"
+                dominantBaseline="central"
+                style={{ fill: ink }}
+                fontSize={skin.size * 0.6}
+                fontWeight={skin.weight}
+              >
+                {shifted}
+              </text>
+            </>
+          ) : shifted != null && G.topLegends ? (
+            <>
+              <text
+                className={clsx(styles.legend, cued === true && styles.cueInk)}
+                x={lx - 1.7}
+                y={cy}
+                transform={persp(cy)}
+                textAnchor="end"
+                dominantBaseline="central"
+                style={{ fill: ink }}
+                fillOpacity={alnum(leftText) ? 1 : 0.55}
+                fontSize={skin.size - 1.5}
+                fontWeight={skin.weight}
+              >
+                {leftText}
+              </text>
+              <text
+                className={clsx(styles.legend, cued === true && styles.cueInk)}
+                x={lx + 1.7}
+                y={cy}
+                transform={persp(cy)}
+                textAnchor="start"
+                dominantBaseline="central"
+                style={{ fill: ink }}
+                fillOpacity={alnum(rightText) ? 1 : 0.55}
+                fontSize={skin.size - 1.5}
+                fontWeight={skin.weight}
+              >
+                {rightText}
+              </text>
+            </>
+          ) : shifted != null ? (
+            <>
+              <text
+                className={clsx(styles.legend, cued === true && styles.cueInk)}
+                x={lx}
+                y={cy - 5.9}
+                transform={persp(cy - 5.9)}
+                textAnchor="middle"
+                dominantBaseline="central"
+                style={{ fill: ink }}
+                fillOpacity={0.66}
+                fontSize={skin.size - 3}
+                fontWeight={skin.weight}
+              >
+                {shifted}
+              </text>
+              <text
+                className={clsx(styles.legend, cued === true && styles.cueInk)}
+                x={lx}
+                y={cy + 4.9}
+                transform={persp(cy + 4.9)}
+                textAnchor="middle"
+                dominantBaseline="central"
+                style={{ fill: ink }}
+                fontSize={skin.size}
+                fontWeight={skin.weight}
+              >
+                {prim}
+              </text>
+            </>
+          ) : prim != null ? (
+            <text
+              className={clsx(styles.legend, cued === true && styles.cueInk)}
+              x={lx}
+              y={cy}
+              transform={persp(cy)}
               textAnchor="middle"
               dominantBaseline="central"
               style={{ fill: ink }}
+              // Punctuation is printed lighter on a grown-up keyset. A painted
+              // board prints every legend at full strength, as the trail does.
+              fillOpacity={alnum(prim) || paint != null ? 1 : 0.55}
               fontSize={skin.size}
               fontWeight={skin.weight}
             >
               {prim}
             </text>
-          </>
-        ) : prim != null ? (
-          <text
-            className={clsx(styles.legend, cued === true && styles.cueInk)}
-            x={lx}
-            y={cy}
-            transform={persp(cy)}
-            textAnchor="middle"
-            dominantBaseline="central"
-            style={{ fill: ink }}
-            fillOpacity={alnum(prim) ? 1 : 0.55}
-            fontSize={skin.size}
-            fontWeight={skin.weight}
-          >
-            {prim}
-          </text>
-        ) : null}
-        {shape.homing && (
-          <rect
-            x={w / 2 - 5}
-            y={faceY + h - 6}
-            width={10}
-            height={1.6}
-            rx={0.8}
-            style={{ fill: ink }}
-            fillOpacity={0.6}
-          />
-        )}
-        {id === "CapsLock" && toggled === true && (
-          <>
-            <circle cx={w - 9} cy={cy} r={5.5} fill={LAMP} opacity={0.22} />
-            <circle cx={w - 9} cy={cy} r={2.4} fill={LAMP} />
-          </>
-        )}
+          ) : null}
+          {shape.homing && (
+            <rect
+              x={w / 2 - 5}
+              y={faceY + h - 6}
+              width={10}
+              height={1.6}
+              rx={0.8}
+              style={{ fill: ink }}
+              fillOpacity={0.6}
+            />
+          )}
+          {id === "CapsLock" && toggled === true && (
+            <>
+              <circle cx={w - 9} cy={cy} r={5.5} fill={LAMP} opacity={0.22} />
+              <circle cx={w - 9} cy={cy} r={2.4} fill={LAMP} />
+            </>
+          )}
+        </g>
       </svg>
     );
   }

@@ -350,10 +350,11 @@ export function Header({
                 // Days in a row, said the way the other chips say things. Not a
                 // button — there is nothing to press about having turned up.
                 <span
-                  className={clsx(styles.kidsChip, styles.kidsChipWide)}
-                  style={{
-                    background: "color-mix(in srgb, #b8b2a6 38%, #ffffff)",
-                  }}
+                  className={clsx(
+                    styles.kidsChip,
+                    styles.kidsChipWide,
+                    styles.kidsChipStone,
+                  )}
                   title={formatMessage(
                     defineMessage({
                       id: "kids.header.streak",
@@ -370,10 +371,7 @@ export function Header({
               )}
               <button
                 type="button"
-                className={styles.kidsChip}
-                style={{
-                  background: "color-mix(in srgb, #f2c94c 34%, #ffffff)",
-                }}
+                className={clsx(styles.kidsChip, styles.kidsChipSun)}
                 title={formatMessage(
                   defineMessage({
                     id: "kids.header.sound",
@@ -386,10 +384,7 @@ export function Header({
               </button>
               <button
                 type="button"
-                className={styles.kidsChip}
-                style={{
-                  background: "color-mix(in srgb, #5fc9a7 34%, #ffffff)",
-                }}
+                className={clsx(styles.kidsChip, styles.kidsChipMint)}
                 title={formatMessage(
                   defineMessage({
                     id: "kids.header.night",
@@ -402,10 +397,7 @@ export function Header({
               </button>
               <button
                 type="button"
-                className={styles.kidsChip}
-                style={{
-                  background: "color-mix(in srgb, #3aa0ff 28%, #ffffff)",
-                }}
+                className={clsx(styles.kidsChip, styles.kidsChipSky)}
                 title={formatMessage(
                   defineMessage({
                     id: "kids.header.settings",
@@ -464,8 +456,7 @@ export function Header({
           {kids ? (
             <button
               type="button"
-              className={styles.kidsChip}
-              style={{ background: "color-mix(in srgb, #8bc34a 30%, #ffffff)" }}
+              className={clsx(styles.kidsChip, styles.kidsChipLeaf)}
               title={formatMessage(
                 defineMessage({
                   id: "nav.openMenu",

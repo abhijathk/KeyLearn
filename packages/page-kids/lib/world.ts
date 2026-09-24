@@ -29,7 +29,35 @@ import {
   tiredWalkAt,
   villageDay,
 } from "./chapter1.ts";
-import { WHISPER_NODES, whisperFolkOut, whisperState } from "./chapter3.ts";
+import {
+  WHISPER_NODES,
+  WHISPER_SPACES,
+  whisperFolkOut,
+  whisperState,
+} from "./chapter3.ts";
+import {
+  reserveWhisperProps,
+  resolveChapter3Layout,
+  shopkeeperMarket,
+} from "./chapter3-layout.ts";
+import { wildState } from "./chapter4.ts";
+import {
+  bridgeModules,
+  ISLAND_BANYAN,
+  ISLAND_MANGROVE,
+  islandBanyanAt,
+  islandMangroveAt,
+  islandRadius,
+  islandShore,
+  mangroveStand,
+  wildBanks,
+  type WildCrossing,
+  wildCrossing,
+  wildDry,
+  wildIslandNodes,
+  wildLimit,
+  wildTerrain,
+} from "./chapter4-crossing.ts";
 import { CHAPTERS } from "./chapters.ts";
 import {
   attachTint,
@@ -37,6 +65,7 @@ import {
   type ClothingColours,
 } from "./character-tint.ts";
 import { boneToRig, clipTimeForYaw, clipYaw, clipYawAt } from "./clip-yaw.ts";
+import { depthScale } from "./depth-scale.ts";
 import {
   anchorsFrom,
   beatAt,
@@ -51,6 +80,7 @@ import {
 import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
 import { MAX_UNITS_PER_KEY, RUN_LEN, runLengthFor } from "./run-length.ts";
 import { MIN_STONE_GAP, stoneXFor } from "./stone-x.ts";
+import { createWorldLogo } from "./world-logo.ts";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
 export { ASSETS, versioned };
@@ -1296,6 +1326,20 @@ export type Land = {
      * world — rather than a stand-in borrowed from the scatter set.
      */
     readonly fieldHue?: "land" | "texture";
+    /**
+     * How far the BARE surfaces (road, litter, dry) keep their own colour,
+     * 0 to 1.
+     *
+     * The vertex pass tints the whole ground toward the land's grass and the
+     * maps multiply over it, which is right for the village — its litter and
+     * sand are meant to read as ground under a green country — and wrong for
+     * a map whose colour IS the point: Dino Run's rust soil and straw came
+     * out olive, and Hero Trail's clover flowers came out green. Where the
+     * mix says the ground is not field, the vertex colour is pulled this far
+     * toward white so the map shows through. 0 (the default) leaves the
+     * village exactly as it was.
+     */
+    readonly bareHue?: number;
   };
   readonly trees: string;
   readonly friend: string;
@@ -1346,6 +1390,15 @@ export const LANDS: readonly Land[] = [
     name: "Amber Sands",
     mood: "day",
     tex: "sandy_gravel",
+    // A desert, so the FIELD is the dusty trail's grain rather than grass —
+    // tinted by this land's sand, the way every field takes its land's hue.
+    mix: {
+      field: "dino_trail",
+      road: "dino_trail",
+      litter: "dino_drygrass",
+      dry: "dino_soil",
+      bareHue: 0.55,
+    },
     grass: 0xd8b878,
     grassVar: 0xc9a865,
     dirt: 0xba9358,
@@ -2324,6 +2377,20 @@ export type WorldTheme = {
      * world — rather than a stand-in borrowed from the scatter set.
      */
     readonly fieldHue?: "land" | "texture";
+    /**
+     * How far the BARE surfaces (road, litter, dry) keep their own colour,
+     * 0 to 1.
+     *
+     * The vertex pass tints the whole ground toward the land's grass and the
+     * maps multiply over it, which is right for the village — its litter and
+     * sand are meant to read as ground under a green country — and wrong for
+     * a map whose colour IS the point: Dino Run's rust soil and straw came
+     * out olive, and Hero Trail's clover flowers came out green. Where the
+     * mix says the ground is not field, the vertex colour is pulled this far
+     * toward white so the map shows through. 0 (the default) leaves the
+     * village exactly as it was.
+     */
+    readonly bareHue?: number;
   };
   /**
    * Recolour scattered foliage to suit the land.
@@ -2524,6 +2591,17 @@ export type WorldTheme = {
    * leaves back at dawn belong to the other world entirely.
    */
   readonly nightTrees?: "change" | "keep";
+  /**
+   * WHETHER THE LETTER CARDS KEEP THEIR DAYLIGHT LOOK AFTER DARK.
+   *
+   * The cards are stones lit by the scene, so a real night takes them down
+   * with everything else — the lights drop, the exposure drops and the canvas
+   * grade greys the palette. On the Hero Trail that put the one thing a child
+   * has to READ into the same murk as the road. With this set, the cards make
+   * up whatever light the night took off them and are drawn as they were by
+   * day; the world around them still goes dark.
+   */
+  readonly dayLetters?: boolean;
   /** GLBs whose animation clips are shared by every character (KayKit rigs
    * ship their movement clips separately from the meshes). */
   readonly animationUrls?: readonly string[];
@@ -2614,6 +2692,9 @@ export type WorldTheme = {
    * character vivid when the scene grade desaturates everything (Hero Trail is
    * paled down, but the hero should still read at full colour). */
   readonly playerVivid?: number;
+  /** The world's title sign, drawn small in the top-right corner of the
+   * scene — a path under models/ without `.glb`. See `world-logo.ts`. */
+  readonly sign?: string;
 };
 
 const DEFAULT_VIEW = {
@@ -2629,6 +2710,7 @@ const DEFAULT_VIEW = {
 
 export const DINO_THEME: WorldTheme = {
   modelDir: "dino",
+  sign: "dino/Sign",
   sceneryDir: "nature",
   defaultPlayer: "TRex",
   playerHeight: (name) =>
@@ -2654,9 +2736,27 @@ export const DINO_THEME: WorldTheme = {
   // Modernised like Hero Trail (flat ground + gradient sky + flatter camera),
   // but with a SUBTLE grade — gentle saturation and contrast, not punchy.
   floorTextured: false,
+  // THE SAME GROUND AS TIME KEEPERS, a prehistoric version of it: the
+  // village's four-surface blend and shader, with maps generated for this
+  // valley (scripts/kids-ground-textures.py) — short tufty grass for the
+  // fields, a dusty pebbled trail, straw-dry grass in the damp-noise
+  // patches and rust earth with stones in the dry ones. One mesh, one draw
+  // call, exactly as before; only the four samplers are new.
+  groundMix: {
+    field: "dino_fern",
+    road: "dino_trail",
+    litter: "dino_drygrass",
+    dry: "dino_soil",
+    bareHue: 0.55,
+  },
   floorOpacity: 1,
   sky: "flat",
-  view: { camY: 11, camZ: 30, lookY: 3.0, frustum: 13, topF: 0.66, botF: 1.34 },
+  // The path and runner sit lower in the pane than they used to: the
+  // bottom of the frame was empty ground. Same total view (top + bottom).
+  view: { camY: 11, camZ: 30, lookY: 3.0, frustum: 13, topF: 0.98, botF: 1.02 },
+  // The word cards a little nearer the camera, which sits them lower in the
+  // pane, below the runner's path rather than on it.
+  wordZ: 14.5,
   grade: {
     exposure: 1.36,
     sat: 1.2,
@@ -2671,6 +2771,7 @@ export const DINO_THEME: WorldTheme = {
 // shared animation GLB and bound to every character by bone name.
 export const HERO_THEME: WorldTheme = {
   modelDir: "hero",
+  sign: "hero/Sign",
   sceneryDir: "hero",
   defaultPlayer: "Knight",
   // 3.4 suits the armoured heroes, who are drawn as adults. The Explorer is a
@@ -2724,17 +2825,33 @@ export const HERO_THEME: WorldTheme = {
   // guards are the other skeletons only.
   flagGuard: ["Skeleton_Minion", "Skeleton_Mage", "Skeleton_Rogue"],
   floorTextured: false,
+  // THE SAME GROUND AS TIME KEEPERS, a fantasy-meadow version of it: lush
+  // grass for the fields, a worn cobbled path, clover starred with little
+  // flowers in the damp patches, and mossy leaf-strewn earth in the dry
+  // ones. See Dino Run's for how it is built.
+  groundMix: {
+    field: "hero_meadow",
+    road: "hero_path",
+    litter: "hero_clover",
+    dry: "hero_moss",
+    bareHue: 0.5,
+  },
   floorOpacity: 1,
   sky: "flat",
   pointerRing: true,
   companionsWatch: true,
   nightMode: "night",
+  dayLetters: true,
   // More of the heroes patrol their stretch of the trail than the dinos do.
   guardRate: 0.22,
   // Flatter and more horizontal than the dino 3/4 view, but still angled
   // enough to show the forest behind the trail. The runner sits high in the
   // frame (big botF) so the practice-text card never covers it.
-  view: { camY: 11, camZ: 33, lookY: 3.6, frustum: 12, topF: 0.6, botF: 1.28 },
+  // Lowered in the pane for the same reason as Dino Run — see there.
+  view: { camY: 11, camZ: 33, lookY: 3.6, frustum: 12, topF: 0.84, botF: 1.04 },
+  // The word cards a little nearer the camera, which sits them lower in the
+  // pane, below the runner's path rather than on it.
+  wordZ: 14.5,
   // Softer grade — the default punchy look was too saturated and distracting.
   // Just a gentle calm (a touch less saturation, a little more ambient fill),
   // not washed out; the child can dial brightness/paleness further with the
@@ -2756,6 +2873,7 @@ export const HERO_THEME: WorldTheme = {
 // them; the buffalo stands about in the fields as a wild thing rather than a
 // companion, which is what it is in the pack's own manifest.
 export const VILLAGE_THEME: WorldTheme = {
+  sign: "village-sign/Sign",
   /**
    * EIGHT IN THE MORNING, not noon.
    *
@@ -3830,6 +3948,8 @@ type RiverCut = {
   readonly depth: number;
 };
 let RIVER: RiverCut | null = null;
+let WILD: WildCrossing | null = null;
+let WILD_BANK_Y = 0;
 
 /** The water's own surface height — flat, the way still water is. */
 let RIVER_SURFACE = 0;
@@ -3886,9 +4006,13 @@ type BridgeDeck = {
   readonly y: number;
 };
 let BRIDGE: BridgeDeck | null = null;
+let BRIDGES: BridgeDeck[] = [];
+const bridgeAt = (x: number) =>
+  BRIDGES.find((b) => Math.abs(x - b.x) <= b.halfLen);
 
 /** The deck's height at a point, or null if the point is not on it. */
 const deckY = (x: number, z: number): number | null => {
+  const BRIDGE = bridgeAt(x);
   if (BRIDGE == null) {
     return null;
   }
@@ -3896,6 +4020,9 @@ const deckY = (x: number, z: number): number | null => {
   if (dx > BRIDGE.halfLen || Math.abs(z - meander(x)) > BRIDGE.halfWid) {
     return null;
   }
+  // Both Wild Crossing spans land on level ground. Blending with the
+  // channel underneath their last planks makes feet sink through the deck.
+  if (WILD != null) return BRIDGE.y;
   // THE LAST TWO UNITS AT EACH END BLEND INTO THE BANK. The deck is set to
   // the bank's height, but a bank is not perfectly flat, and a character who
   // steps from a deck at 1.30 onto ground at 1.18 drops through a visible
@@ -3953,6 +4080,7 @@ const crossLimitX = (fromX: number, toX: number, z: number): number => {
   if (BRIDGE != null && Math.abs(z - meander(fromX)) <= BRIDGE.halfWid) {
     return toX;
   }
+  if (WILD != null) return wildLimit(WILD, fromX, toX, z);
   const dir = Math.sign(toX - fromX);
   const edge = riverHalfAt(z) + 0.9;
   const lo = RIVER.x - edge;
@@ -3994,6 +4122,7 @@ const crossLimitX = (fromX: number, toX: number, z: number): number => {
  * the road's own line otherwise.
  */
 const roadTopY = (x: number): number => {
+  const BRIDGE = bridgeAt(x);
   if (BRIDGE != null && Math.abs(x - BRIDGE.x) <= BRIDGE.halfLen) {
     return deckY(x, meander(x)) ?? BRIDGE.y;
   }
@@ -4003,6 +4132,8 @@ const roadTopY = (x: number): number => {
 function setRiver(cut: RiverCut | null): void {
   RIVER = null;
   BRIDGE = null;
+  BRIDGES = [];
+  WILD = null;
   if (cut == null) {
     return;
   }
@@ -4043,6 +4174,7 @@ const terrainY = (x: number, z: number) => {
     // rather than running to a hard edge - the mountains go on top of this.
     y += (-z - 10) * (0.3 + 0.1 * Math.sin(x * 0.05)) * (0.25 + 0.75 * RELIEF);
   }
+  if (WILD != null) return wildTerrain(WILD, x, z, y, WILD_BANK_Y);
   // ── THE CHANNEL, CUT LAST ────────────────────────────────────────────
   //
   // After the road's wear, after the field noise, after the far bank rises:
@@ -4367,8 +4499,17 @@ export function createKidsWorld(
      * anyone can see it. This makes it happen.
      */
     readonly wildReview?: boolean;
-    /** Which chapter this is, carved into the roadside milestone. */
+    /**
+     * WHICH AUTHORED ROAD to build, 1-based — the scenery. Every chapter-
+     * specific test in this file reads this. See `Chapter.scenery`.
+     */
     readonly chapter?: number;
+    /**
+     * The chapter's own number, which the milestones are carved from. The
+     * same as `chapter` for the written chapters; Chapter 5 is built on
+     * road 1 and carved 40 to 50. See `chapterNo` in chapters.ts.
+     */
+    readonly chapterNumber?: number;
     /**
      * Which band is walking this road, and therefore how long it is.
      *
@@ -5102,9 +5243,12 @@ export function createKidsWorld(
   // table this sets — see `setChapterLessons` — so it has to be set before the first
   // of them is called, which is the ground pass, thousands of lines below.
   const CHAPTER_N = Math.max(1, opts.chapter ?? 1);
+  /** The number carved on the stones — not the scenery. See the option. */
+  const CHAPTER_NUMBER = Math.max(1, opts.chapterNumber ?? CHAPTER_N);
   setChapterLessons(CHAPTERS[CHAPTER_N - 1]?.lessons ?? []);
   const LESSONS = activeLessons();
   const CHAPTER = theme.village != null ? boundsForBand(opts.ageBand) : null;
+  let resolvedChapterPlacements: ReturnType<typeof placements> | null = null;
   if (CHAPTER != null) {
     TRAIL_END = chapterEnd(CHAPTER);
   }
@@ -5116,7 +5260,16 @@ export function createKidsWorld(
   // its own Lesson 6.
   {
     const wet = CHAPTER == null ? null : LESSONS.find((l) => l.river != null);
-    if (wet?.river != null && CHAPTER != null) {
+    if (CHAPTER_N === 4 && CHAPTER != null) {
+      const c = wildCrossing(CHAPTER);
+      setRiver({
+        x: (c.approach + c.exit) / 2,
+        half: (c.exit - c.approach) / 2,
+        depth: 3.6,
+      });
+      WILD_BANK_Y = RIVER_SURFACE + 0.9;
+      WILD = c;
+    } else if (wet?.river != null && CHAPTER != null) {
       const from = CHAPTER[wet.n - 1]!;
       const len = CHAPTER[wet.n]! - from;
       setRiver({
@@ -5146,6 +5299,24 @@ export function createKidsWorld(
       scene,
       cam,
       renderer,
+      crossing: () => ({ island: WILD, decks: BRIDGES, waterY: RIVER_SURFACE }),
+      walker: () => player?.wrap.position.toArray(),
+      passage: () => ({ text: wordText, index: wordIdx }),
+      // The ground read two ways — the grid and the raycast it replaced —
+      // so the two can be checked against each other on a live road.
+      surfaceBoth: (x: number, z: number) => {
+        const grid = gridY(x, z);
+        if (groundMesh == null) return { grid, ray: null };
+        _rayFrom.set(x, 200, z);
+        _groundRay.set(_rayFrom, _rayDir);
+        const hit = _groundRay.intersectObject(groundMesh, false);
+        return { grid, ray: hit.length > 0 ? hit[0]!.point.y : null };
+      },
+      supportAt: (x: number, z: number) => ({
+        terrain: terrainY(x, z),
+        deck: deckY(x, z),
+        walk: walkY(x, z),
+      }),
       sun,
       THREE,
     };
@@ -5280,12 +5451,32 @@ export function createKidsWorld(
     earWhich: number;
     /** 0 standing, 1 folded down for the night; eased between. */
     rest: number;
-    /** How far the body drops when it lies down, in world units. */
-    drop: number;
-    /** The four legs, top bone first, for folding. */
-    legs: THREE.Object3D[];
+    /** Stride frequency of the calf's bounce; 0 for anything that shouldn't spring. */
+    bounce: number;
+    /** How high that bounce goes. */
+    hop: number;
     baseY: number;
   };
+
+  /**
+   * How much faster a calf plays a given clip than its mother does.
+   *
+   * A CALF IS NOT A SMALL COW. The two share a rig and a clip list, so
+   * played straight they move at identical, adult speed — which on a body
+   * half the size reads as a heavy, plodding calf. Short legs swing faster.
+   * The graze is left alone: eating is the one thing a calf does as slowly
+   * as she does, and resting even more so.
+   */
+  const CALF_RATE: Record<string, number> = {
+    Walk: 1.32,
+    Idle: 1.12,
+    Idle_Alert: 1.25,
+    Graze: 1,
+    Rest: 1,
+  };
+  function calfRate(model: string, clip: string): number | null {
+    return /Calf/i.test(model) ? (CALF_RATE[clip] ?? 1.15) : null;
+  }
 
   /** Collect the bones the motions drive, by the names this rig uses. */
   function cattleLife(
@@ -5310,13 +5501,8 @@ export function createKidsWorld(
       earT: 0,
       earWhich: 0,
       rest: 0,
-      // A lying cow's back is a bit over half its standing height, and what
-      // comes off is leg. Measured against the fitted height rather than a
-      // constant so the calf folds to its own size.
-      drop: height * 0.3,
-      legs: ["frontleg", "R_frontleg", "backleg", "R_backleg"]
-        .map(bone)
-        .filter((b): b is THREE.Object3D => b != null),
+      bounce: 0,
+      hop: height * 0.012,
       baseY: wrap.position.y,
     };
   }
@@ -5340,32 +5526,44 @@ export function createKidsWorld(
     dt: number,
     t: number,
   ): void {
-    // ── LYING DOWN FOR THE NIGHT ────────────────────────────────────
+    // ── LYING DOWN IS A CLIP NOW ────────────────────────────────────
     //
-    // Cattle spend the night down, and they chew while they are down — a
-    // field of animals still standing at two in the morning is one of those
-    // things nobody can name but everybody feels. Neither model ships a
-    // lie-down clip, so the pose is made here: the body settles by about a
-    // third of its height, which is roughly the leg it is folding away, and
-    // the legs tuck under it.
+    // This used to pose the fold here: fixed angles per bone applied
+    // additively, four legs jackknifed by numbers tuned by eye. It could not
+    // be made to work and was wrong three separate ways. The hind profile is
+    // not the mirror of the front, because a hock bends the opposite way to
+    // a knee — mirroring it straightened the hind legs and left the animal
+    // kneeling with its rump in the air. The body's drop cannot be a
+    // fraction of its height, because what it has to equal is how much room
+    // folding actually frees, which is a property of the rig. And nothing in
+    // a hand-posed fold knows where the floor is.
     //
-    // Eased over several seconds rather than switched, so they go down as
-    // the light does instead of dropping on the frame the sky changes.
-    const wantRest = nightBlend > 0.55 ? 1 : 0;
-    cow.rest += (wantRest - cow.rest) * Math.min(1, dt * 0.55);
-    if (cow.rest > 0.002) {
-      wrap.position.y = cow.baseY - cow.drop * cow.rest;
-      for (let i = 0; i < cow.legs.length; i++) {
-        // Fronts fold forward under the chest, backs tuck the other way —
-        // which is how a cow actually gets down, and why she looks lopsided
-        // doing it.
-        const front = i < 2;
-        addWorldSpin(
-          cow.legs[i]!,
-          wrapRight(wrap, AX_R),
-          (front ? 1.15 : -1.0) * cow.rest,
-        );
-      }
+    // Both cattle now ship an authored `Rest` clip — barrel planted on the
+    // floor by its own skin, legs solved with IK to ground targets beneath
+    // it — and the villager tick cross-fades to it after dark. `rest` is
+    // still eased here because the small living motions below use it: a
+    // resting animal chews slower and swishes less, and it does not stop.
+    cow.rest +=
+      ((nightBlend > 0.55 ? 1 : 0) - cow.rest) * Math.min(1, dt * 0.55);
+    // A CALF CARRIES ITSELF DIFFERENTLY. Both animals share the same clips,
+    // so played straight they move at identical, adult speed, which on a body
+    // half the size reads as a heavy, plodding calf. Running the gait faster
+    // is half of it; the other half is the spring — a young animal pushes off
+    // harder than its weight needs and lifts clear between steps. Twice the
+    // stride, one push per diagonal pair, and switched off while resting or
+    // grazing, where the same bounce would read as a twitch.
+    // SET FROM `baseY` EVERY FRAME, NEVER ACCUMULATED.
+    //
+    // This was `+=` onto whatever height the animal was already at. While the
+    // night fold lived here that was harmless, because the fold assigned
+    // `wrap.position.y` outright a few lines above and reset it each frame.
+    // Taking the fold out took the reset with it, and the bounce started
+    // integrating: the calf climbed a little every frame and floated off the
+    // top of the world. An offset from a known base cannot do that.
+    wrap.position.y = cow.baseY;
+    if (cow.calf && cow.bounce > 0 && cow.rest < 0.2) {
+      const hop = Math.abs(Math.sin(t * cow.bounce * Math.PI)) - 0.5;
+      wrap.position.y = cow.baseY + hop * cow.hop;
     }
     // Resting animals chew slower and swish less; they do not stop.
     const calm = 1 - cow.rest * 0.55;
@@ -6889,6 +7087,14 @@ export function createKidsWorld(
     // changes lamp and at no other time. Between moves it is free.
     spot.castShadow = !lowTier;
     spot.shadow.autoUpdate = false;
+    // BUT THE MAP HAS TO EXIST FROM THE FIRST FRAME. Every lit shader is
+    // compiled to sample one shadow map per casting spot, and three.js only
+    // allocates a map on a pass that renders it. The first refresh used to
+    // come from lending a cone to a lamp — and the Hero Trail and Dino Run
+    // have no lamps to lend to, so no map was ever made, every lit draw call
+    // failed, and the world was sky, mist and unlit stones. One pass here, of
+    // a light parked under the ground, makes the map and costs nothing after.
+    spot.shadow.needsUpdate = true;
     spot.shadow.mapSize.set(lowTier ? 512 : 1024, lowTier ? 512 : 1024);
     spot.shadow.camera.near = 0.5;
     spot.shadow.camera.far = 46;
@@ -7584,6 +7790,50 @@ export function createKidsWorld(
   // rendered surface (raycast) rather than the analytic height — the two differ
   // slightly between vertices, which is what made props hover.
   let groundMesh: THREE.Mesh | null = null;
+  /**
+   * THE GROUND'S GRID, so its height can be READ rather than raycast.
+   *
+   * The ground is one `PlaneGeometry`: a regular grid of vertices whose
+   * heights the build sets. A raycast against it tests triangles one by one
+   * — about two hundred thousand on the village road — and `surfaceY` is
+   * asked from thirty-one places, several of them every frame and seven
+   * hundred times in a row while the road is planted. Profiled, that was 58
+   * of every 81 seconds the tick spent and a ten-second freeze on the
+   * loader. The rendered surface over any point is one triangle of one
+   * cell, and which one is known from the grid: find it, interpolate its
+   * three corners, done. Same answer as the ray, in constant time.
+   */
+  let groundGrid: {
+    readonly pos: THREE.BufferAttribute;
+    readonly nx: number;
+    readonly nz: number;
+    readonly x0: number;
+    readonly dx: number;
+    readonly z0: number;
+    readonly dz: number;
+  } | null = null;
+  const gridY = (x: number, z: number): number | null => {
+    const g = groundGrid;
+    if (g == null) return null;
+    const fx = (x - g.x0) / g.dx;
+    const fz = (z - g.z0) / g.dz;
+    const ix = Math.floor(fx);
+    const iz = Math.floor(fz);
+    if (ix < 0 || iz < 0 || ix >= g.nx - 1 || iz >= g.nz - 1) return null;
+    const u = fx - ix;
+    const v = fz - iz;
+    // PlaneGeometry's winding: a = (ix, iz), b = (ix, iz+1), c = (ix+1,
+    // iz+1), d = (ix+1, iz), faces a-b-d and b-c-d — so the diagonal runs
+    // b to d, which in cell terms is u + v = 1.
+    const y = (i: number, k: number) => g.pos.getY(i + g.nx * k);
+    const ya = y(ix, iz);
+    const yb = y(ix, iz + 1);
+    const yc = y(ix + 1, iz + 1);
+    const yd = y(ix + 1, iz);
+    return u + v <= 1
+      ? ya + (yd - ya) * u + (yb - ya) * v
+      : yc + (yb - yc) * (1 - u) + (yd - yc) * (1 - v);
+  };
   let roadMesh: THREE.Mesh | null = null;
   const _groundRay = new THREE.Raycaster();
   const _rayFrom = new THREE.Vector3();
@@ -7693,6 +7943,8 @@ export function createKidsWorld(
   }
 
   const surfaceY = (x: number, z: number, sink = 0.06) => {
+    const read = gridY(x, z);
+    if (read != null) return read - sink;
     if (groundMesh) {
       _rayFrom.set(x, 200, z);
       _groundRay.set(_rayFrom, _rayDir);
@@ -7723,20 +7975,33 @@ export function createKidsWorld(
         mat.needsUpdate = true;
       }
     };
-    const diff = tl.load(
-      `${ASSETS}/textures/${land.tex}_diff.jpg`,
-      undefined,
-      undefined,
-      onTexFail("map"),
-    );
-    diff.colorSpace = THREE.SRGBColorSpace;
-    const nor = tl.load(
-      `${ASSETS}/textures/${land.tex}_nor.jpg`,
-      undefined,
-      undefined,
-      onTexFail("normalMap"),
-    );
+    // ONLY FETCHED WHEN IT IS DRAWN. The single photo floor is used by a
+    // `floorTextured` theme and by nothing else — every world today draws a
+    // blended `groundMix` instead — and loading it regardless cost each of
+    // them two JPEGs (~270 KB) that were never sampled.
+    const diff = theme.floorTextured
+      ? tl.load(
+          `${ASSETS}/textures/${land.tex}_diff.jpg`,
+          undefined,
+          undefined,
+          onTexFail("map"),
+        )
+      : null;
+    if (diff != null) {
+      diff.colorSpace = THREE.SRGBColorSpace;
+    }
+    const nor = theme.floorTextured
+      ? tl.load(
+          `${ASSETS}/textures/${land.tex}_nor.jpg`,
+          undefined,
+          undefined,
+          onTexFail("normalMap"),
+        )
+      : null;
     for (const t of [diff, nor]) {
+      if (t == null) {
+        continue;
+      }
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
       t.repeat.set(40, 8);
     }
@@ -7759,8 +8024,8 @@ export function createKidsWorld(
     const geo = new THREE.PlaneGeometry(
       GROUND_WIDE,
       GROUND_DEPTH,
-      Math.round(GROUND_WIDE / 2),
-      40,
+      Math.round(GROUND_WIDE / (WILD != null ? 0.8 : 2)),
+      WILD != null ? 96 : 40,
     );
     geo.rotateX(-Math.PI / 2);
     // Centre it on the road it carries, not on the origin.
@@ -7842,7 +8107,7 @@ export function createKidsWorld(
             ...villageHouses(CHAPTER[4]!, CHAPTER[5]! - CHAPTER[4]!).map(
               (h) => ({ x: h.x, z: h.z + 9, rx: 13, rz: 7.5 }),
             ),
-            ...placements(CHAPTER, perspective)
+            ...chapterPlacements()
               .filter((p) => /Market/i.test(p.model))
               .map((p) => ({
                 x: p.x,
@@ -7871,7 +8136,7 @@ export function createKidsWorld(
       // answers for the nominal one.
       ...(CHAPTER == null
         ? []
-        : placements(CHAPTER, perspective)
+        : chapterPlacements()
             .filter((p) => /House|Cottage/i.test(p.model))
             .map((p) => ({ x: p.x, z: p.z + 9, rx: 13, rz: 7.5 }))),
     ];
@@ -7888,7 +8153,7 @@ export function createKidsWorld(
     // be left behind if the shrine moves, which is the mistake the temple's
     // forecourt is still one hand-kept number away from.
     if (CHAPTER != null) {
-      const placed = placements(CHAPTER, perspective);
+      const placed = chapterPlacements();
       if (CHAPTER_N === 3) {
         for (const p of placed.filter((p) => /Market|Temple/i.test(p.model))) {
           yards.push({
@@ -7898,13 +8163,15 @@ export function createKidsWorld(
             rz: 5,
           });
         }
-        for (let n = 2; n <= 9; n++) {
-          const from = CHAPTER[n - 1]!;
-          const len = CHAPTER[n]! - from;
-          yards.push({ x: from + len * 0.65, z: -17, rx: 1.6, rz: 10 });
-          if (n === 4 || n === 7) {
-            yards.push({ x: from + len * 0.25, z: -20, rx: 1.5, rz: 12 });
-          }
+        for (const space of WHISPER_SPACES) {
+          const from = CHAPTER[space.lesson - 1]!;
+          const len = CHAPTER[space.lesson]! - from;
+          yards.push({
+            x: from + len * space.at,
+            z: space.z,
+            rx: space.rx,
+            rz: space.rz,
+          });
         }
       }
       yards.push(
@@ -7927,6 +8194,11 @@ export function createKidsWorld(
       // line.
       for (const m of placed.filter((q) => /(?:^|\/)Mana$/i.test(q.model))) {
         const gx =
+          placed.find(
+            (q) =>
+              /Estate_Gate$/i.test(q.model) &&
+              lessonAt(q.x, CHAPTER).n === lessonAt(m.x, CHAPTER).n,
+          )?.x ??
           estateGate(
             placed
               .filter(
@@ -7935,7 +8207,8 @@ export function createKidsWorld(
                   lessonAt(q.x, CHAPTER).n === lessonAt(m.x, CHAPTER).n,
               )
               .map((q) => q.x),
-          ) ?? m.x;
+          ) ??
+          m.x;
         // Half the model's depth forward of its centre. Measured off the
         // file: 1.74 deep for 1.08 tall, so half-depth is 0.806 of the
         // height, and the depth falloff scales it like everything else.
@@ -8006,6 +8279,41 @@ export function createKidsWorld(
         Math.min(1, (coarse * 0.6 + fine * 0.4 - 0.28) / 0.34),
       );
       return w * (0.78 + 0.22 * m * m * (3 - 2 * m));
+    };
+    /**
+     * HOW WORN THE GRASS IS BY A SIDE TRACK HERE, 0..1 — see `Lesson.tracks`.
+     *
+     * Each track leaves the far verge at its own point in the lesson and runs
+     * back and away at a slant, wobbling as a path trodden by animals does,
+     * and fades out into the field rather than stopping. Alternate tracks
+     * lean opposite ways, so two in one lesson cross the field rather than
+     * run side by side. Behind the road only: the near verge is the child's.
+     */
+    const trackAt = (x: number, z: number): number => {
+      if (CHAPTER == null || z > -6) return 0;
+      const L = lessonAt(x, CHAPTER);
+      const count = L.tracks ?? 0;
+      if (count <= 0) return 0;
+      const begin = CHAPTER[L.n - 1]!;
+      const len = CHAPTER[L.n]! - begin;
+      let best = 0;
+      for (let k = 0; k < count; k++) {
+        const x0 = begin + len * ((k + 0.5) / count);
+        const lean = k % 2 === 0 ? 1 : -1;
+        const back = -z - 6.5; // how far behind the verge
+        if (back < 0 || back > 30) continue;
+        // Where the path is at this depth: slanting off, with a wobble.
+        const px = x0 + lean * back * 1.1 + Math.sin(back * 0.35 + k) * 1.3;
+        const d = Math.abs(x - px);
+        // Wide enough to read at this camera's distance — at 0.9 a track
+        // was a faint scratch in the grass rather than a path.
+        const width = 1.6 - back * 0.02; // narrows as it goes
+        const t = Math.max(0, Math.min(1, (d - width * 0.4) / width));
+        const edge = 1 - t * t * (3 - 2 * t);
+        const fade = Math.max(0, 1 - back / 30);
+        best = Math.max(best, edge * Math.min(1, fade * 1.4));
+      }
+      return best;
     };
     const tmp = new THREE.Color();
     const noise2 = groundNoise;
@@ -8118,14 +8426,31 @@ export function createKidsWorld(
           );
         }
       } else {
-        tmp.lerp(cDirt, pathBlend * (land.path === "stones" ? 0.5 : 0.85));
+        // Much lighter on a blended ground, for the village road's reason:
+        // the trail MAP carries its own colour, and a full dirt tint under it
+        // stacks two browns into a stripe.
+        const mixed = (land.mix ?? theme.groundMix) != null;
+        tmp.lerp(
+          cDirt,
+          pathBlend * (mixed ? 0.2 : land.path === "stones" ? 0.5 : 0.85),
+        );
         if (pathBlend > 0.55) {
           // the packed, well-trodden core of the trail is a shade deeper
           tmp.lerp(
             cDirt.clone().multiplyScalar(0.82),
-            (pathBlend - 0.55) * 0.7,
+            (pathBlend - 0.55) * (mixed ? 0.3 : 0.7),
           );
         }
+      }
+      if (WILD != null) {
+        const banks = wildBanks(WILD, z);
+        const edge = Math.min(
+          Math.abs(x - banks.left),
+          Math.abs(x - banks.right),
+          Math.abs(islandRadius(WILD, x, z) - 0.78) * WILD.islandRX,
+        );
+        if (x >= banks.left - 3 && x <= banks.right + 3 && edge < 2.5)
+          tmp.lerp(new THREE.Color(0xb9b293), 0.7 * (1 - edge / 2.5));
       }
       colors[i * 3] = tmp.r;
       colors[i * 3 + 1] = tmp.g;
@@ -8143,6 +8468,7 @@ export function createKidsWorld(
     const groundMix = land.mix ?? theme.groundMix;
     if (groundMix != null) {
       const mix = new Float32Array(pos.count * 4);
+      const bareHue = groundMix.bareHue ?? 0;
       // Smoothstep, not a linear ramp. A straight ramp reaches its ends with a
       // sudden change of slope, and across a ground mesh whose vertices are two
       // units apart that corner is visible as a crease running the length of
@@ -8156,14 +8482,22 @@ export function createKidsWorld(
         const x = pos.getX(i);
         const z = pos.getZ(i);
         const off = Math.abs(z - meander(x));
-        const hw = 6.6 + noise2(x * 0.17, 3.1) * 1.3;
-        const worn = 2.9 + noise2(x * 0.13, 1.7) * 0.5;
+        // THE ROAD IS THIS LAND'S PATH. A cart road is thirteen units across;
+        // Dino Run's and Hero Trail's footpaths are three or four, and the
+        // same numbers the colour pass uses for them (`halfWidth`) decide
+        // where the trail map lies — otherwise the dusty trail would be a
+        // cart road's width of bare earth under a line of stepping stones.
+        const cart = land.path === "mud";
+        const hw = cart
+          ? 6.6 + noise2(x * 0.17, 3.1) * 1.3
+          : (land.path === "sand" ? 2.2 : 1.6) + noise2(x * 0.17, 3.1) * 0.45;
+        const worn = cart ? 2.9 + noise2(x * 0.13, 1.7) * 0.5 : hw * 0.7;
         // Full road out to the worn part, then feathered well past the edge.
         // The feather runs beyond `hw` on purpose: a transition that finishes
         // exactly where the colour pass stops tinting puts two edges in the
         // same place, and two soft edges on top of each other read as one hard
         // one.
-        const road = 1 - ss(worn * 0.8, hw + 2.5, off);
+        const road = 1 - ss(worn * 0.8, hw + (cart ? 2.5 : 1.6), off);
         // Two independent patch fields, on different frequencies and offsets
         // so they never coincide: shaded litter in the low damp places, dry
         // ground out in the open. Both are squeezed by (1 - road), because
@@ -8177,15 +8511,57 @@ export function createKidsWorld(
         // read as a rug thrown on the grass, and what this is meant to be is
         // ground that simply stopped growing.
         const worn2 = yardAt(x, z);
-        const roadOrYard = Math.max(road, worn2);
+        const roadOrYard = Math.max(road, worn2, trackAt(x, z));
         const field = Math.max(0, 1 - roadOrYard - litter - dry);
         const sum = roadOrYard + litter + dry + field || 1;
         mix[i * 4] = field / sum;
         mix[i * 4 + 1] = roadOrYard / sum;
         mix[i * 4 + 2] = litter / sum;
         mix[i * 4 + 3] = dry / sum;
+        // See `bareHue`: the bare maps keep their own colour. Written into
+        // the colour array before it is uploaded, so it costs nothing.
+        const keep = (1 - field / sum) * bareHue;
+        if (keep > 0) {
+          for (let c = 0; c < 3; c++) {
+            colors[i * 3 + c] += (1 - colors[i * 3 + c]) * keep;
+          }
+        }
       }
       geo.setAttribute("aMix", new THREE.BufferAttribute(mix, 4));
+    }
+    // ── CANOPY SHADE, painted — see `Lesson.shade` ───────────────────────
+    //
+    // Last, after the bare maps have been lifted towards white above: done
+    // before, that lift would take the shade back off the road, which is
+    // the one place it was asked for. A multiply, so it darkens whatever the
+    // ground already is — grass, litter or cart track — rather than
+    // painting one colour over all three.
+    //
+    // DAPPLED, NOT FLAT. A flat dark band reads as a cloud; what says trees
+    // is the sun coming through them in flecks. Two noise octaves make the
+    // leaf pattern and the brightest of it is let through. Cooler in the
+    // shade than out of it, because what lights a shadow is the sky.
+    if (CHAPTER != null) {
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getZ(i);
+        const here = blendAt(x, CHAPTER);
+        const was = here.prev.shade ?? 0;
+        const shade = was + ((here.lesson.shade ?? 0) - was) * here.mix;
+        if (shade <= 0) continue;
+        const leaf =
+          ((noise2(x * 0.13 + 5.1, z * 0.15 - 2.7) + 1) / 2) * 0.6 +
+          ((noise2(x * 0.41 - 1.9, z * 0.47 + 6.3) + 1) / 2) * 0.4;
+        const t = Math.max(0, Math.min(1, (leaf - 0.6) / 0.12));
+        const fleck = t * t * (3 - 2 * t);
+        const dark = shade * (1 - fleck * 0.8);
+        // Deep enough that the laterite reads as shaded earth and not as
+        // sunlit road: at half this the cart track stayed orange under a
+        // full canopy, which is the exact thing this was asked to fix.
+        colors[i * 3] *= 1 - 0.66 * dark;
+        colors[i * 3 + 1] *= 1 - 0.56 * dark;
+        colors[i * 3 + 2] *= 1 - 0.45 * dark;
+      }
     }
     // Cube world: flat stylized ground (vertex colours only) so the floor
     // reads as a low-poly surface under the blocky cast, not photo grass.
@@ -8347,6 +8723,29 @@ export function createKidsWorld(
     ground.receiveShadow = true;
     ground.updateMatrixWorld(true);
     groundMesh = ground;
+    {
+      // The grid behind `gridY`, read off the finished geometry rather than
+      // re-derived from the numbers that built it — so a change to how the
+      // plane is made cannot leave this quietly measuring a different one.
+      // Only trusted when the mesh has no transform of its own, which is
+      // how it is built: the translation is baked into the vertices.
+      const p = geo.attributes.position as THREE.BufferAttribute;
+      const { widthSegments, heightSegments } = geo.parameters;
+      const nx = widthSegments + 1;
+      const nz = heightSegments + 1;
+      const untransformed = ground.matrixWorld.equals(new THREE.Matrix4());
+      if (untransformed && p.count === nx * nz && nx > 1 && nz > 1) {
+        groundGrid = {
+          pos: p,
+          nx,
+          nz,
+          x0: p.getX(0),
+          dx: p.getX(1) - p.getX(0),
+          z0: p.getZ(0),
+          dz: p.getZ(nx) - p.getZ(0),
+        };
+      }
+    }
     scene.add(ground);
 
     // ── THE WATER ──────────────────────────────────────────────────────
@@ -8370,14 +8769,71 @@ export function createKidsWorld(
       // half-width changes with depth into the scene — so the plane is built
       // in a unit width and every vertex is pushed out to the edge at ITS z.
       const wet = Math.sqrt(Math.max(0, 1 - freeboard / RIVER.depth));
-      const wgeo = new THREE.PlaneGeometry(2, GROUND_DEPTH, 8, 40);
+      // ── THE WILD CROSSING OPENS OUT INTO A LAKE ──────────────────────
+      //
+      // The water used to stop where the ground does, 38 units out, in a
+      // hard straight line with a band of empty sky between it and the
+      // painted hills — a pond with an edge, not a great river. So on the
+      // crossing it carries on under the horizon and thins away into the
+      // sky, the way open water does into haze.
+      //
+      // WHERE IT MUST BE GONE BY is on the painted band, not in the world:
+      // the band writes no depth, so water drawn over it would paint over
+      // the hills. Measured off the art, it is transparent below 0.225 of
+      // its height and fully in by 0.275, so the water is faded to nothing
+      // at 0.26 — just as the band's own mist takes over. Worked out in
+      // the same terms the band is placed in (height along the camera's up
+      // vector, which is what an orthographic camera turns into screen
+      // height), so the two meet wherever the camera is set.
+      const lake = WILD != null && theme.horizon != null;
+      const upV = new THREE.Vector3();
+      let lakeFrom = 0;
+      let lakeTo = 1;
+      let lakeZ = -GROUND_DEPTH / 2;
+      if (lake) {
+        cam.updateMatrixWorld(true);
+        upV.setFromMatrixColumn(cam.matrixWorld, 1);
+        const H = theme.horizon!;
+        const ridge =
+          new THREE.Vector3(0, V.lookY, 0).dot(upV) + V.frustum * V.topF * 0.9;
+        lakeTo = ridge + (0.26 - H.skyline) * H.height * upV.y;
+        lakeFrom = RIVER_SURFACE * upV.y + (-GROUND_DEPTH / 2) * upV.z;
+        // Out as far as the water can be seen, and no further.
+        if (upV.z < -1e-4) {
+          lakeZ = Math.max(
+            -400,
+            Math.min(
+              -GROUND_DEPTH / 2,
+              (lakeTo - RIVER_SURFACE * upV.y) / upV.z - 2,
+            ),
+          );
+        }
+      }
+      const nearZ = GROUND_DEPTH / 2;
+      const lakeLen = nearZ - lakeZ;
+      const wgeo = new THREE.PlaneGeometry(
+        2,
+        lakeLen,
+        8,
+        Math.max(40, Math.round((40 * lakeLen) / GROUND_DEPTH)),
+      );
       wgeo.rotateX(-Math.PI / 2);
+      wgeo.translate(0, 0, nearZ - lakeLen / 2);
+      const side = new Float32Array(wgeo.attributes.position.count).fill(1);
       {
         const wp = wgeo.attributes.position;
         for (let i = 0; i < wp.count; i++) {
           const u = wp.getX(i); // -1 .. 1 across the channel
           const z = wp.getZ(i);
-          wp.setX(i, RIVER.x + u * riverHalfAt(z) * wet);
+          if (WILD != null) {
+            const banks = wildBanks(WILD, z);
+            wp.setX(i, banks.left + ((u + 1) / 2) * (banks.right - banks.left));
+            // How far in from either bank, 0 at the bank and 1 mid-channel,
+            // for the lake's side fade below.
+            side[i] = 1 - Math.abs(u);
+          } else {
+            wp.setX(i, RIVER.x + u * riverHalfAt(z) * wet);
+          }
         }
         wp.needsUpdate = true;
       }
@@ -8401,6 +8857,7 @@ export function createKidsWorld(
         shade[i * 3 + 2] = k;
       }
       wgeo.setAttribute("color", new THREE.BufferAttribute(shade, 3));
+      wgeo.setAttribute("aSide", new THREE.BufferAttribute(side, 1));
       const wmat = new THREE.MeshStandardMaterial({
         color: new THREE.Color(0x3f8f92),
         roughness: 0.14,
@@ -8415,19 +8872,43 @@ export function createKidsWorld(
       // large wobble reads as boiling.
       wmat.onBeforeCompile = (sh) => {
         sh.uniforms.uWave = waterTime;
+        sh.uniforms.uLakeUp = { value: new THREE.Vector2(upV.y, upV.z) };
+        sh.uniforms.uLakeFrom = { value: lakeFrom };
+        sh.uniforms.uLakeTo = { value: lakeTo };
+        sh.uniforms.uLakeEdge = { value: -GROUND_DEPTH / 2 };
         sh.vertexShader = sh.vertexShader
           .replace(
             "#include <common>",
-            "#include <common>\nvarying vec2 vWave;",
+            "#include <common>\nvarying vec2 vWave;\nvarying float vWaveY;\nattribute float aSide;\nvarying float vSide;",
+          )
+          .replace(
+            "#include <begin_vertex>",
+            "#include <begin_vertex>\nvSide = aSide;",
           )
           .replace(
             "#include <worldpos_vertex>",
-            "#include <worldpos_vertex>\nvWave = (modelMatrix * vec4(transformed, 1.0)).xz;",
+            "#include <worldpos_vertex>\nvWave = (modelMatrix * vec4(transformed, 1.0)).xz;\nvWaveY = (modelMatrix * vec4(transformed, 1.0)).y;",
           );
         sh.fragmentShader = sh.fragmentShader
           .replace(
             "#include <common>",
-            "#include <common>\nvarying vec2 vWave;\nuniform float uWave;",
+            "#include <common>\nvarying vec2 vWave;\nvarying float vWaveY;\nuniform float uWave;\nuniform vec2 uLakeUp;\nuniform float uLakeFrom;\nuniform float uLakeTo;\nuniform float uLakeEdge;\nvarying float vSide;",
+          )
+          .replace(
+            "#include <opaque_fragment>",
+            lake
+              ? `{
+                   // Screen height, in the horizon's own terms; see the lake.
+                   float lakeS = vWaveY * uLakeUp.x + vWave.y * uLakeUp.y;
+                   diffuseColor.a *= 1.0 - smoothstep(uLakeFrom, uLakeTo, lakeS);
+                   // Past the ground's far edge the banks have no land
+                   // against them, so the sides are feathered out too —
+                   // otherwise the lake ends in two straight lines in the sky.
+                   float open = smoothstep(uLakeEdge, uLakeEdge - 8.0, vWave.y);
+                   diffuseColor.a *= mix(1.0, smoothstep(0.0, 0.35, vSide), open);
+                 }
+                 #include <opaque_fragment>`
+              : "#include <opaque_fragment>",
           )
           .replace(
             "#include <normal_fragment_begin>",
@@ -8439,8 +8920,10 @@ export function createKidsWorld(
              }`,
           );
       };
-      wmat.customProgramCacheKey = () => "village-water";
+      wmat.customProgramCacheKey = () =>
+        lake ? "village-water-lake" : "village-water";
       const water = new THREE.Mesh(wgeo, wmat);
+      water.name = WILD != null ? "chapter4-wide-river" : "chapter2-river";
       water.position.y = RIVER_SURFACE;
       water.receiveShadow = true;
       scene.add(water);
@@ -8649,6 +9132,13 @@ export function createKidsWorld(
     .detectSupport(renderer);
   serveTranscoderFromUrl(ktx2);
   loader.setKTX2Loader(ktx2);
+  // The title sign in the top-right corner — see `world-logo.ts`. Drawn by
+  // this renderer as a second pass, so it costs no context of its own.
+  const logo = createWorldLogo();
+  logo.setStill(motionStilled());
+  if (theme.sign != null) {
+    void logo.load(loader, `${ASSETS}/models/${theme.sign}.glb`);
+  }
   /**
    * Every model this world parsed.
    *
@@ -8758,15 +9248,15 @@ export function createKidsWorld(
     gltf.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.isMesh && m.geometry) {
-        try {
-          const before = m.geometry;
-          m.geometry = mergeVertices(m.geometry, 1e-4);
-          m.geometry.computeVertexNormals();
-          // Welding returns a new geometry; without this the parsed one is
-          // orphaned still holding its buffers, once per mesh per load.
-          before.dispose();
-        } catch {
-          // Keep the original geometry if welding fails.
+        // The mangrove ships its own normals, and its leaf cards' are bent
+        // out from each lobe so the canopy shades as one mass; recomputing
+        // them from the cards turns it back into a pile of flat quads.
+        if (!/\/Mangrove_Kandal\.glb$/.test(url)) {
+          try {
+            weldAndShade(m);
+          } catch {
+            // Keep the original geometry if welding fails.
+          }
         }
         const mat = m.material as THREE.MeshStandardMaterial;
         if (mat) {
@@ -8777,7 +9267,176 @@ export function createKidsWorld(
         m.receiveShadow = true;
       }
     });
+    if (/\/models\/dino\/(?!Sign\.)/.test(url)) {
+      dressDinoSkin(gltf.scene);
+    }
     return gltf;
+  }
+  /**
+   * DINOSAUR SKIN: lighter, softer, and scaled.
+   *
+   * The dinosaur set is flat-coloured — no UVs on five of the six, one
+   * palette strip on the T. rex — and its colours were authored very dark
+   * (a base of about 0.12 linear, a mid-brown at best), so under this
+   * world's flat sky and no environment map they read as dark silhouettes
+   * with no surface at all. Three things, all at load, none per frame:
+   *
+   * - LIFTED. Lightness up, saturation up a touch, so a brown is a brown by
+   *   day and still reads by night. Near-black parts (eyes, claws) are left
+   *   alone — a lifted eye is a grey eye.
+   * - MATTE. Skin, not lacquer: roughness 0.75.
+   * - SCALED. A cellular pattern computed in the fragment shader from the
+   *   BIND-POSE position — so it rides the skin through every animation and
+   *   every `morphDino` age without swimming, needs no UVs and no texture
+   *   download, and adds no draw call. Creases between the scales darken the
+   *   colour a little; it fades out where a scale would be smaller than a
+   *   couple of pixels, so a far dinosaur does not shimmer.
+   */
+  function dressDinoSkin(root: THREE.Object3D): void {
+    // One density for the whole animal: every primitive is a separate mesh
+    // with its own box, and sizing each from its own would give the head
+    // bigger scales than the body.
+    const box = new THREE.Box3();
+    root.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh && m.geometry) {
+        m.geometry.computeBoundingBox();
+        if (m.geometry.boundingBox != null) {
+          box.union(m.geometry.boundingBox);
+        }
+      }
+    });
+    const size = box.getSize(new THREE.Vector3());
+    const span = Math.max(size.x, size.y, size.z) || 1;
+    // About 55 scales nose to tail.
+    const freq = { value: 55 / span };
+    const hsl = { h: 0, s: 0, l: 0 };
+    const patch = (shader: THREE.WebGLProgramParametersWithUniforms) => {
+      shader.uniforms.uScaleFreq = freq;
+      shader.vertexShader = shader.vertexShader
+        .replace(
+          "#include <common>",
+          `#include <common>
+           uniform float uScaleFreq;
+           varying vec3 vSkinPos;`,
+        )
+        .replace(
+          "#include <begin_vertex>",
+          `#include <begin_vertex>
+           vSkinPos = position * uScaleFreq;`,
+        );
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          "#include <common>",
+          `#include <common>
+           varying vec3 vSkinPos;
+           vec3 dinoHash(vec3 p) {
+             p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
+                      dot(p, vec3(269.5, 183.3, 246.1)),
+                      dot(p, vec3(113.5, 271.9, 124.6)));
+             return fract(sin(p) * 43758.5453);
+           }
+           // Distance to the nearest cell border: 0 in a crease.
+           float dinoScales(vec3 p) {
+             vec3 i = floor(p);
+             vec3 f = fract(p);
+             float d1 = 8.0;
+             float d2 = 8.0;
+             for (int z = -1; z <= 1; z++)
+             for (int y = -1; y <= 1; y++)
+             for (int x = -1; x <= 1; x++) {
+               vec3 g = vec3(float(x), float(y), float(z));
+               vec3 r = g + dinoHash(i + g) * 0.8 + 0.1 - f;
+               float d = dot(r, r);
+               if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) { d2 = d; }
+             }
+             return sqrt(d2) - sqrt(d1);
+           }`,
+        )
+        .replace(
+          "#include <color_fragment>",
+          `#include <color_fragment>
+           {
+             float e = dinoScales(vSkinPos);
+             // Dark crease, then a little lift toward each scale's middle.
+             float k = mix(0.72, 1.04, smoothstep(0.0, 0.32, e));
+             float fade = 1.0 - smoothstep(0.35, 0.8, length(fwidth(vSkinPos)));
+             diffuseColor.rgb *= mix(1.0, k, fade);
+           }`,
+        );
+    };
+    // prepFade and the eye pass CLONE a character's materials, and a clone
+    // does not carry `onBeforeCompile` — so a fading dinosaur would lose its
+    // scales mid-fade. Each dressed material hands the patch to its clones.
+    const skin = (mat: THREE.MeshStandardMaterial) => {
+      mat.onBeforeCompile = patch;
+      mat.customProgramCacheKey = () => "dino-skin";
+      mat.clone = function (this: THREE.MeshStandardMaterial) {
+        const c = THREE.MeshStandardMaterial.prototype.clone.call(this);
+        skin(c);
+        return c;
+      };
+      mat.needsUpdate = true;
+    };
+    const done = new Set<THREE.Material>();
+    root.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) {
+        return;
+      }
+      const mats = Array.isArray(m.material) ? m.material : [m.material];
+      for (const raw of mats) {
+        const mat = raw as THREE.MeshStandardMaterial;
+        if (!mat?.isMeshStandardMaterial || done.has(mat)) {
+          continue;
+        }
+        done.add(mat);
+        mat.color.getHSL(hsl);
+        if (mat.map == null && hsl.l < 0.02) {
+          continue;
+        }
+        mat.roughness = 0.75;
+        mat.metalness = 0.05;
+        if (mat.map != null) {
+          // The palette strip carries the colour; the factor is white.
+          mat.color.multiplyScalar(1.3);
+        } else {
+          mat.color.setHSL(
+            hsl.h,
+            Math.min(1, hsl.s * 1.1),
+            Math.min(0.85, hsl.l * 1.55),
+          );
+        }
+        skin(mat);
+      }
+    });
+  }
+  /**
+   * Weld a mesh and give it smooth normals of its own.
+   *
+   * Every model the world loads goes through this, which is why a model can
+   * ship WITHOUT normals at all — the cattle do, since nothing they carried
+   * survived this step anyway (see scripts/glb-quantize-mesh.mjs).
+   *
+   * THE FLAG HAS TO COME OFF AS WELL. GLTFLoader turns `flatShading` on for
+   * a primitive that arrives without normals, and flat shading ignores the
+   * normal attribute entirely — so without resetting it the normals
+   * computed here are never used and the animal draws faceted.
+   */
+  function weldAndShade(m: THREE.Mesh): void {
+    const before = m.geometry;
+    m.geometry = mergeVertices(before, 1e-4);
+    m.geometry.computeVertexNormals();
+    // Welding returns a new geometry; without this the parsed one is
+    // orphaned still holding its buffers, once per mesh per load.
+    before.dispose();
+    const mats = Array.isArray(m.material) ? m.material : [m.material];
+    for (const mat of mats) {
+      if ((mat as THREE.MeshStandardMaterial | undefined)?.flatShading) {
+        (mat as THREE.MeshStandardMaterial).flatShading = false;
+        mat.needsUpdate = true;
+      }
+    }
   }
   function measureBox(root: THREE.Object3D) {
     // Skinned rigs carry 100-300x node scales; measure through the skeleton.
@@ -8889,10 +9548,44 @@ export function createKidsWorld(
    * thing in the frame that looked like it was ignoring depth.
    */
   function perspective(z: number): number {
-    const eye = V.camZ;
-    const dist = Math.max(1, eye - z);
-    const lane = Math.max(1, eye - (theme.laneZ ?? 0));
-    return 1 - 0.7 * (1 - lane / dist);
+    return depthScale(z, V.camZ, theme.laneZ ?? 0);
+  }
+  function chapterPlacements(): ReturnType<typeof placements> {
+    if (CHAPTER == null) return [];
+    if (resolvedChapterPlacements != null) return resolvedChapterPlacements;
+    const authored = placements(CHAPTER, perspective);
+    if (CHAPTER_N === 4 && WILD != null) {
+      const crossing = WILD;
+      resolvedChapterPlacements = authored.map((p) => {
+        if (wildDry(crossing, p.x, p.z, 2)) return p;
+        // A TREE COMES FORWARD TO THE WATER'S EDGE, NOT SIDEWAYS. The near
+        // bank runs diagonally across Lesson 36, so a tree written behind
+        // it is in the river — and moving it to `banks.left` at the same
+        // depth piled all four of the Wide Riverbank's trees into the one
+        // dry corner at the start of the lesson. Keeping its x and walking
+        // it towards the road until the ground is dry keeps the lesson's
+        // spacing and stands it on the waterline, which is where a
+        // riverbank tree grows. Only while that is still well behind the
+        // road; nearer than that, the old rule.
+        if (/_Tree$|Peepal/.test(p.model) && p.x < crossing.islandX) {
+          for (let z = p.z; z <= -13; z += 0.5) {
+            if (wildDry(crossing, p.x, z, 2)) return { ...p, z };
+          }
+        }
+        const banks = wildBanks(crossing, p.z);
+        return {
+          ...p,
+          x: p.x < crossing.islandX ? banks.left - 4 : banks.right + 4,
+        };
+      });
+      return resolvedChapterPlacements;
+    }
+    if (CHAPTER_N !== 3) return authored;
+    const result = resolveChapter3Layout(authored, CHAPTER, perspective);
+    if (result.unresolved.length)
+      console.error("[chapter3-layout] unresolved", result.unresolved);
+    resolvedChapterPlacements = result.placements;
+    return resolvedChapterPlacements;
   }
   function fitToHeight(root: THREE.Object3D, targetH: number) {
     const box = measureBox(root);
@@ -9820,7 +10513,7 @@ export function createKidsWorld(
     // sight when they look up.
     //
     // Little Drew is six. The same behaviour reads completely differently
-    // beside a six-year-old who has sat down on a road in 1930 — the person
+    // beside a six-year-old who has sat down on a road in 1960 — the person
     // showing him the way strolls off and leaves him sitting there. So with
     // Drew the guide simply never goes: he stays where he is, and the
     // look-back and the sit-with-them below carry the whole rest.
@@ -10236,7 +10929,12 @@ export function createKidsWorld(
               Math.floor(
                 opts.startLesson != null
                   ? opts.startLesson - 1
-                  : (opts.stonesPassed ?? 0),
+                  : // WITHIN THIS CHAPTER. `stonesPassed` counts the whole
+                    // road, so a child on Milestone 34 used to be clamped to
+                    // this chapter's last lesson instead of standing at the
+                    // start of its fifth.
+                    (opts.stonesPassed ?? 0) -
+                      (CHAPTER_NUMBER - 1) * SEGMENT_COUNT,
               ),
             ),
           )
@@ -10525,13 +11223,25 @@ export function createKidsWorld(
    * The number cut into the NEXT stone to be planted.
    *
    * Starts from what the child has already walked past, not from zero.
+   *
+   * ON A CHAPTER ROAD IT IS THE STONE'S PLACE IN THIS CHAPTER, 0 to 10 —
+   * every reader indexes `CHAPTER` with it, and the carving adds the
+   * chapter's own offset. `stonesPassed` counts the whole road, and handing
+   * that in unchanged put a child on Milestone 44 at this chapter's LAST
+   * stone (clamped) beside markers carved 84 and 85 — on every resume past
+   * Chapter 1, and on every chapter after the fourth.
    */
   let milestoneNo = Math.max(
     0,
     Math.floor(
       opts.startLesson != null
         ? opts.startLesson - 1
-        : (opts.stonesPassed ?? 0),
+        : CHAPTER != null
+          ? Math.min(
+              SEGMENT_COUNT - 1,
+              (opts.stonesPassed ?? 0) - (CHAPTER_NUMBER - 1) * SEGMENT_COUNT,
+            )
+          : (opts.stonesPassed ?? 0),
     ),
   );
   // `MIN_STONE_GAP` and the lead cap live in stone-x.ts, with the arithmetic
@@ -10793,7 +11503,7 @@ export function createKidsWorld(
           //
           // Lamps out in the middle of the stretches were tried and dropped:
           // scattered along an empty road they read as street lighting, which
-          // a 1930s cart track does not have. A lamp standing WITH the marker
+          // a 1960s cart track does not have. A lamp standing WITH the marker
           // is a different object — it is there so the stone can be read, the
           // way a shrine lamp is there for the shrine.
           //
@@ -10929,6 +11639,14 @@ export function createKidsWorld(
     Cow: 1.09,
     Cow_Calf: 1.09,
   };
+
+  /**
+   * How fast the cattle walk, in body heights a second — the ground speed
+   * their `Walk` clip is authored at (`CATTLE_PACE` in
+   * scripts/buffalo-author.mjs). The hooves only stay planted while the two
+   * agree.
+   */
+  const CATTLE_PACE = 0.32;
 
   const WILD_HEIGHT: Record<string, number> = {
     // 6.8, up from 6.0. The buffalo is the animal this whole road was
@@ -11289,7 +12007,11 @@ export function createKidsWorld(
     // Nothing is planted in the river. The channel is a strip, not a disc,
     // so it is tested here rather than pushed into `blockers` as a ring of
     // circles pretending to be one.
-    if (RIVER != null && Math.abs(x - RIVER.x) < riverHalfAt(z) + need) {
+    if (
+      WILD != null
+        ? !wildDry(WILD, x, z, need)
+        : RIVER != null && Math.abs(x - RIVER.x) < riverHalfAt(z) + need
+    ) {
       return false;
     }
     for (const b of blockers) {
@@ -12560,13 +13282,29 @@ export function createKidsWorld(
     box: THREE.Box3;
   }[] = [];
 
+  const wildNodes =
+    CHAPTER == null
+      ? []
+      : [
+          { lesson: 2, at: 0.42, z: -13, kind: "path" },
+          { lesson: 5, at: 0.52, z: -14, kind: "path" },
+          { lesson: 6, at: 0.28, z: -12, kind: "path" },
+          ...wildIslandNodes(CHAPTER),
+          { lesson: 8, at: 0.02, z: -10, kind: "path" },
+          { lesson: 9, at: 0.08, z: -13, kind: "path" },
+        ];
+  const mysteryNodes = CHAPTER_N === 4 ? wildNodes : WHISPER_NODES;
   const tickWhispers = (dt: number) => {
-    if (CHAPTER_N !== 3 || CHAPTER == null) return;
+    if ((CHAPTER_N !== 3 && CHAPTER_N !== 4) || CHAPTER == null) return;
     whisperTime += Math.min(dt, 0.1);
     const lesson = lessonAt(playerX, CHAPTER).n;
     const begin = CHAPTER[lesson - 1]!;
     const fraction = (playerX - begin) / (CHAPTER[lesson]! - begin);
-    const state = whisperState(lesson, fraction, worldHour());
+    const state = (CHAPTER_N === 4 ? wildState : whisperState)(
+      lesson,
+      fraction,
+      worldHour(),
+    );
     const k = kutti;
     if (lesson !== whisperLesson) {
       whisperLesson = lesson;
@@ -12612,12 +13350,13 @@ export function createKidsWorld(
       if (!p.roll) opts.onWhisper?.();
       if (lesson >= 8) whisperFarewells.add(lesson);
     }
-    const nodes = WHISPER_NODES.filter((n) => n.lesson === lesson);
+    const nodes = mysteryNodes.filter((n) => n.lesson === lesson);
     const node = nodes[whisperSequence++ % Math.max(1, nodes.length)];
     if (!state.figure || k == null || node == null) return;
     let x = begin + node.at * (CHAPTER[lesson]! - begin);
     let z: number = node.z;
     let y = terrainY(x, z);
+    if (node.kind === "bridge" && WILD != null) y = WILD_BANK_Y + 1.4;
     const pattern =
       node.kind === "wall"
         ? /Laterite_Wall/
@@ -12640,12 +13379,21 @@ export function createKidsWorld(
       z = node.kind === "wall" ? (box.min.z + box.max.z) / 2 : box.max.z + 0.8;
       y = node.kind === "wall" ? box.max.y : terrainY(x, z);
     }
-    if (z > -8 || Math.abs(shotX(x, z)) >= 0.8) return;
+    if (
+      z > -8 ||
+      Math.abs(shotX(x, z)) >= 0.8 ||
+      (WILD != null && node.kind !== "bridge" && !wildDry(WILD, x, z))
+    )
+      return;
     k.wrap.position.set(x, y, z);
+    // Each glimpse can use a different depth; undo the original fitted scale.
+    k.wrap.scale.setScalar(perspective(z) / perspective(k.spots[0]!.z));
     k.wrap.rotation.y = Math.PI * 0.2;
     k.mixer.stopAllAction();
     const clip =
-      node.kind === "wall" ? "kutti_22_perched_crouch" : "kutti_15_peek_left";
+      node.kind === "wall" || node.kind === "bridge"
+        ? "kutti_22_perched_crouch"
+        : "kutti_15_peek_left";
     k.act.get(clip)?.reset().play();
     whisperUntil = whisperTime + state.seconds;
     k.wrap.visible = true;
@@ -13164,7 +13912,7 @@ export function createKidsWorld(
   };
 
   const tickKutti = (dt: number) => {
-    if (CHAPTER_N === 3) {
+    if (CHAPTER_N === 3 || CHAPTER_N === 4) {
       tickWhispers(dt);
       return;
     }
@@ -14691,6 +15439,7 @@ export function createKidsWorld(
       }
       const fm = tile.face.material as THREE.MeshStandardMaterial;
       fm.map = letterTexture(ch);
+      if (theme.dayLetters === true) fm.emissiveMap = fm.map;
       fm.needsUpdate = true;
     }
   };
@@ -14723,6 +15472,72 @@ export function createKidsWorld(
       TILE_CUR_C.lerp(TILE_C, 0.08);
     } catch {
       // An unparseable colour leaves the tile as it was.
+    }
+  };
+  /**
+   * THE CARDS AT NIGHT ARE THE CARDS BY DAY — see `theme.dayLetters`.
+   *
+   * Whatever light the night took off a card's face is handed back as
+   * emissive, so the lit term plus the glow lands where the lit term alone
+   * stood in daylight. Three things take it down, and all three are undone:
+   *
+   *  1. THE LIGHTS. Measured, not assumed: the key and the fill as they fall
+   *     on a face turned to the camera, now against the last full-day frame.
+   *     Divided by pi because three's Lambert term is and emissive is not.
+   *  2. THE EXPOSURE, which is a multiplier on everything including the glow,
+   *     so the daylight figure is scaled up by however far it has come down.
+   *  3. THE CANVAS GRADE, which greys and darkens the whole picture in CSS.
+   *     The glow colour is pushed the opposite way before it goes in.
+   *
+   * The daylight is sampled on every full-day frame, so a dusk hour gives
+   * dusk-lit cards; the grade's own figures stand in for a session that
+   * opens straight into the night and has no day frame to go by.
+   */
+  const dayCard = { lit: -1, exposure: grade.exposure };
+  const CARD_SUN = new THREE.Vector3();
+  const CARD_C = new THREE.Color();
+  const luma = (c: THREE.Color): number =>
+    0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+  const cardLight = (): number => {
+    CARD_SUN.subVectors(sun.position, sun.target.position).normalize();
+    // The faces look down +z, at the camera; a vertical face takes half the
+    // sky and half the ground from the hemisphere.
+    const key = sun.intensity * luma(sun.color) * Math.max(0, CARD_SUN.z);
+    const fill =
+      hemi.intensity * 0.5 * (luma(hemi.color) + luma(hemi.groundColor));
+    return key + fill;
+  };
+  const fitCardsToDay = (): void => {
+    const now = cardLight();
+    const exposure = renderer.toneMappingExposure;
+    if (nightBlend <= 0.001) {
+      dayCard.lit = now;
+      dayCard.exposure = exposure;
+    }
+    const dayLit =
+      dayCard.lit >= 0 ? dayCard.lit : grade.sun * 0.5 + grade.hemi;
+    const lift = dayCard.exposure / Math.max(0.01, exposure);
+    const makeUp = Math.max(0, dayLit * lift - now) / Math.PI;
+    // The inverse of `applyLook`'s night terms. The child's own brightness
+    // and paleness settings are left alone — those are theirs to set.
+    const sat = Math.max(0.05, 1 - nightLook * 0.48);
+    const bright = 1 - nightLook * 0.05;
+    for (let i = 0; i < wordTiles.length; i++) {
+      const bm = wordTiles[i].base.material as THREE.MeshStandardMaterial;
+      const fm = wordTiles[i].face.material as THREE.MeshStandardMaterial;
+      CARD_C.copy(bm.color);
+      const l = luma(CARD_C);
+      CARD_C.setRGB(
+        Math.max(0, l + (CARD_C.r - l) / sat) / bright,
+        Math.max(0, l + (CARD_C.g - l) / sat) / bright,
+        Math.max(0, l + (CARD_C.b - l) / sat) / bright,
+      );
+      bm.emissive.copy(CARD_C);
+      // The card being typed has its own daylight glow (see `setWord`), and
+      // that is carried through the exposure change with everything else.
+      bm.emissiveIntensity = makeUp + (i === wordIdx ? 0.3 * lift : 0);
+      fm.emissive.setScalar(1 / bright);
+      fm.emissiveIntensity = makeUp;
     }
   };
   type WordTile = {
@@ -14872,6 +15687,8 @@ export function createKidsWorld(
           // turned over one at a time by the tick — see revealLeft.
           const cell = revealLeft > 0 ? brailleTexture(ch) : null;
           fm.map = cell ?? letterTexture(ch);
+          // The glow is printed with the same ink — see `fitCardsToDay`.
+          if (theme.dayLetters === true) fm.emissiveMap = fm.map;
           fm.needsUpdate = true;
         }
         base.scale.set(isSpace ? 0.5 : 1, isSpace ? 0.32 : 1, 1);
@@ -15647,6 +16464,9 @@ export function createKidsWorld(
             if (m.isMesh) {
               m.castShadow = true;
               m.frustumCulled = false;
+              // Loaded raw, so it misses loadModel's weld; a model shipped
+              // without normals needs it or it draws faceted.
+              if (m.geometry.attributes.normal == null) weldAndShade(m);
             }
           });
           // 5.9 against Dave's 4.8 — clearly taller on all fours, and it towers
@@ -15741,6 +16561,7 @@ export function createKidsWorld(
             if (m.isMesh) {
               m.castShadow = true;
               m.receiveShadow = true;
+              if (m.geometry.attributes.normal == null) weldAndShade(m);
             }
           });
           idleShowWrap = fitToHeight(
@@ -15966,6 +16787,17 @@ export function createKidsWorld(
       // loops, swapped every twenty seconds or so, read as somebody waiting.
       if (!guard && pool.length > 1) {
         wrap.userData.idlePool = pool.map((c) => mixer.clipAction(c));
+        // Lying down is a CLIP, not a pose. `Rest` is authored against this
+        // animal's own body by `buffalo-author.mjs` — barrel planted on the
+        // floor by its own skin, legs solved with IK to ground targets under
+        // it — so going down for the night is a cross-fade like any other
+        // idle, and nothing at runtime has to know where the ground is.
+        {
+          const restClip = clips.find((c) => c.name === "Rest");
+          if (restClip != null) {
+            wrap.userData.restIdle = mixer.clipAction(restClip);
+          }
+        }
         wrap.userData.idleNext = 12 + Math.random() * 14;
       }
       // ── CATTLE ARE SCENERY THAT HAS TO LOOK ALIVE ──────────────────
@@ -15987,7 +16819,11 @@ export function createKidsWorld(
       // the authored motion still comes through underneath.
       if (/^Cow/.test(model)) {
         const calf = /Calf/i.test(model);
-        wrap.userData.cattle = cattleLife(wrap, calf, h);
+        const life = cattleLife(wrap, calf, h);
+        // The spring belongs to the gaits; a calf standing or grazing should
+        // not be bouncing on the spot.
+        life.bounce = calf && clip != null && /^Walk/i.test(clip.name) ? 3 : 0;
+        wrap.userData.cattle = life;
         // A calf does not stand still for as long as its mother does.
         wrap.userData.idleNext = calf
           ? 6 + Math.random() * 8
@@ -16002,7 +16838,12 @@ export function createKidsWorld(
           ? 0.9
           : scary
             ? 0.32 + Math.random() * 0.12
-            : 0.85 + Math.random() * 0.4;
+            : // A CALF IS NOT A SMALL COW. It shares its mother's clips, so
+              // played at her speed on a body half the size it reads as a
+              // heavy, plodding calf. Short legs swing faster. The graze is
+              // left alone, because eating is the one thing a calf does as
+              // slowly as she does.
+              (calfRate(model, clip.name) ?? 1) * (0.85 + Math.random() * 0.4);
         a.play();
         // Start each one at a random point in its loop so companions sharing
         // a clip are never bobbing in unison.
@@ -18031,6 +18872,13 @@ export function createKidsWorld(
             }
           }
 
+          const staffHome =
+            CHAPTER_N === 3 ? shopkeeperMarket(chapterPlacements()) : null;
+          const staffAtThisRow =
+            CHAPTER_N !== 3 ||
+            (staffHome != null &&
+              Math.abs(wrap.position.x - staffHome.x) < 0.01 &&
+              Math.abs(wrap.position.z - staffHome.z) < 0.01);
           // ── THE TEA SELLER, INSIDE HIS OWN SHOP ───────────────────────
           //
           // Behind the front plane rather than in front of it, which is the
@@ -18045,7 +18893,7 @@ export function createKidsWorld(
           // different width on a five-year-old's road than on an
           // eleven-year-old's, and a fraction of it is only meaningful once
           // that is settled.
-          {
+          if (staffAtThisRow) {
             // BEHIND THE COUNTER, BUT STILL VISIBLE THROUGH THE OPENING.
             //
             // 1.6 inside the front plane left him level with the shutters,
@@ -18100,7 +18948,7 @@ export function createKidsWorld(
           // the same fraction his counter lamp hangs at — one number for
           // where that business is, so the man and his lamp cannot drift on
           // to different premises.
-          {
+          if (staffAtThisRow && smith == null) {
             // BACK AGAINST HIS OWN SHOPFRONT. 0.55 out from the front
             // plane put him on the edge of the plinth with the road behind
             // his heels, which reads as a man waiting for a bus rather than
@@ -18125,6 +18973,7 @@ export function createKidsWorld(
               // people the road has on it, and the log that says how many
               // villagers are out would be wrong without him.
               sm.wrap.userData.villageBystander = true;
+              blockers.push({ x: seat[0], z: seat[2], r: 1, hw: 1.2, hd: 1 });
               builtGroup.add(sm.wrap);
               smith = sm;
             }
@@ -18624,7 +19473,7 @@ export function createKidsWorld(
         // is ready to look at that much sooner. They still all get built;
         // the ordering only decides what is finished first.
         const opensAt = lessonAt(resumeX, CHAPTER).n;
-        const queue = [...placements(CHAPTER, perspective)].sort(
+        const queue = [...chapterPlacements()].sort(
           (a, b) =>
             Math.abs(lessonAt(a.x, CHAPTER).n - opensAt) -
             Math.abs(lessonAt(b.x, CHAPTER).n - opensAt),
@@ -18662,6 +19511,11 @@ export function createKidsWorld(
           if (/(?:^|\/)Mana$/i.test(p.model)) {
             const mine = lessonAt(p.x, CHAPTER).n;
             const gateX =
+              queue.find(
+                (q) =>
+                  /Estate_Gate$/i.test(q.model) &&
+                  lessonAt(q.x, CHAPTER).n === mine,
+              )?.x ??
               estateGate(
                 queue
                   .filter(
@@ -18670,7 +19524,8 @@ export function createKidsWorld(
                       lessonAt(q.x, CHAPTER).n === mine,
                   )
                   .map((q) => q.x),
-              ) ?? p.x;
+              ) ??
+              p.x;
             const w2 = await stand(
               p.model,
               gateX,
@@ -18869,7 +19724,11 @@ export function createKidsWorld(
                 box: measureBox(w),
               });
             }
-            if (p.box != null) {
+            if (
+              p.box != null ||
+              (CHAPTER_N === 3 &&
+                /House|Cottage|Mana$|Temple$|Market$/.test(p.model))
+            ) {
               // A BUILDING IS BLOCKED AS ITS FOOTPRINT — see `Placed.box`
               // and the blocker type. Measured off the standing model
               // rather than taken from the table, so it is right whatever
@@ -18990,20 +19849,286 @@ export function createKidsWorld(
       // channel from there. `deckY` then reports that height to every foot
       // that steps onto it; see `BRIDGE` at module scope for why a mesh
       // lookup would be the wrong tool.
+      if (WILD != null) {
+        const crossing = WILD;
+        // Repeat the Lesson 16 asset at a constant rail height and road width.
+        // Each span has its own deck; the space between is real island ground.
+        for (const [index, span] of crossing.spans.entries()) {
+          const deck = {
+            x: (span.from + span.to) / 2,
+            halfLen: (span.to - span.from) / 2,
+            halfWid: 6.8,
+            y: WILD_BANK_Y,
+          };
+          for (const module of bridgeModules(span.from, span.to)) {
+            const w = await stand(
+              "village-util/Wooden_Bridge",
+              module.x,
+              0,
+              4,
+              Math.PI / 2,
+              0,
+            );
+            if (w == null)
+              throw new Error("Chapter 4 bridge asset failed to load");
+            const size = measureBox(w).getSize(new THREE.Vector3());
+            w.scale.z *= (module.length + 0.04) / size.x;
+            w.scale.x *= 15.6 / size.z;
+            w.scale.y *= 3 / size.y;
+            w.position.y = deck.y - 0.33 * 3;
+            w.name = `chapter4-bridge-${index + 1}`;
+            w.userData.crossing = { ...span, moduleX: module.x, deckY: deck.y };
+            builtGroup.add(w);
+          }
+          BRIDGES.push(deck);
+        }
+        BRIDGE = BRIDGES[0]!;
+        // ONE WIDE BANYAN, STANDING IN THE RIVER'S EDGE.
+        //
+        // The island is the one place on this road a child reaches by
+        // crossing water, and a single great banyan is what makes it a place
+        // rather than a sandbank with two orchard trees on it. It stands on
+        // the island's back shore with about a quarter of its trunk in the
+        // water — the way a banyan on a riverbank actually grows, roots
+        // going down into the bank and over it.
+        //
+        // WHERE THE SHORE IS: `wildTerrain` lifts the island to the bank
+        // from a bed 3.6 below it, and the water stands 0.9 under the bank,
+        // so the waterline is where the island blend reaches 0.75 — at 0.778
+        // of the island's radii. The trunk's centre goes 0.4 of its radius
+        // inland of that line, which is what leaves a quarter of it out in
+        // the water.
+        //
+        // HOW BIG, AND WHICH WAY: measured off the model, the aerial roots
+        // hang in a ring about 0.44 of the tree's width out from the trunk
+        // and reach the ground. Scaled up evenly, that ring lands on the road
+        // and the bridge decks before the tree looks big. So it is stretched
+        // per axis instead — the one direction it must NOT grow is toward
+        // the road (z), and nothing else is in the way:
+        //   - taller (y), which lifts the crown and moves no roots at all;
+        //   - much wider ALONG the river (x), which is the width the camera
+        //     sees and puts the extra roots out over the water;
+        //   - only a little deeper (z), so the ring still stops a unit short
+        //     of the carriageway while the crown spreads out over it.
+        // Unturned, so those three stretches stay on the world's axes.
+        const onShore = (deg: number, inland: number) =>
+          islandShore(crossing, deg, inland);
+        const {
+          h: BANYAN_H,
+          tall: BANYAN_TALL,
+          along: BANYAN_ALONG,
+          deep: BANYAN_DEEP,
+        } = ISLAND_BANYAN;
+        // BACK-LEFT, NOT STRAIGHT BACK. On the back shore the water at its
+        // foot is behind the trunk from where the camera stands, so the tree
+        // read as standing on dry land; round at -120 the waterline runs past
+        // the side of the trunk the road can see. `islandBanyanAt` puts the
+        // trunk's centre 0.4 of its radius inland, which leaves a quarter of
+        // it in the water; Kuttichathan's island tree sighting reads the same.
+        const at = islandBanyanAt(crossing);
+        const banyan = await stand(
+          "village-plants/Banyan_Almaram",
+          at.x,
+          at.z,
+          BANYAN_H,
+          0,
+          0,
+        );
+        if (banyan != null) {
+          banyan.scale.x *= BANYAN_ALONG;
+          banyan.scale.y *= BANYAN_TALL;
+          banyan.scale.z *= BANYAN_DEEP;
+          banyan.name = "chapter4-island-banyan";
+          builtGroup.add(banyan);
+        }
+        // AND A MANGROVE IN THE RIVER BESIDE IT — a fifth of its root cage
+        // on the island, the rest standing in the water, which is where a
+        // mangrove grows and nothing else on this road does. Placed at the
+        // depth scale of the spot it lands on (`stand` scales h by it, and
+        // the fifth is measured in the scaled roots); one refinement pass is
+        // enough because the scale barely changes over a couple of units.
+        // SEATED ON THE WATER, NOT THE BED: `stand` puts a prop on
+        // `surfaceY`, which out here is the river bed 2.7 under the surface
+        // — the tree would stand drowned to its trunk. The feet go just
+        // under the surface instead, so the water hides where they end, and
+        // the landward roots run into the bank.
+        {
+          const guess = islandMangroveAt(crossing);
+          const m = islandMangroveAt(crossing, perspective(guess.z));
+          const mangrove = await stand(
+            "village-plants/Mangrove_Kandal",
+            m.x,
+            m.z,
+            ISLAND_MANGROVE.h,
+            2.2,
+            0,
+          );
+          if (mangrove != null) {
+            mangrove.position.y = RIVER_SURFACE - 0.3 * perspective(m.z);
+            mangrove.name = "chapter4-island-mangrove";
+            builtGroup.add(mangrove);
+          }
+          // The rest of the stand, in clumps — see `mangroveStand` — seated
+          // on the water the same way.
+          for (const [i, b] of mangroveStand(crossing).entries()) {
+            const w = await stand(
+              "village-plants/Mangrove_Kandal",
+              b.x,
+              b.z,
+              b.h,
+              b.turn,
+              0,
+            );
+            if (w != null) {
+              w.position.y = RIVER_SURFACE - 0.3 * perspective(b.z);
+              w.name = `chapter4-mangrove-${i + 1}`;
+              builtGroup.add(w);
+            }
+          }
+        }
+        // AND BIG ROCKS AT THE WATER'S EDGE, half in and half out, on the
+        // back and side shores only: anything on the front shore stands
+        // between the camera and the milestone, which has to stay readable.
+        for (const [deg, h] of [
+          [-150, 2.8],
+          [-70, 3.2],
+          [-48, 2.4],
+          [-30, 2.9],
+        ] as const) {
+          const r = onShore(deg, 0);
+          const w = await stand(
+            "village-stone/Granite_Boulder",
+            r.x,
+            r.z,
+            h,
+            deg * 0.05,
+            0,
+          );
+          if (w != null) {
+            w.name = "chapter4-island-rock";
+            builtGroup.add(w);
+          }
+        }
+        for (let i = 0; i < 34; i++) {
+          const a = (i / 34) * Math.PI * 2;
+          const x = crossing.islandX + Math.cos(a) * crossing.islandRX * 0.66;
+          const z = crossing.islandZ + Math.sin(a) * crossing.islandRZ * 0.66;
+          if (Math.abs(z) < 9) continue;
+          const model =
+            i % 5 === 0
+              ? "village-stone/River_Stone"
+              : `village-plants/${i % 3 === 0 ? "Taro_Chembu" : "Kerala_Grass_Tuft"}`;
+          const w = await stand(model, x, z, i % 5 === 0 ? 0.65 : 1.1, a, 0);
+          if (w != null) {
+            w.name = "chapter4-island-edge";
+            builtGroup.add(w);
+          }
+        }
+        // AND THE FRONT SHORE IS BROKEN UP WITH STONE.
+        //
+        // Seen from the camera the island's front edge was one clean curve
+        // of sand meeting water — it read as a cut, not a shore. A river
+        // island's edge is stones the current has left: a run of low rocks
+        // along the waterline, some in the water and some out of it, with
+        // grass growing down between them. Low, and only on the front arc
+        // clear of the road: nothing here may stand in front of the
+        // milestone or on a bridge landing.
+        for (let i = 0; i < 13; i++) {
+          const deg = 52 + i * 6.3 + hashRange(i, 0, 81, -2, 2);
+          // Alternately a little in and a little out, so the waterline
+          // wanders between the stones instead of following them.
+          const r = onShore(deg, hashRange(i, 1, 82, -0.6, 0.5));
+          if (r.z - meander(r.x) < 8) continue;
+          const big = i % 3 === 1;
+          const w = await stand(
+            `village-stone/${big ? "Granite_Boulder" : i % 3 === 0 ? "River_Stone" : "Mossy_Stone"}`,
+            r.x,
+            r.z,
+            big ? hashRange(i, 2, 83, 1.2, 1.6) : hashRange(i, 2, 83, 0.6, 1),
+            hashRange(i, 3, 84, 0, Math.PI * 2),
+            0,
+          );
+          if (w != null) {
+            w.name = "chapter4-island-shore";
+            builtGroup.add(w);
+          }
+          // A tuft at the stone's landward side.
+          const g = onShore(deg + 3, 0.9);
+          const t = await stand(
+            "village-plants/Kerala_Grass_Tuft",
+            g.x,
+            g.z,
+            hashRange(i, 4, 85, 1, 1.4),
+            hashRange(i, 5, 86, 0, Math.PI * 2),
+            0,
+          );
+          if (t != null) {
+            t.name = "chapter4-island-shore";
+            builtGroup.add(t);
+          }
+        }
+        // THE CHILD'S SIDE OF THE ISLAND IS LONG GRASS, not bare sand.
+        //
+        // The strip between the road's near edge and the front shore is the
+        // part of the island closest to the camera, and it was empty ground
+        // with a handful of edge tufts round its rim. A river island is
+        // overgrown to the waterline — thick grass with the odd fern in it —
+        // and packing it is what makes the island read as land that has
+        // been there a long time rather than a sandbar the bridges rest on.
+        //
+        // Laid on a jittered grid rather than scattered, so it is dense
+        // everywhere instead of clumped in some places and bare in others,
+        // and hashed on position so it grows the same on every visit. Small
+        // plants only: grass and fern, nothing that could stand between the
+        // camera and the milestone.
+        for (
+          let gx = crossing.islandX - crossing.islandRX;
+          gx <= crossing.islandX + crossing.islandRX;
+          gx += 0.9
+        ) {
+          for (let row = 0; row < 8; row++) {
+            const x = gx + hashRange(gx, row, 71, -0.35, 0.35);
+            const z =
+              meander(x) + 7.2 + row * 0.85 + hashRange(gx, row, 72, -0.3, 0.3);
+            if (islandRadius(crossing, x, z) > 0.75) continue;
+            const fern = hash3(x, z, 73) < 0.15;
+            const w = await stand(
+              `village-plants/${fern ? "Kerala_Fern" : "Kerala_Grass_Tuft"}`,
+              x,
+              z,
+              fern
+                ? hashRange(x, z, 74, 1.2, 1.6)
+                : hashRange(x, z, 74, 0.9, 1.4),
+              hashRange(x, z, 75, 0, Math.PI * 2),
+              0,
+            );
+            if (w != null) {
+              w.name = "chapter4-island-grass";
+              builtGroup.add(w);
+            }
+          }
+        }
+        console.info(
+          `[chapter4] two bridges, island milestone 37 at ${crossing.milestone.toFixed(2)}`,
+        );
+      }
       if (RIVER != null) {
         const rx = RIVER.x;
         const rz = meander(rx);
         const landing = 2;
         const span = 2 * (RIVER.half + landing);
         const H = span / 2.98;
-        const w = await stand(
-          "village-util/Wooden_Bridge",
-          rx,
-          rz,
-          H,
-          Math.PI / 2,
-          0,
-        );
+        const w =
+          WILD != null
+            ? null
+            : await stand(
+                "village-util/Wooden_Bridge",
+                rx,
+                rz,
+                H,
+                Math.PI / 2,
+                0,
+              );
         if (w != null) {
           const bank =
             (terrainY(rx - RIVER.half - 1.5, rz) +
@@ -19061,6 +20186,7 @@ export function createKidsWorld(
             halfWid: Math.max(roadClear * 0.8, (1.36 * Hd) / 2),
             y: bank,
           };
+          BRIDGES = [BRIDGE];
           console.info(
             `[chapter] bridge at x=${rx.toFixed(1)} span ${span.toFixed(1)} deck y=${bank.toFixed(2)}`,
           );
@@ -19083,7 +20209,13 @@ export function createKidsWorld(
         ];
         for (const [side, out, model, h] of bankStones) {
           const sz = rz - 6.5 - hashRange(rx, side, 61, 0, 2.5);
-          const sx = rx + side * (riverHalfAt(sz) + out);
+          const banks = WILD != null ? wildBanks(WILD, sz) : null;
+          const sx =
+            banks != null
+              ? side < 0
+                ? banks.left - out
+                : banks.right + out
+              : rx + side * (riverHalfAt(sz) + out);
           const st = await stand(
             model,
             sx,
@@ -19154,7 +20286,13 @@ export function createKidsWorld(
           const out = rock
             ? hashRange(rx, i, 66, -0.6, 0.9)
             : hashRange(rx, i, 67, 1.1, 3.4);
-          const bx = rx + side * (riverHalfAt(sz) + out);
+          const banks = WILD != null ? wildBanks(WILD, sz) : null;
+          const bx =
+            banks != null
+              ? side < 0
+                ? banks.left - out
+                : banks.right + out
+              : rx + side * (riverHalfAt(sz) + out);
           const b = await stand(
             model,
             bx,
@@ -19203,7 +20341,13 @@ export function createKidsWorld(
           const len = CHAPTER[l.n]! - from;
           // Two or three head, spread through the middle of the segment so
           // they are met while walking it rather than at a milestone.
-          const n = 3 + Math.floor(hash3(l.n, 0, 31) * 3);
+          //
+          // THE COMMENT SAID TWO OR THREE AND THE CODE MADE THREE TO FIVE,
+          // plus a calf with every other cow — and because the second buffalo
+          // of a lesson becomes a cow, even a buffalo lesson filled up with
+          // cattle. The owner found the road over-stocked (23 Sep 2026);
+          // this is what the comment always said.
+          const n = 2 + Math.floor(hash3(l.n, 0, 31) * 2);
           // ONE BUFFALO TO A LESSON, AND THE REST ARE COWS.
           //
           // The model was drawn from the lesson's list per animal, so a
@@ -19333,10 +20477,10 @@ export function createKidsWorld(
             // than as a herd. It is placed here instead, beside its mother
             // and close enough to be plainly hers.
             //
-            // About half the cows have one. A field where every cow has a
-            // calf is a farm that had one remarkable year.
+            // About a third of the cows have one. A field where every cow
+            // has a calf is a farm that had one remarkable year.
             //
-            if (model === "Cow" && hash3(l.n, i, 35) < 0.5) {
+            if (model === "Cow" && hash3(l.n, i, 35) < 0.35) {
               const near = clearSpot(
                 spot.x + hashRange(l.n, i, 36, 2.4, 4),
                 spot.z + hashRange(l.n, i, 37, -1.8, 1.8),
@@ -19567,14 +20711,8 @@ export function createKidsWorld(
           // the blacksmith's round was shortened to avoid.
           const stationed = CHAPTER_N === 1;
           const WHO = stationed
-            ? ["Headman", "FarmerWoman", "VillageBoy", "Blacksmith"]
-            : [
-                "Headman",
-                "TeaStall",
-                "FarmerWoman",
-                "VillageBoy",
-                "Blacksmith",
-              ];
+            ? ["Headman", "FarmerWoman", "VillageBoy"]
+            : ["Headman", "TeaStall", "FarmerWoman", "VillageBoy"];
           /**
            * WHO KEEPS TO A PARTICULAR STRETCH, by milestone.
            *
@@ -19978,7 +21116,12 @@ export function createKidsWorld(
           // stays clear, which is the rule the village already follows.
           const z = -hashRange(x, 4, 15, from.depth[0], from.depth[1]);
           const spot = clearSpot(x, z, Math.max(0.8, layer.clear));
-          if (spot == null) {
+          if (
+            spot == null ||
+            (WILD != null &&
+              layer.key === "canopy" &&
+              islandRadius(WILD, spot.x, spot.z) < 1)
+          ) {
             refused++;
             continue;
           }
@@ -20025,6 +21168,23 @@ export function createKidsWorld(
             templeView != null &&
             spot.z > templeView.z &&
             Math.abs(spot.x - templeView.x) < templeView.halfW
+          ) {
+            refused++;
+            continue;
+          }
+          // Keep the authored lanes and common spaces usable, rather than
+          // painting dirt beneath another layer of vegetation.
+          if (
+            CHAPTER_N === 3 &&
+            WHISPER_SPACES.some((space) => {
+              const from = CHAPTER[space.lesson - 1]!;
+              const cx = from + (CHAPTER[space.lesson]! - from) * space.at;
+              return (
+                ((spot.x - cx) / space.rx) ** 2 +
+                  ((spot.z - space.z) / space.rz) ** 2 <
+                1
+              );
+            })
           ) {
             refused++;
             continue;
@@ -20138,7 +21298,11 @@ export function createKidsWorld(
               const pz =
                 side * hashRange(px, i, 66, roadClear + 0.6, roadClear + 5.5);
               const pick = hashPick(here.ground, px, i, 67);
-              if (pick == null || onRoad(px, pz, pick, 0.3)) {
+              if (
+                pick == null ||
+                onRoad(px, pz, pick, 0.3) ||
+                (WILD != null && !wildDry(WILD, px, pz, 0.5))
+              ) {
                 continue;
               }
               // Collected like the field planting, and for the same reason:
@@ -20223,7 +21387,7 @@ export function createKidsWorld(
 
       // ── WHAT WAS MOVED IN THE NIGHT ──────────────────────────────────
       //
-      if (CHAPTER_N === 3 && CHAPTER != null) {
+      if ((CHAPTER_N === 3 || CHAPTER_N === 4) && CHAPTER != null) {
         // Build the same props at noon and midnight. Only their transforms
         // change, briefly, in tickWhispers; no night-only architecture.
         const clay = new THREE.MeshStandardMaterial({
@@ -20248,35 +21412,48 @@ export function createKidsWorld(
           16,
         );
         const coconut = new THREE.SphereGeometry(0.28, 12, 8);
-        for (let n = 1; n <= 9; n++) {
-          const count = n === 7 ? 4 : n === 5 || n === 6 ? 3 : 1;
-          for (let i = 0; i < count; i++) {
-            const roll = i % 2 === 1;
-            const x =
-              CHAPTER[n - 1]! +
-              (CHAPTER[n]! - CHAPTER[n - 1]!) * (0.28 + i * 0.15);
-            const z = -9.5 - (i % 2) * 1.1;
-            const mesh = new THREE.Mesh(
-              roll ? coconut : potShape,
-              roll ? husk : clay,
-            );
-            mesh.position.set(x, terrainY(x, z) + (roll ? 0.28 : 0), z);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            builtGroup.add(mesh);
-            whisperProps.push({
-              mesh,
-              base: mesh.position.clone(),
-              lesson: n,
-              roll,
-            });
-          }
+        const mysteryProps =
+          CHAPTER_N === 4
+            ? wildNodes.map((n) => ({
+                lesson: n.lesson,
+                roll: true,
+                x:
+                  CHAPTER[n.lesson - 1]! +
+                  n.at * (CHAPTER[n.lesson]! - CHAPTER[n.lesson - 1]!),
+                z: n.z,
+              }))
+            : reserveWhisperProps(chapterPlacements(), CHAPTER, perspective);
+        for (const { lesson: n, roll, x, z } of mysteryProps) {
+          if (WILD != null && !wildDry(WILD, x, z)) continue;
+          const mesh = new THREE.Mesh(
+            roll ? coconut : potShape,
+            CHAPTER_N === 4
+              ? new THREE.MeshStandardMaterial({
+                  color: 0x888579,
+                  roughness: 1,
+                })
+              : roll
+                ? husk
+                : clay,
+          );
+          const scale = perspective(z);
+          mesh.scale.setScalar(scale);
+          mesh.position.set(x, terrainY(x, z) + (roll ? 0.28 * scale : 0), z);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          builtGroup.add(mesh);
+          whisperProps.push({
+            mesh,
+            base: mesh.position.clone(),
+            lesson: n,
+            roll,
+          });
         }
         // Load regardless of the opening hour: a daytime visit may reach
         // 22:00 without a scene rebuild. The tick alone owns visibility.
         later(() => {
           void spawnKutti(
-            WHISPER_NODES.map((n) => ({
+            mysteryNodes.map((n) => ({
               x:
                 CHAPTER[n.lesson - 1]! +
                 n.at * (CHAPTER[n.lesson]! - CHAPTER[n.lesson - 1]!),
@@ -20334,7 +21511,7 @@ export function createKidsWorld(
       // folds to is a deep one; `nightNow` already decides when he is awake.
       if (
         CHAPTER != null &&
-        CHAPTER_N !== 3 &&
+        CHAPTER_N < 3 &&
         trueNight &&
         activityAt(stagedNow().night) === "deep"
       ) {
@@ -20343,11 +21520,19 @@ export function createKidsWorld(
         // has no corridor and gets no figure. That is not a special case: it
         // is the same rule the traces themselves follow, and it is why he is
         // a Chapter 1 story rather than something that turns up on every road.
+        // THIS CHAPTER'S OWN LESSONS. This read Chapter 1's table whatever
+        // was being built, so Chapter 2 got Chapter 1's haunted lessons —
+        // 4 to 8 — and he could turn up in Chapter 2's Lesson 4, the Shrine
+        // Grove, which that chapter rules out in so many words. A lesson is
+        // his if it is in the corridor or carries a trace; for Chapter 1
+        // that is the same 4 to 8 it always was.
         const corridorLessons = new Set(
-          LESSONS.filter((x) => x.trace != null).map((x) => x.n),
+          (CHAPTERS[CHAPTER_N - 1]?.lessons ?? LESSONS)
+            .filter((x) => x.corridor || x.trace != null)
+            .map((x) => x.n),
         );
         const spots = thinAnchors(
-          anchorsFrom(placements(CHAPTER, perspective)).filter((a) =>
+          anchorsFrom(chapterPlacements()).filter((a) =>
             corridorLessons.has(lessonAt(a.x, CHAPTER).n),
           ),
         ).map((a) => {
@@ -21025,7 +22210,7 @@ export function createKidsWorld(
             // because the road did not start again at the chapter line and
             // neither did the count. Carved with the chapter offset, and
             // weathered on it too, so no two stones on the road age alike.
-            const carved = n + (CHAPTER_N - 1) * SEGMENT_COUNT;
+            const carved = n + (CHAPTER_NUMBER - 1) * SEGMENT_COUNT;
             weatherStone(wrap, carved + 7);
             const plate = carveFace(carved);
             plate.scale.setScalar((w * 0.78) / 0.96);
@@ -24707,6 +25892,9 @@ export function createKidsWorld(
       // he's heading — held steady on screen by tracking the camera; the
       // current tile lifts + bobs.
       if (wordGroup.visible) {
+        if (theme.dayLetters === true) {
+          fitCardsToDay();
+        }
         // The ribbon glides so the current letter always sits at the same spot
         // (just to the right of the runner, low in the pane); typed letters
         // scroll off left, upcoming ones flow in from the right — no jump.
@@ -24741,8 +25929,18 @@ export function createKidsWorld(
           // sank into the channel with the child walking above them.
           // `roadTopY`, keyed on x alone — see why the z test is wrong for
           // the word row, which rides the road from out over the verge.
+          //
+          // AND ACROSS THE WHOLE WILD CROSSING, not only on the decks. The
+          // island between the two spans is dry on the road's line and wet
+          // on the row's: the row rides fourteen units in front of the road,
+          // where the island has already shelved away into the channel, so
+          // the cards between the bridges dropped into the river and the
+          // line broke in two. The road over the island is at bank height,
+          // which is the line the decks either side of it are already on.
+          const onCrossing =
+            WILD != null && tileX > WILD.approach - 2 && tileX < WILD.exit + 2;
           const groundH =
-            BRIDGE != null && Math.abs(tileX - BRIDGE.x) <= BRIDGE.halfLen
+            onCrossing || bridgeAt(tileX) != null
               ? roadTopY(tileX)
               : terrainY(tileX, gz);
           g.position.y += (groundH + WORD_REST_Y + lift - g.position.y) * 0.25;
@@ -24859,7 +26057,9 @@ export function createKidsWorld(
       // 1.5s a person takes to stop and look up, and only re-projected while
       // it is actually moving: the matrix is the same every frame the child
       // spends on the open road.
-      const wantWide = insideVillage != null ? 1 : 0;
+      // Chapter 3's reference locks the gameplay framing even in the large
+      // market. Extra buildings occupy depth, not a wider camera shot.
+      const wantWide = CHAPTER_N >= 3 ? 0 : insideVillage != null ? 1 : 0;
       if (Math.abs(wantWide - villageWide) > 0.0015) {
         villageWide += (wantWide - villageWide) * Math.min(1, dt / 1.5);
         applyFrustum();
@@ -24932,6 +26132,13 @@ export function createKidsWorld(
         wildModel?: string;
         moving?: number;
         playing?: string;
+        /** This animal's own playback pace, so no two keep time. */
+        rate?: number;
+        /** Grazing or standing about, and how long before she changes. */
+        mode?: "graze" | "idle";
+        bout?: number;
+        /** The action currently in charge of her pose. */
+        cur?: THREE.AnimationAction;
       };
       if (ud.wildModel === "Cow" || ud.wildModel === "Cow_Calf") {
         const pos = w.wrap.position;
@@ -24967,10 +26174,10 @@ export function createKidsWorld(
           // nothing here is in danger — she is giving way, which is a walk.
           //
           // ONE CYCLE OF THE CLIP CARRIES HER ONE STRIDE, and that is the
-          // whole rule this used to break. `Walk` is exactly one second
-          // long, so a stride per second is the pace the animation is drawn
-          // at; move her at any other rate and the hooves skate, because
-          // nothing ties the legs to the ground but this number.
+          // whole rule this used to break. The pace below is the one the
+          // animation is drawn at; move her at any other rate and the hooves
+          // skate, because nothing ties the legs to the ground but this
+          // number.
           //
           // The stride is a quarter of the animal's height, which is the
           // buffalo's figure — 1.7 units a second on a 6.8-unit body, on the
@@ -24985,8 +26192,16 @@ export function createKidsWorld(
           // third, which is worse the further she goes. Real distance slows
           // a walk across the frame; so does this one.
           const persp = perspective(pos.z);
+          //
+          // 0.32, NOT THE BUFFALO'S 0.25, AND NOT A GUESS. The cattle's
+          // `Walk` is authored (scripts/buffalo-author.mjs, `CATTLE_PACE`)
+          // with its planted hooves travelling backward at 0.32 body heights
+          // a second, over a 1.2-second stride. The take it replaced moved
+          // its hooves at 3.3 times what this carried her, so every step
+          // slid under her. The two numbers are one number: change either
+          // and change the other.
           const stride =
-            0.25 * (WILD_HEIGHT[ud.wildModel ?? ""] ?? 4.5) * persp;
+            CATTLE_PACE * (WILD_HEIGHT[ud.wildModel ?? ""] ?? 4.5) * persp;
           const speed = stride * step;
           const fromX = pos.x;
           const fromZ = pos.z;
@@ -25031,15 +26246,130 @@ export function createKidsWorld(
           const walk = w.act.get("Walk");
           if (walk != null) walk.timeScale = 1;
         }
-        const wants = walking ? "Walk" : "Graze";
-        if (ud.playing !== wants) {
-          const next = w.act.get(wants) ?? w.act.get("Idle");
-          if (next != null) {
-            for (const [name, a] of w.act) {
-              if (name !== wants) a.fadeOut(0.35);
+        // ── EVERY COW ON HER OWN CLOCK ──────────────────────────────────
+        //
+        // This used to be one line: Walk if a buffalo is near, else Graze,
+        // started with `reset()`. Every cow in the village took that branch
+        // on the same first frame, so every cow began the same clip at time
+        // zero at the same speed and stayed in lockstep for the whole visit
+        // — a field of animals biting, chewing and lifting their heads as
+        // one. The graze clip also restarted every six seconds, so the
+        // whole herd raised its heads together on the beat.
+        //
+        // Now each animal has its own pace, starts partway into whatever it
+        // plays, and alternates grazing bouts with spells of standing and
+        // looking about, each of a random length. A long bout stays
+        // head-down: before the graze clip would restart it hands over to a
+        // second copy already in the feeding loop, cross-faded, instead of
+        // snapping the head up and lowering it again.
+        if (ud.rate == null) {
+          ud.rate = 0.88 + Math.random() * 0.24;
+          ud.mode = Math.random() < 0.7 ? "graze" : "idle";
+          // Already part-way through: the first switch is spread too.
+          ud.bout =
+            ud.mode === "graze"
+              ? 3 + Math.random() * 35
+              : 2 + Math.random() * 12;
+        }
+        const rate =
+          ud.rate *
+          (ud.wildModel === "Cow_Calf"
+            ? (calfRate("Cow_Calf", "Idle") ?? 1)
+            : 1);
+        const startClip = (
+          a: THREE.AnimationAction,
+          at: number,
+          fade: number,
+          once: boolean,
+        ) => {
+          a.reset();
+          a.setLoop(
+            once ? THREE.LoopOnce : THREE.LoopRepeat,
+            once ? 1 : Infinity,
+          );
+          a.clampWhenFinished = once;
+          a.timeScale = rate;
+          a.time = at;
+          a.setEffectiveWeight(1);
+          a.play();
+          const prev = ud.cur;
+          if (prev != null && prev !== a) {
+            if (fade > 0) a.crossFadeFrom(prev, fade, false);
+            else prev.stop();
+          } else if (prev == null) {
+            // Whatever the spawner started is not ours to blend from.
+            for (const o of [...w.act.values(), ...w.twin.values()]) {
+              if (o !== a) o.stop();
             }
-            next.reset().fadeIn(0.35).play();
-            ud.playing = wants;
+          }
+          ud.cur = a;
+        };
+        // The second copy of Graze the feeding loop hands over to.
+        const grazeB = (() => {
+          const g = w.act.get("Graze");
+          if (g == null) return null;
+          let t = w.twin.get("Graze");
+          if (t == null) {
+            t = w.mixer.clipAction(g.getClip().clone());
+            w.twin.set("Graze", t);
+          }
+          return t;
+        })();
+        // Where the head is already down, and how close to the end the
+        // hand-over happens (clip seconds).
+        const FEED_FROM = 1.2;
+        const HAND_OVER = 0.7;
+        if (!walking) {
+          ud.bout = (ud.bout ?? 0) - step;
+          if (ud.bout <= 0) {
+            ud.mode = ud.mode === "graze" ? "idle" : "graze";
+            ud.bout =
+              ud.mode === "graze"
+                ? 15 + Math.random() * 35
+                : 6 + Math.random() * 14;
+          }
+        }
+        const wants = walking ? "Walk" : ud.mode === "idle" ? "Idle" : "Graze";
+        if (ud.playing !== wants) {
+          const first = ud.playing == null;
+          const from = ud.playing;
+          if (wants === "Walk") {
+            const a = w.act.get("Walk");
+            if (a != null) {
+              startClip(a, Math.random() * a.getClip().duration, 0.35, false);
+              a.timeScale = 1; // the walking branch above sets it from the ground covered
+            }
+          } else if (wants === "Idle") {
+            const a = w.act.get("Idle") ?? w.act.get("Graze");
+            if (a != null) {
+              startClip(
+                a,
+                Math.random() * a.getClip().duration,
+                first ? 0 : 0.9,
+                a.getClip().name !== "Idle",
+              );
+            }
+          } else {
+            const a = w.act.get("Graze");
+            if (a != null) {
+              const d = a.getClip().duration;
+              // From standing, the head goes down first. On the first
+              // frame, or back from a walk after a moment's pause, she is
+              // simply found already eating.
+              const at =
+                first || from === "Walk"
+                  ? FEED_FROM +
+                    Math.random() * Math.max(0, d - FEED_FROM - HAND_OVER - 0.2)
+                  : 0;
+              startClip(a, at, first ? 0 : from === "Walk" ? 0.5 : 0.8, true);
+            }
+          }
+          ud.playing = wants;
+        } else if (wants === "Graze" && ud.cur != null && grazeB != null) {
+          const d = ud.cur.getClip().duration;
+          if (ud.cur.time >= d - HAND_OVER) {
+            const a = ud.cur === grazeB ? w.act.get("Graze")! : grazeB;
+            startClip(a, FEED_FROM, 0.6, true);
           }
         }
         continue;
@@ -25907,6 +27237,10 @@ export function createKidsWorld(
         head?: THREE.Object3D | null;
         /** Several standing loops, swapped between. See spawnCompanion. */
         idlePool?: THREE.AnimationAction[];
+        /** The authored lie-down, for animals that have one. */
+        restIdle?: THREE.AnimationAction;
+        /** Whether this animal is currently down for the night. */
+        resting?: boolean;
         idleNext?: number;
         headBaseX?: number;
         /** Cattle only: the bones and timers behind the small motions. */
@@ -26039,6 +27373,47 @@ export function createKidsWorld(
       // cutting between them twitches.
       {
         const pool = ud.idlePool;
+        // ── DOWN FOR THE NIGHT ──────────────────────────────────────────
+        //
+        // Cattle spend the night lying down, and they chew while they are
+        // down: a field of animals still standing at two in the morning is
+        // one of those things nobody can name but everybody feels.
+        //
+        // This holds the animal on `Rest` for as long as it is dark rather
+        // than letting the idle rotation move it off again — an animal that
+        // lies down and stands back up every fifteen seconds all night is
+        // worse than one that never lies down at all. The rotation below is
+        // skipped entirely while it is resting.
+        const rest = ud.restIdle;
+        if (rest != null && pool != null) {
+          const wantRest = nightBlend > 0.55;
+          if (wantRest !== (ud.resting ?? false)) {
+            ud.resting = wantRest;
+            const from = wantRest
+              ? pool.find((a) => a.isRunning() && a.weight > 0.5)
+              : rest;
+            const to = wantRest
+              ? rest
+              : (pool.find((a) => a.getClip().name === "Idle") ?? pool[0]);
+            if (to != null && to !== from) {
+              to.reset();
+              to.setEffectiveWeight(1);
+              to.play();
+              // Slow, and slower than the idle rotation's own cross-fade:
+              // an animal folding its legs under itself is not a pose change
+              // it can make in eight-tenths of a second.
+              if (from != null) {
+                to.crossFadeFrom(from, 2.5, false);
+              }
+            }
+            // Re-arm the rotation so a standing animal does not immediately
+            // switch pose on the frame it gets up.
+            ud.idleNext = 12 + Math.random() * 14;
+          }
+          if (ud.resting) {
+            continue;
+          }
+        }
         if (pool != null && pool.length > 1) {
           ud.idleNext = (ud.idleNext ?? 0) - dt;
           if (ud.idleNext <= 0) {
@@ -26218,6 +27593,7 @@ export function createKidsWorld(
     // the one place that is reached whenever there is a frame to describe.
     publishLightDirection(1 - nightBlend);
     renderer.render(scene, cam);
+    logo.render(renderer, elapsed);
     requestAnimationFrame(tick);
   }
   /**
@@ -26593,9 +27969,11 @@ export function createKidsWorld(
     },
     setMotion(intensity) {
       motionScale = Math.max(0, Math.min(1, intensity));
+      logo.setStill(calmMode || motionScale === 0);
     },
     setCalm(calm) {
       calmMode = calm === true;
+      logo.setStill(calmMode || motionScale === 0);
       if (calmMode) {
         // Anything already in the air comes down now rather than finishing its
         // arc — a learner who has just asked for stillness should get it, not
@@ -26639,6 +28017,7 @@ export function createKidsWorld(
       // them is one pool that outlives it, and a child who flips between
       // Dino Run and Hero Trail a few times ends up with several — which
       // is a slow page at best and a loader that never answers at worst.
+      logo.dispose();
       ktx2.dispose();
       renderer.dispose();
       // dispose() frees the renderer's GL objects but never loses the
@@ -26678,9 +28057,15 @@ export function createLoaderScene(
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(canvas.width, canvas.height, false);
   const scene = new THREE.Scene();
+  // A cool rim from behind as well as the key in front: the dinosaurs are
+  // dark green and brown, and on the night loading card (navy) they sank
+  // into the page. The rim traces their outline against any ground.
+  const loaderRim = new THREE.DirectionalLight(0xcfe2ff, 2.4);
+  loaderRim.position.set(-3, 4, -6);
   scene.add(
-    new THREE.HemisphereLight(0xffffff, 0x8fce7e, 1.6),
+    new THREE.HemisphereLight(0xffffff, 0x8fce7e, 2.0),
     new THREE.DirectionalLight(0xffffff, 2.2),
+    loaderRim,
   );
   const cam = new THREE.PerspectiveCamera(
     30,
@@ -26742,10 +28127,36 @@ export function createLoaderScene(
         }
       });
       const size = box.getSize(new THREE.Vector3());
-      const s = 4.2 / (size.y || 1);
+      // Fitted by height AND by length. A child is taller than long, so
+      // height decides; a dinosaur is far longer than tall, and sized by its
+      // height alone it ran off both sides of the frame. Turned side-on, its
+      // length lies across the frame, so it must fit the width the lens sees
+      // at this distance (with a margin) as well.
+      const across =
+        2 * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * 10 * cam.aspect;
+      const length = Math.max(size.x, size.z) || 1;
+      const s = Math.min(4.2 / (size.y || 1), (0.82 * across) / length);
       gltf.scene.scale.setScalar(s);
       gltf.scene.position.y = -box.min.y * s;
       gltf.scene.rotation.y = facing;
+      // Matte, and lifted by their own colours. The dinosaurs ship metallic
+      // (0.4), which with nothing to reflect reads as near-black — on the
+      // navy night card they vanished. A little of the texture as emission
+      // keeps their colours visible whatever the page behind them.
+      gltf.scene.traverse((o) => {
+        const m = (o as THREE.Mesh).material as
+          | THREE.MeshStandardMaterial
+          | undefined;
+        if (m?.isMeshStandardMaterial) {
+          m.metalness = Math.min(m.metalness, 0.05);
+          m.roughness = Math.max(m.roughness, 0.7);
+          if (m.map != null && m.emissiveMap == null) {
+            m.emissiveMap = m.map;
+            m.emissive = new THREE.Color(0x3a3a3a);
+          }
+          m.needsUpdate = true;
+        }
+      });
       scene.add(gltf.scene);
       const playRun = (clips: readonly THREE.AnimationClip[]) => {
         // A RUN, with the walk as the fallback for anybody who has no run.
@@ -26886,6 +28297,18 @@ export function createPickerScene(
     new THREE.HemisphereLight(0xffffff, 0xc9c4b4, 2.1),
     new THREE.DirectionalLight(0xffffff, 1.5),
   );
+  // AND A SPOT ON WHOEVER IS CHOSEN. The directional light above sits at its
+  // default, straight overhead, so it lights crowns and shoulders and leaves
+  // the face — the side a child is choosing by — on the fill alone, which
+  // read as the portrait standing a step back in the dark. A stage spot from
+  // in front, above and a little to one side puts the light on the face and
+  // front of the costume. Soft-edged and warm-white so it reads as a light
+  // on a plinth, not a torch; no decay, so its strength is a plain figure
+  // beside the other two rather than a number in candela at some distance.
+  const pickSpot = new THREE.SpotLight(0xfff4e6, 1.6, 0, 0.42, 0.7, 0);
+  pickSpot.position.set(1.8, 7.5, 7);
+  pickSpot.target.position.set(0, 2.2, 0);
+  scene.add(pickSpot, pickSpot.target);
   const cam = new THREE.PerspectiveCamera(
     30,
     canvas.width / canvas.height,

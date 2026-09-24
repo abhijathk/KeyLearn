@@ -1,0 +1,935 @@
+// ── "Your game, your way": the trail game's settings sheet ─────────────
+//
+// Rendered inside the kids root, so every colour here is derived from that
+// root's own tokens (--paper, --card, --kink, --kline and the learner's
+// --leaf accent) and night comes for free when `.rootDark` swaps them.
+//
+// ONE SIZE KNOB. Everything inside the sheet is in `em`, and the sheet's own
+// font size follows the smaller of the window's width and height between 13
+// and 16px — so a 1024×640 laptop gets a sheet that is the same design a
+// notch smaller rather than the big one with a scrollbar, and a phone gets
+// the smallest one that is still comfortable to read.
+
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  place-items: center;
+  background: rgba(40, 44, 70, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.sheet {
+  --s-soft: color-mix(in oklab, var(--kink) 5%, var(--paper));
+  --s-muted: color-mix(in oklab, var(--kink) 68%, var(--card));
+  --s-on: color-mix(in oklab, var(--leaf) 14%, var(--card));
+  --s-on-ink: color-mix(in oklab, var(--leaf) 62%, var(--kink));
+  --s-track: color-mix(in oklab, var(--kink) 18%, var(--card));
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  inline-size: min(61rem, calc(100vi - 2rem));
+  block-size: min(45rem, calc(100dvb - 2rem));
+  border-radius: 2em;
+  overflow: hidden;
+  color: var(--kink);
+  background: var(--paper);
+  box-shadow: 0 30px 70px rgba(20, 25, 50, 0.4);
+  font-size: clamp(0.8125rem, min(1.4vi, 2.2vb), 1rem);
+  animation: sheetPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--leaf);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes sheetPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+// ── header ─────────────────────────────────────────────────────────────
+
+.head {
+  display: flex;
+  flex: none;
+  gap: 0.875em;
+  align-items: center;
+  padding: 1.25em 1.625em 1em;
+}
+
+.gear {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.75em;
+  block-size: 2.75em;
+  border-radius: 0.875em;
+  color: color-mix(in oklab, #2a6db8 75%, var(--kink));
+  background: color-mix(in oklab, #3aa0ff 22%, var(--card));
+  transform: rotate(-6deg);
+
+  svg {
+    inline-size: 1.375em;
+    block-size: 1.375em;
+  }
+}
+
+.title {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: 1.5em;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.playing {
+  display: flex;
+  position: relative;
+  flex: none;
+  gap: 0.5em;
+  align-items: center;
+  margin-inline-start: auto;
+  padding: 0.375em 0.875em 0.375em 0.375em;
+  border-radius: 999px;
+  background: var(--s-soft);
+  font-size: 0.8125em;
+  font-weight: 900;
+}
+
+.playingImg {
+  object-fit: cover;
+  inline-size: 2.3em;
+  block-size: 2.3em;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+.playingText {
+  white-space: nowrap;
+}
+
+// ── body: rail + pane ──────────────────────────────────────────────────
+
+.body {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 1.125em;
+  min-block-size: 0;
+  padding: 0 1.625em 0.875em;
+}
+
+.rail {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 0.375em;
+  box-sizing: border-box;
+  inline-size: 14.375em;
+  padding: 0.625em;
+  border-radius: 1.375em;
+  background: var(--s-soft);
+  overflow-y: auto;
+}
+
+.tab {
+  --tint: #3aa0ff;
+  display: flex;
+  position: relative;
+  flex: none;
+  gap: 0.75em;
+  align-items: center;
+  inline-size: 100%;
+  padding: 0.625em 0.75em;
+  border: 0;
+  border-radius: 1em;
+  color: var(--kink);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in oklab, var(--kink) 5%, transparent);
+  }
+}
+
+.tabOn,
+.tabOn:hover {
+  background: var(--card);
+  box-shadow:
+    0 3px 0 var(--kline),
+    0 6px 16px rgba(58, 58, 78, 0.08);
+}
+
+.tabIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.375em;
+  block-size: 2.375em;
+  border-radius: 0.75em;
+  color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 20%, transparent);
+
+  svg {
+    inline-size: 1.25em;
+    block-size: 1.25em;
+  }
+}
+
+.tabOn .tabIcon {
+  color: #ffffff;
+  background: var(--tint);
+}
+
+.tabText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.tabLabel {
+  font-size: 0.9375em;
+  font-weight: 900;
+}
+
+.tabSummary {
+  color: var(--s-muted);
+  font-size: 0.75em;
+  font-weight: 800;
+}
+
+.pane {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1em;
+  min-inline-size: 0;
+  padding: 0.25em 0.375em 1em;
+  overscroll-behavior: contain;
+  // The focus ring of the scrolling pane itself sits inside it.
+  outline-offset: -3px;
+  overflow-y: auto;
+}
+
+.paneTitle {
+  margin: 0;
+  font-family: inherit;
+  font-size: 1.375em;
+  font-weight: 900;
+}
+
+// ── groups and rows ────────────────────────────────────────────────────
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375em;
+  min-inline-size: 0;
+}
+
+.groupTitle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  align-items: center;
+  margin: 0;
+  padding-inline-start: 0.25em;
+  color: var(--s-muted);
+  font-family: inherit;
+  font-size: 0.6875em;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.groupNote {
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.groupCard {
+  border-radius: 1.125em;
+  background: var(--card);
+  box-shadow: 0 3px 0 var(--kline);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1em;
+  align-items: center;
+  padding: 0.75em 1em;
+
+  & + & {
+    border-block-start: 1.5px solid var(--kline);
+  }
+}
+
+.rowIndent {
+  padding-inline-start: 2.5em;
+}
+
+.rowText {
+  display: flex;
+  flex: 1 1 13em;
+  flex-direction: column;
+  gap: 0.125em;
+  min-inline-size: 0;
+}
+
+.rowWide .rowText {
+  flex-basis: 10em;
+}
+
+.rowDim .rowText {
+  opacity: 0.55;
+}
+
+.label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em 0.5em;
+  align-items: center;
+  font-size: 0.9375em;
+  font-weight: 900;
+}
+
+.desc {
+  color: var(--s-muted);
+  font-size: 0.75em;
+  font-weight: 700;
+}
+
+.ctl {
+  display: flex;
+  flex: 0 1 auto;
+  justify-content: flex-end;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  margin-inline-start: auto;
+}
+
+.ctlPair {
+  display: flex;
+  gap: 0.625em;
+  align-items: center;
+}
+
+// ── tags ───────────────────────────────────────────────────────────────
+
+.tag {
+  --hue: #d99a00;
+  padding: 0.2em 0.8em;
+  border-radius: 999px;
+  color: color-mix(in oklab, var(--hue) 45%, var(--kink));
+  background: color-mix(in oklab, var(--hue) 26%, var(--card));
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+// Inside a row label the tag is sized from the label, not the page.
+.label .tag {
+  font-size: 0.667em;
+}
+
+.groupTitle .tag {
+  font-size: 0.91em;
+  letter-spacing: 0.08em;
+}
+
+.tagGold {
+  --hue: #d99a00;
+}
+
+.tagBlue {
+  --hue: #2d8cff;
+}
+
+.tagGreen {
+  --hue: #1fae6b;
+}
+
+.tagViolet {
+  --hue: #8a5ad8;
+}
+
+// ── controls ───────────────────────────────────────────────────────────
+
+.switch {
+  position: relative;
+  flex: none;
+  inline-size: 3em;
+  block-size: 1.75em;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--s-track);
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &[aria-checked="true"] {
+    background: var(--leaf);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.knob {
+  position: absolute;
+  inset-inline-start: 0.1875em;
+  inset-block-start: 0.1875em;
+  inline-size: 1.375em;
+  block-size: 1.375em;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+
+  [aria-checked="true"] > & {
+    transform: translateX(1.25em);
+  }
+
+  :dir(rtl) [aria-checked="true"] > & {
+    transform: translateX(-1.25em);
+  }
+}
+
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.125em;
+  max-inline-size: 100%;
+  padding: 0.25em;
+  border-radius: 0.8em;
+  background: var(--s-soft);
+}
+
+.segItem {
+  padding: 0.5em 0.85em;
+  border: 0;
+  border-radius: 0.625em;
+  color: var(--s-muted);
+  background: transparent;
+  font-size: 0.8125em;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--kink);
+  }
+
+  &[aria-checked="true"] {
+    color: var(--s-on-ink);
+    background: var(--card);
+    box-shadow: 0 2px 0 var(--kline);
+  }
+}
+
+.slider {
+  display: flex;
+  gap: 0.625em;
+  align-items: center;
+  inline-size: 19em;
+  max-inline-size: 100%;
+}
+
+.sliderEnd {
+  flex: none;
+  color: var(--s-muted);
+  font-size: 0.75em;
+  font-weight: 800;
+}
+
+.range {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  block-size: 1.4em;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--leaf);
+}
+
+.chip {
+  display: flex;
+  gap: 0.4em;
+  align-items: center;
+  block-size: 2.5em;
+  padding: 0 1em;
+  border: 0;
+  border-radius: 999px;
+  color: var(--s-on-ink);
+  background: var(--s-soft);
+  font-size: 0.75em;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+// ── picture cards ──────────────────────────────────────────────────────
+
+.worlds {
+  display: flex;
+  gap: 0.625em;
+  padding: 0.75em;
+}
+
+.world {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 0.5em;
+  min-inline-size: 0;
+  padding: 0.5em;
+  border: 0;
+  border-radius: 1.125em;
+  color: var(--kink);
+  background: var(--s-soft);
+  text-align: start;
+  cursor: pointer;
+
+  &[aria-pressed="true"] {
+    background: var(--s-on);
+    box-shadow: 0 0 0 3px var(--leaf);
+  }
+}
+
+.worldShot {
+  display: block;
+  position: relative;
+  aspect-ratio: 2.1;
+  border-radius: 0.75em;
+  overflow: hidden;
+
+  img {
+    display: block;
+    object-fit: cover;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}
+
+.worldName {
+  padding-inline-start: 0.25em;
+  font-size: 0.875em;
+  font-weight: 900;
+}
+
+.pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875em;
+
+  > .group:first-child {
+    flex: 0 1 auto;
+  }
+
+  > .group + .group {
+    flex: 1 1 17em;
+  }
+}
+
+.faces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  padding: 0.75em;
+}
+
+.faceWrap {
+  display: flex;
+  position: relative;
+}
+
+.face {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375em;
+  align-items: center;
+  box-sizing: border-box;
+  inline-size: 5em;
+  padding: 0.625em 0.375em 0.5em;
+  border: 0;
+  border-radius: 1em;
+  color: var(--kink);
+  background: var(--s-soft);
+  cursor: pointer;
+
+  &[aria-pressed="true"] {
+    background: var(--s-on);
+    box-shadow: 0 0 0 3px var(--leaf);
+  }
+}
+
+.faceBig .face {
+  inline-size: 5.625em;
+}
+
+.faceRing {
+  --face: #9fb0c8;
+  display: grid;
+  position: relative;
+  place-items: center;
+  inline-size: 3.125em;
+  block-size: 3.125em;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #ffffff, var(--face));
+}
+
+.faceBig .faceRing {
+  inline-size: 3.625em;
+  block-size: 3.625em;
+}
+
+// CONTAIN, NOT COVER. The dinosaur portraits are padded so the whole animal
+// sits inside the inscribed circle; cropping them to fill cut off heads and
+// tails. The people are head crops and look the same either way.
+.faceClip {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+
+  img {
+    display: block;
+    object-fit: contain;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}
+
+.nobody {
+  --face: var(--s-track);
+  color: var(--s-muted);
+  font-size: 1.25em;
+  font-weight: 900;
+}
+
+.faceName {
+  max-inline-size: 100%;
+  overflow: hidden;
+  font-size: 0.8125em;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Room for the pencil, which is its own button laid over the card.
+.faceNameRoom {
+  padding-inline-end: 1.6em;
+}
+
+.pencil {
+  display: grid;
+  position: absolute;
+  inset-inline-end: 0.35em;
+  inset-block-end: 0.45em;
+  place-items: center;
+  inline-size: 1.5em;
+  block-size: 1.5em;
+  padding: 0;
+  border: 0;
+  border-radius: 0.4em;
+  color: var(--s-on-ink);
+  background: var(--card);
+  box-shadow: 0 1px 0 var(--kline);
+  cursor: pointer;
+}
+
+.check {
+  display: grid;
+  position: absolute;
+  inset-inline-end: -0.25em;
+  inset-block-end: -0.25em;
+  place-items: center;
+  inline-size: 1.375em;
+  block-size: 1.375em;
+  border-radius: 50%;
+  background: var(--leaf);
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+.checkCorner {
+  inset-inline-end: 0.5em;
+  inset-block: 0.5em auto;
+  inline-size: 1.5em;
+  block-size: 1.5em;
+}
+
+.locked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: 5em;
+  min-block-size: 5.4em;
+  border: 2px dashed color-mix(in oklab, var(--kink) 22%, var(--card));
+  border-radius: 1em;
+  color: var(--s-muted);
+  font-weight: 900;
+  text-align: center;
+
+  > span {
+    font-size: 0.75em;
+  }
+}
+
+.boards {
+  display: flex;
+  gap: 0.5em;
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375em;
+  align-items: center;
+  padding: 0.5em 0.625em;
+  border: 0;
+  border-radius: 0.875em;
+  color: var(--kink);
+  background: var(--s-soft);
+  font-size: 0.75em;
+  font-weight: 900;
+  cursor: pointer;
+
+  &[aria-pressed="true"] {
+    background: var(--s-on);
+    box-shadow: 0 0 0 3px var(--leaf);
+  }
+}
+
+.boardSvg {
+  inline-size: 5.5em;
+  block-size: 2em;
+}
+
+.classic {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  align-items: center;
+  padding: 1em;
+}
+
+.classicIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 3.5em;
+  block-size: 3.5em;
+  border-radius: 1em;
+  background: linear-gradient(135deg, #6ea4ff, #7b3dff);
+
+  svg {
+    inline-size: 1.75em;
+    block-size: 1.75em;
+  }
+}
+
+.classicText {
+  display: flex;
+  flex: 1 1 12em;
+  flex-direction: column;
+  gap: 0.125em;
+}
+
+.classicTitle {
+  font-size: 1em;
+  font-weight: 900;
+}
+
+.classicGo {
+  block-size: 2.625em;
+  margin-inline-start: auto;
+  padding: 0 1.125em;
+  border: 0;
+  border-radius: 999px;
+  color: var(--leaf-ink);
+  background: var(--leaf);
+  box-shadow: 0 4px 0 var(--leaf-d);
+  font-size: 0.875em;
+  font-weight: 900;
+  cursor: pointer;
+
+  &:active {
+    box-shadow: 0 1px 0 var(--leaf-d);
+    transform: translateY(3px);
+  }
+}
+
+// ── footer ─────────────────────────────────────────────────────────────
+
+.foot {
+  display: flex;
+  flex: none;
+  gap: 0.75em;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 1em 1.625em 1.25em;
+  border-block-start: 1.5px solid var(--kline);
+}
+
+.cta {
+  block-size: 2.95em;
+  padding: 0 1.65em;
+  border: 0;
+  border-radius: 999px;
+  color: var(--leaf-ink);
+  background: var(--leaf);
+  box-shadow: 0 5px 0 var(--leaf-d);
+  font-size: 1.0625em;
+  font-weight: 900;
+  cursor: pointer;
+
+  &:active {
+    box-shadow: 0 1px 0 var(--leaf-d);
+    transform: translateY(4px);
+  }
+}
+
+.ctaQuiet {
+  color: var(--s-muted);
+  background: var(--s-soft);
+  box-shadow: 0 5px 0 var(--kline);
+
+  &:active {
+    box-shadow: 0 1px 0 var(--kline);
+  }
+}
+
+// ── narrow: the rail lies down as a row of icon tabs above the pane ────
+
+@media (max-width: 45rem) {
+  .head {
+    gap: 0.625em;
+    padding: 1em 1em 0.75em;
+  }
+
+  .gear {
+    inline-size: 2.25em;
+    block-size: 2.25em;
+  }
+
+  .title {
+    font-size: 1.2em;
+  }
+
+  .body {
+    flex-direction: column;
+    gap: 0.75em;
+    padding-inline: 1em;
+  }
+
+  .rail {
+    flex-direction: row;
+    gap: 0.25em;
+    inline-size: auto;
+    padding: 0.375em;
+    border-radius: 1.125em;
+    overflow: visible;
+  }
+
+  .tab {
+    flex: 1 1 0;
+    justify-content: center;
+    min-inline-size: 0;
+    padding: 0.375em;
+    border-radius: 0.875em;
+  }
+
+  // Still read out — the tab's name is its label — just not drawn.
+  .tabText {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  .pane {
+    padding-inline: 0.125em;
+  }
+
+  .paneTitle {
+    font-size: 1.2em;
+  }
+
+  .row {
+    padding: 0.7em 0.8em;
+  }
+
+  .rowIndent {
+    padding-inline-start: 1.8em;
+  }
+
+  .worlds,
+  .faces {
+    padding: 0.5em;
+  }
+
+  .foot {
+    padding: 0.75em 1em 1em;
+  }
+
+  .cta {
+    flex: 1 1 auto;
+  }
+
+  .ctaQuiet {
+    flex: 0 1 34%;
+  }
+}
+
+@media (max-width: 30rem) {
+  .playing {
+    padding: 0.25em;
+  }
+
+  .playingText {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+// The guide's portrait at the head of his row — the same round face the
+// avatar cards use, smaller.
+.rowFace {
+  flex: none;
+  object-fit: contain;
+  inline-size: 2.6em;
+  block-size: 2.6em;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #ffffff, #e6ecf5);
+}

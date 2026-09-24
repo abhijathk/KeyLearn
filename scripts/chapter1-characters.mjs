@@ -75,8 +75,8 @@ const OUT = join(REPO, "root/public/kids-assets/models/village-folk");
 
 
 const CAST = [
-  { name: "Cow", ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert"] },
-  { name: "Cow_Calf", ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Idle" }, splice: ["Graze", "Walk", "Idle_Alert"] },
+  { name: "Cow", pack: true, ratio: 0.38,         src: "Cows/Village cow.glb",                              tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Walk" }, author: ["Idle", "Graze", "Idle_Alert", "Rest"] },
+  { name: "Cow_Calf", pack: true, ratio: 0.38,    src: "Cows/Village cow calf.glb",                         tex: 1024, drop: [],           budget: 1_000_000, rename: { "Armature|Unreal Take|baselayer": "Walk" }, author: ["Idle", "Graze", "Idle_Alert", "Rest"] },
   {
     name: "Headman", ratio: 0.4, tex: 1024, budget: 1_500_000,
     // THE SECOND HEADMAN FILE, which arrived with real animation on it. The
@@ -211,6 +211,17 @@ const only = args.filter((a) => !a.startsWith("--"));
 const kb = (p) => (statSync(p).size / 1024).toFixed(0);
 const run = (script, a) =>
   execFileSync("node", [join(HERE, script), ...a], { stdio: "pipe" }).toString();
+/**
+ * The same, for a step that has to happen in Blender.
+ *
+ * Skin weights are the one thing this pipeline cannot do in glTF space with
+ * any confidence: the weighting is per-vertex, has to be renormalised, and
+ * has to respect the four-influence limit or the exporter silently drops the
+ * smallest and the vertex drifts off the model. Blender owns that.
+ */
+const runBlender = (script, a) =>
+  execFileSync("blender", ["-b", "-P", join(HERE, script), "--", ...a],
+               { stdio: "pipe" }).toString();
 
 function readGlb(path) {
   const src = readFileSync(path);
@@ -428,6 +439,19 @@ for (const c of CAST) {
 
     // 1c ── ONE CLIP IS NOT AN ANIMAL.
     //
+    // AND THE CATTLE'S ONE CLIP IS A WALK, WHATEVER IT IS CALLED. Both cows
+    // arrive with a single take named `Armature|Unreal Take|baselayer`, which
+    // this script used to rename to `Idle` — the reasonable guess for an
+    // animal's only clip, and wrong. It is a one-second cycle whose front leg
+    // swings 20 degrees every tenth of a second, which is not a cow standing
+    // still; measured against the buffalo's actual Walk the two are within a
+    // couple of degrees of each other on every joint. So the village's idle
+    // cows have always been walking on the spot.
+    //
+    // It is renamed `Walk` and the real `Idle` is taken from the donor with
+    // the rest. The cow keeps her own gait, which is the better one — 81
+    // channels against the donor's 28 — and gains a standstill she never had.
+    //
     // The cattle arrived with a single pose apiece, so a cow could stand and
     // do nothing else — it could not graze, could not walk, and could not
     // move out of a buffalo's way. The buffalo already has thirteen clips
@@ -451,6 +475,71 @@ for (const c of CAST) {
     // IT the dangerous animal on this road, and a cow that can rear at a
     // child is a different game. The kids app strips attack clips on load
     // anyway, so they would be downloaded and thrown away.
+    // 1c(i) ── AUTHORED ON ITS OWN BODY, not borrowed from another one.
+    //
+    // The cattle used to take `Idle`, `Graze` and `Idle_Alert` from the
+    // buffalo. A splice remaps by bone name, which is the right idea — the
+    // rigs are the same 27 joints under the same names — but what it copies
+    // is JOINT ANGLES, and a joint angle is only the same pose on two animals
+    // if they are the same shape. They are not. The borrowed graze put the
+    // buffalo's muzzle where the buffalo's grass is, which on a cow's neck is
+    // a foot above the ground: she chewed at the air in front of her. The
+    // borrowed idle stood her hind legs out behind her, because that is where
+    // a buffalo's stance puts them.
+    //
+    // `buffalo-author.mjs` does not copy angles. It gives a hoof a world
+    // target — on the floor, under this animal's own hip — and solves the
+    // leg with IK, and it puts the muzzle on the floor by measuring where
+    // this animal's skin actually is. Run against the cow it produces the
+    // cow's graze, not a scaled buffalo's. It reads its source gait from the
+    // file, so each animal is authored from its own Walk.
+    //
+    // It also authors `Rest`, which no donor had: the cattle lie down at
+    // night and nothing in the pack ships a lie-down clip.
+    if (c.author != null) {
+      // 1c(0) ── GIVE IT A NECK FIRST, AND MAKE THE NECK CARRY THE NECK.
+      //
+      // The cattle rig has 27 joints and no neck: `head` pivots directly on
+      // `chest`, so the skull swings on one hinge at the withers. Every clip
+      // this tool authors drives `neck0` and `neck1` — and on an animal that
+      // has neither, every one of those lines was silently doing nothing.
+      // That is the single reason the cattle animations read as fake: the
+      // neck never moved in any of them.
+      //
+      // Inserting the joints is not enough on its own. `buffalo-add-neck`
+      // moves skin onto them with a weighting written around the buffalo's
+      // proportions; run on the cow it transfers almost nothing — measured,
+      // `head` kept 7408 units of weight against 42 on `neck0` and 9 on
+      // `neck1`, with no vertex above 0.10 on either. The joints were there
+      // and the skin still would not bend. The second pass re-splits that
+      // weight along the axis the GEOMETRY defines, from the chest joint to
+      // the muzzle, which is the one that matches where the neck actually
+      // is on this animal.
+      run("buffalo-add-neck.mjs", [cur, step("n0.glb")]);
+      runBlender("blender-cattle-neck-weights.py", [step("n0.glb"), step("n1.glb")]);
+      cur = step("n1.glb");
+      console.log("  neck joints added and weighted from the geometry");
+      // `--cattle` / `--calf`: the cattle's own Walk, authored against
+      // their own body in place of the source take (which lands in the file
+      // as `Walk_Source` and is dropped just below with the buffalo's
+      // clips), and a cattle Idle that looks rather than sweeps.
+      run("buffalo-author.mjs", [cur, step("a0.glb"), /Calf/.test(c.name) ? "--calf" : "--cattle"]);
+      cur = step("a0.glb");
+      // The tool authors the buffalo's whole repertoire; the cattle need four
+      // of them. Charging, goring and dying are what make the BUFFALO the
+      // dangerous animal on this road, and the kids app strips attack clips
+      // on load anyway, so they would be downloaded and thrown away.
+      const { json: aj } = readGlb(cur);
+      const keep = new Set([...c.author, "Walk"]);
+      const toss = (aj.animations ?? [])
+        .map((a) => a.name)
+        .filter((n) => !keep.has(n));
+      if (toss.length > 0) {
+        run("glb-drop-clips.mjs", [cur, step("a1.glb"), ...toss]);
+        cur = step("a1.glb");
+      }
+      console.log(`  authored on its own body: ${c.author.join(", ")}`);
+    }
     if (c.splice != null) {
       const donor = join(
         REPO,
@@ -518,9 +607,33 @@ for (const c of CAST) {
       }
       if (pbr.metallicRoughnessTexture != null) {
         delete pbr.metallicRoughnessTexture;
-        pbr.metallicFactor = 0;
-        pbr.roughnessFactor = 0.85;
+        pbr.roughnessFactor ??= 0.85;
         dropped++;
+      }
+      // NOBODY IN THIS VILLAGE IS MADE OF METAL — AND SAYING NOTHING MEANS
+      // METAL.
+      //
+      // glTF's default `metallicFactor` is 1.0, so a material that simply
+      // omits it is fully metallic. The cow and the calf omit it. A fully
+      // metallic surface has no diffuse term at all: its basecolor — the
+      // 1024 ETC1S map this script works so hard to fit — cannot contribute
+      // anything, and the animal is lit entirely by reflections.
+      //
+      // In the village that reads as merely dark, because the world supplies
+      // an environment map for the sky to reflect, so the cows have always
+      // been a bit too black rather than obviously wrong. On the review page,
+      // which has honest directional and hemisphere lights and no
+      // environment, they render as near-silhouettes.
+      //
+      // This used to be set only when a metallic-roughness TEXTURE was
+      // dropped, which is backwards: the materials that ship a texture are
+      // the ones that had an answer, and the ones that ship nothing are the
+      // ones defaulting to metal. Assert it for every character instead —
+      // the same reasoning as the emissive basecolor two lines down, which
+      // is also a lighting bug rather than a size one.
+      if (pbr.metallicFactor !== 0) {
+        pbr.metallicFactor = 0;
+        pbr.roughnessFactor ??= 0.85;
       }
       // AND THE NORMAL MAP, for the same reason as the metallic-roughness.
       //
@@ -651,7 +764,28 @@ for (const c of CAST) {
     //      decision 4 — the index codec needs 32-bit indices and widening
     //      them costs more than the codec recovers on meshes like these.
     run("glb-quantize-attrs.mjs", [cur, step("d.glb")]);
-    run("glb-compress.mjs", [step("d.glb"), step("e.glb")]);
+    // 5b ── `pack`: THE CATTLE GO FURTHER, and lose nothing on screen.
+    //
+    //  * reorder: triangles and vertices into cache order, a permutation.
+    //    It is what makes decision 4 wrong for these files — in atlas order
+    //    the index codec found nothing to predict; in cache order it turns
+    //    73 KB of indices into 13, and the vertex codec halves UV/skin too.
+    //  * positions to 15-bit integers (KHR_mesh_quantization), the
+    //    dequantization folded into the inverse bind matrices; the worst
+    //    vertex moves 0.0015% of the animal's size.
+    //  * normals DROPPED: loadModel welds and recomputes them, so the ones
+    //    in the file never reached the screen. The weld guard keeps every
+    //    hard edge the weld kept before. Measured through the game's own
+    //    weld: same 16,506 vertices, median normal change 0.05 degrees.
+    //
+    // Cow 899 KB -> ~536 KB, texture and animation bytes untouched.
+    if (c.pack) {
+      run("glb-reorder-mesh.mjs", [step("d.glb"), step("d1.glb")]);
+      run("glb-quantize-mesh.mjs", [step("d1.glb"), step("d2.glb"), "--normals", "drop", "--bits", "15"]);
+      run("glb-compress.mjs", [step("d2.glb"), step("e.glb"), "--indices", "--verify"]);
+    } else {
+      run("glb-compress.mjs", [step("d.glb"), step("e.glb")]);
+    }
     const size = statSync(step("e.glb")).size;
     const was = statSync(from).size;
     console.log(`  ${(was / 1e6).toFixed(1)} MB -> ${(size / 1e6).toFixed(2)} MB  (${(100 - (size / was) * 100).toFixed(0)}% off)`);

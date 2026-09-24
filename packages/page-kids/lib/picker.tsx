@@ -37,6 +37,7 @@ export type Pick = {
 export function Picker({
   open,
   chapter,
+  sign,
   lesson,
   characters,
   companions,
@@ -64,6 +65,8 @@ export function Picker({
    */
   readonly open: boolean;
   readonly chapter: string;
+  /** The world's title sign, drawn small at the head of the screen. */
+  readonly sign?: string;
   readonly lesson: string;
   readonly characters: readonly Pick[];
   readonly companions: readonly Pick[];
@@ -163,7 +166,23 @@ export function Picker({
       aria-hidden={!open}
     >
       <div className={styles.pickSky} />
-      <div className={styles.pickTop}>
+      <div
+        className={[
+          styles.pickTop,
+          sign != null ? styles.pickTopSigned : "",
+        ].join(" ")}
+      >
+        {/* The same sign the loading card opened on, small and first in the
+            row, so the name of the place stays on screen while the child
+            chooses. */}
+        {sign != null && (
+          <img
+            className={styles.pickSign}
+            src={sign}
+            alt=""
+            aria-hidden="true"
+          />
+        )}
         <div>
           <div className={styles.pickWhere}>{chapter}</div>
           <div className={styles.pickAsk}>Who is walking today?</div>
@@ -173,7 +192,7 @@ export function Picker({
           className={styles.pickGo}
           onClick={() => setSent(true)}
         >
-          Walk on
+          Walk on <span aria-hidden="true">→</span>
         </button>
       </div>
 
@@ -253,13 +272,12 @@ export function Picker({
               }}
             >
               <b>{chosen.label}</b>
-              <svg
-                className={styles.pickPen}
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M4 20h4L20 8l-4-4L4 16z" />
-              </svg>
+              <span className={styles.pickPenBox} aria-hidden="true">
+                <svg className={styles.pickPen} viewBox="0 0 24 24">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+                </svg>
+              </span>
             </button>
             {chosen.label !== shipped(chosen.id) && (
               <button
@@ -296,8 +314,9 @@ export function Picker({
           <div className={styles.pickLab}>
             <b>Walking with</b>
             <i>
+              {"· "}
               {walkingWith.length === 0
-                ? "up to two · or nobody"
+                ? "up to two"
                 : full
                   ? "both chosen · tap one to drop it"
                   : "room for one more"}
@@ -355,10 +374,24 @@ function Row({
             aria-pressed={on}
             onClick={() => onTap(p.id)}
           >
+            {/* A ring (lit when chosen), the portrait inside it, and a check
+                badge on the chosen one — the tick says "chosen" to a child
+                who cannot tell a gradient ring from a hover. */}
             <span
               className={[styles.pickAv, on ? styles.pickOn : ""].join(" ")}
-              style={{ backgroundImage: `url(${faceUrl(p.id)})` }}
-            />
+            >
+              <span
+                className={styles.pickFace}
+                style={{ backgroundImage: faceLayers(p.id) }}
+              />
+              {on && (
+                <span className={styles.pickCheck} aria-hidden="true">
+                  <svg className={styles.pickTick} viewBox="0 0 24 24">
+                    <path d="M5 12l5 5L20 7" />
+                  </svg>
+                </span>
+              )}
+            </span>
             <span className={styles.pickName}>{p.label}</span>
           </button>
         );
@@ -366,6 +399,24 @@ function Row({
     </div>
   );
 }
+
+/**
+ * The colour each portrait sits on — the glow behind the face in the offline
+ * render's circle, keyed by cast id. Anybody new gets a neutral grey.
+ */
+const FACE_TINT: Readonly<Record<string, string>> = {
+  Explorer: "#5b8def",
+  Peeli: "#e9739a",
+  Explorer6: "#4fb58a",
+  Robot: "#8a8fa8",
+  Puppy: "#c89b6d",
+};
+
+/** The portrait over a soft light in that character's colour. */
+const faceLayers = (id: string) =>
+  `url(${faceUrl(id)}), radial-gradient(circle at 50% 35%, #fff, ${
+    FACE_TINT[id] ?? "#8a8fa8"
+  })`;
 
 const labelOf = (people: readonly Pick[], id: string) =>
   people.find((p) => p.id === id)?.label ?? "";

@@ -48,9 +48,8 @@ export type BandConfig = {
    *
    * The dino trail is the whole point for the younger bands. By eleven it
    * reads as a game made for somebody smaller — so the oldest band opens on
-   * the grown-up-shaped Classic screen instead. Only the landing choice
-   * differs: either band can switch in the toy-box, and both faces run the
-   * same engine over the same progress.
+   * Classic, the grown-up practice page, instead. Only the landing choice
+   * differs: either band can switch in the toy-box.
    */
   readonly classic: boolean;
   /**
@@ -155,8 +154,8 @@ const CONFIGS: Record<AgeBand, BandConfig> = {
     timerMin: 20,
     bigLetters: false,
     // The trail wants the helper hands and the simple board whatever the age:
-    // these are the defaults for the game, and Classic draws its own full
-    // board and its own hands regardless of them.
+    // these are the defaults for the game, and Classic (the grown-up page)
+    // does not read them.
     hands: true,
     kbMode: "simple",
     classic: true,
@@ -218,7 +217,7 @@ export function bandConfig(band: AgeBand = currentBand()): BandConfig {
 }
 
 /**
- * Whether this band is even offered the Classic screen.
+ * Whether this band is even offered Classic, the grown-up practice page.
  *
  * Below nine it is not a choice worth having: the grown-up shape assumes a
  * reader who can take a paragraph of words and a wall of statistics, and the

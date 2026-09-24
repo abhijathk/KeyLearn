@@ -1,0 +1,893 @@
+// The kids Classic celebration windows — "Key unlocked", "Goal complete" and
+// "Time for a break". One vocabulary shared by all three: a vivid header
+// band, fully tinted stat cards with glossy icon tiles, a chunky primary
+// button. Day is the default; the night palette is the same shapes, dimmer
+// and less saturated, keyed off the kids frame's body attribute.
+//
+// Compact by design, and fluid: the card never outgrows the window. Width is
+// capped by the viewport, height by the viewport too (the band stays, the
+// body scrolls inside), and the band, keycap, medal, ring and headline scale
+// with the window's height through clamp().
+
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  place-items: center;
+  padding: 1rem;
+  background-color: rgb(12 16 38 / 60%);
+  overflow-y: auto;
+  backdrop-filter: blur(3px);
+}
+
+.card {
+  --kw-card: #fff;
+  --kw-text: #1b2140;
+  --kw-muted: #6b7090;
+  --kw-panel: #f4f6fb;
+  --kw-chip: #fff;
+  --kw-chip-shadow: 0 2px 6px rgb(27 33 64 / 10%);
+  --kw-inset: rgb(255 255 255 / 40%);
+  --kw-violet: #f1ebfc;
+  --kw-blue: #e8f0ff;
+  --kw-orange: #fff0e5;
+  --kw-green: #e3f7ee;
+  --kw-orange-ink: #c0612b;
+  --kw-green-ink: #178a55;
+  --kw-seg: #e4e7f0;
+  --kw-seg-on: linear-gradient(180deg, #6ea4ff, #3a6bff);
+  --kw-seg-new: linear-gradient(180deg, #e28bff, #9b3dff);
+  --kw-seg-new-glow: rgb(155 61 255 / 80%);
+  --kw-bar: linear-gradient(180deg, #d9e4fb, #c4d3f4);
+  --kw-bar-today: linear-gradient(180deg, #ffb35c, #ff5a6e);
+  --kw-primary: linear-gradient(180deg, #5b95ff, #2d6cf0);
+  --kw-primary-edge: #1a4fc0;
+  --kw-secondary: #eef0f6;
+  --kw-secondary-edge: #d3d7e3;
+  --kw-lift: rgb(27 33 64 / 12%);
+  --kw-glow: rgb(255 255 255 / 28%);
+  --kw-sparkle: 1;
+  --kw-keycap-glow: 0 0 40px rgb(255 255 255 / 55%);
+  --kw-medal: #ffd24a;
+  --kw-ring-a: #ffb46b;
+  --kw-ring-b: #ff7a3d;
+  --kw-head-unlock: linear-gradient(125deg, #3a6bff, #7b3dff 55%, #c43dff);
+  --kw-head-goal: linear-gradient(125deg, #ff9a2e, #ff5a6e 55%, #e0357f);
+  --kw-head-rest: linear-gradient(125deg, #23307a, #2b5aa8 55%, #18a3a3);
+
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  inline-size: min(var(--kw-width, 26.25rem), calc(100vi - 2rem));
+  max-block-size: calc(100dvb - 2rem);
+  border-radius: 1.375rem;
+  overflow: hidden;
+  color: var(--kw-text);
+  background-color: var(--kw-card);
+  box-shadow:
+    0 2px 0 var(--kw-inset) inset,
+    0 20px 48px rgb(0 0 0 / 40%),
+    0 6px 16px rgb(0 0 0 / 18%);
+  font-family: var(--value-font-family);
+  font-weight: 800;
+  animation: kids-window-rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:global(body[data-kids-classic="night"]) .card {
+  --kw-card: #262c4d;
+  --kw-text: #f2f2fc;
+  --kw-muted: #b0b4d0;
+  --kw-panel: #2e3558;
+  --kw-chip: #353d66;
+  --kw-chip-shadow: 0 2px 6px rgb(0 0 0 / 30%);
+  --kw-inset: rgb(255 255 255 / 6%);
+  --kw-violet: #34295a;
+  --kw-blue: #22335e;
+  --kw-orange: #45301f;
+  --kw-green: #1b3f3a;
+  --kw-orange-ink: #ffb07a;
+  --kw-green-ink: #6fe0b4;
+  --kw-seg: #353d66;
+  --kw-seg-on: linear-gradient(180deg, #4c78c8, #3453ad);
+  --kw-seg-new: linear-gradient(180deg, #b06ccc, #7433b8);
+  --kw-seg-new-glow: rgb(155 61 255 / 35%);
+  --kw-bar: linear-gradient(180deg, #3e4f88, #34427a);
+  --kw-bar-today: linear-gradient(180deg, #c48b4e, #bb4a5c);
+  --kw-primary: linear-gradient(180deg, #4a7ad8, #2553bf);
+  --kw-primary-edge: #163c90;
+  --kw-secondary: #353d66;
+  --kw-secondary-edge: #20264a;
+  --kw-lift: rgb(0 0 0 / 30%);
+  --kw-glow: rgb(255 255 255 / 12%);
+  --kw-sparkle: 0.55;
+  --kw-keycap-glow: 0 0 24px rgb(255 255 255 / 22%);
+  --kw-medal: #d4b04a;
+  --kw-ring-a: #d49a62;
+  --kw-ring-b: #c7663b;
+  --kw-head-unlock: linear-gradient(125deg, #2c4fb4, #5832b0 55%, #8a32a8);
+  --kw-head-goal: linear-gradient(125deg, #c7742a, #bf4658 55%, #a3336a);
+  --kw-head-rest: linear-gradient(125deg, #1a2458, #22447e 55%, #147a7c);
+}
+
+@keyframes kids-window-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0.9rem) scale(0.96);
+  }
+}
+
+// ---- Header band -----------------------------------------------------------
+
+.head {
+  display: flex;
+  position: relative;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  // The band's full height on a roomy window, down to ~60% on a short one.
+  block-size: clamp(
+    calc(var(--kw-head, 8rem) * 0.6),
+    22dvb,
+    var(--kw-head, 8rem)
+  );
+  overflow: hidden;
+  color: #fff;
+
+  &[data-tone="unlock"] {
+    background: var(--kw-head-unlock);
+  }
+
+  &[data-tone="goal"] {
+    background: var(--kw-head-goal);
+  }
+
+  &[data-tone="rest"] {
+    background: var(--kw-head-rest);
+  }
+}
+
+.streaks {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  pointer-events: none;
+}
+
+.sparkles {
+  opacity: var(--kw-sparkle);
+}
+
+.glow {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: 50%;
+  inline-size: 16rem;
+  block-size: 16rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--kw-glow),
+    rgb(255 255 255 / 0%) 62%
+  );
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.headBody {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: clamp(0.5rem, 1.6dvb, 0.75rem);
+  align-items: center;
+}
+
+.headRow {
+  display: flex;
+  position: relative;
+  gap: 1rem;
+  align-items: center;
+  box-sizing: border-box;
+  inline-size: 100%;
+  padding-inline: 1.25rem;
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+  min-inline-size: 0;
+}
+
+.headBig {
+  font-size: clamp(1.5rem, 5dvb, 2.125rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.headSub {
+  color: rgb(255 255 255 / 85%);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.medal {
+  --kw-medal-size: clamp(3.25rem, 11dvb, 4.5rem);
+
+  flex: none;
+  inline-size: var(--kw-medal-size);
+  block-size: calc(var(--kw-medal-size) * 1.146);
+}
+
+.medalDisc {
+  fill: var(--kw-medal);
+}
+
+// ---- Pills, keycap -------------------------------------------------------
+
+.pill {
+  padding-inline: 0.625rem;
+  padding-block: 0.25rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pillOnHead {
+  background: #fff;
+
+  [data-tone="unlock"] & {
+    color: #5b3dff;
+  }
+
+  [data-tone="goal"] & {
+    color: #e0357f;
+  }
+}
+
+.pillWarm {
+  color: var(--kw-orange-ink);
+  background: var(--kw-orange);
+}
+
+.keycap {
+  --kw-key-size: clamp(3rem, 10.5dvb, 4.5rem);
+
+  display: grid;
+  place-items: center;
+  inline-size: var(--kw-key-size);
+  block-size: calc(var(--kw-key-size) * 0.94);
+  border-radius: calc(var(--kw-key-size) * 0.2);
+  color: #1b2140;
+  background: linear-gradient(180deg, #fff, #eef2fb);
+  box-shadow:
+    0 5px 0 #c3cde6,
+    0 0 0 4px rgb(255 255 255 / 35%),
+    var(--kw-keycap-glow);
+  font-size: calc(var(--kw-key-size) * 0.55);
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  animation: kids-window-key-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes kids-window-key-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-8deg);
+  }
+}
+
+// ---- Body ------------------------------------------------------------------
+
+// Everything under the band. On a short window this is what scrolls, so the
+// band and its keycap or medal stay put.
+.scroll {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overscroll-behavior: contain;
+  overflow-y: auto;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-inline: 1.25rem;
+  padding-block: 1rem 1.125rem;
+}
+
+.bodyCentered {
+  align-items: center;
+  text-align: center;
+}
+
+.bodyTight {
+  gap: 0.625rem;
+  padding-inline: 1.125rem;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.25rem, 3.8dvb, 1.5rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  margin: 0;
+  color: var(--kw-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.line {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.caption {
+  color: var(--kw-muted);
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  inline-size: 100%;
+  text-align: start;
+}
+
+// ---- Keys-unlocked meter -----------------------------------------------------
+
+.meterHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.meterCount {
+  font-size: 0.8125rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.meterTotal {
+  color: var(--kw-muted);
+}
+
+.meter {
+  display: flex;
+  gap: 0.1875rem;
+}
+
+.seg {
+  flex-grow: 1;
+  block-size: 0.5rem;
+  border-radius: 0.1875rem;
+  background: var(--kw-seg);
+
+  &[data-state="on"] {
+    background: var(--kw-seg-on);
+  }
+
+  &[data-state="new"] {
+    background: var(--kw-seg-new);
+    box-shadow: 0 0 8px var(--kw-seg-new-glow);
+  }
+}
+
+// ---- Stat tiles ----------------------------------------------------------------
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(var(--kw-cols, 3), minmax(0, 1fr));
+  gap: 0.5rem;
+  inline-size: 100%;
+  text-align: start;
+}
+
+.tilesFour {
+  --kw-cols: 4;
+
+  gap: 0.375rem;
+}
+
+@media (width <= 36rem) {
+  .tilesFour {
+    --kw-cols: 2;
+  }
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-inline-size: 0;
+  padding: 0.625rem;
+  border-radius: 0.875rem;
+
+  &[data-tint="violet"] {
+    --kw-tile-a: #b08cf0;
+    --kw-tile-b: #8a63d2;
+
+    background: var(--kw-violet);
+  }
+
+  &[data-tint="blue"] {
+    --kw-tile-a: #6ea4ff;
+    --kw-tile-b: #2d7cff;
+
+    background: var(--kw-blue);
+  }
+
+  &[data-tint="orange"] {
+    --kw-tile-a: #ffb070;
+    --kw-tile-b: #ff8a3d;
+
+    background: var(--kw-orange);
+  }
+
+  &[data-tint="green"] {
+    --kw-tile-a: #5fe0a8;
+    --kw-tile-b: #23c483;
+
+    background: var(--kw-green);
+  }
+}
+
+.tileHead {
+  display: flex;
+  gap: 0.375rem;
+  align-items: center;
+  min-inline-size: 0;
+
+  .caption {
+    min-inline-size: 0;
+    line-height: 1.15;
+    letter-spacing: 0.08em;
+  }
+}
+
+// Four across is too narrow for icon and caption side by side, so the
+// caption sits under the icon; on a narrow window the same goes for three
+// across, while four drops to two across and has room again.
+.tilesFour .tileHead {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+@media (width <= 36rem) {
+  .tiles .tileHead {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tilesFour .tileHead {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.tileIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, var(--kw-tile-a), var(--kw-tile-b));
+  box-shadow:
+    0 2px 6px color-mix(in srgb, var(--kw-tile-b) 40%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 45%);
+
+  svg {
+    inline-size: 0.8125rem;
+    block-size: 0.8125rem;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.6;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+}
+
+.tileValue {
+  font-size: 1.375rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.tileValueSmall {
+  font-size: 1.125rem;
+}
+
+.unit {
+  margin-inline-start: 0.1875rem;
+  color: var(--kw-muted);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.badge {
+  align-self: flex-start;
+  padding-inline: 0.4375rem;
+  padding-block: 0.0625rem;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff9a2e, #e0357f);
+  font-size: 0.5625rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+// ---- Weekly bars -------------------------------------------------------------
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-inline: 0.75rem;
+  padding-block: 0.625rem 0.5rem;
+  border-radius: 0.875rem;
+  background: var(--kw-panel);
+}
+
+.panelHead {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gain {
+  padding-inline: 0.5rem;
+  padding-block: 0.125rem;
+  border-radius: 999px;
+  color: var(--kw-green-ink);
+  background: var(--kw-green);
+  font-size: 0.6875rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.bars {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  block-size: clamp(2.75rem, 8dvb, 4rem);
+}
+
+.barCol {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: flex-end;
+  min-inline-size: 0;
+  block-size: 100%;
+}
+
+.bar {
+  inline-size: 100%;
+  border-radius: 0.375rem;
+  background: var(--kw-bar);
+}
+
+.barToday {
+  background: var(--kw-bar-today);
+}
+
+.barLabel {
+  color: var(--kw-muted);
+  font-size: 0.625rem;
+  font-weight: 900;
+}
+
+.barLabelToday {
+  color: var(--kw-text);
+}
+
+// ---- Strips (slowest keys, tips) ------------------------------------------------
+
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding-inline: 0.75rem;
+  padding-block: 0.5rem;
+  border-radius: 0.875rem;
+  text-align: start;
+
+  &[data-tint="orange"] {
+    background: var(--kw-orange);
+  }
+
+  &[data-tint="green"] {
+    background: var(--kw-green);
+  }
+
+  &[data-tint="blue"] {
+    background: var(--kw-blue);
+  }
+}
+
+.stripTip {
+  flex-wrap: nowrap;
+  gap: 0.625rem;
+  padding-block: 0.5rem;
+}
+
+.stripLabel {
+  color: var(--kw-orange-ink);
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.stripText {
+  color: var(--kw-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.tipText {
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.chip {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: 0.4375rem;
+  background: var(--kw-chip);
+  box-shadow: var(--kw-chip-shadow);
+  font-size: 0.8125rem;
+  font-weight: 900;
+}
+
+.tipIcon {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: 0.5625rem;
+
+  svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+    fill: none;
+    stroke-width: 2.4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+}
+
+.tipIconGreen svg {
+  stroke: #23c483;
+}
+
+.tipIconBlue svg {
+  stroke: #2d7cff;
+}
+
+// ---- Rest ring -------------------------------------------------------------------
+
+.ring {
+  display: grid;
+  position: relative;
+  place-items: center;
+  inline-size: clamp(4.5rem, 15dvb, 6rem);
+  block-size: clamp(4.5rem, 15dvb, 6rem);
+
+  svg {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}
+
+.ringTrack {
+  fill: none;
+  stroke: rgb(255 255 255 / 12%);
+  stroke-width: 12;
+}
+
+.ringFill {
+  fill: none;
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.ringStopA {
+  stop-color: var(--kw-ring-a);
+}
+
+.ringStopB {
+  stop-color: var(--kw-ring-b);
+}
+
+.ringText {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ringValue {
+  font-size: clamp(1.25rem, 4.2dvb, 1.625rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ringUnit {
+  margin-inline-start: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.ringCaption {
+  color: rgb(255 255 255 / 75%);
+  font-size: 0.5625rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+// ---- Buttons ---------------------------------------------------------------------
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  inline-size: 100%;
+}
+
+.actionsRow {
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-block-size: 2.75rem;
+  padding-inline: 1rem;
+  padding-block: 0.375rem;
+  border: 0;
+  border-radius: 0.875rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease;
+
+  &:active {
+    transform: translateY(3px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid color-mix(in srgb, #5b95ff 70%, transparent);
+    outline-offset: 3px;
+  }
+}
+
+.primary {
+  flex-grow: 1;
+  inline-size: 100%;
+  color: #fff;
+  background: var(--kw-primary);
+  box-shadow:
+    0 3px 0 var(--kw-primary-edge),
+    0 6px 14px var(--kw-lift);
+
+  &:active {
+    box-shadow:
+      0 1px 0 var(--kw-primary-edge),
+      0 4px 10px var(--kw-lift);
+  }
+}
+
+.secondary {
+  flex: none;
+  inline-size: 7.5rem;
+  color: var(--kw-text);
+  background: var(--kw-secondary);
+  box-shadow:
+    0 3px 0 var(--kw-secondary-edge),
+    0 6px 14px var(--kw-lift);
+
+  &:active {
+    box-shadow:
+      0 1px 0 var(--kw-secondary-edge),
+      0 4px 10px var(--kw-lift);
+  }
+}
+
+@media (width <= 36rem) {
+  .secondary {
+    inline-size: 6rem;
+  }
+}
+
+.actionsRow .primary {
+  inline-size: auto;
+}
+
+.kbd {
+  padding-inline: 0.375rem;
+  padding-block: 0.0625rem;
+  border-radius: 0.375rem;
+  background: rgb(255 255 255 / 22%);
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.text {
+  padding-inline: 0.5rem;
+  padding-block: 0.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: var(--kw-muted);
+  background: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  cursor: pointer;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+
+  &:hover {
+    color: var(--kw-text);
+  }
+
+  &:focus-visible {
+    outline: 3px solid color-mix(in srgb, #5b95ff 70%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.titleSmall {
+  font-size: clamp(1.125rem, 3.4dvb, 1.3125rem);
+}

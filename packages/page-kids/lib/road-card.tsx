@@ -6,7 +6,7 @@ import * as styles from "./kids.module.less";
  * ONE CARD, USED BY ALL OF THEM.
  *
  * Time Keepers' overlays were six unrelated objects — a rounded white panel
- * here, a badge and a ribbon there — none of which belonged to a road in 1930s
+ * here, a badge and a ribbon there — none of which belonged to a road in 1960s
  * Kerala, and all of which a child had to read differently. This is the one
  * object they now share: the scoreboard's torn paper, an eyebrow saying which
  * kind of card it is, and the keys that dismiss it drawn as the keys they are.

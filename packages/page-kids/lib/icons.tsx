@@ -67,7 +67,7 @@ export function PawIcon({ size = 34, color = "#fff" }: IconProps) {
 /**
  * A PALM-LEAF MANUSCRIPT — the story button.
  *
- * Not a book. A book in 1930s Kerala is a European object; what a story was
+ * Not a book. The stories this road tells are older than print; what they were
  * actually kept on was a stack of dried palm leaves, cut long and narrow,
  * pierced through the middle and held with a cord. Drawn as the leaves either
  * side of the binding rather than as a solid block, because the cord down the

@@ -55,6 +55,7 @@ const PIN = defineMessages({
     defaultMessage: "Let this fade back while you type, as usual",
   },
 });
+import { useKidsPractice } from "./kids-flavour.ts";
 import * as styles from "./Pulse.module.less";
 import {
   AlphabetGrid,
@@ -115,6 +116,10 @@ export const Pulse = memo(function Pulse({
   const { formatMessage } = useIntl();
   const { formatNumber, formatPercents } = useIntlNumbers();
   const assessing = useAssessment() != null;
+  // The session recap is shut during a sitting, and on the kids' Classic
+  // screen, which keeps the row (speed, accuracy, streak) but not the panel.
+  const kids = useKidsPractice();
+  const recapOff = assessing || kids;
   const { formatSpeed, formatConfidence, speedUnit } = useFormatter();
   const { settings, updateSettings } = useSettings();
   const target = settings.get(lessonProps.targetSpeed);
@@ -162,7 +167,7 @@ export const Pulse = memo(function Pulse({
   // stop, on the same signal that dims the rest of the chrome — a pin holds
   // it open through the whole lesson instead. The learner's own open/closed
   // choice is untouched by this, so it survives the round.
-  const panelOpen = expanded && !assessing && !(live.typing && !pinned);
+  const panelOpen = expanded && !recapOff && !(live.typing && !pinned);
   // Mounted a moment longer than it is open, so the fold has something to
   // fold. 340ms matches the panel's own transition.
   const [recapMounted, setRecapMounted] = useState(panelOpen);
@@ -226,6 +231,264 @@ export const Pulse = memo(function Pulse({
   );
   const learningRate = learningRateInfo?.learningRate ?? null;
   const headerHidden = useHeaderHidden();
+
+  /*
+   * ── THE KIDS' CLASSIC SCREEN ─────────────────────────────────────────
+   *
+   * The same numbers, drawn as the owner's chosen "chip strip" (23 Sep 2026)
+   * for ten- to thirteen-year-olds: the speed and its road to the goal on
+   * one line, and everything else as a centred row of pastel chips in the
+   * kids header's own style. Nothing is computed here that the grown-up row
+   * does not compute — only the drawing differs — and every id the tour and
+   * the hide-the-score / hide-the-timer settings reach for is kept.
+   */
+  if (kids) {
+    const speedNow = showLive
+      ? formatSpeed(live.cpm, { unit: false })
+      : hasData
+        ? formatSpeed(speed.last, { unit: false })
+        : "—";
+    return (
+      <div
+        className={clsx(
+          styles.root,
+          styles.kidsRoot,
+          headerHidden && styles.alone,
+        )}
+      >
+        <div className={styles.kidsTop}>
+          <div
+            id={names?.speed}
+            className={styles.kidsSpeed}
+            data-score=""
+            title={formatMessage({
+              id: "metric.speed.description",
+              defaultMessage: "Your typing speed in the most recent lesson.",
+            })}
+          >
+            {showLive && <i className={styles.liveDot} />}
+            <b>{speedNow}</b>
+            <i className={styles.kidsUnit}>{speedUnit.id}</i>
+          </div>
+          {hasData &&
+            (warmingUp ? (
+              <span className={styles.kidsWarm}>
+                <FormattedMessage
+                  id="practice.pulse.warmup"
+                  defaultMessage="warm-up"
+                />
+              </span>
+            ) : (
+              <Chip delta={speed.delta} text={formatSpeed} />
+            ))}
+          <span
+            className={styles.kidsTrack}
+            title={formatMessage({
+              id: "practice.pulse.you.description",
+              defaultMessage:
+                "You are here — your latest speed on the way to the goal.",
+            })}
+          >
+            <span
+              className={styles.kidsFill}
+              style={{ inlineSize: `${frac * 100}%` }}
+            />
+            {/* You are here: the round marker rides the end of the fill. */}
+            <span
+              className={styles.kidsKnob}
+              style={{ insetInlineStart: `${frac * 100}%` }}
+            />
+          </span>
+          <span
+            className={clsx(styles.kidsGoal, crossed && styles.kidsGoalLit)}
+          >
+            <svg
+              className={styles.kidsFlag}
+              viewBox="0 0 24 24"
+              aria-hidden={true}
+            >
+              <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
+            </svg>
+            {formatSpeed(target)}
+            {hasData && !reached && (
+              <em className={styles.pct}>
+                <FormattedMessage
+                  id="practice.pulse.progress"
+                  defaultMessage="{percent}% of the way"
+                  values={{ percent: Math.round(frac * 100) }}
+                />
+              </em>
+            )}
+          </span>
+        </div>
+        <div className={styles.kidsChips}>
+          <span
+            id={names?.currentKey}
+            className={clsx(styles.kidsChip, styles.kidsKey)}
+            title={formatMessage({
+              id: "practice.lane.road.description",
+              defaultMessage:
+                "This key’s road to unlocking: the glowing dot is where you are now, the hollow ring is your best so far, the star is the unlock.",
+            })}
+          >
+            {focusedKey != null ? (
+              <>
+                {/* The key itself as a small white keycap. */}
+                <span
+                  className={styles.kidsKeycap}
+                  ref={Key.attach(focusedKey)}
+                  data-code-point={focusedKey.letter.codePoint}
+                >
+                  {focusedKey.letter.label}
+                </span>
+                {keyCalibrated ? (
+                  <>
+                    <span className={styles.kidsMini}>
+                      <span style={{ inlineSize: `${conf * 100}%` }} />
+                    </span>
+                    {bottleneck != null && (
+                      <span className={styles.kidsJoin}>
+                        <FormattedMessage
+                          id="practice.pulse.join"
+                          defaultMessage="slow join {pair}"
+                          values={{
+                            pair: (
+                              <b>
+                                {String.fromCodePoint(bottleneck.from)}
+                                {String.fromCodePoint(bottleneck.to)}
+                              </b>
+                            ),
+                          }}
+                        />
+                      </span>
+                    )}
+                    <b>{formatSpeed(timeToSpeed(focusedKey.timeToType!))}</b>
+                    <span className={styles.kidsSub}>
+                      {formatConfidence(focusedKey.confidence)}
+                    </span>
+                  </>
+                ) : (
+                  <span className={styles.kidsSub}>
+                    <FormattedMessage
+                      id="t_Not_calibrated_"
+                      defaultMessage="Not calibrated yet — keep practicing to unlock this."
+                    />
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <span className={styles.kidsTile}>
+                  <StrokeIcon name="trophy" />
+                </span>
+                <FormattedMessage
+                  id="t_All_keys_are_unlocked"
+                  defaultMessage="Every key is unlocked."
+                />
+                <NextChallenge />
+              </>
+            )}
+          </span>
+          <span
+            id={names?.accuracy}
+            data-score=""
+            className={clsx(styles.kidsChip, styles.kidsMint)}
+            title={formatMessage({
+              id: "metric.accuracy.description",
+              defaultMessage:
+                "The share of characters you typed correctly in the last lesson.",
+            })}
+          >
+            <b>{hasData ? formatPercents(accuracy.last) : "—"}</b>
+            {hasData && <Delta delta={accuracy.delta} text={formatPercents} />}
+          </span>
+          {!assessing && (
+            <>
+              <span
+                id={names?.score}
+                data-score=""
+                className={clsx(styles.kidsChip, styles.kidsSun)}
+                title={formatMessage({
+                  id: "metric.score.description",
+                  defaultMessage:
+                    "Your last lesson’s score, in points. " +
+                    "You earn more by typing faster and cleaner.",
+                })}
+              >
+                <b>{hasData ? formatNumber(score.last, 0) : "—"}</b>
+              </span>
+              <span
+                data-score=""
+                className={clsx(styles.kidsChip, styles.kidsLilac)}
+                title={formatMessage({
+                  id: "practice.lane.best.description",
+                  defaultMessage: "The fastest you have ever typed this key.",
+                })}
+              >
+                <span className={styles.kidsLab}>
+                  <FormattedMessage
+                    id="practice.pulse.best"
+                    defaultMessage="Best"
+                  />
+                </span>
+                <b>
+                  {keyCalibrated
+                    ? formatSpeed(timeToSpeed(focusedKey!.bestTimeToType!))
+                    : "—"}
+                </b>
+              </span>
+              <span
+                data-score=""
+                className={clsx(styles.kidsChip, styles.kidsGrey)}
+                title={formatMessage({
+                  id: "metric.learningRate.description",
+                  defaultMessage:
+                    "How your speed on this key is trending from lesson to lesson.",
+                })}
+              >
+                <span className={styles.kidsLab}>
+                  <FormattedMessage
+                    id="practice.pulse.pace"
+                    defaultMessage="Pace"
+                  />
+                </span>
+                {learningRate != null && learningRate === learningRate ? (
+                  <b>
+                    <Delta
+                      delta={learningRate}
+                      text={(v) =>
+                        formatMessage(
+                          {
+                            id: "practice.pulse.perLesson",
+                            defaultMessage: "{value}/lesson",
+                          },
+                          { value: formatSpeed(v) },
+                        )
+                      }
+                    />
+                  </b>
+                ) : (
+                  <b>—</b>
+                )}
+                <Mood rate={learningRate} />
+              </span>
+              <StreakWhisper streakList={streakList} />
+              {dailyGoal.goal > 0 && (
+                // The no-timer hook is on the chip as well as on the figures
+                // inside it, so hiding the clock leaves no empty chip behind.
+                <span
+                  className={clsx(styles.kidsChip, styles.kidsSky)}
+                  data-timer=""
+                >
+                  <TodayWhisper dailyGoal={dailyGoal} />
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={clsx(styles.root, headerHidden && styles.alone)}>
@@ -464,15 +727,15 @@ export const Pulse = memo(function Pulse({
           expanded && styles.whisperOpen,
           panelOpen && styles.whisperShown,
         )}
-        role={assessing ? undefined : "button"}
-        tabIndex={assessing ? undefined : 0}
-        aria-expanded={assessing ? undefined : expanded}
+        role={recapOff ? undefined : "button"}
+        tabIndex={recapOff ? undefined : 0}
+        aria-expanded={recapOff ? undefined : expanded}
         title={formatMessage({
           id: "practice.pulse.expand",
           defaultMessage: "Show more about this session",
         })}
         onClick={
-          assessing
+          recapOff
             ? undefined
             : () => {
                 toggleExpanded();
@@ -481,7 +744,7 @@ export const Pulse = memo(function Pulse({
               }
         }
         onKeyDown={
-          assessing
+          recapOff
             ? undefined
             : (ev) => {
                 if (ev.key === "Enter" || ev.key === " ") {
@@ -599,7 +862,7 @@ export const Pulse = memo(function Pulse({
           </>
         )}
         {/* Only worth offering once there is something open to hold on to. */}
-        {!assessing && expanded && (
+        {!recapOff && expanded && (
           <button
             type="button"
             className={clsx(styles.pin, pinned && styles.pinOn)}
@@ -624,7 +887,7 @@ export const Pulse = memo(function Pulse({
             </svg>
           </button>
         )}
-        {!assessing && (
+        {!recapOff && (
           <svg
             className={styles.chevron}
             viewBox="0 0 12 12"
@@ -1485,6 +1748,7 @@ function StreakWhisper({
 }): ReactNode {
   const { formatMessage } = useIntl();
   const { formatPercents } = useIntlNumbers();
+  const kids = useKidsPractice();
   let bestRun: { level: number; length: number } | null = null;
   for (const { level, results } of streakList) {
     if (results.length > 0 && (bestRun == null || level > bestRun.level)) {
@@ -1496,6 +1760,22 @@ function StreakWhisper({
     defaultMessage:
       "Your longest run of lessons typed at high accuracy, and the next milestone.",
   });
+  // On the kids' Classic screen the streak is one of the header's chips: a
+  // flame and a count on a soft square, said the way the others say things.
+  if (kids) {
+    return (
+      <span className={clsx(styles.kidsChip, styles.kidsStreak)} title={title}>
+        <b>{bestRun?.length ?? 0}</b>
+        <span className={styles.kidsLab}>
+          <FormattedMessage
+            id="profile.road.streakLessons"
+            defaultMessage="{count, plural, one {lesson} other {lessons}}"
+            values={{ count: bestRun?.length ?? 0 }}
+          />
+        </span>
+      </span>
+    );
+  }
   if (bestRun == null) {
     return (
       <span title={title}>
@@ -1576,6 +1856,7 @@ function TodayWhisper({
   readonly dailyGoal: DailyGoalType;
 }): ReactNode {
   const { formatMessage } = useIntl();
+  const kids = useKidsPractice();
   const { value: recorded, goal } = dailyGoal;
   const extraMs = useLiveExtraMs(recorded);
   const value = recorded + (goal > 0 ? extraMs / (goal * 60000) : 0);
@@ -1594,10 +1875,14 @@ function TodayWhisper({
           "Today’s practice time, out of your daily goal. Only time spent actually typing counts — pauses between lessons don’t.",
       })}
     >
-      <span
-        className={clsx(styles.miniRing, done && styles.miniRingDone)}
-        style={{ "--p": `${Math.round(pct * 100)}%` } as CSSProperties}
-      />
+      {/* The kids' chip carries no ring: the figures beside it already say
+          how far along today is. */}
+      {!kids && (
+        <span
+          className={clsx(styles.miniRing, done && styles.miniRingDone)}
+          style={{ "--p": `${Math.round(pct * 100)}%` } as CSSProperties}
+        />
+      )}
       <b>
         <FormattedMessage
           id="practice.lane.todayMinutes"
@@ -1611,6 +1896,11 @@ function TodayWhisper({
     </span>
   );
 }
+
+/**
+ * The small glossy tile that heads each chip on the kids' Classic screen: a
+ * white stroke glyph on the chip's own gradient (set by the chip's class).
+ */
 
 function Spark({ speeds }: { readonly speeds: readonly number[] }): ReactNode {
   const width = 96;

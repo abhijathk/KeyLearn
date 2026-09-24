@@ -6,6 +6,7 @@ import {
   CHAPTER_STONES,
   chapterAt,
   chapterDueAt,
+  chapterNo,
   chapterOpensAt,
   CHAPTERS,
   chapterSeenKey,
@@ -49,7 +50,10 @@ test("every declared chapter is a full ten lessons", () => {
 test("a chapter with no lessons is not walkable", () => {
   // The rule itself, tested on a stand-in rather than on the live table —
   // it has to keep holding once every declared chapter is finished.
-  equal(isWalkable({ n: 9, name: "x", blurb: "y", lessons: [] }), false);
+  equal(
+    isWalkable({ n: 9, name: "x", blurb: "y", lessons: [], scenery: 9 }),
+    false,
+  );
 });
 
 test("lesson numbers are 1..10 within every chapter", () => {
@@ -94,10 +98,44 @@ test("the tenth stone is the start of Chapter 2, now that it exists", () => {
   equal(chapterAt(10).lessons[0]?.name, "Back Road");
 });
 
-test("a child past the last chapter stays in it", () => {
-  // No Chapter 3 exists, so four hundred stones is still Chapter 2 rather
-  // than a scoreboard naming a chapter that is not there.
-  equal(chapterAt(400).n, CHAPTERS.length);
+test("past the written chapters the road comes round again", () => {
+  // Forty stones is Chapter 5 — built on Chapter 1's road, carrying its own
+  // number. Four hundred is Chapter 41, still a real, walkable chapter.
+  equal(chapterAt(40).n, 5);
+  equal(chapterAt(40).scenery, 1);
+  equal(chapterAt(59).n, 6);
+  equal(chapterAt(59).scenery, 2);
+  equal(chapterAt(400).n, 41);
+  equal(chapterAt(400).scenery, 1);
+  ok(isWalkable(chapterAt(400)));
+});
+
+test("a repeat has its own name, not the first time's", () => {
+  for (let n = 5; n <= 12; n++) {
+    const c = chapterNo(n);
+    const first = CHAPTERS[c.scenery - 1]!;
+    ok(c.name !== first.name, `Chapter ${n} is still called ${c.name}`);
+    equal(c.lessons, first.lessons, `Chapter ${n} walks road ${c.scenery}`);
+  }
+  // Second and third time round differ from each other too.
+  ok(chapterNo(5).name !== chapterNo(9).name);
+});
+
+test("repeat names follow the same rules as the first ones", () => {
+  for (const c of CHAPTERS) {
+    for (const a of c.again ?? []) {
+      ok(a.name.split(/\s+/).length <= 3, a.name);
+      ok(a.blurb.length > 40, `${a.name} blurb is too thin`);
+      ok(!/lesson|type|typing|keyboard/i.test(a.blurb), `${a.name} blurb`);
+      ok(!/kerala|malayal|india/i.test(a.blurb), `${a.name} names a place`);
+    }
+  }
+});
+
+test("the written chapters build their own scenery", () => {
+  for (const c of CHAPTERS) {
+    equal(c.scenery, c.n, c.name);
+  }
 });
 
 test("but the card may announce a chapter nobody has built yet", () => {
@@ -118,7 +156,7 @@ test("a negative or missing count is the start of the road", () => {
   equal(lessonAtStones(-3), 1);
 });
 
-test("lesson numbers run 1..30 along the whole road", () => {
+test("lesson numbers run on along the whole road", () => {
   equal(lessonAtStones(0), 1);
   equal(lessonAtStones(4), 5);
   equal(lessonAtStones(9), 10);
@@ -126,7 +164,10 @@ test("lesson numbers run 1..30 along the whole road", () => {
   equal(lessonAtStones(19), 20);
   equal(lessonAtStones(20), 21);
   equal(lessonAtStones(29), 30);
-  equal(lessonAtStones(40), 30);
+  equal(lessonAtStones(30), 31);
+  equal(lessonAtStones(40), 41);
+  equal(lessonAtStones(49), 50);
+  equal(lessonAtStones(50), 51);
   // Once Chapter 2 has lessons, its first stone is its Lesson 1 and never
   // "Lesson 11" — a chip that climbs to twenty is a number about the
   // software rather than about the road.
@@ -175,10 +216,20 @@ test("`?lesson=N` addresses a lesson the way the brief numbers it", () => {
   equal(addressLesson(20)?.lesson, 10);
 });
 
-test("nothing outside the authored road addresses anything", () => {
-  for (const n of [0, -1, 31, 99, 1.5, Number.NaN]) {
+test("nothing that is not a lesson number addresses anything", () => {
+  for (const n of [0, -1, 1.5, Number.NaN]) {
     equal(addressLesson(n), null, String(n));
   }
+});
+
+test("`?lesson=` runs on past forty into the repeats", () => {
+  equal(addressLesson(41)?.chapter.n, 5);
+  equal(addressLesson(41)?.lesson, 1);
+  equal(addressLesson(47)?.chapter.scenery, 1);
+  equal(addressLesson(47)?.lesson, 7);
+  equal(addressLesson(77)?.chapter.n, 8);
+  equal(addressLesson(77)?.chapter.scenery, 4);
+  equal(addressLesson(77)?.chapter.lessons[6]?.name, "Island Milestone");
 });
 
 test("Chapter 3 continues directly from global lesson 20 at milestone 20", () => {
@@ -189,5 +240,23 @@ test("Chapter 3 continues directly from global lesson 20 at milestone 20", () =>
   equal(addressLesson(21)?.chapter.n, 3);
   equal(addressLesson(21)?.lesson, 1);
   equal(addressLesson(30)?.lesson, 10);
-  equal(chapterDueAt(30), null);
+  equal(chapterDueAt(30)?.n, 4);
+});
+
+test("Chapter 4 continues at M30 and ends at M40", () => {
+  equal(chapterAt(30).n, 4);
+  equal(lessonIndexAt(30), 0);
+  equal(addressLesson(31)?.lesson, 1);
+  equal(addressLesson(40)?.lesson, 10);
+});
+
+test("Milestone 40 opens Chapter 5, and every tenth stone after it", () => {
+  equal(chapterDueAt(40)?.n, 5);
+  equal(chapterDueAt(50)?.n, 6);
+  equal(chapterDueAt(80)?.n, 9);
+  equal(lessonIndexAt(40), 0);
+  equal(lessonIndexAt(47), 7);
+  // Remembered under its own key, so the village's second card is shown
+  // even though the first one was seen long ago.
+  ok(chapterSeenKey(chapterNo(5)) !== chapterSeenKey(chapterNo(1)));
 });

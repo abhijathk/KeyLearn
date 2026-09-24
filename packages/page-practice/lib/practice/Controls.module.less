@@ -107,3 +107,190 @@
   font-size: 1rem;
   font-weight: 700;
 }
+
+// ── THE KIDS' CLASSIC SCREEN ────────────────────────────────────────────
+//
+// The same tools, dressed as the chips in the kids header: rounded squares in
+// soft pastels that tilt when a pointer finds them, so the row reads as part
+// of that set rather than as the grown-up page's quiet icons. Each tool keeps
+// one colour so it can be found by colour alone.
+.kids {
+  gap: 0.4rem;
+
+  button {
+    display: grid;
+    place-items: center;
+    inline-size: 2.2rem;
+    block-size: 2.2rem;
+    padding: 0;
+    border-radius: 0.7rem;
+    color: #3a3a4e;
+    background: color-mix(in srgb, #3aa0ff 28%, #ffffff);
+    box-shadow:
+      0 2px 0 rgb(0 0 0 / 8%),
+      inset 0 -2px 0 rgb(0 0 0 / 5%);
+    transition: transform 0.12s ease;
+
+    &:hover {
+      transform: scale(1.08) rotate(-4deg);
+    }
+
+    &:active {
+      transform: translateY(2px);
+    }
+  }
+
+  svg {
+    inline-size: 1.2rem;
+    block-size: 1.2rem;
+  }
+
+  [data-chip="help"] {
+    background: color-mix(in srgb, #f2c94c 34%, #ffffff);
+  }
+
+  [data-chip="restart"],
+  [data-chip="skip"] {
+    background: color-mix(in srgb, #5fc9a7 34%, #ffffff);
+  }
+
+  [data-chip="keyboard"] {
+    background: color-mix(in srgb, #f5a8b8 40%, #ffffff);
+  }
+
+  .tools {
+    gap: 0.4rem;
+    padding: 0.55rem 0.45rem;
+    border-radius: 1.1rem;
+    background: #ffffff;
+  }
+
+  .toggleOpen button {
+    background: color-mix(in srgb, #3aa0ff 55%, #ffffff);
+  }
+
+  // The tools toggle as one of the kids header's chips: the sky square the
+  // header's settings chip wears, the same size, lip and tilt on hover.
+  .toggle [data-chip="tune"] {
+    inline-size: 2.2rem;
+    block-size: 2.2rem;
+    border-radius: 0.7rem;
+    color: #2a6db8;
+    background: color-mix(in srgb, #3aa0ff 28%, #ffffff);
+    box-shadow:
+      0 2px 0 rgb(0 0 0 / 8%),
+      inset 0 -2px 0 rgb(0 0 0 / 5%);
+
+    svg {
+      inline-size: 1.1rem;
+      block-size: 1.1rem;
+    }
+  }
+
+  .toggleOpen [data-chip="tune"] {
+    background: color-mix(in srgb, #3aa0ff 45%, #ffffff);
+  }
+
+  // The size slider as a chunky rounded track with a round thumb, like the
+  // kids sheet's own sliders, instead of the browser's thin default.
+  // Physical sizes on purpose: the input is laid out vertically, so its
+  // logical inline size is its LENGTH, and setting it to a track's width
+  // folded the slider down to a stub. Upright, like the grown-up one.
+  .sizer input {
+    /* stylelint-disable-next-line logical-css/require-logical-properties */
+    width: 0.7rem;
+    /* stylelint-disable-next-line logical-css/require-logical-properties */
+    height: 5.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, #3aa0ff 22%, #ffffff);
+    appearance: none;
+    accent-color: #3aa0ff;
+
+    &::-webkit-slider-thumb {
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      background: #3aa0ff;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+      appearance: none;
+    }
+
+    &::-moz-range-thumb {
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      background: #3aa0ff;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+    }
+  }
+
+  .sizerIcon {
+    color: #3a3a4e;
+    font-family: var(--value-font-family);
+  }
+}
+
+// At night each tool is its hue sunk into the dark card with a lifted icon,
+// the same treatment as the header's chips and the chip strip.
+:global(body[data-kids-classic="night"]) .kids {
+  button {
+    color: #8cc8ff;
+    background: #22405f;
+    box-shadow:
+      0 2px 0 rgb(0 0 0 / 30%),
+      inset 0 1px 0 rgb(255 255 255 / 6%);
+  }
+
+  [data-chip="restart"],
+  [data-chip="skip"] {
+    color: #6fe0b4;
+    background: #1f4a42;
+  }
+
+  [data-chip="keyboard"] {
+    color: #f5b8c6;
+    background: #4a2e44;
+  }
+
+  .toggleOpen button {
+    color: #ffffff;
+    background: #2d5f93;
+  }
+
+  // At night, the header chip's night face: the sky hue sunk into the card.
+  .toggle [data-chip="tune"] {
+    color: #8cc8ff;
+    background: #22405f;
+    box-shadow:
+      0 2px 0 rgb(0 0 0 / 30%),
+      inset 0 1px 0 rgb(255 255 255 / 6%);
+  }
+
+  .toggleOpen [data-chip="tune"] {
+    background: #2d5f93;
+  }
+
+  .tools {
+    background: #2a2f4d;
+  }
+
+  .sizer input {
+    background: #1d2136;
+  }
+
+  .sizerIcon {
+    color: #f2f2fc;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kids button {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}

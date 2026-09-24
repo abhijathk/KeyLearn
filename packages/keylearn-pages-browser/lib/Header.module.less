@@ -134,6 +134,14 @@
   overflow: hidden;
 }
 
+// The kids header is a full-width bar, not the top half of a card, so there is
+// nothing for it to tuck behind: sliding it down laid it over Classic's
+// telemetry island. It stays where it is; its controls still step back.
+.full.hidden {
+  pointer-events: auto;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .header {
     transition: opacity 0.2s ease;
@@ -600,4 +608,89 @@
 :global(body[data-kids="night"]) .glyph,
 :global(body[data-kids="night"]) .kidsMark {
   color: color-mix(in srgb, var(--accent) 88%, #f2f2fc);
+}
+
+// ── THE KIDS CHIPS' COLOURS ──────────────────────────────────────────────
+//
+// Classes rather than inline styles so the night can change them. By day,
+// the pastels they always had; by night, each hue sunk into the night header
+// with its icon lifted to match — the same treatment as Classic's chip strip.
+// Doubled class: `.controls button` clears every header button's background
+// and would otherwise win.
+.kidsChip.kidsChipStone {
+  background: color-mix(in srgb, #b8b2a6 38%, #ffffff);
+}
+
+.kidsChip.kidsChipSun {
+  background: color-mix(in srgb, #f2c94c 34%, #ffffff);
+}
+
+.kidsChip.kidsChipMint {
+  background: color-mix(in srgb, #5fc9a7 34%, #ffffff);
+}
+
+.kidsChip.kidsChipSky {
+  background: color-mix(in srgb, #3aa0ff 28%, #ffffff);
+}
+
+.kidsChip.kidsChipLeaf {
+  background: color-mix(in srgb, #8bc34a 30%, #ffffff);
+}
+
+:global(body[data-kids="night"]) {
+  .kidsChip {
+    box-shadow:
+      0 2px 0 rgb(0 0 0 / 30%),
+      inset 0 1px 0 rgb(255 255 255 / 6%);
+  }
+
+  .kidsChip.kidsChipStone {
+    background: #3d3b44;
+
+    path {
+      stroke: #d8d0c0;
+    }
+  }
+
+  .kidsChip.kidsChipSun {
+    background: #4f4420;
+
+    path,
+    circle,
+    line {
+      stroke: #ffd766;
+    }
+  }
+
+  .kidsChip.kidsChipMint {
+    background: #1f4a42;
+
+    path,
+    circle,
+    line {
+      stroke: #6fe0b4;
+    }
+  }
+
+  .kidsChip.kidsChipSky {
+    background: #22405f;
+
+    path,
+    circle,
+    line {
+      stroke: #8cc8ff;
+    }
+  }
+
+  .kidsChip.kidsChipLeaf {
+    background: #2c4a22;
+
+    path {
+      stroke: #b6e37c;
+    }
+  }
+
+  .kidsChipCount {
+    color: #f2f2fc;
+  }
 }

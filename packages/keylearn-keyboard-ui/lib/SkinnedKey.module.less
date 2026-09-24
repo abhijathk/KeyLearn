@@ -35,3 +35,23 @@
     animation: none;
   }
 }
+
+// The kids boards' next key: a filled cue that pulses, as on the trail.
+.cueBlink {
+  transform-origin: center;
+  animation: kids-cue-blink 1s ease-in-out infinite;
+  transform-box: fill-box;
+}
+
+@keyframes kids-cue-blink {
+  50% {
+    opacity: 0.72;
+    transform: scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cueBlink {
+    animation: none;
+  }
+}

@@ -1,12 +1,9 @@
 /**
  * The kids' game sound synth — Web Audio only, no files, zero load time.
  *
- * Two voices share one set of scenarios:
- *  - "dino": the Dino Run arcade's crunchy 8-bit square-wave blips.
- *  - "hero": Hero Trail's softer, cuter, storybook chimes (sine/triangle with
- *    gentle envelopes) — including a little "bored" babble when the child stops
- *    typing.
- * Switch with setTheme(); every play* method picks the right voice.
+ * The keyboard has one voice per world (see `#synthKey`): Dino Run's 8-bit
+ * blips, Hero Trail's storybook chimes, and Time Keepers' recorded keys.
+ * Switch with setTheme(). Everything else is the shared recorded library.
  */
 
 import { ASSETS, versioned } from "./asset-url.ts";
@@ -282,16 +279,19 @@ class KidsAudio {
     return this.#ctx != null && this.#on[bus] && !this.#hidden;
   }
 
-  /** Pick the voice for the active world ("dino" arcade vs "hero" storybook). */
   /**
-   * Kept so callers need not change, and now a no-op.
+   * Which world's keyboard is live.
    *
-   * There used to be two synthesised voices — the arcade's square-wave blips
-   * and the storybook's chimes — and this chose between them. Every sound in
-   * the game now comes from the recorded library, which is one voice: warm
-   * wood and cloth, recorded for this village. A world does not get its own.
+   * Only the KEYBOARD differs by world. Time Keepers uses the recorded wooden
+   * keys; Dino Run keeps its arcade blips and Hero Trail its storybook
+   * chimes, which is what each world sounded like before the recorded
+   * library arrived. Every other sound is the shared recorded library.
    */
-  setTheme(_theme: Voice): void {}
+  #voice: Voice = "village";
+
+  setTheme(theme: Voice): void {
+    this.#voice = theme;
+  }
 
   /** A good keystroke used to be a blip here; it is a real key now. See `playKey`. */
   playMove() {
@@ -424,32 +424,141 @@ class KidsAudio {
   /**
    * THE KEYBOARD. One call per press, whichever key it was.
    *
-   * Every sound the board makes comes from here, so a child gets the same
-   * keyboard in Classic and on the trail, in all three worlds. It replaced a
-   * synthesised blip that differed per world; the blip is still in this file
-   * as the game's chime voice, but it is no longer what a key sounds like.
+   * Time Keepers plays the recorded keys. Dino Run and Hero Trail play their
+   * own synthesised voices; see {@link #synthKey}.
    */
   playKey(key?: string) {
-    if (key === " ") {
-      this.#fire("space", "clicks", TYPING_PEAK);
-    } else if (key === "\n") {
-      this.#fire("enter", "clicks", TYPING_PEAK);
-    } else {
-      this.#fire("key", "clicks", TYPING_PEAK);
+    const kind = key === " " ? "space" : key === "\n" ? "enter" : "key";
+    if (this.#synthKey(kind)) {
+      return;
     }
+    this.#fire(kind, "clicks", TYPING_PEAK);
   }
 
   /** A letter that was not the one asked for. */
   playWrong() {
+    if (this.#synthKey("wrong")) {
+      return;
+    }
     this.#fire("wrong", "clicks", TYPING_PEAK);
   }
 
   playBackspace() {
+    if (this.#synthKey("backspace")) {
+      return;
+    }
     this.#fire("backspace", "clicks", TYPING_PEAK);
   }
 
   playEnter() {
+    if (this.#synthKey("enter")) {
+      return;
+    }
     this.#fire("enter", "clicks", TYPING_PEAK);
+  }
+
+  /**
+   * The per-world keyboards, synthesised: no download, no latency.
+   *
+   *  - Dino Run: short 8-bit square-wave blips with a quick pitch drop,
+   *    softened by a low-pass so several a second never turn shrill.
+   *  - Hero Trail: soft triangle/sine chimes on a pentatonic scale with a
+   *    gentle decay, like a storybook xylophone.
+   *
+   * Pitch is picked at random from a small set so a run of keys never
+   * becomes one repeated note. Returns false in Time Keepers, where the
+   * recorded keys play instead.
+   */
+  #synthKey(kind: "key" | "space" | "enter" | "backspace" | "wrong"): boolean {
+    const voice = this.#voice;
+    if (voice !== "dino" && voice !== "hero") {
+      return false;
+    }
+    this.init();
+    const ctx = this.#ctx;
+    const out = this.#out("clicks");
+    if (ctx == null || out == null || !this.#live("clicks")) {
+      return true;
+    }
+    if (ctx.state === "suspended") {
+      void ctx.resume().catch(() => {});
+    }
+    const t = ctx.currentTime + 0.002;
+    const pick = <T>(xs: readonly T[]): T =>
+      xs[Math.floor(Math.random() * xs.length)]!;
+    const note = (
+      type: OscillatorType,
+      from: number,
+      to: number,
+      at: number,
+      length: number,
+      peak: number,
+      through: AudioNode,
+    ) => {
+      const osc = ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.setValueAtTime(from, at);
+      if (to !== from) {
+        osc.frequency.exponentialRampToValueAtTime(to, at + length * 0.8);
+      }
+      const env = ctx.createGain();
+      env.gain.setValueAtTime(0.0001, at);
+      env.gain.exponentialRampToValueAtTime(peak, at + 0.004);
+      env.gain.exponentialRampToValueAtTime(0.0001, at + length);
+      osc.connect(env);
+      env.connect(through);
+      osc.start(at);
+      osc.stop(at + length + 0.02);
+    };
+    if (voice === "dino") {
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 2600;
+      lp.connect(out);
+      switch (kind) {
+        case "key": {
+          const f = pick([660, 740, 784, 880, 988]);
+          note("square", f, f * 0.7, t, 0.06, 0.07, lp);
+          break;
+        }
+        case "space":
+          note("square", 330, 220, t, 0.09, 0.07, lp);
+          break;
+        case "enter":
+          note("square", 523, 523, t, 0.06, 0.06, lp);
+          note("square", 784, 784, t + 0.07, 0.08, 0.06, lp);
+          break;
+        case "backspace":
+          note("square", 440, 294, t, 0.07, 0.06, lp);
+          break;
+        case "wrong":
+          note("square", 196, 147, t, 0.14, 0.07, lp);
+          break;
+      }
+    } else {
+      switch (kind) {
+        case "key": {
+          const f = pick([784, 880, 1047, 1175, 1319]);
+          note("triangle", f, f, t, 0.18, 0.16, out);
+          note("sine", f * 2, f * 2, t, 0.1, 0.04, out);
+          break;
+        }
+        case "space":
+          note("sine", 523, 523, t, 0.22, 0.16, out);
+          break;
+        case "enter":
+          note("triangle", 784, 784, t, 0.16, 0.14, out);
+          note("triangle", 1175, 1175, t + 0.08, 0.24, 0.14, out);
+          break;
+        case "backspace":
+          note("sine", 659, 523, t, 0.14, 0.13, out);
+          break;
+        case "wrong":
+          note("sine", 330, 262, t, 0.24, 0.14, out);
+          break;
+      }
+    }
+    return true;
   }
 
   /** A menu button being pressed. */

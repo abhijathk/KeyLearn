@@ -1,0 +1,273 @@
+// Classic is the grown-up practice page wearing the kids palette. Nothing in
+// here reaches into that page's components: it only re-points the theme
+// tokens they already read, so a change to the grown-up page arrives here
+// untouched and in the kids colours.
+
+@font-face {
+  font-family: "Nunito Kids";
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  src: url(nunito-800.woff2) format("woff2");
+}
+
+// On <body>, not on the frame: the page ground, the header and the settings
+// window (which renders outside the frame) all have to be in the same colours.
+:global(body[data-kids-classic]) {
+  --primary-d2: #ebe6d8;
+  --primary-d1: #f4f0e6;
+  --primary: #fdfcf9;
+  --primary-l1: #ffffff;
+  --primary-l2: #ffffff;
+  --secondary-d1: #22222f;
+  --secondary: #3a3a4e;
+  --secondary-l1: #5a5a70;
+  --secondary-l2: #7a7a90;
+  --secondary-f1: #6b6b80;
+  --secondary-f2: #9a9aac;
+  --text-color: #3a3a4e;
+  --text-color-f1: #6b6b80;
+  --text-color-f2: #9a9aac;
+  --background-color: #fdfcf9;
+  --separator-border: 2px solid #f2f2ea;
+  --shadow-color: #3a3a4e22;
+  --textinput__color: #3a3a4e;
+  --textinput--special__color: #9b9ba6;
+  --textinput--hit__color: #a9a9b3;
+  --textinput--miss__color: #d4675a;
+  --textinput-cursor__color: #fdfcf9;
+  --textinput-cursor__background-color: var(--accent);
+  --Name-color: #6b6b80;
+  --Value-color: #22222f;
+  --default-font-family:
+    ui-rounded, "Arial Rounded MT Bold", "Nunito Kids", "Trebuchet MS",
+    sans-serif;
+  --value-font-family:
+    "Nunito Kids", ui-rounded, "Arial Rounded MT Bold", sans-serif;
+  color: var(--text-color);
+
+  background-color: var(--primary);
+  font-family: var(--default-font-family);
+}
+
+:global(body[data-kids-classic="night"]) {
+  --primary-d2: #151827;
+  --primary-d1: #191c2e;
+  --primary: #1d2136;
+  --primary-l1: #2a2f4d;
+  --primary-l2: #333a5e;
+  --secondary-d1: #ffffff;
+  --secondary: #f2f2fc;
+  --secondary-l1: #d6d6ea;
+  --secondary-l2: #b8b8d0;
+  --secondary-f1: #b8b8d0;
+  --secondary-f2: #8a8aa8;
+  --text-color: #f2f2fc;
+  --text-color-f1: #b8b8d0;
+  --text-color-f2: #8a8aa8;
+  --background-color: #1d2136;
+  --separator-border: 2px solid #3a4064;
+  --shadow-color: #00000a73;
+  --textinput__color: #f2f2fc;
+  --textinput--special__color: #8a8fb0;
+  --textinput--hit__color: #767b9c;
+  --textinput--miss__color: #f08a7c;
+  --textinput-cursor__color: #1d2136;
+  --Name-color: #b8b8d0;
+  --Value-color: #ffffff;
+}
+
+.frame {
+  // Softer, rounder cards and controls: the grown-up page's surfaces take
+  // their corners from here.
+  --radius: 1.25rem;
+  --border-radius: 1.25rem;
+}
+
+// ── THE CLASSIC SHEET ────────────────────────────────────────────────────
+//
+// The trail's settings sheet in miniature: the same card, rows and pills. Its
+// tokens are the kids page's, written out, because the kids page's own
+// stylesheet scopes them to a root this screen does not have.
+.overlay {
+  display: grid;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  place-items: center;
+  background: rgb(40 44 70 / 45%);
+  backdrop-filter: blur(7px);
+}
+
+.card {
+  --card: #ffffff;
+  --kink: #3a3a4e;
+  --kink2: #6b6b80;
+  --kline: #f2f2ea;
+
+  display: flex;
+  flex-direction: column;
+  inline-size: min(34rem, 94vi);
+  padding: 1.5rem 1.6rem 1.4rem;
+  border-radius: 2rem;
+  color: var(--kink);
+  background: var(--card);
+  box-shadow: 0 30px 70px rgb(20 25 50 / 40%);
+  font-family: var(--value-font-family);
+  animation: classic-sheet-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:global(body[data-kids-classic="night"]) .card {
+  --card: #2a2f4d;
+  --kink: #f2f2fc;
+  --kink2: #b8b8d0;
+  --kline: #3a4064;
+}
+
+@keyframes classic-sheet-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+.cardTitle {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block-end: 1.1rem;
+  font-size: 1.25rem;
+}
+
+.hIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, #3aa0ff 26%, var(--card));
+  box-shadow:
+    0 2px 0 rgb(0 0 0 / 8%),
+    inset 0 -2px 0 rgb(0 0 0 / 5%);
+  transform: rotate(-6deg);
+}
+
+.srow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-block-start: 0.45rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 1.2rem;
+  background: color-mix(in srgb, var(--kline) 60%, transparent);
+}
+
+.ri {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.3rem;
+  block-size: 2.3rem;
+  border-radius: 0.85rem;
+  box-shadow: inset 0 -2.5px 0 rgb(0 0 0 / 12%);
+
+  svg {
+    inline-size: 1.3rem;
+    block-size: 1.3rem;
+  }
+}
+
+.sl {
+  font-size: 0.9rem;
+}
+
+.sd {
+  color: var(--kink2);
+  font-size: 0.62rem;
+}
+
+.ctl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.3rem;
+  justify-content: flex-end;
+  margin-inline-start: auto;
+}
+
+.pill {
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  color: var(--kink2);
+  background: var(--card);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--kline) 80%, #888888);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+
+  &:active {
+    transform: translateY(2px);
+  }
+}
+
+.pillOn {
+  color: var(--accent-ink);
+  background: var(--accent);
+  box-shadow: 0 3px 0 var(--accent-d1);
+}
+
+// The goal speed's − and + — round, chunky, the size of a small finger.
+.step {
+  display: grid;
+  place-items: center;
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
+  border: 0;
+  border-radius: 50%;
+  color: var(--kink);
+  background: var(--card);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--kline) 80%, #888888);
+  font: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+
+  &:active {
+    transform: translateY(2px);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.stepValue {
+  align-self: center;
+  min-inline-size: 4.2rem;
+  font-size: 1.05rem;
+  text-align: center;
+
+  small {
+    color: var(--kink2);
+    font-size: 0.7rem;
+  }
+}
+
+.done {
+  align-self: flex-end;
+  margin-block-start: 1.1rem;
+  padding: 0.6rem 1.4rem;
+  border: 0;
+  border-radius: 999px;
+  color: var(--accent-ink);
+  background: var(--accent);
+  box-shadow: 0 3px 0 var(--accent-d1);
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}

@@ -1,7 +1,7 @@
 import { codeThemeFor, codeThemeVars } from "@keylearn/content-snippets";
 import { keyboardProps } from "@keylearn/keyboard";
 import { type KeyId } from "@keylearn/keyboard";
-import { useSkin } from "@keylearn/keyboard-ui";
+import { capLook, useSkin } from "@keylearn/keyboard-ui";
 import { lessonProps, LessonType, Target } from "@keylearn/lesson";
 import { names } from "@keylearn/lesson-ui";
 import {
@@ -41,6 +41,7 @@ import { Controls } from "./Controls.tsx";
 import { GhostTrack } from "./GhostTrack.tsx";
 import { Indicators, JourneyStrip } from "./Indicators.tsx";
 import { DeferredKeyboardPresenter } from "./KeyboardPresenter.tsx";
+import { useKidsPractice } from "./kids-flavour.ts";
 import { PracticeTour } from "./PracticeTour.tsx";
 import * as styles from "./Presenter.module.less";
 import { readPinned } from "./Pulse.tsx";
@@ -57,6 +58,8 @@ type Props = {
   readonly onInput: (ev: IInputEvent) => void;
   /** Whether this learner has never dismissed the tour before. */
   readonly startWithTourOpen: boolean;
+  /** The kids' Classic screen: its text size is kept apart (see below). */
+  readonly kids?: boolean;
   /** Persists that they now have, so it doesn't show again. */
   readonly onTourClose: () => void;
 };
@@ -128,6 +131,20 @@ function hasCodeTheme(settings: Settings): boolean {
 // so the midpoint itself isn't a reachable value; round up rather than down,
 // since the point of moving off 1 is that the practice text read a touch
 // small at the old default.
+/** How much larger the kids' Classic screen sets its practice text. */
+const KIDS_TEXT_SCALE = 1.4;
+
+/**
+ * Classic's own text-size slider, saved apart from the grown-up one so a
+ * parent's choice on the same device never moves a child's, and starting in
+ * the exact middle of its range. The screen's larger text comes from
+ * KIDS_TEXT_SCALE on top of it, not from this default.
+ */
+const propKidsTextSize = numberProp("prefs.kids.classic.textScale", 1.125, {
+  min: 0.75,
+  max: 1.5,
+});
+
 const propTextSize = numberProp("prefs.practice.textScale", 1.15, {
   min: 0.75,
   max: 1.5,
@@ -145,7 +162,9 @@ export class Presenter extends PureComponent<Props, State> {
     // begin, not a cage.
     focusMode: loadA11y().plain,
     typing: false,
-    textSize: Preferences.get(propTextSize),
+    textSize: Preferences.get(
+      this.props.kids === true ? propKidsTextSize : propTextSize,
+    ),
     pinned: readPinned(),
   };
 
@@ -471,7 +490,10 @@ export class Presenter extends PureComponent<Props, State> {
   };
 
   handleTextSize = (textSize: number) => {
-    Preferences.set(propTextSize, textSize);
+    Preferences.set(
+      this.props.kids === true ? propKidsTextSize : propTextSize,
+      textSize,
+    );
     this.setState({ textSize });
   };
 
@@ -547,22 +569,43 @@ function NormalLayout({
      Null skin is KeyLearn's own board, which has no keyset to borrow from;
      the fallbacks in the stylesheet are the accent look it has always worn. */
   const capSkin = useSkin(state.settings);
+  // Classic's text is set larger than the grown-up page's. A factor on top of
+  // the learner's own slider, so the slider still moves it, and the saved
+  // size a grown-up chose on the same device is left alone.
+  const kidsScale = useKidsPractice() ? KIDS_TEXT_SCALE : 1;
   const startCapStyle = ((): CSSProperties | undefined => {
     if (capSkin == null) {
       return undefined;
     }
-    const accent =
-      capSkin.accentIds.includes("Enter") && capSkin.accentTop != null;
-    const top = accent ? capSkin.accentTop! : capSkin.modTop;
-    const skirt = accent ? capSkin.accentSkirt! : capSkin.modSkirt;
+    // Asked of the skin exactly as the board asks it for its own Enter cap
+    // (capLook), so a painted finish — the kids Crayon and Rainbow — dresses
+    // this button as its Enter too: Crayon's white cap in its ring, Rainbow's
+    // green frame key. Enter is a frame key on the right little finger.
+    const look = capLook(
+      capSkin,
+      { id: "Enter", finger: "pinky", legend: null, frame: true },
+      state.settings.get(keyboardProps.colors),
+    );
     return {
-      ["--sk-face" as never]: `linear-gradient(180deg, ${top[0]}, ${top[top.length - 1]})`,
-      ["--sk-edge" as never]: skirt[0],
-      ["--sk-ink" as never]: accent ? capSkin.accentInk : capSkin.modInk,
-      // A round board's caps are stadiums, so its Enter is too. Everything
-      // else keeps the soft square this button has always been.
+      ["--sk-face" as never]: look.face,
+      ["--sk-edge" as never]: look.edge,
+      ["--sk-ink" as never]: look.ink,
+      // The ring rides on the border, at the board's proportion of the cap.
+      ...(look.ring != null
+        ? {
+            ["--sk-ring" as never]: look.ring,
+            ["--sk-ring-w" as never]: `calc(2.7rem * ${look.ringRatio.toFixed(3)})`,
+          }
+        : {}),
+      // A round board's caps are stadiums, so its Enter is too, and a painted
+      // finish keeps its own corner. Everything else keeps the soft square
+      // this button has always been.
       ["--sk-radius" as never]:
-        capSkin.geom.round === true ? "999px" : "0.55rem",
+        capSkin.geom.round === true
+          ? "999px"
+          : capSkin.paint != null
+            ? `calc(2.7rem * ${look.radiusRatio.toFixed(3)})`
+            : "0.55rem",
     };
   })();
 
@@ -596,6 +639,7 @@ function NormalLayout({
           {
             "--text-scale":
               textSize *
+              kidsScale *
               (state.settings.get(lessonProps.type) === LessonType.CODE
                 ? CODE_TEXT_SCALE
                 : 1),
@@ -669,6 +713,7 @@ function NormalLayout({
  * fix: the behaviour was never the problem.
  */
 function ResetNotice(): ReactNode {
+  const kids = useKidsPractice();
   const [reason, setReason] = useState<string | null>(null);
   useEffect(() => {
     const onReset = (ev: Event) => {
@@ -687,19 +732,36 @@ function ResetNotice(): ReactNode {
   if (reason == null) {
     return null;
   }
+  const message =
+    reason === "idle" ? (
+      <FormattedMessage
+        id="practice.reset.idle"
+        defaultMessage="Line restarted after a pause — so the speed stays honest."
+      />
+    ) : (
+      <FormattedMessage
+        id="practice.reset.away"
+        defaultMessage="Line restarted while you were away — so the speed stays honest."
+      />
+    );
+  if (kids) {
+    // Classic: a white strip with a restart tile, sitting between the text
+    // and the keyboard.
+    return (
+      <p className={styles.kidsResetNotice} role="status">
+        <span className={styles.kidsResetTile}>
+          <svg viewBox="0 0 24 24" aria-hidden={true}>
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </span>
+        <span className={styles.kidsResetText}>{message}</span>
+      </p>
+    );
+  }
   return (
     <p className={styles.resetNotice} role="status">
-      {reason === "idle" ? (
-        <FormattedMessage
-          id="practice.reset.idle"
-          defaultMessage="Line restarted after a pause — so the speed stays honest."
-        />
-      ) : (
-        <FormattedMessage
-          id="practice.reset.away"
-          defaultMessage="Line restarted while you were away — so the speed stays honest."
-        />
-      )}
+      {message}
     </p>
   );
 }

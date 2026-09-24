@@ -1,3 +1,4 @@
+import { getPageData } from "./pagedata.tsx";
 import { activeProfileId, PROFILE_CHANGED_EVENT } from "./profile-storage.ts";
 
 /**
@@ -376,6 +377,26 @@ const url = (profileId: string | null): string =>
     ? "/_/sync/doc/local"
     : `/_/sync/doc/profile/${encodeURIComponent(profileId)}/local`;
 
+/**
+ * WHETHER THERE IS AN ACCOUNT TO CARRY ANYTHING TO.
+ *
+ * A guest has none, and every sync call they made came back 403 — one on
+ * boot and another on every settings change, all day, into the console of
+ * anybody trying to see what the page was actually doing. The device's copy
+ * is the whole story for a guest; nothing is lost by not asking.
+ *
+ * Only a page that SAYS it is signed out is treated as one: with no page data
+ * at all (a test, a worker) this keeps its old behaviour.
+ */
+function signedOut(): boolean {
+  try {
+    const data = getPageData();
+    return data != null && data.user == null;
+  } catch {
+    return false;
+  }
+}
+
 /** Whether this learner is one whose state can be carried at all. */
 function syncable(profileId: string | null): boolean {
   return profileId == null || /^[0-9]+$/.test(profileId);
@@ -389,6 +410,9 @@ function syncable(profileId: string | null): boolean {
  * know something it has no reason to know.
  */
 export async function pushLocal(): Promise<void> {
+  if (signedOut()) {
+    return;
+  }
   const profileId = activeProfileId();
   const scopes: (string | null)[] = [null];
   if (profileId != null && syncable(profileId)) {
@@ -426,6 +450,9 @@ export async function pushLocal(): Promise<void> {
  * dressed as the repair. So an empty account takes this device's copy instead.
  */
 export async function pullLocal(): Promise<boolean> {
+  if (signedOut()) {
+    return false;
+  }
   const profileId = activeProfileId();
   const scopes: (string | null)[] = [null];
   if (profileId != null && syncable(profileId)) {

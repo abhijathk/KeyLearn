@@ -422,6 +422,8 @@ export type Placed = {
     readonly aspect: number;
     /** Which panel is missing. The way in. */
     readonly gapAt: number;
+    /** Keep a real gate even when only three boundary slots fit. */
+    readonly keepGate?: boolean;
     /**
      * WHAT STANDS IN THE GAP, if anything. A farm boundary's way in is a
      * hole; an estate's is a gate, and that difference is most of what
@@ -535,6 +537,8 @@ export type Placed = {
   readonly box?: {
     readonly w: number;
     readonly d: number;
+    /** Fit repeated buildings at one depth so distant copies still shrink. */
+    readonly referenceZ?: number;
     /**
      * The most of its lesson this building may cover. MAY EXCEED 1.
      *
@@ -610,6 +614,26 @@ export type Lesson = {
   readonly mix: readonly [number, number, number];
   /** How far back the planting reaches. The near verge is left clear. */
   readonly depth: readonly [number, number];
+  /**
+   * CANOPY SHADE ON THE GROUND, 0..1 — the road included.
+   *
+   * Real tree shadows cannot be relied on for this. The sun over this road is
+   * the real one, and for much of the day it is nearly overhead: a tree at
+   * the verge throws a pool round its own trunk and the thirteen-unit cart
+   * road stays in full sun. A forest that is meant to be SHADY has to be
+   * shady at noon, so the shade is painted into the ground itself — dark
+   * under the leaves, broken by flecks of sun — and it bleeds across the
+   * milestones like every other property of a lesson.
+   */
+  readonly shade?: number;
+  /**
+   * WORN SIDE TRACKS across the grass behind the road — cattle paths and
+   * short cuts, the thing that makes open country look walked rather than
+   * mown. How many leave the road in this lesson; each one peels off the
+   * far verge and wanders back into the field. Drawn in the road's own bare
+   * earth, so a track is the same ground as the road it came from.
+   */
+  readonly tracks?: number;
   /** Fixed structures, in segment-relative coordinates. */
   readonly props: readonly Placed[];
   /**
@@ -1779,10 +1803,11 @@ function fitted(
     p.box.want ?? Infinity,
     p.box.span == null ? Infinity : p.box.span * len,
   );
-  if (width <= limit) {
+  const fitWidth = p.box.w * p.h * persp(p.box.referenceZ ?? p.z);
+  if (fitWidth <= limit) {
     return { ...p, width, depth };
   }
-  const k = limit / width;
+  const k = limit / fitWidth;
   const h = p.h * k;
   return {
     ...p,
@@ -1790,7 +1815,7 @@ function fitted(
     clear: p.clear == null ? undefined : p.clear * k,
     // The front face is at z + depth / 2; keep it there.
     z: p.z + (depth - depth * k) / 2,
-    width: limit,
+    width: width * k,
     depth: depth * k,
   };
 }
@@ -1896,7 +1921,7 @@ export function placements(
       const gap =
         fits === p.run.count
           ? p.run.gapAt
-          : fits < 4
+          : fits < 4 && !p.run.keepGate
             ? -1
             : Math.min(
                 fits - 2,

@@ -2,6 +2,8 @@ import { Backlight, keyboardProps, KeyboardStyle } from "@keylearn/keyboard";
 import { type Settings } from "@keylearn/settings";
 import { useSyncExternalStore } from "react";
 import {
+  KIDS_CRAYON_SKIN,
+  KIDS_RAINBOW_SKIN,
   MECHANICAL_DAY_SKIN,
   MECHANICAL_SKIN,
   MIDNIGHT_SKIN,
@@ -115,6 +117,14 @@ export function skinFor(
         ? { ...skin, accentInk: skin.accentInkLight }
         : skin;
     }
+    // Neither kids finish asks the theme either. Rainbow is one face, as the
+    // trail draws it; Crayon's cap and legends are page tokens, so the page
+    // that re-points them for its night (the kids Classic frame does) carries
+    // the board with it, whatever `data-color` says.
+    case KeyboardStyle.KIDS_CRAYON:
+      return KIDS_CRAYON_SKIN;
+    case KeyboardStyle.KIDS_RAINBOW:
+      return KIDS_RAINBOW_SKIN;
     default:
       return null;
   }

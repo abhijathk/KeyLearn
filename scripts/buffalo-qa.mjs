@@ -123,13 +123,16 @@ const SLIDE_TOL = walkDrift * 1.25;
 // Graze is a one-shot that loops INTERNALLY over its grazing section
 // (see buffalo-graze-qa.mjs): it starts standing and ends head-down, so a
 // whole-clip seam check is the wrong test for it.
-const LOOPING = new Set(["Idle", "Idle_Alert", "Walk", "Run", "Walk_Backward", "Charge_Loop"]);
+const LOOPING = new Set(["Idle", "Idle_Alert", "Walk", "Run", "Walk_Backward", "Charge_Loop", "Rest"]);
 
 const rows = [], problems = [];
 for (const anim of g.animations) {
   const C = sampleClip(anim);
   const hip = C.frames.map((f) => f.pos.get(byName.Hips));
   const hipRot = C.frames.map((f) => f.rot.get(byName.Hips));
+  const headY = byName.head != null
+    ? C.frames.map((f) => f.pos.get(byName.head)[1])
+    : null;
   const rootTravel = Math.hypot(hip[C.N-1][0]-hip[0][0], hip[C.N-1][2]-hip[0][2]);
   const yaw0 = yawDeg(hipRot[0]), yaw1 = yawDeg(hipRot[C.N-1]);
   let dyaw = yaw1 - yaw0; while (dyaw > 180) dyaw -= 360; while (dyaw < -180) dyaw += 360;
@@ -198,7 +201,13 @@ for (const anim of g.animations) {
   // so "no hooves down" is only a fault where the animal is not meant to leave
   // the ground. Charge_Start ends by launching into the gallop and goes
   // airborne on its last strides, which is the behaviour, not a float.
-  const AIRBORNE_OK = /Death|Run|Charge_Loop|Charge_Start|Supernatural_Rear_Stomp/;
+  // `Rest` belongs here for a different reason than the rest of this list.
+  // The others leave the ground because they are fast; a lying animal leaves
+  // it because its weight is on its barrel and its feet are folded up
+  // underneath, carrying nothing. Hooves in contact would mean it was still
+  // propped on them, which is the crouch this check cannot otherwise see —
+  // and which the resting-pose check below tests for directly.
+  const AIRBORNE_OK = /Death|Rest|Run|Charge_Loop|Charge_Start|Supernatural_Rear_Stomp/;
   if (floatFrames > 0 && !AIRBORNE_OK.test(anim.name)) fails.push(`all four hooves off the ground on ${floatFrames} frame(s)`);
   else if (floatFrames > 0) notes.push(`airborne on ${floatFrames} frame(s)`);
   if (looping && poseGap > 3) fails.push(`loop pose gap ${poseGap.toFixed(1)}°`);
@@ -215,6 +224,37 @@ for (const anim of g.animations) {
   if (/Death/.test(anim.name)) {
     const endHip = (hip[C.N-1][1] - ground) / (walkHip - ground);
     if (endHip > 0.62) fails.push(`ends with the hips at ${(100*endHip).toFixed(0)}% of standing height; not on the ground`);
+  }
+  // ── A RESTING ANIMAL IS DOWN, AND ITS HEAD IS UP ────────────────────
+  //
+  // Both halves of that were got wrong, twice, and neither shows up in any
+  // check above: a `Rest` that is really a crouch still has every hoof in
+  // contact, zero slide and zero penetration, and so passes clean. The two
+  // failures were a body that never came down — the legs were IK'd to the
+  // floor and became props, leaving the cow kneeling with her brisket driven
+  // between them — and a head that sank to the ground over the loop, because
+  // the clip inherited `death`'s neck-collapse pass.
+  //
+  // Measured against the animal's own standing height, so it means the same
+  // thing on the cow and on the calf.
+  if (/Rest/.test(anim.name)) {
+    const stand = walkHip - ground;
+    let lo = Infinity, hi = -Infinity, headBelowHip = 0;
+    for (let f = 0; f < C.N; f++) {
+      const h = (hip[f][1] - ground) / stand;
+      if (h < lo) lo = h;
+      if (h > hi) hi = h;
+      if (headY != null && headY[f] < hip[f][1]) headBelowHip++;
+    }
+    if (lo > 0.80) {
+      fails.push(`resting hips never drop below ${(100*lo).toFixed(0)}% of standing height; that is a crouch, not a lie-down`);
+    }
+    if (headBelowHip > C.N * 0.1) {
+      fails.push(`head is below the hips on ${headBelowHip} frame(s); a resting animal holds its head up`);
+    }
+    if (hi - lo > 0.12) {
+      notes.push(`resting body height wanders ${(100*(hi-lo)).toFixed(0)}% of standing height`);
+    }
   }
   const result = fails.length ? "FAIL" : notes.length ? "PASS WITH NOTES" : "PASS";
   rows.push({ name: anim.name, dur: C.dur, loop: looping ? "Loop" : "One-shot",

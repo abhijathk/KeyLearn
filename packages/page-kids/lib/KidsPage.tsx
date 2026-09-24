@@ -35,6 +35,7 @@ import {
 import { useTheme } from "@keylearn/themes";
 import { clsx } from "clsx";
 import {
+  type CSSProperties,
   memo,
   type ReactElement,
   type ReactNode,
@@ -85,29 +86,20 @@ import {
   REGION_LABEL,
   SWATCHES,
 } from "./character-tint.ts";
-import { ClassicScreen, ClassicTour, ClassicUnlock } from "./classic.tsx";
 import {
   BranchIcon,
-  ChatIcon,
-  ClassicIcon,
-  ClockIcon,
   DinoFill,
   EggIcon,
   FlagIcon,
   FlameIcon,
-  GearIcon,
-  HandIcon,
   KeysIcon,
   LeafBookIcon,
   MoonIcon,
-  PawIcon,
   SoundIcon,
   SproutIcon,
   StarIcon,
-  SunIcon,
   TentIcon,
   TrophyIcon,
-  WorldIcon,
 } from "./icons.tsx";
 import {
   FINGER_DOTS,
@@ -125,6 +117,7 @@ import { deviceTier, type NightOverride, resolveNightStyle } from "./night.ts";
 import { paceTarget } from "./pace.ts";
 import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
+import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
 import { STORY, type StoryPart } from "./story.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
 import {
@@ -140,6 +133,7 @@ import {
   VILLAGE_THEME,
   type WorldId,
 } from "./world.ts";
+import { WORLD_SIGN } from "./world-signs/index.ts";
 
 // Storage keys are namespaced by the active household profile so every
 // learner keeps their own scores and toy-box settings.
@@ -183,8 +177,6 @@ function minutesToday(results: readonly Result[]): number {
 }
 
 const BEST_KEY = () => profileStorageKey("kids.best");
-// Shown once per learner, the first time they land on Classic.
-const CLASSIC_TOUR_KEY = () => profileStorageKey("kids.classicTour");
 const PREFS_KEY = () => profileStorageKey("kids.prefs");
 
 type KbMode = "off" | "simple" | "full";
@@ -203,7 +195,7 @@ type KbMode = "off" | "simple" | "full";
  */
 const childCast = (w: WorldId) => w !== "dino";
 
-type Prefs = {
+export type Prefs = {
   world: WorldId;
   dino: string;
   hero: string;
@@ -448,24 +440,14 @@ type Prefs = {
    * in; the youngest always get it). */
   wordBlocks: boolean;
   /**
-   * Which face of practice this learner is on: the dino trail, or the
-   * grown-up-shaped Classic screen.
+   * Which face of practice this learner is on: the dino trail, or Classic —
+   * the grown-up practice page, which the route mounts instead of this one
+   * (see `classicActive`).
    *
    * Defaults from the age band — the trail up to ten, Classic from eleven —
-   * and is a knob because eleven is an average, not a rule. Both faces run
-   * the same lesson engine over the same saved progress, so switching costs
-   * a child nothing.
+   * and is a knob because eleven is an average, not a rule.
    */
   classic: boolean;
-  /**
-   * Practice-text scale on the Classic screen, 0.75–1.5.
-   *
-   * The trail has one big-letters switch because its words sit in a fixed
-   * panel. Classic gives the grown-up page's slider instead: the text is the
-   * screen's centrepiece there, and how big it wants to be depends on the
-   * desk, the eyes and the room rather than on the age.
-   */
-  textScale: number;
   /**
    * Whether the board's keys wear their finger-zone colours.
    *
@@ -483,8 +465,7 @@ type Prefs = {
    * alphabet, with the vowels set apart in a lighter blue.
    *
    * A finish, not a second keyboard — the key positions, sizes and labels are
-   * identical, so this follows the learner between Classic and the trail
-   * without either having to know about it.
+   * identical.
    */
   board: KidsBoard;
 };
@@ -548,7 +529,6 @@ function defaultPrefs(): Prefs {
     motion: 0.7,
     wordBlocks: false,
     classic: cfg.classic,
-    textScale: 1.25,
     fingerColours: true,
     board: "crayon",
   };
@@ -567,6 +547,27 @@ export function classicActive(): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Switch this learner between the trail and Classic, and reload so the route
+ * can mount the page that belongs to the choice.
+ *
+ * Written straight to storage rather than through a state setter: the reload
+ * would otherwise race the setter, and the page that comes back would read
+ * the old answer.
+ */
+export function choosePracticeStyle(classic: boolean): void {
+  try {
+    localStorage.setItem(
+      PREFS_KEY(),
+      JSON.stringify({ ...loadPrefs(), classic }),
+    );
+  } catch {
+    // Storage denied: nothing to switch to on the way back, so stay put.
+    return;
+  }
+  window.location.reload();
 }
 
 /**
@@ -1135,120 +1136,6 @@ const HERO_SAYS = {
   ],
 } as const;
 
-/**
- * The Classic voice: the same encouragement with nothing to look at.
- *
- * The trail's lines narrate a picture — a herd walking home, a camp reached,
- * a new land. On Classic there is no picture, so those lines describe a
- * journey the learner cannot see, and an eleven-year-old notices immediately
- * that the game is talking about somewhere else. This says the same things
- * about the only things actually on screen: the words, the keys and the
- * progress.
- */
-const CLASSIC_SAYS = {
-  start: [
-    "A fresh set of words. Take them at your own pace.",
-    "New words up. Eyes on the text, not your hands.",
-    "Ready when you are — the glowing key starts it.",
-    "Fresh line. Smooth beats fast.",
-    "Here we go. Let your fingers find the rhythm.",
-  ],
-  cheer: [
-    "Nice and steady.",
-    "Good rhythm — keep it.",
-    "That's the pace.",
-    "Clean work.",
-    "Smooth. Keep going.",
-  ],
-  cheerYoung: [
-    "Lovely typing!",
-    "You're doing so well!",
-    "Great going!",
-    "Look at those fingers!",
-  ],
-  cheerCool: [
-    "Clean hit. Keep the rhythm.",
-    "Smooth — that's the pace.",
-    "Nice streak building.",
-    "Steady and sharp.",
-    "That's how it's done.",
-  ],
-  milestone: [
-    "Set finished. +10.",
-    "Whole line, done. +10!",
-    "That's the set — nicely held together. +10.",
-    "Finished. Your accuracy is holding. +10!",
-  ],
-  miss: [
-    "Not that one — look for the glowing key.",
-    "Close. The glowing key is the one.",
-    "No rush. Find the glow and try again.",
-    "Wrong key — the glow shows the way.",
-    "Easy does it. The glowing key next.",
-  ],
-  stumble: [
-    "Take a breath — then the glowing key.",
-    "Pause a second. Shake out your hands.",
-    "Slow is smooth, smooth is fast.",
-    "Breathe. The key is not going anywhere.",
-  ],
-  grow: [
-    "A brand new key just joined your set!",
-    "New key unlocked — your alphabet grew!",
-    "That's another key earned.",
-    "New letter in the mix. Nicely done.",
-  ],
-  growYoung: [
-    "A new key, all yours!",
-    "You unlocked another letter!",
-    "Your set is getting bigger!",
-  ],
-  growOld: [
-    "Another key earned — the set is filling out.",
-    "New letter unlocked. Not many left now.",
-    "That's one more off the list.",
-  ],
-  joins: [
-    "Something new unlocked!",
-    "A new one joins the set!",
-    "Unlocked — nice work.",
-  ],
-  streak: [
-    "Ten in a row — that's control.",
-    "TEN clean. Your fingers know this.",
-    "Ten straight without a slip.",
-    "Ten in a row. That's the rhythm.",
-  ],
-  idle: [
-    "Still here — the glowing key is waiting.",
-    "Whenever you're ready.",
-    "The glowing key starts it again.",
-    "Take your time.",
-  ],
-  idleYoung: [
-    "Ready when you are!",
-    "The glowing key is waiting for you!",
-    "Press the glowing key to start!",
-  ],
-  idleOld: [
-    "Waiting on you — the glowing key.",
-    "Pick it up whenever you like.",
-    "Still here when you're ready.",
-  ],
-  stuck: ["The {letter} key — your {finger} presses it."],
-  stuckSpace: ["The space bar — a thumb presses it."],
-  wake: ["Back to it — the {letter} key."],
-  crossed: ["Onward — the set keeps growing."],
-  graduate: [
-    "You know every single letter. That is the whole alphabet.",
-    "Every letter, learned. The whole board is yours.",
-  ],
-  timerEnd: [
-    "That's your session — good work today.",
-    "Time's up. You held your pace well.",
-  ],
-} as const;
-
 // Time Keepers' voice. Warmer and slower than the hero world's, and about
 // walking and arriving rather than questing and winning - the road is not a
 // challenge to beat, it is a place to go through.
@@ -1260,7 +1147,7 @@ const CLASSIC_SAYS = {
  * wrong when it was typed (it was ninety-six) and would have been wrong again
  * every January.
  */
-const VILLAGE_YEAR = 1930;
+const VILLAGE_YEAR = 1960;
 /**
  * The local boy, by model id.
  *
@@ -1795,14 +1682,12 @@ const VILLAGE_PLAYFUL_SAYS: Partial<Record<string, readonly string[]>> = {
 const defaultWhoName = (w: WorldId) =>
   w === "village" ? "Your friend" : w === "hero" ? "Your hero" : "Your dino";
 
-const saysOf = (world: WorldId, classic = false) =>
-  classic
-    ? (CLASSIC_SAYS as unknown as typeof SAYS)
-    : world === "village"
-      ? (VILLAGE_SAYS as unknown as typeof SAYS)
-      : world === "hero"
-        ? (HERO_SAYS as unknown as typeof SAYS)
-        : SAYS;
+const saysOf = (world: WorldId) =>
+  world === "village"
+    ? (VILLAGE_SAYS as unknown as typeof SAYS)
+    : world === "hero"
+      ? (HERO_SAYS as unknown as typeof SAYS)
+      : SAYS;
 
 // The dino grows from a just-hatched baby (few keys) to a full adult (whole
 // alphabet). Age is 0→1 across that span; the stage name is shown to the kid.
@@ -2030,6 +1915,9 @@ const NAME_MAX = 12;
  * starts to feel like another wait.
  */
 const HANDOVER_MS = 560;
+
+/** The least time a loading card stays up, however fast the world arrives. */
+const MIN_LOADER_MS = 2500;
 
 /**
  * HOW LONG THE CARD WILL WAIT FOR THE OTHER TWO.
@@ -2691,7 +2579,7 @@ const SPEECH_QUIET_MS = 1_000;
 /**
  * Which bands are offered the drier voice.
  *
- * The same line as Classic, and for the same reason: below it the coach's
+ * Classic's line, and for the same reason: below it the coach's
  * lines are often the only prose the child reads unaided, and understatement
  * is the one register that does not survive being read by someone still
  * decoding the words.
@@ -3006,7 +2894,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [prefs, setPrefs] = useState(loadPrefs);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
-  const [tourOpen, setTourOpen] = useState(false);
   /**
    * Timestamps of the last few keystrokes, for the character's gait.
    *
@@ -3043,6 +2930,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [loaded, setLoaded] = useState(false);
   /** The world is ready and the recap may be walked away from. */
   const [walkArmed, setWalkArmed] = useState(false);
+  const loaderShownAt = useRef(performance.now());
   /**
    * ── THE THREE-STEP WAY IN ────────────────────────────────────────────
    *
@@ -3139,14 +3027,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [chapter, setChapter] = useState(1);
   const [landName, setLandName] = useState("");
   const [stuckHelp, setStuckHelp] = useState(false);
-  // A wrong key reddens the caret for a moment, the way the grown-up page
-  // marks a slip — cleared by the next good key or by a short timer.
-  const [missFlash, setMissFlash] = useState(false);
-  // Classic borrows the grown-up page's focus behaviour: the lesson waits
-  // behind an Enter, the chrome steps back while the fingers are moving,
-  // and a long silence puts the line back to the start rather than
-  // recording a speed nobody typed at.
-  const [armed, setArmed] = useState(false);
   // The key actually pressed on a miss, flashed on the board for a moment so
   // a learner sees WHICH key they hit, not just that something was wrong.
   const [wrongKey, setWrongKey] = useState<string | null>(null);
@@ -3158,16 +3038,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [helpLevel, setHelpLevel] = useState(0);
   const helpAtRef = useRef("");
   const helpMissesRef = useRef(0);
-  // Said out loud when a long pause puts the line back to the start — a line
-  // that simply vanishes reads as the app breaking.
-  const [resetNotice, setResetNotice] = useState(false);
   // Raised once a day when the child has practised past the healthy ceiling.
   const [restOpen, setRestOpen] = useState(false);
-  const resetNoticeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [typing, setTyping] = useState(false);
-  const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const idleTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const missFlashTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   // On-screen full-board modifier state — mirrors the real keyboard so Caps and
   // Shift flip the letters to capitals (lowercase by default) and Tab/Enter/
   // Backspace light up when pressed, just like the grown-up board.
@@ -3637,13 +3509,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       return;
     }
     const wanted =
-      prefs.world === "village" && !prefs.classic && (prefs.guide ?? true)
-        ? VILLAGE_GUIDE
-        : null;
+      prefs.world === "village" && (prefs.guide ?? true) ? VILLAGE_GUIDE : null;
     worldRef.current?.setGuide(wanted).catch(() => {
       // A guide who cannot be swapped is not worth taking the road down for.
     });
-  }, [prefs.guide, prefs.world, prefs.classic, loaded, regenNonce]);
+  }, [prefs.guide, prefs.world, loaded, regenNonce]);
   const roadClock = useMemo(() => {
     void clockTick;
     // REVIEW ONLY: `?hour=` pins the staged hour, and the board has to be
@@ -3780,14 +3650,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       : (prefs.roadStones ?? 0) >= part.stone,
   ).length;
   const storyUnread = Math.max(0, storyOpenCount - (prefs.storyRead ?? 0));
-  // Each world has its own voice: the dino arcade blips, the hero storybook
-  // chimes (and its bored idle babble).
+  // Each world has its own keyboard: Dino Run's arcade blips, Hero Trail's
+  // storybook chimes, Time Keepers' recorded wooden keys.
   useEffect(() => {
-    // Time Keepers borrows Hero Trail's softer chimes rather than Dino Run's
-    // 8-bit blips: it is the gentler of the two moods, and a village road is
-    // not an arcade. A voice of its own can come later - the palette is the
-    // one thing here that is genuinely shared rather than merely defaulted.
-    kidsAudio.setTheme(childCast(prefs.world) ? "hero" : "dino");
+    kidsAudio.setTheme(prefs.world);
   }, [prefs.world]);
   /**
    * WHAT IS AUDIBLE, in one place.
@@ -4089,25 +3955,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return () => clearTimeout(id);
   }, [ceremonyWaiting]);
 
-  // The first arrival on Classic, and only the first. Anything already open —
-  // the settings panel, a ceremony — takes precedence; the walk-through waits
-  // rather than stacking on top of it.
-  useEffect(() => {
-    if (!(prefs.classic && classicOffered(band)) || tourOpen) {
-      return;
-    }
-    let seen = "1";
-    try {
-      seen = localStorage.getItem(CLASSIC_TOUR_KEY()) ?? "";
-    } catch {
-      seen = "1"; // Storage denied: never nag.
-    }
-    if (seen === "") {
-      setTourOpen(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefs.classic, band]);
-
   const dinoName = () =>
     prefsRef.current.name || defaultWhoName(prefsRef.current.world);
   /**
@@ -4181,7 +4028,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    */
   const withoutGuide = (pool: readonly string[]): readonly string[] => {
     const p = prefsRef.current;
-    if (p.world !== "village" || p.classic || p.guide !== false) {
+    if (p.world !== "village" || p.guide !== false) {
       return pool;
     }
     const without = pool.filter((l) => !l.includes("{guide}"));
@@ -4218,7 +4065,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     const age = dinoAgeRef.current;
     const p = prefsRef.current;
     const world = p.world;
-    const village = world === "village" && !p.classic;
+    const village = world === "village";
     // ── WHICH VARIANT OF THIS CONTEXT ────────────────────────────────────
     //
     // Time Keepers resolves in its own order: a once-ever line if this child
@@ -4226,7 +4073,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // age variants, then the plain key. Everywhere else is untouched.
     const stones = p.roadStones ?? 0;
     const bandNo = bandOf(stones);
-    const table = saysOf(world, p.classic) as unknown as Record<
+    const table = saysOf(world) as unknown as Record<
       string,
       readonly string[] | undefined
     >;
@@ -4248,7 +4095,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     if (pool.length === 0 && key in SAYS) {
       // The age variants only exist for the shared contexts; the village-only
       // keys are banded instead and have already been resolved above.
-      pool = agedPool(saysOf(world, p.classic), key as keyof typeof SAYS, age);
+      pool = agedPool(saysOf(world), key as keyof typeof SAYS, age);
     }
     // The banded pools were already filtered inside `villagePool`; this
     // catches the shared ones that fell through to it — the age variants and
@@ -4262,7 +4109,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // The after-dark lines. Time Keepers has its own; the Hero Trail's are
     // about lanterns, a party and mist, and were being handed to a Kerala
     // cart road because the test for them is only "not the dino world".
-    if (!p.classic && childCast(world) && p.night) {
+    if (childCast(world) && p.night) {
       const nightKeys = village ? [`${key}B${bandNo}`, key] : [key];
       const extra = village
         ? nightKeys.flatMap((k) => VILLAGE_NIGHT_SAYS[k] ?? [])
@@ -4416,17 +4263,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       }
     }
     let flat = flattenStyledText(lesson.generate(lessonKeys, Lesson.rng));
-    if (prefs.classic) {
-      // Classic sits between the two pages. The grown-up passage is a long
-      // sitting for an eleven-year-old and the trail's handful of words is
-      // too short to find a rhythm in, so it runs at seven tenths of the
-      // grown-up length — the band's word caps do not apply here.
-      const ws = flat.split(" ");
-      flat = ws.slice(0, Math.max(1, Math.round(ws.length * 0.7))).join(" ");
-    } else if (
-      included < lesson.letters.length &&
-      included < cfg.fullPassageAt
-    ) {
+    if (included < lesson.letters.length && included < cfg.fullPassageAt) {
       const wordCount = Math.min(
         cfg.capWords,
         cfg.baseWords + Math.floor(Math.max(0, included - 6) / 5),
@@ -4452,7 +4289,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // short words as for a twelve-year-old typing thirty.
     worldRef.current?.startRun(flat.length);
     forceTick();
-  }, [lesson, lessonKeys, included, settings, regenNonce, prefs.classic]);
+  }, [lesson, lessonKeys, included, settings, regenNonce]);
 
   // A run here is thirty or forty-five seconds, and the words are long enough
   // that a small child can spend the whole of one without reaching the end of
@@ -4644,24 +4481,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // the browser fetches first. Created after it, the loading screen stood
     // empty until every tree and companion had been fetched, which is most of
     // the wait it exists to fill.
-    // The loading screen is always one of the three children.
-    //
-    // It is the first thing a child sees every session, and it is the only
-    // picture of "who this is for" the page gets to make before the world
-    // arrives. A skeleton jogging on the spot is a fine thing to PLAY as and
-    // a poor thing to be greeted by. So the loader shows Dave, Little Drew
-    // or Peeli — the child's own pick when it is one of them, and otherwise
-    // the sibling their age band opens with.
-    //
-    // Only the hero world has anything else to offer; Dino Run's cast is
-    // dinosaurs, and a child running there is a dinosaur on purpose.
-    const SIBLINGS = ["Explorer", "Explorer6", "Peeli"];
-    const loaderWho =
-      !childCast(prefsRef.current.world) || SIBLINGS.includes(chosen)
-        ? chosen
-        : band === "5-6" || band === "7-8"
-          ? "Explorer6"
-          : "Explorer";
+    // The loading screen runs whoever the learner picked as their main
+    // character, in every world: waiting behind somebody else's hero, then
+    // arriving as your own, reads as the game having forgotten you.
+    const loaderWho = chosen;
     const loader =
       loaderRef.current != null
         ? createLoaderScene(loaderRef.current, theme, loaderWho)
@@ -4741,9 +4564,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // Which chapter's ten lessons this road is made of. `?lesson=` wins, so
     // a reviewer lands in the chapter they named; otherwise it is whichever
     // one the child's own milestones put them in.
-    const villageChapter = onVillageNow
-      ? (at?.chapter.n ?? chapterAt(prefsRef.current.roadStones ?? 0).n)
-      : chapter;
+    // `scenery` is the road it is BUILT from and `n` is the number carved on
+    // its stones; they part company from Chapter 5, which walks road 1 again.
+    const villageChapterOf = onVillageNow
+      ? (at?.chapter ?? chapterAt(prefsRef.current.roadStones ?? 0))
+      : null;
+    const villageChapter = villageChapterOf?.scenery ?? chapter;
     // `?lesson=` IMPLIES THE VILLAGE IS DUE, and leaving that out made the
     // flag look broken in the worst way: the whole chapter — its props, its
     // planting, its herd, its people AND its milestones — is built inside
@@ -4755,19 +4581,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     //
     // A reviewer naming a lesson is asking for that lesson's scenery. There
     // is no reading of `?lesson=16` under which they wanted an empty road.
+    // THE CHAPTER ROAD IS ALWAYS BUILT NOW. The village used to be a reward
+    // that came round every four to seven flags and was spent when it
+    // appeared — from before there were chapters, when it was one cluster of
+    // houses on a generic trail. Everything a chapter is (its props, its
+    // planting, its people, its milestones) is built inside this gate, so
+    // under the old rule a child who pressed Enter on a chapter card, or came
+    // back for the next session, walked a bare generic road under a
+    // scoreboard naming a lesson that was not there until enough flags came
+    // round again. The road is the game now; it is always there.
     const villageDue: boolean | "near" =
       prefsRef.current.world !== "village"
         ? false
         : villageForced || at != null
           ? "near"
-          : (prefsRef.current.villageFlags ?? 0) >=
-            (prefsRef.current.villageGap ?? 4);
-    if (villageDue === true) {
-      savePrefs({
-        villageFlags: 0,
-        villageGap: 4 + Math.floor(Math.random() * 4),
-      });
-    }
+          : true;
     // THE FIRST FEW NAMES, SET BEFORE ANYTHING IS FETCHED.
     //
     // The card goes up now, so the reading starts now — it does not wait for
@@ -4831,6 +4659,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         prefsRef.current.dayHour === "auto" ? null : prefsRef.current.dayHour,
       stonesPassed: prefsRef.current.roadStones ?? 0,
       chapter: villageChapter,
+      chapterNumber: villageChapterOf?.n,
       // How long this child's chapter is. Ten lessons of a five-year-old's
       // passages is 270 units of road; of an eleven-year-old's, 640.
       ageBand: reviewBand ?? band,
@@ -5016,11 +4845,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     };
     // The style override rebuilds the world: the plan decides what was
     // planted, which is not a thing that can be re-lit in place.
-    // `classic` matters here even though the world does not use it: while
-    // Classic is on there is no canvas to draw into, so this effect bails out
-    // early. Coming back to the trail must rebuild the world, or the learner
-    // lands on an empty scene that never loads.
-  }, [landNonce, prefs.world, worldNight, band, prefs.classic]);
+  }, [landNonce, prefs.world, worldNight, band]);
 
   /**
    * The world pane never grows more than 50% taller than the helper card.
@@ -5124,10 +4949,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       observer.disconnect();
       window.removeEventListener("resize", cap);
     };
-    // Re-measured on the way back from Classic too: while it was on there was
-    // no scene card to size, so the cap never ran and the trail returned with
-    // a 3-D pane taller than the screen.
-  }, [prefs.kbMode, prefs.hands, prefs.classic]);
+  }, [prefs.kbMode, prefs.hands]);
 
   // Refs mirror the bits of state the one-time key listener needs.
   const assessmentOffered = useAssessment();
@@ -5142,9 +4964,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
-  // Which screen this session is on. Needed here because the input gate below
-  // asks whether there is a 3-D world to wait for, and Classic has none.
-  const classic = prefs.classic && classicOffered(band);
   const blockedRef = useRef(false);
   blockedRef.current =
     settingsOpen ||
@@ -5161,7 +4980,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     storyOpen ||
     graduated ||
     restOpen ||
-    tourOpen ||
     // MIRRORS THE CARD'S OWN RENDER CONDITION, deliberately, rather than
     // asking the shorter question. A blocked state whose only exit is a card
     // must be blocked on exactly the terms that card appears on; the two
@@ -5172,44 +4990,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // Keys pressed at the loading screen are not practice. They used to land
     // on a run that had not started: the letters counted, the mistakes
     // counted, and the trail they were scored against was still being built.
-    // Classic never sets this — it has no world to wait for — so it is
-    // excluded rather than left permanently blocked.
-    (!classic && !loaded);
+    !loaded;
 
   useEffect(() => {
-    // Back to the top of the same line, and back behind the Enter gate. Told
-    // out loud when it was a pause that caused it, so nobody thinks the words
-    // disappeared on their own.
-    const restartLine = (announce: boolean) => {
-      textInputRef.current = new TextInput(
-        passageRef.current,
-        toTextInputSettings(settings),
-      );
-      lastStampRef.current = 0;
-      missStreakRef.current = 0;
-      helpAtRef.current = "";
-      helpMissesRef.current = 0;
-      setHelpLevel(0);
-      setArmed(false);
-      setTyping(false);
-      clearTimeout(idleTimer.current);
-      if (announce) {
-        setResetNotice(true);
-        clearTimeout(resetNoticeTimer.current);
-        resetNoticeTimer.current = setTimeout(
-          () => setResetNotice(false),
-          5000,
-        );
-      }
-      forceTick();
-    };
-    restartLineRef.current = restartLine;
-
     const onKeyDown = (ev: KeyboardEvent) => {
       // Enter, Backspace and Tab are named keys, so a plain "one character
       // only" test throws them away before anything downstream can act on
-      // them — which is why the board's own Backspace typed a "b" and why
-      // Classic's Enter gate could never open.
+      // them — which is why the board's own Backspace typed a "b".
       const named =
         ev.key === "Enter" || ev.key === "Backspace" || ev.key === "Tab";
       if (ev.key.length !== 1 && !named) {
@@ -5230,16 +5017,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           if (prefsRef.current.sounds) {
             kidsAudio.playPoint();
           }
-          // Three presses teaches a six-year-old where the key is. At the age
-          // Classic is for, it is a chore standing between them and the thing
-          // they just earned.
-          // `classicRef`, not `prefs.classic`: Classic is only OFFERED to the
-          // oldest band, so a younger child carrying the preference — set
-          // when they were older, or inherited from a shared device — was
-          // shown a card counting three presses by a handler that closed it
-          // after one. The render decides what the card says; this has to
-          // read the same answer.
-          if (cer.presses + 1 >= (classicRef.current ? 1 : 3)) {
+          // Three presses teaches a six-year-old where the key is.
+          if (cer.presses + 1 >= 3) {
             setCeremony(null);
             worldRef.current?.hop();
             if (prefsRef.current.sounds) {
@@ -5266,21 +5045,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       if (textInput == null || textInput.completed) {
         return;
       }
-      // Classic waits behind an Enter, like the grown-up page: a stray key
-      // pressed while somebody is reading the screen should not start the
-      // clock, and should certainly not be recorded as a mistake.
-      if (classicRef.current && !armedRef.current) {
-        if (ev.key === "Enter") {
-          ev.preventDefault();
-          // `setArmed`, to match the `armedRef` two lines up. This is
-          // Classic's own gate; the loader's Walk on button is `walkArmed`,
-          // and the two were crossed — this handler opened the loader and
-          // the loader opened this handler, so Classic's Enter did nothing
-          // and the loading screen could not be left at all.
-          setArmed(true);
-        }
-        return;
-      }
       kidsAudio.init(); // browsers unlock audio on first input
       unlockVoice(); // and speech, which is gated the same way
       // Typing wins over talking. A coach line still playing over the child's
@@ -5299,20 +5063,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       }
       lastKeyAtRef.current = now;
       ev.preventDefault();
-      if (classicRef.current) {
-        // The chrome steps back while the fingers move, and comes back a beat
-        // after they stop.
-        setTyping(true);
-        clearTimeout(typingTimer.current);
-        typingTimer.current = setTimeout(() => setTyping(false), 1200);
-        // Fifteen seconds of silence puts the line back to the start. A
-        // lesson clock that kept running while somebody answered the door
-        // would otherwise record a speed they never typed at.
-        clearTimeout(idleTimer.current);
-        idleTimer.current = setTimeout(() => {
-          restartLine(true);
-        }, 15_000);
-      }
       // The keys that are not letters, behaving the way the grown-up board
       // behaves. Without this they arrive as whatever their name starts
       // with — `ev.key` for Backspace is the word "Backspace", so lowercasing
@@ -5367,15 +5117,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         if (prefsRef.current.spaceJump !== false) {
           worldRef.current?.jump();
         }
-        // The jump is the trail's own sound effect. On Classic the space bar
-        // is just another key and should sound like one — the real key click
-        // is played below with every other press. And a child who has turned
-        // the hop off should not still hear one.
-        if (
-          sounds &&
-          !prefsRef.current.classic &&
-          prefsRef.current.spaceJump !== false
-        ) {
+        // The jump is the trail's own sound effect, and a child who has
+        // turned the hop off should not still hear one.
+        if (sounds && prefsRef.current.spaceJump !== false) {
           kidsAudio.playJump();
         }
       }
@@ -5416,11 +5160,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       );
       // ONE KEY SOUND PER PRESS, for every mode and every key.
       //
-      // Classic used to play the grown-up page's synthesised click and the
-      // trail its own 8-bit blip, each skipping the other so they never
-      // doubled up. Both are the recorded keyboard now — so a child gets the
-      // same board whichever way they are practising, and the space bar,
-      // Enter and a wrong letter each sound like themselves.
+      // The recorded keyboard, so the space bar, Enter and a wrong letter
+      // each sound like themselves.
       if (sounds && prefsRef.current.clickSounds) {
         if (
           feedback === Feedback.Succeeded ||
@@ -5467,12 +5208,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         // leap on every gap and learn that the gaps are where the points are.
         // Finishing a word still counts and still chimes; it just is not paid.
         setScore((s) => saveBest(s + 1));
-        // The key itself already sounded, above — every mode, every key.
+        // The key itself already sounded, above — every key.
         if (pos > 0 && passage[pos - 1] === " ") {
           setWords((w) => w + 1);
-          // Another of the trail's game chimes: Classic keeps to the sound a
-          // keyboard makes, and its own key click has already played.
-          if (sounds && !prefsRef.current.classic) {
+          // Another of the trail's game chimes, on top of the key click.
+          if (sounds) {
             kidsAudio.playPoint();
           }
         }
@@ -5480,12 +5220,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           setSay(
             fillSay(
               pickSay(
-                withoutGuide(
-                  cheerPool(
-                    saysOf(prefsRef.current.world, prefsRef.current.classic),
-                    band,
-                  ),
-                ),
+                withoutGuide(cheerPool(saysOf(prefsRef.current.world), band)),
               ),
               sayVars(),
             ),
@@ -5584,9 +5319,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           }
         }
       } else {
-        setMissFlash(true);
-        clearTimeout(missFlashTimer.current);
-        missFlashTimer.current = setTimeout(() => setMissFlash(false), 420);
         // Show the key that was actually pressed, briefly. Knowing you hit D
         // instead of F is the correction; knowing only that you were wrong
         // is not.
@@ -5635,15 +5367,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         if (missStreakRef.current >= 3) {
           missStreakRef.current = 0;
           worldRef.current?.roar();
-          if (sounds && !prefsRef.current.classic) {
+          if (sounds) {
             kidsAudio.playRoar();
           }
           if (cheers && stuckRef.current.misses < cfg.rescueMisses) {
             speak("stumble");
           }
         } else {
-          // Classic's own miss sound comes from the key player above.
-          if (sounds && !prefsRef.current.classic) {
+          if (sounds) {
             kidsAudio.playDrop();
           }
           if (cheers && stuckRef.current.misses < cfg.rescueMisses) {
@@ -5812,13 +5543,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         // beyond it is still arriving — so pressing this the instant it
         // lights costs them nothing.
         //
-        // `setWorldArmed`, NOT `setArmed`. There are three things in this
-        // file called armed and they are nothing to do with each other:
-        // this one says the road is ready to be stood on, `walkArmed` is
-        // the loading card's own cue, and `armed` is Classic mode's "press
-        // Enter to begin" gate. Writing to the wrong one typechecks
-        // perfectly and fails silently — which has happened here once
-        // already, and cost the loading screen its only way out.
+        // `setWorldArmed`, NOT `setWalkArmed`. The two are nothing to do
+        // with each other: this one says the road is ready to be stood on,
+        // `walkArmed` is the loading card's own cue. Writing to the wrong one
+        // typechecks perfectly and fails silently — which has happened here
+        // once already, and cost the loading screen its only way out.
         setWorldArmed(true);
       }
     };
@@ -5902,10 +5631,40 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * a button, on a screen that is plainly a question.
    */
   useEffect(() => {
-    if (walkArmed && !loaded) {
-      setPickOpen(true);
+    if (loaded) {
+      return;
     }
-  }, [walkArmed, loaded]);
+    // Only Time Keepers has a picker, and it opens once the cast is in.
+    if (onVillage) {
+      if (walkArmed) {
+        setPickOpen(true);
+      }
+      return;
+    }
+    // Dino Run and Hero Trail have nobody to choose on the way in, so the
+    // card hands straight to the road — but only once the road is BUILT.
+    // Their cast reports ready at once (there is no turntable to fill), so
+    // gating on `walkArmed` lifted the card over an empty, unbuilt scene and
+    // skipped the loading screen altogether. And opening a picker that is
+    // never drawn, as this used to, left `loaded` false for ever: the world
+    // stayed held at dt = 0 and the braille cards never turned.
+    // And never in less than a couple of seconds: a cached world is ready
+    // almost at once, and a card that flashes past reads as a glitch — the
+    // runner has not even arrived on it yet.
+    if (worldReady) {
+      const since = performance.now() - loaderShownAt.current;
+      const wait = Math.max(0, MIN_LOADER_MS - since);
+      const t = setTimeout(() => setLoaded(true), wait);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [walkArmed, loaded, onVillage, worldReady]);
+  // When the current loading card went up — see MIN_LOADER_MS.
+  useEffect(() => {
+    if (!loaded) {
+      loaderShownAt.current = performance.now();
+    }
+  }, [loaded]);
 
   /**
    * THE HANDOVER, AND WHY THE CARD DOES NOT SIMPLY VANISH.
@@ -6099,11 +5858,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     }
   };
 
+  // Every world's title sign rides small over the runner on the loading card.
+  // Time Keepers, the one world with a picker, keeps it first in that header.
+  const worldSign = WORLD_SIGN[prefs.world];
   const pickerPane =
     loaded || !onVillage ? null : (
       <Picker
         open={pickOpen}
         chapter={`Chapter ${chapterNow.n} · ${chapterNow.name}`}
+        sign={WORLD_SIGN.village}
         lesson={lessonName}
         characters={VILLAGE_CHARACTERS.map(({ id }) => ({
           id,
@@ -6171,55 +5934,69 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           this, because the extra was GPU work paid during the load for
           resolution nothing could see.
         */}
-          <canvas
-            ref={loaderRef}
-            className={styles.loadArt}
-            width={360}
-            height={240}
-          />
-          {/* The ground he walks on IS the progress bar — see `.loadGround`. */}
+          {/* The world's name over the runner. A flat picture, and inline in
+              this bundle, so it is up the moment this card is — no WebGL, no
+              fetch. The light that crosses it is CSS (see `.loadSign`). */}
+          <div
+            className={styles.loadSign}
+            style={{ "--sign": `url(${worldSign})` } as CSSProperties}
+          >
+            <img src={worldSign} alt="" aria-hidden="true" />
+          </div>
+          {/* He stands on the page itself — no panel round him — with a soft
+              shadow under his feet so he is standing rather than floating. */}
+          <div className={styles.loadRunner}>
+            <span className={styles.loadShadow} aria-hidden="true" />
+            <canvas
+              ref={loaderRef}
+              className={styles.loadArt}
+              width={360}
+              height={240}
+            />
+          </div>
+          {/* The progress line under his feet — see `.loadGround`. */}
           <div className={styles.loadGround}>
             <i />
           </div>
-        </div>
-        <div className={styles.loadBand}>
-          <div className={styles.loadWords}>
-            {/*
-            THE PLACE, in display size and in braille first.
+          <div className={styles.loadBand}>
+            <div className={styles.loadWords}>
+              {/*
+              THE PLACE, in display size and in braille first.
 
-            One name, not a sentence: the chapter and the lesson number are
-            the line below, and a heading that carries its own coordinates is
-            a heading nobody reads twice. Mixed case rather than the
-            uppercase this line used to be set in — at this size uppercase
-            stops being a title and starts being a sign.
-          */}
-            <div className={styles.loadLabel}>
-              <Reveal text={loadHead} />
+              One name, not a sentence: the chapter and the lesson number are
+              the line below, and a heading that carries its own coordinates is
+              a heading nobody reads twice. Mixed case rather than the
+              uppercase this line used to be set in — at this size uppercase
+              stops being a title and starts being a sign.
+            */}
+              <div className={styles.loadLabel}>
+                <Reveal text={loadHead} />
+              </div>
+              {/*
+              CHAPTER AND VERSE, quieter on purpose. Same braille, so the two
+              lines resolve as one gesture — two different treatments a line
+              apart would read as one of them being chrome.
+            */}
+              <div className={styles.loadLesson}>
+                <Reveal text={loadSub} />
+              </div>
             </div>
             {/*
-            CHAPTER AND VERSE, quieter on purpose. Same braille, so the two
-            lines resolve as one gesture — two different treatments a line
-            apart would read as one of them being chrome.
-          */}
-            <div className={styles.loadLesson}>
-              <Reveal text={loadSub} />
-            </div>
+              A STATUS, NOT A CONTROL — and it never gets to say anything else.
+
+              This was "Press space to walk on", which was the right answer to
+              the wrong question. It existed because the card needed an exit
+              and a typing game's exit belongs on the keyboard — but the card
+              now hands over to the picker by itself the moment the cast has
+              landed, so there is nothing left to press and no moment in which
+              to read an instruction about pressing it.
+
+              A loading card that has finished loading and stays put reads as
+              stuck, whatever it says. The one gate before the road is Walk on,
+              which is a button on a screen that is plainly a question.
+            */}
+            <div className={styles.loadGo}>Walking out…</div>
           </div>
-          {/*
-            A STATUS, NOT A CONTROL — and it never gets to say anything else.
-
-            This was "Press space to walk on", which was the right answer to
-            the wrong question. It existed because the card needed an exit
-            and a typing game's exit belongs on the keyboard — but the card
-            now hands over to the picker by itself the moment the cast has
-            landed, so there is nothing left to press and no moment in which
-            to read an instruction about pressing it.
-
-            A loading card that has finished loading and stays put reads as
-            stuck, whatever it says. The one gate before the road is Walk on,
-            which is a button on a screen that is plainly a question.
-          */}
-          <div className={styles.loadGo}>Walking out…</div>
         </div>
         {/*
         THE STRIP ALONG THE BOTTOM, where the machine gets to talk.
@@ -6273,18 +6050,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * appears, because the first thing a child does is look at it, and paused
    * for every word they type.
    *
-   * `typingRef` rather than `typing`: a predicate read inside the sweep, so
-   * the sweep does not restart every time a key goes down.
+   * "Typing" is a key inside the last 1.2 seconds, read from `lastKeyAtRef`
+   * inside the sweep, so the sweep does not restart every time a key goes
+   * down.
    */
-  const typingRef = useRef(typing);
-  typingRef.current = typing;
   useEffect(() => {
     if (!loaded) {
       return;
     }
     const world = prefs.world;
     const t = setTimeout(() => {
-      stopWarmRef.current = warmWorld(world, () => typingRef.current);
+      stopWarmRef.current = warmWorld(
+        world,
+        () => performance.now() - lastKeyAtRef.current < 1200,
+      );
     }, 6000);
     return () => {
       clearTimeout(t);
@@ -6587,8 +6366,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // so the text jumped left at the same moment the transform below moved it
   // right to compensate. The two cancel in the final position and not in the
   // animation, which reads as a shudder on every keystroke. A passage is 9-16
-  // words for the kid bands and a few hundred characters at most in classic,
-  // so there is nothing to save by slicing it.
+  // words for the kid bands, so there is nothing to save by slicing it.
   const passageChars = [...passage];
   // Keep the letter being typed at a fixed spot near the left of the card, so
   // what is coming stays visible. Layout effect, not effect: this runs before
@@ -6628,70 +6406,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // and a keyboard at once, so the keyboard steps aside. It does not touch
   // `prefs.kbMode`, so the child's own choice comes back with the space.
   const kbVisible = !hideHints && prefs.kbMode !== "off";
-  // ── Classic: the same lesson, wearing the grown-up page's anatomy ──────
-  //
-  // Classic always draws the whole board — it is the screen's centrepiece,
-  // not a hint that fades — and never the helper hands: the finger colours
-  // and the home bumps do that work, and a child who chose this face has
-  // asked for the grown-up shape.
-  // Never for the youngest bands, whatever is in storage — a profile that
-  // was switched at eleven and handed down to a younger sibling would
-  // otherwise open on a screen built for somebody else. Declared further up,
-  // beside blockedRef, which needs it before this point.
-  // Classic types on a picture of a real board, so it should sound like one
-  // — but like the boards these learners have actually used. The mechanical
-  // samples are a nostalgia most eleven-year-olds do not share; the soft
-  // modern click of a laptop is the sound they know a key to make.
-  const classicRef = useRef(classic);
-  classicRef.current = classic;
-  const armedRef = useRef(armed);
-  armedRef.current = armed;
-  // Set by the keydown effect, which owns the lesson's TextInput.
-  const restartLineRef = useRef<((announce: boolean) => void) | null>(null);
-  // Leaving the window or the tab puts the line back, the way the grown-up
-  // page does. A clock that kept running while somebody watched a video would
-  // otherwise record a speed they never typed at — and the average they are
-  // measured against is the thing that suffers.
-  useEffect(() => {
-    const away = () => {
-      if (!classicRef.current) {
-        return;
-      }
-      restartLineRef.current?.(false);
-    };
-    // Clicking anywhere that is not the words or the board hands the page
-    // back: the hands return, the invitation comes back, and the line starts
-    // over — the same thing the grown-up page does when its text area loses
-    // focus. A learner who wandered off to press a button was not typing.
-    const clickedAway = (ev: PointerEvent) => {
-      if (!classicRef.current || !armedRef.current) {
-        return;
-      }
-      const target = ev.target;
-      if (
-        target instanceof Element &&
-        target.closest("[data-practice]") != null
-      ) {
-        return;
-      }
-      away();
-    };
-    const hidden = () => {
-      if (document.visibilityState === "hidden") {
-        away();
-      }
-    };
-    window.addEventListener("blur", away);
-    document.addEventListener("visibilitychange", hidden);
-    document.addEventListener("pointerdown", clickedAway, true);
-    return () => {
-      window.removeEventListener("blur", away);
-      document.removeEventListener("visibilitychange", hidden);
-      document.removeEventListener("pointerdown", clickedAway, true);
-    };
-  }, []);
-  const kbFull = classic || prefs.kbMode === "full";
-  const showHands = !classic && !hideHints && prefs.hands;
+  const kbFull = prefs.kbMode === "full";
+  const showHands = !hideHints && prefs.hands;
   const helperVisible = kbVisible || (!hideHints && prefs.hands);
   /**
    * Whether the keyboard and hands are actually offered yet.
@@ -6705,85 +6421,21 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * the 3-D pane and the scene jumps taller for the length of the load and
    * back again when it finishes. Held with `visibility` rather than unmounted,
    * the layout is the same before and after; only the invitation waits.
-   *
-   * Classic has no 3-D world to wait for — its effect bails out before
-   * anything sets `loaded` — so it is never held back.
    */
-  const helperReady = classic || loaded;
+  const helperReady = loaded;
   const wide = kbVisible && (kbFull || prefs.hands);
 
-  // Finished passages for this lesson, oldest first — the spark, the delta
-  // and the accuracy all read the very records the unlock rules read, so the
-  // island can never disagree with the trail about how it is going.
-  const pastResults = useMemo(
-    () => (classic ? lesson.filter(results) : []),
-    [classic, lesson, results],
-  );
-  const speeds = pastResults.slice(-20).map(({ speed }) => speed / 5);
-  const lastWpm = speeds.length > 0 ? Math.round(speeds[speeds.length - 1]) : 0;
-  const prevWpm =
-    speeds.length > 1 ? Math.round(speeds[speeds.length - 2]) : null;
-  // Live while the fingers are moving, the last recorded figure when they are
-  // not — a big number that sat at zero between passages would read as lost
-  // progress rather than as a pause.
-  const liveWpm = (() => {
-    const steps = textInput?.steps ?? [];
-    if (steps.length < 2) {
-      return 0;
-    }
-    const ms = steps.at(-1)!.timeStamp - steps[0]!.timeStamp;
-    // chars/sec → chars/min → words/min (five characters to a word).
-    return ms > 0 ? Math.round(((steps.length / (ms / 1000)) * 60) / 5) : 0;
-  })();
-  const shownWpm = liveWpm > 0 ? liveWpm : lastWpm;
-
-  // Coming back after a break, the first round is a warm-up and its delta
-  // means nothing. Without this every learner who returns after school is
-  // met by a red minus for something that is not their doing.
-  const warmingUp = (() => {
-    const last = pastResults[pastResults.length - 1];
-    if (last == null) {
-      return false;
-    }
-    return Date.now() - last.timeStamp > 30 * 60 * 1000;
-  })();
-  // "On target" reads the round being typed, not the last one filed away.
-  // Taking it from the finished results left it frozen — a learner who had
-  // ever finished one clean round saw 100% for the rest of the session, no
-  // matter how the current line was going.
-  const liveAccuracy = (() => {
-    const steps = textInput?.steps ?? [];
-    if (steps.length > 0) {
-      return Math.round(makeStats(steps).accuracy * 100);
-    }
-    return pastResults.length > 0
-      ? Math.round(pastResults[pastResults.length - 1].accuracy * 100)
-      : null;
-  })();
-
-  // One board, drawn once and worn by both faces — the trail sets it inside
-  // the helper card beside the hands, Classic stands it on its own. Built
-  // here rather than twice so the two can never drift apart.
-  // Nothing on the board glows until the lesson has actually started: a key
-  // lit while the screen is still saying "press Enter" is inviting a press
-  // that will be thrown away.
-  const showNext = !classic || armed;
+  // The board, set inside the helper card beside the hands.
   const rainbow = prefs.board === "rainbow";
   const board = kbVisible ? (
-    <div
-      className={clsx(
-        styles.kb,
-        classic && styles.kbClassic,
-        rainbow && styles.kbRainbow,
-      )}
-    >
+    <div className={clsx(styles.kb, rainbow && styles.kbRainbow)}>
       {(kbFull ? FULL_ROWS : SIMPLE_ROWS).map((row, r) => (
         <div key={r} className={styles.krow}>
           {row.map((def, i) => (
             <Key
               key={i}
               def={def}
-              next={showNext && def.char != null && def.char === nextChar}
+              next={def.char != null && def.char === nextChar}
               pressed={def.char != null && def.char === pressed}
               stuck={stuckHelp || helpLevel >= 1}
               urgent={helpLevel >= 2}
@@ -6810,20 +6462,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           space={true}
           colours={prefs.fingerColours}
           rainbow={rainbow}
-          next={showNext && nextChar === " "}
+          next={nextChar === " "}
           pressed={pressed === " "}
           stuck={stuckHelp}
         />
       </div>
-      {/* Classic says nothing here: the coach line sits under this card and
-          the glowing key speaks for itself. */}
-      {!classic && (
-        <div className={styles.kbHint}>
-          {showHands
-            ? "the glowing key is next — the dots mark where your pointers rest"
-            : "the glowing key is next"}
-        </div>
-      )}
+      <div className={styles.kbHint}>
+        {showHands
+          ? "the glowing key is next — the dots mark where your pointers rest"
+          : "the glowing key is next"}
+      </div>
     </div>
   ) : null;
 
@@ -6841,453 +6489,401 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * gives the new one; the moments themselves are announced by the coach
    * line, which is a live region.
    */
-  const sceneDescription = classic
-    ? "Typing practice."
-    : [
-        landName !== "" ? `Chapter ${chapter}, ${landName}.` : "On the trail.",
-        prefs.world === "hero"
-          ? `${dinoName()} the hero is walking with you.`
-          : `${dinoName()} is walking with you.`,
-        `${included} ${included === 1 ? "key" : "keys"} unlocked so far.`,
-      ].join(" ");
+  const sceneDescription = [
+    landName !== "" ? `Chapter ${chapter}, ${landName}.` : "On the trail.",
+    prefs.world === "hero"
+      ? `${dinoName()} the hero is walking with you.`
+      : `${dinoName()} is walking with you.`,
+    `${included} ${included === 1 ? "key" : "keys"} unlocked so far.`,
+  ].join(" ");
 
   return (
     <div
       className={clsx(styles.root, prefs.night && styles.rootDark)}
       style={{ fontFamily: cfg.font }}
     >
-      {classic && (
-        <ClassicScreen
-          lessonKeys={lessonKeys}
-          included={included}
-          passage={passage}
-          pos={pos}
-          bigLetters={prefs.bigLetters}
-          say={say}
-          wpm={shownWpm}
-          wpmDelta={warmingUp || prevWpm == null ? null : lastWpm - prevWpm}
-          speeds={speeds}
-          accuracy={liveAccuracy}
-          score={score}
-          best={best}
-          streakDays={dailyStreak(results, streakGraceDays())}
-          minutesDone={Math.floor((sessionTotal - sessionSecs) / 60)}
-          minutesGoal={prefs.timerMin}
-          target={Math.round(paceTarget(results, cfg) / 5)}
-          keyboard={board}
-          textScale={prefs.textScale}
-          boardShown={prefs.kbMode !== "off"}
-          missed={missFlash}
-          armed={armed}
-          typing={typing}
-          resetNotice={resetNotice}
-          helpLevel={helpLevel}
-          onArm={() => setArmed(true)}
-          onRestart={() => {
-            // The same words again from the top — a fresh TextInput over the
-            // passage already on screen, rather than a new passage.
-            textInputRef.current = new TextInput(
-              passageRef.current,
-              toTextInputSettings(settings),
-            );
-            lastStampRef.current = 0;
-            missStreakRef.current = 0;
-            forceTick();
-          }}
-          onSkip={() => setRegenNonce((n) => n + 1)}
-          onToggleBoard={() =>
-            // Back to the band's own board, not "full" — Classic draws the
-            // whole board regardless, and writing "full" here followed the
-            // learner back to the trail and left them with a grown-up board
-            // they never asked for.
-            savePrefs({ kbMode: prefs.kbMode === "off" ? cfg.kbMode : "off" })
-          }
-          onTextScale={(textScale) => savePrefs({ textScale })}
-        />
-      )}
-      {!classic && (
-        <div className={clsx(styles.oneWindow, onVillage && styles.joined)}>
+      <div className={clsx(styles.oneWindow, onVillage && styles.joined)}>
+        {/*
+          BOTH, AND IN THIS ORDER. The picker is mounted from the first
+          frame so its canvas exists and its model can start downloading;
+          the loading card is drawn over it until that model lands. They
+          are never both visible — `loaderPane` is null once the picker
+          opens, and `pickerPane` is null once the road is stood on.
+        */}
+        {onVillage && pickerPane}
+        {onVillage && loaderPane}
+        <div className={styles.sceneCard} ref={sceneCardRef}>
+          {/* Described, not narrated.
+              The scene is a canvas, which to a screen reader is a blank
+              box: a learner using one got the lesson text and no idea
+              there was a world around it — no companion, no land, no
+              sense of having travelled anywhere.
+              What it says is what is DRAWN, refreshed as the journey
+              moves. Narrating the running game was considered and
+              rejected: a combo or a step announced per keystroke is
+              noise that would bury the lesson text underneath it. The
+              moments that matter — a key unlocked, a land crossed, a
+              companion hatched — are already announced by the coach line
+              below, which is a polite live region.
+              `role="img"` because that is what it is here: a picture of
+              where they are, not a control and not a document. */}
+          <canvas
+            key={worldKey}
+            className={styles.canvas}
+            ref={canvasRef}
+            role="img"
+            aria-label={sceneDescription}
+          />
           {/*
-            BOTH, AND IN THIS ORDER. The picker is mounted from the first
-            frame so its canvas exists and its model can start downloading;
-            the loading card is drawn over it until that model lands. They
-            are never both visible — `loaderPane` is null once the picker
-            opens, and `pickerPane` is null once the road is stood on.
+            THE STORY BUTTON. Time Keepers only, and only while nothing is
+            being typed — see `restful`. Absent rather than dimmed: a story
+            invitation in the corner of a typing exercise is a thing to look
+            at instead of the keyboard.
           */}
-          {onVillage && pickerPane}
-          {onVillage && loaderPane}
-          <div className={styles.sceneCard} ref={sceneCardRef}>
-            {/* Described, not narrated.
-                The scene is a canvas, which to a screen reader is a blank
-                box: a learner using one got the lesson text and no idea
-                there was a world around it — no companion, no land, no
-                sense of having travelled anywhere.
-                What it says is what is DRAWN, refreshed as the journey
-                moves. Narrating the running game was considered and
-                rejected: a combo or a step announced per keystroke is
-                noise that would bury the lesson text underneath it. The
-                moments that matter — a key unlocked, a land crossed, a
-                companion hatched — are already announced by the coach line
-                below, which is a polite live region.
-                `role="img"` because that is what it is here: a picture of
-                where they are, not a control and not a document. */}
-            <canvas
-              key={worldKey}
-              className={styles.canvas}
-              ref={canvasRef}
-              role="img"
-              aria-label={sceneDescription}
-            />
-            {/*
-              THE STORY BUTTON. Time Keepers only, and only while nothing is
-              being typed — see `restful`. Absent rather than dimmed: a story
-              invitation in the corner of a typing exercise is a thing to look
-              at instead of the keyboard.
-            */}
-            {prefs.world === "village" &&
-              prefs.story !== false &&
-              loaded &&
-              restful && (
-                <button
-                  type="button"
-                  className={clsx(styles.storyBtn, styles.storyScrap)}
-                  aria-label="The story so far"
-                  title="The story so far"
-                  onClick={() => setStoryOpen(true)}
-                >
-                  <span className={styles.scrapPaper}>
-                    <span className={styles.scrapRim} />
-                    <span className={styles.scrapFibre} />
-                    <span className={styles.scrapFace} />
-                  </span>
-                  <LeafBookIcon size={20} />
-                  {storyUnread > 0 && <span className={styles.storyNew} />}
-                </button>
-              )}
-            {!onVillage && (
-              <span className={styles.keysChip}>
-                <b>{included}</b> keys on your trail
-              </span>
+          {prefs.world === "village" &&
+            prefs.story !== false &&
+            loaded &&
+            restful && (
+              <button
+                type="button"
+                className={clsx(styles.storyBtn, styles.storyScrap)}
+                aria-label="The story so far"
+                title="The story so far"
+                onClick={() => setStoryOpen(true)}
+              >
+                <span className={styles.scrapPaper}>
+                  <span className={styles.scrapRim} />
+                  <span className={styles.scrapFibre} />
+                  <span className={styles.scrapFace} />
+                </span>
+                <LeafBookIcon size={20} />
+                {storyUnread > 0 && <span className={styles.storyNew} />}
+              </button>
             )}
-            {!onVillage && loaderPane}
-            {onVillage ? (
-              /*
-                VILLAGE ROAD'S HUD: one torn sheet of newsprint with every
-                figure printed on it, and no icons anywhere. See `.notice`
-                in kids.module.less for how the tear and the paper are
-                made. The other two worlds keep the chip stack below —
-                the three games share no furniture.
-              */
-              <div className={styles.notice}>
-                <TearDefs />
-                <div className={styles.sheet}>
-                  <div className={styles.rim} />
-                  <div className={styles.fibre} />
-                  <div className={styles.face} />
-                </div>
-                <div className={styles.notePrint}>
-                  <span className={styles.noteHead}>
-                    <span>
-                      <b>{included}</b> keys
-                    </span>
-                    {/* The hour the ROAD is at, which after the clock
-                        staging is the hour the child is at — see
-                        `stagedHours`. On the same rule as the light: day
-                        mode shows the daylight hour nearest their clock,
-                        night mode the night hour. */}
-                    <span className={styles.noteClock}>{roadClock}</span>
-                  </span>
-                  {prefs.timerVisible && !noClock() && (
-                    <div className={styles.noteRow}>
-                      <span className={styles.noteLab}>
-                        {timerIdle && !sessionOver ? "Waiting" : "Timer"}
-                      </span>
-                      <span
-                        className={clsx(
-                          styles.noteVal,
-                          sessionSecs <= 60 &&
-                            !sessionOver &&
-                            styles.timerLowNote,
-                        )}
-                      >
-                        {Math.floor(sessionSecs / 60)}:
-                        {String(sessionSecs % 60).padStart(2, "0")}
-                      </span>
-                    </div>
-                  )}
-                  <div
-                    className={clsx(
-                      styles.noteRow,
-                      flashScore && styles.noteFlash,
-                    )}
-                  >
-                    <span className={styles.noteLab}>Score</span>
-                    <span className={styles.noteVal}>{score}</span>
-                  </div>
-                  <div
-                    className={clsx(
-                      styles.noteRow,
-                      flashCombo && styles.noteFlash,
-                    )}
-                  >
-                    <span className={styles.noteLab}>
-                      {onVillage ? `Lesson ${lessonNo}` : "Combo"}
-                    </span>
-                    {onVillage ? (
-                      <span className={styles.noteName}>{lessonName}</span>
-                    ) : (
-                      <span className={styles.noteVal}>×{combo}</span>
-                    )}
-                  </div>
-                  <div
-                    className={clsx(
-                      styles.noteRow,
-                      flashStage && styles.noteFlash,
-                    )}
-                  >
-                    <span className={styles.noteLab}>
-                      {stageLabel(prefs.world)}
-                    </span>
-                    <span className={styles.noteVal}>
-                      {stageOf(prefs.world)(
-                        dinoAgeOf(included, lesson.letters.length),
-                      )}
-                    </span>
-                  </div>
-                  <div
-                    className={clsx(
-                      styles.noteRow,
-                      flashBest && styles.noteFlash,
-                    )}
-                  >
-                    <span className={styles.noteLab}>Best</span>
-                    <span className={styles.noteVal}>{best}</span>
-                  </div>
-                </div>
+          {!onVillage && (
+            <span className={styles.keysChip}>
+              <b>{included}</b> keys on your trail
+            </span>
+          )}
+          {!onVillage && loaderPane}
+          {onVillage ? (
+            /*
+              VILLAGE ROAD'S HUD: one torn sheet of newsprint with every
+              figure printed on it, and no icons anywhere. See `.notice`
+              in kids.module.less for how the tear and the paper are
+              made. The other two worlds keep the chip stack below —
+              the three games share no furniture.
+            */
+            <div className={styles.notice}>
+              <TearDefs />
+              <div className={styles.sheet}>
+                <div className={styles.rim} />
+                <div className={styles.fibre} />
+                <div className={styles.face} />
               </div>
-            ) : (
-              <div className={styles.hudStack}>
+              <div className={styles.notePrint}>
+                <span className={styles.noteHead}>
+                  <span>
+                    <b>{included}</b> keys
+                  </span>
+                  {/* The hour the ROAD is at, which after the clock
+                      staging is the hour the child is at — see
+                      `stagedHours`. On the same rule as the light: day
+                      mode shows the daylight hour nearest their clock,
+                      night mode the night hour. */}
+                  <span className={styles.noteClock}>{roadClock}</span>
+                </span>
                 {prefs.timerVisible && !noClock() && (
-                  <div className={styles.chip}>
+                  <div className={styles.noteRow}>
+                    <span className={styles.noteLab}>
+                      {timerIdle && !sessionOver ? "Waiting" : "Timer"}
+                    </span>
                     <span
-                      className={styles.ringT}
-                      style={{
-                        ["--tp" as never]: Math.round(
-                          (sessionSecs / Math.max(1, sessionTotal)) * 100,
-                        ),
-                      }}
-                    />
-                    <div>
-                      <div className={styles.chipLab}>
-                        {timerIdle && !sessionOver ? "Waiting…" : "Timer"}
-                      </div>
-                      <div
-                        className={clsx(
-                          styles.chipVal,
-                          sessionSecs <= 60 && !sessionOver && styles.timerLow,
-                          timerIdle && !sessionOver && styles.timerHeld,
-                        )}
-                      >
-                        {Math.floor(sessionSecs / 60)}:
-                        {String(sessionSecs % 60).padStart(2, "0")}
-                      </div>
-                    </div>
+                      className={clsx(
+                        styles.noteVal,
+                        sessionSecs <= 60 &&
+                          !sessionOver &&
+                          styles.timerLowNote,
+                      )}
+                    >
+                      {Math.floor(sessionSecs / 60)}:
+                      {String(sessionSecs % 60).padStart(2, "0")}
+                    </span>
                   </div>
                 )}
-                <div className={styles.chip}>
-                  <span className={styles.ci}>
-                    <StarIcon />
-                  </span>
-                  <div>
-                    <div className={styles.chipLab}>Score</div>
-                    <div className={styles.chipVal}>{score}</div>
-                  </div>
+                <div
+                  className={clsx(
+                    styles.noteRow,
+                    flashScore && styles.noteFlash,
+                  )}
+                >
+                  <span className={styles.noteLab}>Score</span>
+                  <span className={styles.noteVal}>{score}</span>
                 </div>
-                <div className={styles.chip}>
-                  <span className={styles.ci}>
-                    <FlameIcon />
+                <div
+                  className={clsx(
+                    styles.noteRow,
+                    flashCombo && styles.noteFlash,
+                  )}
+                >
+                  <span className={styles.noteLab}>
+                    {onVillage ? `Lesson ${lessonNo}` : "Combo"}
                   </span>
+                  {onVillage ? (
+                    <span className={styles.noteName}>{lessonName}</span>
+                  ) : (
+                    <span className={styles.noteVal}>×{combo}</span>
+                  )}
+                </div>
+                <div
+                  className={clsx(
+                    styles.noteRow,
+                    flashStage && styles.noteFlash,
+                  )}
+                >
+                  <span className={styles.noteLab}>
+                    {stageLabel(prefs.world)}
+                  </span>
+                  <span className={styles.noteVal}>
+                    {stageOf(prefs.world)(
+                      dinoAgeOf(included, lesson.letters.length),
+                    )}
+                  </span>
+                </div>
+                <div
+                  className={clsx(
+                    styles.noteRow,
+                    flashBest && styles.noteFlash,
+                  )}
+                >
+                  <span className={styles.noteLab}>Best</span>
+                  <span className={styles.noteVal}>{best}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.hudStack}>
+              {prefs.timerVisible && !noClock() && (
+                <div className={styles.chip}>
+                  <span
+                    className={styles.ringT}
+                    style={{
+                      ["--tp" as never]: Math.round(
+                        (sessionSecs / Math.max(1, sessionTotal)) * 100,
+                      ),
+                    }}
+                  />
                   <div>
                     <div className={styles.chipLab}>
-                      {onVillage ? `Lesson ${lessonNo}` : "Combo"}
+                      {timerIdle && !sessionOver ? "Waiting…" : "Timer"}
                     </div>
                     <div
-                      className={onVillage ? styles.chipName : styles.chipVal}
-                    >
-                      {onVillage ? lessonName : `×${combo}`}
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.chip}>
-                  <span className={styles.ci}>
-                    <SproutIcon />
-                  </span>
-                  <div>
-                    <div className={styles.chipLab}>
-                      {stageLabel(prefs.world)}
-                    </div>
-                    <div className={styles.chipVal}>
-                      {stageOf(prefs.world)(
-                        dinoAgeOf(included, lesson.letters.length),
+                      className={clsx(
+                        styles.chipVal,
+                        sessionSecs <= 60 && !sessionOver && styles.timerLow,
+                        timerIdle && !sessionOver && styles.timerHeld,
                       )}
+                    >
+                      {Math.floor(sessionSecs / 60)}:
+                      {String(sessionSecs % 60).padStart(2, "0")}
                     </div>
                   </div>
                 </div>
-                <div className={styles.chip}>
-                  <span className={styles.ci}>
-                    <TrophyIcon />
-                  </span>
-                  <div>
-                    <div className={styles.chipLab}>Best</div>
-                    <div className={styles.chipVal}>{best}</div>
+              )}
+              <div className={styles.chip}>
+                <span className={styles.ci}>
+                  <StarIcon />
+                </span>
+                <div>
+                  <div className={styles.chipLab}>Score</div>
+                  <div className={styles.chipVal}>{score}</div>
+                </div>
+              </div>
+              <div className={styles.chip}>
+                <span className={styles.ci}>
+                  <FlameIcon />
+                </span>
+                <div>
+                  <div className={styles.chipLab}>
+                    {onVillage ? `Lesson ${lessonNo}` : "Combo"}
+                  </div>
+                  <div className={onVillage ? styles.chipName : styles.chipVal}>
+                    {onVillage ? lessonName : `×${combo}`}
                   </div>
                 </div>
               </div>
-            )}
-            {!use3dWord && (
-              <div className={styles.words} ref={wordsViewRef}>
-                <span className={styles.wordsTrack} ref={wordsTrackRef}>
-                  {passageChars.map((ch, at) => (
-                    <span
-                      key={at}
-                      ref={at === pos ? wordsCurRef : undefined}
-                      className={
-                        at < pos
-                          ? styles.hit
-                          : at === pos
-                            ? styles.cur
-                            : undefined
-                      }
-                    >
-                      {/* A real space, not U+00A0. The strip is `nowrap`, so
-                      neither one can break a line any more — but a real space
-                      is what the child is being asked to type, and it is what
-                      the measurement above walks over. */}
-                      {ch === " "
-                        ? " "
-                        : prefs.bigLetters
-                          ? ch.toUpperCase()
-                          : ch}
-                    </span>
-                  ))}
+              <div className={styles.chip}>
+                <span className={styles.ci}>
+                  <SproutIcon />
                 </span>
-              </div>
-            )}
-            <div
-              key={growNonce}
-              className={clsx(
-                styles.growBanner,
-                // Time Keepers prints it on paper — see `.growBannerRoad`.
-                prefs.world === "village" && styles.growBannerRoad,
-                growNonce > 0 && styles.growBannerShow,
-              )}
-            >
-              {/* Each world says this in its own voice. It used to read
-                  "your dino grew" everywhere, so a child walking the village
-                  road was told about a dinosaur. Note what the village does
-                  NOT say: a milestone here is distance walked, not a letter
-                  earned, and borrowing the word would make the two mean the
-                  same thing. */}
-              {prefs.world === "village" ? (
-                <>
-                  <KeysIcon color="#fff" /> NEW KEY UNLOCKED — a new letter for
-                  the road!
-                </>
-              ) : prefs.world === "hero" ? (
-                <>
-                  <FlagIcon size={22} color="#fff" /> NEW KEY UNLOCKED — the
-                  party walks on!
-                </>
-              ) : (
-                <>
-                  <BranchIcon /> NEW KEY UNLOCKED — your dino grew!
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* The coach's line is the only thing on this page that tells a
-              learner what to do next, and it changes without anything else
-              changing — which for somebody listening rather than looking is a
-              page that says nothing at all. Polite, so it lands after
-              whatever they were reading. */}
-          {/*
-            The buffalo shouts from HERE rather than from a banner of its
-            own across the scene, which is where it used to be — and which
-            put the one message a child has to act on straight away
-            somewhere they were not looking. Same line, capitals, and
-            assertive so a screen reader interrupts for it, which is the
-            whole point of the warning.
-          */}
-          <div
-            className={styles.say}
-            role="status"
-            aria-live={alarmLine !== "" ? "assertive" : "polite"}
-          >
-            {alarmLine !== "" ? (
-              <span className={clsx(styles.sayText, styles.sayAlarm)}>
-                {alarmLine}
-              </span>
-            ) : (
-              say !== "" && <span className={styles.sayText}>{say}</span>
-            )}
-          </div>
-
-          {helperVisible && (
-            <div
-              ref={kbCardRef}
-              className={clsx(
-                styles.kbWrap,
-                prefs.kbMode === "full" && styles.kbWrapFull,
-                wide && styles.kbWrapWide,
-                // Nothing beside it any more, so it takes the middle.
-                !showHands && styles.kbWrapAlone,
-                !helperReady && styles.kbWrapWaiting,
-              )}
-              aria-hidden={!helperReady || undefined}
-            >
-              {!prefs.sounds && (
-                <span
-                  className={styles.mutedMark}
-                  title="Sounds are off"
-                  aria-label="Sounds are off"
-                >
-                  <SoundIcon muted={true} />
-                </span>
-              )}
-              {showHands && (
-                <div className={styles.hands}>
-                  <div className={styles.handsArt}>
-                    <img src="/kids-assets/hands.png" alt="" />
-                    {FINGER_DOTS.map(({ id, left, top }) => (
-                      <span
-                        key={id}
-                        className={clsx(
-                          styles.fingerDot,
-                          id === nextFinger && styles.fingerDotOn,
-                          id === nextFinger &&
-                            stuckHelp &&
-                            styles.fingerDotStrong,
-                        )}
-                        style={{ left: `${left}%`, top: `${top}%` }}
-                      />
-                    ))}
+                <div>
+                  <div className={styles.chipLab}>
+                    {stageLabel(prefs.world)}
                   </div>
-                  <div className={styles.handsHint}>
-                    <b>
-                      {nextFinger != null
-                        ? FINGER_NAMES[nextFinger]
-                        : "the glowing finger"}
-                    </b>{" "}
-                    presses it
+                  <div className={styles.chipVal}>
+                    {stageOf(prefs.world)(
+                      dinoAgeOf(included, lesson.letters.length),
+                    )}
                   </div>
                 </div>
-              )}
-              {board}
+              </div>
+              <div className={styles.chip}>
+                <span className={styles.ci}>
+                  <TrophyIcon />
+                </span>
+                <div>
+                  <div className={styles.chipLab}>Best</div>
+                  <div className={styles.chipVal}>{best}</div>
+                </div>
+              </div>
             </div>
           )}
+          {!use3dWord && (
+            <div className={styles.words} ref={wordsViewRef}>
+              <span className={styles.wordsTrack} ref={wordsTrackRef}>
+                {passageChars.map((ch, at) => (
+                  <span
+                    key={at}
+                    ref={at === pos ? wordsCurRef : undefined}
+                    className={
+                      at < pos
+                        ? styles.hit
+                        : at === pos
+                          ? styles.cur
+                          : undefined
+                    }
+                  >
+                    {/* A real space, not U+00A0. The strip is `nowrap`, so
+                    neither one can break a line any more — but a real space
+                    is what the child is being asked to type, and it is what
+                    the measurement above walks over. */}
+                    {ch === " "
+                      ? " "
+                      : prefs.bigLetters
+                        ? ch.toUpperCase()
+                        : ch}
+                  </span>
+                ))}
+              </span>
+            </div>
+          )}
+          <div
+            key={growNonce}
+            className={clsx(
+              styles.growBanner,
+              // Time Keepers prints it on paper — see `.growBannerRoad`.
+              prefs.world === "village" && styles.growBannerRoad,
+              growNonce > 0 && styles.growBannerShow,
+            )}
+          >
+            {/* Each world says this in its own voice. It used to read
+                "your dino grew" everywhere, so a child walking the village
+                road was told about a dinosaur. Note what the village does
+                NOT say: a milestone here is distance walked, not a letter
+                earned, and borrowing the word would make the two mean the
+                same thing. */}
+            {prefs.world === "village" ? (
+              <>
+                <KeysIcon color="#fff" /> NEW KEY UNLOCKED — a new letter for
+                the road!
+              </>
+            ) : prefs.world === "hero" ? (
+              <>
+                <FlagIcon size={22} color="#fff" /> NEW KEY UNLOCKED — the party
+                walks on!
+              </>
+            ) : (
+              <>
+                <BranchIcon /> NEW KEY UNLOCKED — your dino grew!
+              </>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* The coach's line is the only thing on this page that tells a
+            learner what to do next, and it changes without anything else
+            changing — which for somebody listening rather than looking is a
+            page that says nothing at all. Polite, so it lands after
+            whatever they were reading. */}
+        {/*
+          The buffalo shouts from HERE rather than from a banner of its
+          own across the scene, which is where it used to be — and which
+          put the one message a child has to act on straight away
+          somewhere they were not looking. Same line, capitals, and
+          assertive so a screen reader interrupts for it, which is the
+          whole point of the warning.
+        */}
+        <div
+          className={styles.say}
+          role="status"
+          aria-live={alarmLine !== "" ? "assertive" : "polite"}
+        >
+          {/* Nothing while the loading card is up: the coach talking under
+              a screen that is still building reads as the game having
+              started without the child. */}
+          {!loaded ? null : alarmLine !== "" ? (
+            <span className={clsx(styles.sayText, styles.sayAlarm)}>
+              {alarmLine}
+            </span>
+          ) : (
+            say !== "" && <span className={styles.sayText}>{say}</span>
+          )}
+        </div>
+
+        {helperVisible && (
+          <div
+            ref={kbCardRef}
+            className={clsx(
+              styles.kbWrap,
+              prefs.kbMode === "full" && styles.kbWrapFull,
+              wide && styles.kbWrapWide,
+              // Nothing beside it any more, so it takes the middle.
+              !showHands && styles.kbWrapAlone,
+              !helperReady && styles.kbWrapWaiting,
+            )}
+            aria-hidden={!helperReady || undefined}
+          >
+            {!prefs.sounds && (
+              <span
+                className={styles.mutedMark}
+                title="Sounds are off"
+                aria-label="Sounds are off"
+              >
+                <SoundIcon muted={true} />
+              </span>
+            )}
+            {showHands && (
+              <div className={styles.hands}>
+                <div className={styles.handsArt}>
+                  <img src="/kids-assets/hands.png" alt="" />
+                  {FINGER_DOTS.map(({ id, left, top }) => (
+                    <span
+                      key={id}
+                      className={clsx(
+                        styles.fingerDot,
+                        id === nextFinger && styles.fingerDotOn,
+                        id === nextFinger &&
+                          stuckHelp &&
+                          styles.fingerDotStrong,
+                      )}
+                      style={{ left: `${left}%`, top: `${top}%` }}
+                    />
+                  ))}
+                </div>
+                <div className={styles.handsHint}>
+                  <b>
+                    {nextFinger != null
+                      ? FINGER_NAMES[nextFinger]
+                      : "the glowing finger"}
+                  </b>{" "}
+                  presses it
+                </div>
+              </div>
+            )}
+            {board}
+          </div>
+        )}
+      </div>
 
       {/*
         Past the day's healthy ceiling. Deliberately a card that has to be
@@ -7578,31 +7174,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </div>
       )}
 
-      {classic && tourOpen && (
-        <ClassicTour
-          onClose={() => {
-            setTourOpen(false);
-            try {
-              localStorage.setItem(CLASSIC_TOUR_KEY(), "1");
-            } catch {
-              // A learner with storage denied simply sees it again; better than
-              // refusing to show them the page.
-            }
-          }}
-        />
-      )}
-
-      {cardShown === "key" && ceremony != null && classic && (
-        <ClassicUnlock
-          letter={ceremony.letter}
-          finger={
-            FINGER_OF[ceremony.letter] != null
-              ? FINGER_NAMES[FINGER_OF[ceremony.letter]]
-              : null
-          }
-        />
-      )}
-
       {/*
         THE NEW KEY, EARNED AND THEN USED.
         The document has this card leave by Space, like the others. It leaves
@@ -7612,7 +7183,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         earned. A cap that has to be pressed teaches more than a cap that is
         only looked at.
       */}
-      {cardShown === "key" && ceremony != null && !classic && onVillage && (
+      {cardShown === "key" && ceremony != null && onVillage && (
         <RoadCard
           kind="key"
           eyebrow="A new letter"
@@ -7648,7 +7219,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </RoadCard>
       )}
 
-      {cardShown === "key" && ceremony != null && !classic && !onVillage && (
+      {cardShown === "key" && ceremony != null && !onVillage && (
         <div className={styles.overlay}>
           <div className={clsx(styles.card, styles.finishCard)}>
             <div className={styles.cerEyebrow}>NEW LETTER!</div>
@@ -8032,7 +7603,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         />
       )}
       {settingsOpen && (
-        <SettingsCard
+        <SettingsSheet
           prefs={prefs}
           included={included}
           savePrefs={savePrefs}
@@ -8186,9 +7757,6 @@ const Key = memo(function Key({
             }
           : {}),
       }}
-      // Lets Classic find the home keys and the space bar in the DOM, so the
-      // resting hands can be anchored to them rather than eyeballed.
-      data-key={space ? " " : (def.char ?? undefined)}
     >
       {def.shift != null ? (
         rainbow ? (
@@ -8328,8 +7896,6 @@ function StickerTile({
   );
 }
 
-// The sections, in the order a child meets them: how they practise, the world
-// they practise in, what helps while they type, and how long they go for.
 /**
  * Whether this learner has asked to practise without a clock.
  *
@@ -8341,1303 +7907,23 @@ function noClock(): boolean {
   return !loadA11y().timers;
 }
 
-const SET_TABS = [
-  { id: "practise", label: "Practice" },
-  { id: "world", label: "World" },
-  { id: "help", label: "Help" },
-  { id: "session", label: "Session" },
-] as const;
-
-type SetTab = (typeof SET_TABS)[number]["id"];
-
-function SettingsCard({
-  prefs,
-  included,
-  totalLetters,
-  savePrefs,
-  onRename,
-  onPickCharacter,
-  onPickCompanion,
-  onPickWorld,
-  onPickTimer,
-  onClose,
-}: {
-  readonly prefs: Prefs;
-  readonly included: number;
-  /** Letters in this layout's alphabet, so "all of them" is not hardcoded. */
-  readonly totalLetters: number;
-  readonly savePrefs: (patch: Partial<Prefs>) => void;
-  /** Rename one character, by model id — see Prefs.names. */
-  readonly onRename: (who: string) => void;
-  readonly onPickCharacter: (who: string, world: WorldId) => void;
-  /** Toggle one companion in or out of the line, or `null` for nobody. */
-  readonly onPickCompanion: (companion: string | null, world: WorldId) => void;
-  /** Change worlds. Called once, on the way out — see worldDraft. */
-  readonly onPickWorld: (world: WorldId) => void;
-  readonly onPickTimer: (min: number) => void;
-  readonly onClose: () => void;
-}) {
-  const pill = (on: boolean) => clsx(styles.pill, on && styles.pillOn);
-  // The two children, minus whoever is being played. Derived rather than
-  // listed so it cannot fall out of step with the roster, and so a third
-  // character needs nothing here.
-  /**
-   * WHO MAY WALK WITH YOU — everyone but yourself.
-   *
-   * Filtered against whoever the child is actually playing AS, which is not
-   * the same thing as `prefs.hero`: that is the Hero Trail's pick and it
-   * holds a value in every world. Time Keepers stores its choice in
-   * `prefs.village`, so filtering on `prefs.hero` struck Dave off the
-   * companion list on the village road whenever he happened to be somebody's
-   * hero-world character — which, since he is that world's default, was
-   * almost everybody — while cheerfully offering to bring you along with
-   * yourself the moment you played as him here.
-   *
-   * Time Keepers' earned hatchlings join this list rather than the character
-   * one. They are companions by design — see HATCHLINGS in album.ts, which
-   * says so — and the buffalo at twenty keys is the clearest case: it is a
-   * wild animal a child is finally allowed to WALK WITH, not one they are
-   * asked to be.
-   */
-  /**
-   * THE WORLD IS CHOSEN HERE AND CHANGED ON THE WAY OUT.
-   *
-   * Tapping a world used to save it there and then, which tore the running
-   * scene down and rebuilt it while the settings card was still open — a
-   * child browsing the three of them set three worlds building behind a panel
-   * they were still reading, and whichever they looked at last was the one
-   * they got, several seconds after they had stopped caring. Now the pill
-   * records a choice and "Back to the run!" acts on it, which is also what
-   * makes that button mean something.
-   */
-  const [worldDraft, setWorldDraft] = useState<WorldId>(prefs.world);
-  const leaveSettings = () => {
-    if (worldDraft !== prefs.world) {
-      onPickWorld(worldDraft);
-    }
-    onClose();
-  };
-
-  /**
-   * THE PANEL DESCRIBES THE WORLD BEING CHOSEN, not the one still running.
-   *
-   * The world change waits for "Back to the run!", which is right — but it
-   * left every row below the picker talking about the old game: tap Hero
-   * Trail and the cast row still offered the village's three children and the
-   * friend row still said Robot and Peeli were coming along. A settings panel
-   * that shows one world's options under another world's name is worse than
-   * one that switches immediately.
-   *
-   * So the rows read from a view of the preferences with the DRAFTED world in
-   * it, and the pick handlers are told which world they are writing for. What
-   * is saved is still whichever world's own slot the choice belongs to.
-   */
-  const view: Prefs = { ...prefs, world: worldDraft };
-  const playingAs = charOf(view);
-  /**
-   * WHO MAY WALK WITH YOU, WHICH IS NOT THE SAME LIST IN BOTH WORLDS.
-   *
-   * Hero Trail offers the puppy and nobody else. Its cast is a knight, a
-   * skeleton and two children out of another world's story, and a party of
-   * them walking the same trail turns a hero's road into a school outing —
-   * the one companion that belongs beside a lone hero is a dog.
-   *
-   * Time Keepers is the opposite case and offers everybody, because it is a
-   * place people live: the three children, the robot and the puppy.
-   *
-   * THE BUFFALO IS NOT ON THIS LIST, AND IS THE ONLY THING THAT WAS TAKEN
-   * OFF IT. It is the one wild animal on the road — it is standing in the
-   * fields from the first day, it charges, and the whole of its presence is
-   * that it is not anybody's. A buffalo walking to heel is a different
-   * animal from the one the world already has.
-   *
-   * It stays in `HATCHLINGS.village`, so twenty letters still earns its
-   * sticker and the coach still says so; it simply is not somebody you can
-   * take with you.
-   *
-   * With it gone the hatchling term went too, because every other name in
-   * that table is already in `COMPANIONS` — which is also what makes the
-   * list unlocked: `COMPANIONS` carries no `at`, so all five are there from
-   * the first day rather than arriving at four, eight, twelve and sixteen
-   * letters.
-   */
-  const companionChoices = COMPANIONS.filter(
-    ({ id }) => id !== playingAs && walksIn(worldDraft, id),
-  );
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [tab, setTab] = useState<SetTab>("practise");
-  // Classic has no world to dress, no buddy to pick and no hands to show, so
-  // the rows that only mean something on the trail leave the sheet entirely
-  // rather than sitting there doing nothing. They come back untouched the
-  // moment the trail does.
-  // The in-world letters are the default for the youngest; 7-8 and 9-10 get a
-  // toggle to opt in.
-  const band = currentBand();
-  const cfg = bandConfig(band);
-  const canToggleWords = band === "7-8" || band === "9-10";
-  const canClassic = classicOffered(band);
-  const trail = !(prefs.classic && canClassic);
-  /** The hour setting is Time Keepers' alone — see the row below. */
-  const onRoad = trail && prefs.world === "village";
-  // Which sections this learner actually has. A child with no Classic offer
-  // would otherwise open the panel on a heading with nothing under it.
-  const shown = SET_TABS.filter(({ id }) =>
-    id === "practise" ? canClassic : id === "world" ? trail : true,
-  ).map(({ id }) => id);
-  if (!shown.includes(tab)) {
-    setTab(shown[0]);
-  }
-  return (
-    <div className={styles.overlay}>
-      <div className={styles.card}>
-        <div className={styles.cardTitle}>
-          <span className={styles.hIcon}>
-            <GearIcon />
-          </span>
-          Your game, your way
-        </div>
-        {/*
-          The rows scroll; the title above and the button below do not. The
-          card had grown past a screen, and the way back to the game was
-          buried at the bottom of a scroll a five-year-old had to find.
-        */}
-        <div className={styles.cardScroll}>
-          {/* One section at a time. The list had grown long enough that the
-              thing somebody opened this panel for was usually below the fold,
-              and a child scrolling past four headings to find the timer is a
-              child who gives up and asks a grown-up. */}
-          <div className={styles.setTabs} role="tablist">
-            {SET_TABS.filter(({ id }) => shown.includes(id)).map(
-              ({ id, label }) => (
-                <button
-                  key={id}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === id}
-                  className={clsx(styles.setTab, tab === id && styles.setTabOn)}
-                  onClick={() => setTab(id)}
-                >
-                  {label}
-                </button>
-              ),
-            )}
-          </div>
-          <div className={styles.setPane}>
-            {tab === "practise" && (
-              <>
-                {canClassic && (
-                  <>
-                    {/*
-            The two faces of the same lesson. Which one a learner lands on
-            comes from their age to begin with, but it lives here because
-            eleven is an average rather than a rule — and because a child who
-            wants the trail back should not have to wait to grow out of it.
-          */}
-                    <div className={styles.srow}>
-                      <span
-                        className={styles.ri}
-                        style={{ background: "var(--sky)" }}
-                      >
-                        <ClassicIcon />
-                      </span>
-                      <div>
-                        <div className={styles.sl}>Practice style</div>
-                        <div className={styles.sd}>
-                          {trail
-                            ? "run the trail with your buddy"
-                            : "just the words, the board and your progress"}
-                        </div>
-                      </div>
-                      <div className={styles.ctl}>
-                        <button
-                          type="button"
-                          className={pill(trail)}
-                          onClick={() => savePrefs({ classic: false })}
-                        >
-                          Trail game
-                        </button>
-                        <button
-                          type="button"
-                          className={pill(!trail)}
-                          onClick={() => savePrefs({ classic: true })}
-                        >
-                          Classic
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-            {tab === "world" && (
-              <>
-                {trail && (
-                  <div className={styles.srow}>
-                    <span
-                      className={styles.ri}
-                      style={{ background: "var(--seafoam)" }}
-                    >
-                      <WorldIcon size={24} color="#12664a" />
-                    </span>
-                    <div>
-                      <div className={styles.sl}>Pick your world</div>
-                      <div className={styles.sd}>where you run</div>
-                    </div>
-                    <div className={styles.ctl}>
-                      {/*
-                        VILLAGE ROAD FIRST. It is the one this app is built
-                        around and the one most children will stay in, and a
-                        row of choices says which is the main one by where it
-                        puts it — the other two were in front of it only
-                        because they were written first.
-
-                        Named "Road" rather than "Trail" on purpose: two of
-                        the three would otherwise end in the same word, and a
-                        child picking by shape — or a parent scanning the row
-                        — would have to read carefully to tell them apart.
-                      */}
-                      <button
-                        type="button"
-                        className={pill(worldDraft === "village")}
-                        onClick={() => setWorldDraft("village")}
-                      >
-                        Time Keepers
-                      </button>
-                      <button
-                        type="button"
-                        className={pill(worldDraft === "dino")}
-                        onClick={() => setWorldDraft("dino")}
-                      >
-                        Dino Run
-                      </button>
-                      <button
-                        type="button"
-                        className={pill(worldDraft === "hero")}
-                        onClick={() => setWorldDraft("hero")}
-                      >
-                        Hero Trail
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {/*
-          Hero Trail only: what the dark means. By age unless a grown-up says
-          otherwise — the youngest get a starry quiet night with no Lost
-          Travellers, and this is where a parent moves a child up or down.
-        */}
-                {trail && childCast(worldDraft) && (
-                  <div className={styles.srow}>
-                    <span
-                      className={styles.ri}
-                      style={{ background: "var(--sky)" }}
-                    >
-                      <MoonIcon size={20} color="#2d3f6b" />
-                    </span>
-                    <div>
-                      <div className={styles.sl}>Night on the trail</div>
-                      <div className={styles.sd}>who is out after dark</div>
-                    </div>
-                    <div className={styles.ctl}>
-                      {(
-                        [
-                          ["auto", "By age"],
-                          ["quiet", "Quiet"],
-                          ["mild", "Spooky"],
-                          ["full", "Extra spooky"],
-                        ] as const
-                      )
-                        // No Extra spooky at five, not even for a grown-up — the
-                        // resolver refuses the value anyway (see night.ts), so
-                        // offering the pill would be offering a button that does
-                        // not do what it says.
-                        .filter(
-                          ([value]) => !(band === "5-6" && value === "full"),
-                        )
-                        // AND NOTHING SPOOKY ON VILLAGE ROAD AT ALL.
-                        //
-                        // A Kerala cart road after dark is oil lamps, a lit
-                        // temple and a buffalo in the field — it is somewhere
-                        // people live, which is the whole reason this world
-                        // exists as a third rather than a re-skin of Hero
-                        // Trail. Spookiness is that other world's idea, and
-                        // the two pills that offer it were offering to turn
-                        // this one into it.
-                        .filter(
-                          ([value]) =>
-                            worldDraft !== "village" ||
-                            (value !== "mild" && value !== "full"),
-                        )
-                        .map(([value, label]) => (
-                          <button
-                            key={value}
-                            type="button"
-                            className={pill(nightStyleOf(view) === value)}
-                            onClick={() =>
-                              savePrefs({
-                                nightStyleByWorld: {
-                                  ...prefs.nightStyleByWorld,
-                                  [worldDraft]: value,
-                                },
-                                nightStyle: value,
-                              })
-                            }
-                          >
-                            {label}
-                          </button>
-                        ))}
-                    </div>
-                  </div>
-                )}
-                {/*
-          Only offered once the alphabet is done. Before that it would be a
-          harder mode dangled in front of a child still learning where D is.
-        */}
-                {included >= totalLetters && (
-                  <div className={styles.srow}>
-                    <span
-                      className={styles.ri}
-                      style={{ background: "var(--coral)" }}
-                    >
-                      <span className={styles.aaIcon}>A!</span>
-                    </span>
-                    <div>
-                      <div className={styles.sl}>Grown-up keys</div>
-                      <div className={styles.sd}>
-                        capital letters, then full stops and commas
-                      </div>
-                    </div>
-                    <div className={styles.ctl}>
-                      {(
-                        [
-                          ["off", "Off"],
-                          ["caps", "Capitals"],
-                          ["punct", "And marks"],
-                        ] as const
-                      ).map(([value, label]) => (
-                        <button
-                          key={value}
-                          type="button"
-                          className={pill(prefs.grownupKeys === value)}
-                          onClick={() => savePrefs({ grownupKeys: value })}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {trail && (
-                  <>
-                    {/*
-                      The local boy. Time Keepers only — the other two worlds
-                      have nobody to guide anybody.
-                    */}
-                    {worldDraft === "village" && (
-                      <div className={styles.srow}>
-                        <span
-                          className={styles.ri}
-                          style={{ background: "var(--sand)" }}
-                        >
-                          <PawIcon size={24} color="#7a5c00" />
-                        </span>
-                        <div>
-                          <div className={styles.sl}>
-                            {castLabel(VILLAGE_GUIDE, prefs.names)} shows you
-                            round
-                          </div>
-                          <div className={styles.sd}>
-                            the boy from the village who knows the road
-                          </div>
-                        </div>
-                        <div className={styles.ctl}>
-                          <button
-                            type="button"
-                            className={pill(prefs.guide !== false)}
-                            onClick={() => savePrefs({ guide: true })}
-                          >
-                            Yes
-                          </button>
-                          <button
-                            type="button"
-                            className={pill(prefs.guide === false)}
-                            onClick={() => savePrefs({ guide: false })}
-                          >
-                            No
-                          </button>
-                          {/*
-                            He is renameable like anybody else — which is the
-                            whole reason every line says {guide} rather than
-                            his name. Offered only while he is coming along:
-                            naming somebody who is switched off is a button
-                            with nothing behind it.
-                          */}
-                          {prefs.guide !== false && (
-                            <button
-                              type="button"
-                              className={styles.pill}
-                              onClick={() => onRename(VILLAGE_GUIDE)}
-                            >
-                              Rename
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    {worldDraft === "village" && (
-                      <div className={styles.srow}>
-                        <span
-                          className={styles.ri}
-                          style={{ background: "var(--sand)" }}
-                        >
-                          <LeafBookIcon size={22} color="#7a5c00" />
-                        </span>
-                        <div>
-                          <div className={styles.sl}>The story</div>
-                          <div className={styles.sd}>
-                            where they came from, a bit at a time
-                          </div>
-                        </div>
-                        <div className={styles.ctl}>
-                          <button
-                            type="button"
-                            className={pill(prefs.story !== false)}
-                            onClick={() => savePrefs({ story: true })}
-                          >
-                            On
-                          </button>
-                          <button
-                            type="button"
-                            className={pill(prefs.story === false)}
-                            onClick={() => savePrefs({ story: false })}
-                          >
-                            Off
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {/*
-                      NO STICKER ALBUM ROW. The album is still collected —
-                      hatchlings, lands and streaks all still file their
-                      stickers, and album.test.ts still holds that to account —
-                      it simply is not offered from here any more.
-                    */}
-                    <div className={styles.srow}>
-                      <span
-                        className={styles.ri}
-                        style={{ background: "var(--sage)" }}
-                      >
-                        <PawIcon size={24} color="#3d6b2e" />
-                      </span>
-                      <div>
-                        <div className={styles.sl}>
-                          {castLabel(charOf(view), prefs.names)}
-                        </div>
-                        <div className={styles.sd}>who you play as</div>
-                      </div>
-                      {/*
-            Both worlds work the same way now: a couple of starters, then a
-            companion earned every four keys. The hero world used to hand out
-            both of its characters for free and have nothing after them, which
-            left the default world for the youngest bands with no rewards at
-            all.
-          */}
-                      <div className={styles.ctl}>
-                        {charactersOf(worldDraft).map(({ id }) => (
-                          <button
-                            key={id}
-                            type="button"
-                            className={pill(charOf(view) === id)}
-                            onClick={() => onPickCharacter(id, worldDraft)}
-                          >
-                            {castLabel(id, prefs.names)}
-                          </button>
-                        ))}
-                        {/*
-              The hero world's cast is fixed: the Knight, the Skeleton, Dave
-              and Little Drew. Its earnable characters — Scout, Ranger, Mage,
-              Bear, Shadow — are no longer offered here, and neither are the
-              locked eggs counting down to them.
-
-              They are NOT deleted from HATCHLINGS. They still hatch, still
-              celebrate, and still earn their album sticker, which is what the
-              "hero world is not left without rewards" test in album.test.ts
-              exists to protect. Only this picker stops listing them.
-            */}
-                        {/*
-              THE DINO WORLD'S HATCHLINGS, AND ONLY ONCE THEY HAVE HATCHED.
-              
-              Dino is the one world whose hatchlings are characters a child
-              PLAYS AS — Vela, Steggy, Tops are its whole cast past the first
-              one. Time Keepers' are companions, which is what album.ts says
-              they are, so Puppy and Robot were being offered here as people
-              to be rather than to walk with; they have moved to the friend
-              row below, the buffalo with them. Hero's were already gone.
-
-              The locked eggs are gone too. They were greyed pills reading
-              "12 keys", "16 keys", "20 keys" — a row of buttons that could
-              not be pressed, in the one place a child comes to press buttons,
-              mostly saying how much of the toy box is shut. A hatchling is a
-              surprise, and announcing the date of a surprise spends it early.
-
-              Nothing stops hatching: they still celebrate and still earn
-              their album sticker — see the album test that protects it.
-            */}
-                        {(worldDraft === "dino" ? HATCHLINGS.dino : [])
-                          .filter(({ at }) => included >= at)
-                          .map(({ id }) => (
-                            <button
-                              key={id}
-                              type="button"
-                              className={pill(charOf(view) === id)}
-                              onClick={() => onPickCharacter(id, worldDraft)}
-                            >
-                              {castLabel(id, prefs.names)}
-                            </button>
-                          ))}
-                        <button
-                          type="button"
-                          className={styles.pill}
-                          onClick={() => onRename(charOf(view))}
-                        >
-                          Rename
-                        </button>
-                      </div>
-                    </div>
-                    {/*
-            A friend to walk with, offered only in the hero world and only
-            when there is somebody left to offer: the list is the two
-            Explorers minus whoever you are already playing as, so it can
-            never suggest you bring yourself.
-          */}
-                    {childCast(worldDraft) && companionChoices.length > 0 && (
-                      <div className={styles.srow}>
-                        <span
-                          className={styles.ri}
-                          style={{ background: "var(--sky)" }}
-                        >
-                          <PawIcon size={24} color="#2f5d7a" />
-                        </span>
-                        <div>
-                          <div className={styles.sl}>
-                            {companionsOf(view).length === 0
-                              ? "Who comes with you?"
-                              : `${companionsOf(view)
-                                  .map((id) => castLabel(id, prefs.names))
-                                  .join(" and ")} ${
-                                  companionsOf(view).length > 1
-                                    ? "come"
-                                    : "comes"
-                                } with you`}
-                          </div>
-                          {/*
-                            Says what they ARE, not what they do. The old line
-                            promised "they copy what you do, a moment later",
-                            which is only true of where they walk — they do
-                            not copy the resting, the celebrating or any of
-                            the rest of it, so a child who read that line and
-                            then watched them was being told something the
-                            game does not do.
-                          */}
-                          <div className={styles.sd}>
-                            walks the road with you
-                          </div>
-                        </div>
-                        <div className={styles.ctl}>
-                          <button
-                            type="button"
-                            className={pill(companionsOf(view).length === 0)}
-                            onClick={() => onPickCompanion(null, worldDraft)}
-                          >
-                            Nobody
-                          </button>
-                          {companionChoices.map(({ id }) => (
-                            <button
-                              key={id}
-                              type="button"
-                              className={pill(companionsOf(view).includes(id))}
-                              onClick={() => onPickCompanion(id, worldDraft)}
-                            >
-                              {castLabel(id, prefs.names)}
-                            </button>
-                          ))}
-                          {/*
-                            NO RENAME BUTTON HERE. A name belongs to the
-                            character, not to the job — renaming Dave in the
-                            row above renames him here too, because he is the
-                            same person. A second button that did the same
-                            thing to the same people would only raise the
-                            question of why there are two.
-                          */}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
-            )}
-            {tab === "help" && (
-              <>
-                {/*
-            Only while the words are actually in a panel. The in-world letter
-            blocks are capitals by their nature, so whenever a child is on
-            them — always at 5-6, by choice at 7-10 — a CAPITALS toggle
-            changes nothing, and a toggle that changes nothing is worse than
-            no toggle.
-          */}
-                {!(band === "5-6" || (canToggleWords && prefs.wordBlocks)) && (
-                  <div className={styles.srow}>
-                    <span
-                      className={styles.ri}
-                      style={{ background: "var(--sky)" }}
-                    >
-                      <span className={styles.aaIcon}>Aa</span>
-                    </span>
-                    <div>
-                      <div className={styles.sl}>Big letters</div>
-                      <div className={styles.sd}>
-                        show the words in CAPITALS
-                      </div>
-                    </div>
-                    <div className={styles.ctl}>
-                      <button
-                        type="button"
-                        className={pill(prefs.bigLetters)}
-                        onClick={() =>
-                          savePrefs({ bigLetters: !prefs.bigLetters })
-                        }
-                      >
-                        {prefs.bigLetters ? "On" : "Off"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {trail && canToggleWords && (
-                  <div className={styles.srow}>
-                    <span
-                      className={styles.ri}
-                      style={{ background: "var(--seafoam)" }}
-                    >
-                      <span className={styles.aaIcon}>Ab</span>
-                    </span>
-                    <div>
-                      <div className={styles.sl}>Letters on the trail</div>
-                      <div className={styles.sd}>
-                        show the words as blocks in the game, not a panel
-                      </div>
-                    </div>
-                    <div className={styles.ctl}>
-                      <button
-                        type="button"
-                        className={pill(prefs.wordBlocks)}
-                        onClick={() =>
-                          savePrefs({ wordBlocks: !prefs.wordBlocks })
-                        }
-                      >
-                        {prefs.wordBlocks ? "On" : "Off"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <div className={styles.srow}>
-                  <span
-                    className={styles.ri}
-                    style={{ background: "var(--sand)" }}
-                  >
-                    <SoundIcon color="#7a5c00" size={20} />
-                  </span>
-                  <div>
-                    <div className={styles.sl}>Sounds</div>
-                    <div className={styles.sd}>
-                      the speaker button at the top turns these two on and off
-                    </div>
-                  </div>
-                  <div className={styles.ctl}>
-                    <button
-                      type="button"
-                      className={pill(prefs.sounds)}
-                      onClick={() => {
-                        const on = !prefs.sounds;
-                        // Played BEFORE the save when switching off, so the
-                        // child hears the switch they just pressed rather than
-                        // pressing a button that answers with silence.
-                        kidsAudio.init();
-                        kidsAudio.playToggle(on);
-                        savePrefs({ sounds: on });
-                      }}
-                    >
-                      {prefs.sounds ? "On" : "Off"}
-                    </button>
-                  </div>
-                </div>
-                {/*
-          THE TWO HALVES. One is feedback for what the child did, the other is
-          the game making noise, and they are wanted in different rooms — see
-          `clickSounds` on Prefs. Both sit under the master above and go grey
-          with it, the same way "Read it out loud" does.
-        */}
-                <div className={styles.srow}>
-                  <span
-                    className={styles.ri}
-                    style={{ background: "var(--sand)" }}
-                  >
-                    <SoundIcon color="#7a5c00" size={20} />
-                  </span>
-                  <div>
-                    <div className={styles.sl}>Keyboard and buttons</div>
-                    <div className={styles.sd}>
-                      {prefs.sounds
-                        ? "a small click for every key you press, and every button you tap"
-                        : "needs sounds switched on"}
-                    </div>
-                  </div>
-                  <div className={styles.ctl}>
-                    <button
-                      type="button"
-                      className={pill(prefs.clickSounds && prefs.sounds)}
-                      disabled={!prefs.sounds}
-                      onClick={() => {
-                        const on = !prefs.clickSounds;
-                        kidsAudio.init();
-                        savePrefs({ clickSounds: on });
-                        if (on) {
-                          kidsAudio.playToggle(true);
-                        }
-                      }}
-                    >
-                      {prefs.clickSounds && prefs.sounds ? "On" : "Off"}
-                    </button>
-                  </div>
-                </div>
-                <div className={styles.srow}>
-                  <span
-                    className={styles.ri}
-                    style={{ background: "var(--sand)" }}
-                  >
-                    <SoundIcon color="#7a5c00" size={20} />
-                  </span>
-                  <div>
-                    <div className={styles.sl}>Game and background</div>
-                    <div className={styles.sd}>
-                      {prefs.sounds
-                        ? "jumps, chimes, level-up tunes, and the quiet sound of the road"
-                        : "needs sounds switched on"}
-                    </div>
-                  </div>
-                  <div className={styles.ctl}>
-                    <button
-                      type="button"
-                      className={pill(prefs.worldSounds && prefs.sounds)}
-                      disabled={!prefs.sounds}
-                      onClick={() => {
-                        const on = !prefs.worldSounds;
-                        kidsAudio.init();
-                        savePrefs({ worldSounds: on });
-                        if (on) {
-                          kidsAudio.playPoint();
-                        }
-                      }}
-                    >
-                      {prefs.worldSounds && prefs.sounds ? "On" : "Off"}
-                    </button>
-                  </div>
-                </div>
-                {/*
-          On by default for the bands who cannot read the coach, and still a
-          knob: a classroom of eight children is a very different room from a
-          bedroom, and a child who has learned to read wants it gone.
-        */}
-                <div className={styles.srow}>
-                  <span
-                    className={styles.ri}
-                    style={{ background: "var(--sand)" }}
-                  >
-                    <SoundIcon color="#7a5c00" size={20} />
-                  </span>
-                  <div>
-                    <div className={styles.sl}>Read it out loud</div>
-                    <div className={styles.sd}>
-                      {prefs.sounds
-                        ? "the coach says the important bits"
-                        : "needs sounds switched on"}
-                    </div>
-                  </div>
-                  <div className={styles.ctl}>
-                    <button
-                      type="button"
-                      className={pill(prefs.readAloud && prefs.sounds)}
-                      disabled={!prefs.sounds}
-                      onClick={() => {
-                        const on = !prefs.readAloud;
-                        savePrefs({ readAloud: on, readAloudChosen: true });
-                        if (on) {
-                          unlockVoice();
-                          speakLine(
-                            "Hello! I will read the important bits.",
-                            cfg.speechRate,
-                          );
-                        } else {
-                          stopSpeaking();
-                        }
-                      }}
-                    >
-                      {prefs.readAloud && prefs.sounds ? "On" : "Off"}
-                    </button>
-                  </div>
-                </div>
-                {/* Offered from 9-10 up only — see playfulOffered. Below that
-                    the coach's lines are frequently the only prose the child
-                    reads unaided, and understatement is the first register to
-                    fail when somebody is still decoding the words. */}
-                {playfulOffered(band) && (
-                  <div className={styles.srow}>
-                    <span
-                      className={styles.ri}
-                      style={{ background: "var(--sky)" }}
-                    >
-                      <StarIcon />
-                    </span>
-                    <div>
-                      <div className={styles.sl}>Cheeky coach</div>
-                      <div className={styles.sd}>
-                        drier, funnier lines from your buddy
-                      </div>
-                    </div>
-                    <div className={styles.ctl}>
-                      <button
-                        type="button"
-                        className={pill(prefs.playful)}
-                        onClick={() => savePrefs({ playful: !prefs.playful })}
-                      >
-                        {prefs.playful ? "On" : "Off"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {/*
-                  VILLAGE ROAD ONLY. The other two worlds are staged at
-                  midday on purpose and have no hour to set — offering the
-                  control there would be offering a switch that does nothing.
-                */}
-                {onRoad && (
-                  <div className={styles.srow}>
-                    <span
-                      className={styles.ri}
-                      style={{ background: "var(--sand)" }}
-                    >
-                      <ClockIcon color="#7a5c00" />
-                    </span>
-                    <div>
-                      <div className={styles.sl}>Time of day</div>
-                      <div className={styles.sd}>
-                        {prefs.dayHour === "auto"
-                          ? "follows your own clock — the road is lit for the hour you are playing"
-                          : "the road stays at the time you picked"}
-                      </div>
-                      <div className={styles.pillRow}>
-                        {(
-                          [
-                            ["auto", "Auto"],
-                            [7, "Early"],
-                            [9, "Morning"],
-                            [12, "Midday"],
-                            [15, "Afternoon"],
-                            [17, "Evening"],
-                          ] as const
-                        ).map(([value, label]) => (
-                          <button
-                            key={label}
-                            type="button"
-                            className={pill(prefs.dayHour === value)}
-                            onClick={() => savePrefs({ dayHour: value })}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {trail && (
-                  <div className={styles.srow}>
-                    <span
-                      className={styles.ri}
-                      style={{ background: "var(--sky)" }}
-                    >
-                      <KeysIcon color="#1f4f7a" />
-                    </span>
-                    <div>
-                      <div className={styles.sl}>Space bar hop</div>
-                      <div className={styles.sd}>
-                        off, and the space bar is just a key
-                      </div>
-                    </div>
-                    <div className={styles.ctl}>
-                      <button
-                        type="button"
-                        className={pill(prefs.spaceJump !== false)}
-                        onClick={() =>
-                          savePrefs({ spaceJump: prefs.spaceJump === false })
-                        }
-                      >
-                        {prefs.spaceJump !== false ? "On" : "Off"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {trail && (
-                  <div className={styles.srow}>
-                    <span
-                      className={styles.ri}
-                      style={{ background: "var(--rose)" }}
-                    >
-                      <HandIcon />
-                    </span>
-                    <div>
-                      <div className={styles.sl}>Helper hands</div>
-                      <div className={styles.sd}>the glowing finger guide</div>
-                    </div>
-                    <div className={styles.ctl}>
-                      <button
-                        type="button"
-                        className={pill(prefs.hands)}
-                        onClick={() => savePrefs({ hands: !prefs.hands })}
-                      >
-                        {prefs.hands ? "On" : "Off"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <div className={styles.srow}>
-                  <span
-                    className={styles.ri}
-                    style={{ background: "var(--seafoam)" }}
-                  >
-                    <KeysIcon />
-                  </span>
-                  <div>
-                    <div className={styles.sl}>Keyboard</div>
-                    <div className={styles.sd}>
-                      {trail
-                        ? "simple letters, the full grown-up board, or hidden"
-                        : "the full board, or out of the way"}
-                    </div>
-                  </div>
-                  <div className={styles.ctl}>
-                    {/* Classic always draws the whole board, so offering "simple"
-                  there would be a pill that changes nothing. */}
-                    {(trail
-                      ? ([
-                          ["off", "Hidden"],
-                          ["simple", "Simple"],
-                          ["full", "Full"],
-                        ] as const)
-                      : ([
-                          ["off", "Hidden"],
-                          ["full", "Shown"],
-                        ] as const)
-                    ).map(([mode, label]) => (
-                      <button
-                        key={mode}
-                        type="button"
-                        className={pill(
-                          trail
-                            ? prefs.kbMode === mode
-                            : mode === "off"
-                              ? prefs.kbMode === "off"
-                              : prefs.kbMode !== "off",
-                        )}
-                        onClick={() =>
-                          // On the trail, choosing the full board makes room by
-                          // standing the hands aside (turn them back on anytime).
-                          //
-                          // On Classic this row is only Hidden/Shown, and "Shown"
-                          // must write the band's own board rather than "full":
-                          // Classic draws the whole board whatever this says, and
-                          // writing "full" here followed the learner back to the
-                          // trail and left them with a grown-up board — and no
-                          // helper hands — that they never chose.
-                          savePrefs(
-                            !trail
-                              ? { kbMode: mode === "off" ? "off" : cfg.kbMode }
-                              : mode === "full"
-                                ? { kbMode: mode, hands: false }
-                                : { kbMode: mode },
-                          )
-                        }
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className={styles.srow}>
-                  <span
-                    className={styles.ri}
-                    style={{ background: "var(--seafoam)" }}
-                  >
-                    <KeysIcon color="#0b4a37" />
-                  </span>
-                  <div>
-                    <div className={styles.sl}>Key style</div>
-                    <div className={styles.sd}>
-                      how the keys are painted &mdash; the keys themselves do
-                      not move
-                    </div>
-                  </div>
-                  <div className={styles.ctl}>
-                    {(
-                      [
-                        ["crayon", "Crayon"],
-                        ["rainbow", "Rainbow"],
-                      ] as const
-                    ).map(([id, label]) => (
-                      <button
-                        key={id}
-                        type="button"
-                        className={pill(prefs.board === id)}
-                        onClick={() => savePrefs({ board: id })}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className={styles.srow}>
-                  <span
-                    className={styles.ri}
-                    style={{ background: "var(--sand)" }}
-                  >
-                    <KeysIcon color="#7a5c00" />
-                  </span>
-                  <div>
-                    <div className={styles.sl}>Finger colours</div>
-                    <div className={styles.sd}>
-                      colour each key by the finger that presses it
-                    </div>
-                  </div>
-                  <div className={styles.ctl}>
-                    <button
-                      type="button"
-                      className={pill(prefs.fingerColours)}
-                      onClick={() =>
-                        savePrefs({ fingerColours: !prefs.fingerColours })
-                      }
-                    >
-                      {prefs.fingerColours ? "On" : "Off"}
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-            {tab === "session" && (
-              <>
-                <div className={styles.srow}>
-                  <span
-                    className={styles.ri}
-                    style={{ background: "var(--sage)" }}
-                  >
-                    <ClockIcon />
-                  </span>
-                  <div>
-                    <div className={styles.sl}>Timer</div>
-                    <div className={styles.sd}>
-                      pick a session — the run ends at the campfire
-                    </div>
-                  </div>
-                  <div className={styles.ctl}>
-                    {/* A standing preference beats a per-session control: a
-                        parent set "practise without a clock" for this learner,
-                        and a child flipping this pill should not undo it. The
-                        session still ends at the campfire — what goes is being
-                        watched while you type. */}
-                    <button
-                      type="button"
-                      className={pill(!prefs.timerVisible || noClock())}
-                      disabled={noClock()}
-                      title={
-                        noClock()
-                          ? "Hidden for this learner in Accessibility settings"
-                          : undefined
-                      }
-                      onClick={() =>
-                        savePrefs({ timerVisible: !prefs.timerVisible })
-                      }
-                    >
-                      {prefs.timerVisible && !noClock() ? "Shown" : "Hidden"}
-                    </button>
-                    {[5, 10, 15, 20, 25, 30].map((min) => (
-                      <button
-                        key={min}
-                        type="button"
-                        className={pill(prefs.timerMin === min)}
-                        onClick={() => onPickTimer(min)}
-                      >
-                        {min}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className={styles.srow}>
-                  <span
-                    className={styles.ri}
-                    style={{ background: "var(--rose)" }}
-                  >
-                    <ChatIcon />
-                  </span>
-                  <div>
-                    <div className={styles.sl}>Cheers</div>
-                    <div className={styles.sd}>
-                      {trail
-                        ? "dino messages while you type"
-                        : "little messages while you type"}
-                    </div>
-                  </div>
-                  <div className={styles.ctl}>
-                    <button
-                      type="button"
-                      className={pill(prefs.cheers)}
-                      onClick={() => savePrefs({ cheers: !prefs.cheers })}
-                    >
-                      {prefs.cheers ? "On" : "Off"}
-                    </button>
-                  </div>
-                </div>
-                {/* Brightness, paleness and movement all dress the world's canvas,
-              which Classic does not draw. */}
-                {trail && (
-                  <button
-                    type="button"
-                    className={clsx(
-                      styles.advToggle,
-                      advancedOpen && styles.advOpen,
-                    )}
-                    onClick={() => setAdvancedOpen((v) => !v)}
-                    aria-expanded={advancedOpen}
-                  >
-                    <span className={styles.advLabel}>Advanced settings</span>
-                    <span className={styles.advChevron} aria-hidden="true">
-                      ▾
-                    </span>
-                  </button>
-                )}
-                {trail && advancedOpen && (
-                  <div className={styles.advPanel}>
-                    <div className={styles.srow}>
-                      <span
-                        className={styles.ri}
-                        style={{ background: "var(--sky)" }}
-                      >
-                        <SunIcon size={20} color="#3d6b8a" />
-                      </span>
-                      <div>
-                        <div className={styles.sl}>Brightness</div>
-                        <div className={styles.sd}>
-                          how bright the world looks
-                        </div>
-                      </div>
-                      <div className={styles.ctl}>
-                        <input
-                          type="range"
-                          className={styles.slider}
-                          min={0.75}
-                          max={1.25}
-                          step={0.01}
-                          value={prefs.brightness}
-                          aria-label="Brightness"
-                          onChange={(e) =>
-                            savePrefs({ brightness: Number(e.target.value) })
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className={styles.srow}>
-                      <span
-                        className={styles.ri}
-                        style={{ background: "var(--seafoam)" }}
-                      >
-                        <span className={styles.swatch} />
-                      </span>
-                      <div>
-                        <div className={styles.sl}>Brightness of colour</div>
-                        <div className={styles.sd}>
-                          soft and pale, or bright and bold
-                        </div>
-                      </div>
-                      <div className={styles.ctl}>
-                        <input
-                          type="range"
-                          className={styles.slider}
-                          min={0}
-                          max={1}
-                          step={0.02}
-                          // Slider reads left = pale, right = full colour, so invert.
-                          value={1 - prefs.paleness}
-                          aria-label="Colour"
-                          onChange={(e) =>
-                            savePrefs({ paleness: 1 - Number(e.target.value) })
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className={styles.srow}>
-                      <span
-                        className={styles.ri}
-                        style={{ background: "var(--sage)" }}
-                      >
-                        <PawIcon size={20} color="#4a6b3a" />
-                      </span>
-                      <div>
-                        <div className={styles.sl}>Movement</div>
-                        <div className={styles.sd}>
-                          how lively the animals and heroes are
-                        </div>
-                      </div>
-                      <div className={styles.ctl}>
-                        <input
-                          type="range"
-                          className={styles.slider}
-                          min={0}
-                          max={1}
-                          step={0.02}
-                          value={prefs.motion}
-                          aria-label="Movement"
-                          onChange={(e) =>
-                            savePrefs({ motion: Number(e.target.value) })
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-        <div className={styles.ctaRow}>
-          {/*
-            Only offered when there is something to cancel. A button that
-            does the same thing as the one beside it is a button a child has
-            to think about, and there is nothing to undo until a different
-            world has been picked — everything else on this card takes effect
-            as it is tapped and is undone by tapping it back.
-          */}
-          {worldDraft !== prefs.world && (
-            <button
-              type="button"
-              className={clsx(styles.cta, styles.ctaQuiet)}
-              onClick={() => {
-                setWorldDraft(prefs.world);
-                onClose();
-              }}
-            >
-              Cancel
-            </button>
-          )}
-          <button type="button" className={styles.cta} onClick={leaveSettings}>
-            {trail ? "Back to the run!" : "Back to typing!"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+/**
+ * The settings sheet lives in its own file and reads the cast through these —
+ * handed over once, like the picker's, so that file need not import this one.
+ * Down here rather than beside `configurePicker` because the cast tables it
+ * hands over are only initialised by this point in the module.
+ */
+configureSettingsSheet({
+  castLabel,
+  charOf,
+  charactersOf,
+  companions: COMPANIONS,
+  walksIn,
+  childCast,
+  companionsOf,
+  nightStyleOf,
+  guide: VILLAGE_GUIDE,
+  playfulOffered,
+  choosePracticeStyle,
+  noClock,
+});

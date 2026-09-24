@@ -50,6 +50,12 @@ const GROUP_OF = (rel) => {
     return "shared";
   }
   if (top === "faces" || top === "cards") return "village";
+  // Ground maps generated for one world (scripts/kids-ground-textures.py)
+  // are named for it; the village's own maps stay shared.
+  if (top === "textures") {
+    if (second.startsWith("dino_")) return "dino";
+    if (second.startsWith("hero_")) return "hero";
+  }
   return "shared";
 };
 

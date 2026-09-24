@@ -56,6 +56,29 @@ export class KeyboardStyle implements EnumItem {
   static readonly MECHANICAL = new KeyboardStyle("mechanical", "Mechanical");
   /** Round caps on the page, six colourways, one warm light. */
   static readonly ROUND = new KeyboardStyle("round", "Round");
+  /**
+   * The kids trail's own board, worn by the grown-up keyboard: a white cap
+   * ringed in its finger colour, on a lip of the same colour.
+   *
+   * This and Rainbow below exist for the kids Classic mode, which mounts the
+   * grown-up practice page and wants its keyboard and its hands — but in the
+   * two finishes a child already knows from the trail. They are values of
+   * this setting rather than a second setting because a finish is exactly
+   * what this setting chooses; a caller forces one with
+   * `settings.set(keyboardProps.style, KeyboardStyle.KIDS_CRAYON)`.
+   *
+   * They are NOT offered in the grown-up picker (see {@link listed}). They
+   * are still in {@link ALL}, because ALL is also what a stored value is
+   * parsed against, and a value that cannot be parsed quietly falls back to
+   * the default board.
+   */
+  static readonly KIDS_CRAYON = new KeyboardStyle("kidscrayon", "Crayon");
+  /**
+   * The kids primary-colour learning board: green for the frame, red for the
+   * numbers and punctuation, blue for the alphabet, the vowels in a lighter
+   * blue. See {@link KIDS_CRAYON} for why it lives here.
+   */
+  static readonly KIDS_RAINBOW = new KeyboardStyle("kidsrainbow", "Rainbow");
 
   static readonly ALL = new Enum<KeyboardStyle>(
     KeyboardStyle.KEYLEARN,
@@ -63,6 +86,8 @@ export class KeyboardStyle implements EnumItem {
     KeyboardStyle.FLAT_MIDNIGHT,
     KeyboardStyle.MECHANICAL,
     KeyboardStyle.ROUND,
+    KeyboardStyle.KIDS_CRAYON,
+    KeyboardStyle.KIDS_RAINBOW,
   );
 
   private constructor(
@@ -72,7 +97,29 @@ export class KeyboardStyle implements EnumItem {
 
   /** Whether this style has a backlight to configure at all. */
   get lightable(): boolean {
-    return this !== KeyboardStyle.KEYLEARN;
+    // The kids boards are painted plastic under a daylight lamp: the trail
+    // never lit them, and a glow from under a white cap on a cream page is
+    // invisible anyway — so the next key is cued the way an unlit board cues
+    // it, on the cap itself.
+    return this !== KeyboardStyle.KEYLEARN && !this.kids;
+  }
+
+  /** One of the two kids trail finishes. */
+  get kids(): boolean {
+    return (
+      this === KeyboardStyle.KIDS_CRAYON || this === KeyboardStyle.KIDS_RAINBOW
+    );
+  }
+
+  /**
+   * Whether the grown-up keyboard settings offer this style.
+   *
+   * The kids finishes are chosen by the kids Classic mode, not by a learner
+   * browsing the grown-up picker — offered there they would be a novelty
+   * without the rest of the kids page around them.
+   */
+  get listed(): boolean {
+    return !this.kids;
   }
 
   /** Whether this style is sold in more than one colour. */

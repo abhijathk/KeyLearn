@@ -130,10 +130,14 @@ function StyleProp(): ReactNode {
           }
         >
           <OptionList
-            options={[...KeyboardStyle.ALL].map((item) => ({
-              value: item.id,
-              name: item.name,
-            }))}
+            // The kids finishes are in ALL so a stored value parses, but they
+            // are the kids Classic mode's to choose, not this picker's.
+            options={[...KeyboardStyle.ALL]
+              .filter((item) => item.listed)
+              .map((item) => ({
+                value: item.id,
+                name: item.name,
+              }))}
             value={style.id}
             onSelect={(id) => {
               updateSettings(
