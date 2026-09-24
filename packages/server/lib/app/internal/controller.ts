@@ -1358,6 +1358,10 @@ export class Controller {
         signInMethod: deriveSignInMethod(u),
         profileCount: profileCounts.get(u.id!) ?? 0,
         lastSeen: seen == null ? null : new Date(seen).toISOString(),
+        // So the desk's customer list can show a flag beside the name, the
+        // way the Inbox does. The country the account signed up from — a
+        // two-letter code, never an address.
+        country: u.signupCountry ?? null,
       };
     });
 
