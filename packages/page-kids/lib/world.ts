@@ -21268,6 +21268,8 @@ export function createKidsWorld(
             // watching is concerned. They start when the light does.
             f.wrap.userData.shift = HOURS[who] ?? (i < 2 ? [6, 22] : [7, 19]);
             f.wrap.userData.isChild = isChild(who);
+            // Who this is, for the print they leave — see footprints.ts.
+            f.wrap.userData.folkWho = who;
             f.wrap.userData.roadWalker = {
               dir,
               // MEASURED FROM THE CLIP, NOT CHOSEN.
@@ -24411,6 +24413,7 @@ export function createKidsWorld(
         // reaches 0.004, his walk 0.053 and his seated idle 0.113, so
         // planting on the run left him walking a twentieth of his height
         // above the road. Taller than everyone else, so more visible on him.
+        const fromX = f.wrap.position.x;
         f.wrap.position.set(
           nx,
           (deckY(nx, nz) ?? surfaceY(nx, nz)) -
@@ -24418,6 +24421,22 @@ export function createKidsWorld(
             (f.lifts?.walk ?? 0),
           nz,
         );
+        // Villagers print too: bare feet, the headman's chappals, the boy's
+        // slip-ons (owner, 25 Sep 2026) — see footprints.ts.
+        footprints?.step(f, {
+          name: String(f.wrap.userData.folkWho ?? ""),
+          guide: false,
+          x: nx,
+          y: f.wrap.position.y,
+          z: nz,
+          dx: nx - fromX,
+          running: false,
+          height: Number(f.wrap.userData.walkHeight ?? heightOf(f.wrap)),
+          // Only where the camera is: off-screen walkers would spend the
+          // pool on prints nobody sees.
+          allowed: seen && printsHere(nx, nz),
+          groundAt: (x, z) => surfaceY(x, z, 0),
+        });
       }
 
       // ── THE BOY WHO COMES OVER TO LOOK ──────────────────────────────

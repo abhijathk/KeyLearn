@@ -21,26 +21,41 @@ import * as THREE from "three";
  * is full reuses the oldest print, which is the one nearest to gone anyway.
  */
 
-/** What a walker's print looks like. */
+/**
+ * What a walker's print looks like — read off each model's own feet
+ * (rendered close up, 25 Sep 2026), not guessed. The three children and
+ * Abee all wear trainers, so they differ by the sole they leave: a running
+ * shoe's chevrons, a canvas shoe's diamond grid, a kid's wavy tread, a bar
+ * tread. The villagers are barefoot, except the headman in rubber chappals
+ * and the boy in leather slip-ons.
+ */
 export type PrintKind =
-  | "shoe"
-  | "smallShoe"
-  | "sandal"
+  | "chevron"
+  | "canvas"
+  | "wave"
+  | "bars"
   | "tread"
   | "paw"
-  | "bare";
+  | "bare"
+  | "slipper"
+  | "loafer";
 
 const PRINT_OF: Readonly<Record<string, PrintKind>> = {
-  Explorer: "shoe",
-  Explorer6: "smallShoe",
-  Peeli: "sandal",
+  Explorer: "chevron",
+  Explorer6: "canvas",
+  Peeli: "wave",
+  Abee: "bars",
   Robot: "tread",
   Puppy: "paw",
+  FarmerWoman: "bare",
+  TeaStall: "bare",
+  Blacksmith: "bare",
+  Headman: "slipper",
+  VillageBoy: "loafer",
 };
 
-/** The guide is a village child, barefoot on his own road. */
-export function printKindFor(name: string, guide: boolean): PrintKind {
-  return guide ? "bare" : (PRINT_OF[name] ?? "shoe");
+export function printKindFor(name: string, _guide = false): PrintKind {
+  return PRINT_OF[name] ?? "bare";
 }
 
 /** Print length as a share of the walker's height; paws are small and many. */
@@ -48,12 +63,15 @@ export function printKindFor(name: string, guide: boolean): PrintKind {
 // eleven degrees, which squashes a print's width to a sliver. At true size
 // they rendered — measured by painting them black — as two-pixel dashes.
 const LENGTH_OF: Readonly<Record<PrintKind, number>> = {
-  shoe: 0.2,
-  smallShoe: 0.17,
-  sandal: 0.19,
+  chevron: 0.2,
+  canvas: 0.19,
+  wave: 0.18,
+  bars: 0.19,
   tread: 0.21,
   paw: 0.15,
   bare: 0.2,
+  slipper: 0.21,
+  loafer: 0.2,
 };
 /** Width as a share of length. */
 const WIDTH_SHARE = 0.55;
@@ -69,75 +87,280 @@ const TILT = 1.0;
 
 const HOLD = 2.8;
 const FADE = 1.2;
-const PRINTS = 160;
+const PRINTS = 240;
 const PUFFS = 64;
-/** How dark a fresh print is. Subtle by request: a shade on the road. */
-const PRINT_ALPHA = 0.38;
+/** How strong a fresh print is. Subtle by request: a mark in the dust. */
+const PRINT_ALPHA = 0.5;
+
+/*
+ * A PRINT PRESSED INTO DUST, NOT A STAMP ON IT (owner: "nicer, real looking").
+ *
+ * Drawn at 256×128, toe towards +u, the MEDIAL side (big toe, arch) at the top.
+ * Four layers, the way a real print reads in dry earth:
+ *   - the RIM: the wall the foot pushed down, darkest, just inside the edge;
+ *   - the FLOOR: the packed bottom, a lighter brown than the rim;
+ *   - the SOLE: its own pattern, pressed darker into the floor;
+ *   - the LIP: displaced dust thrown up just outside the edge, paler than
+ *     the road — the one light in it, and what makes it read as a hollow.
+ */
+const W = 256;
+const H = 128;
+const MID = H / 2;
+
+/** Half-widths along the foot, t = 0 at the heel to 1 at the toe. */
+function outline(
+  g: CanvasRenderingContext2D,
+  top: (t: number) => number,
+  bottom: (t: number) => number,
+  x0 = 14,
+  x1 = 242,
+) {
+  const N = 48;
+  g.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const x = x0 + (x1 - x0) * t;
+    const y = MID - top(t);
+    if (i === 0) g.moveTo(x, y);
+    else g.lineTo(x, y);
+  }
+  for (let i = N; i >= 0; i--) {
+    const t = i / N;
+    g.lineTo(x0 + (x1 - x0) * t, MID + bottom(t));
+  }
+  g.closePath();
+}
+
+/** A rounded shoe or slipper sole: heel, waist, ball, round toe. */
+function sole(g: CanvasRenderingContext2D, waist = 0.72, toe = 1) {
+  const cap = (t: number) => Math.sqrt(Math.max(0, 1 - ((t - 0.5) / 0.5) ** 8));
+  const lat = (t: number) =>
+    cap(t) *
+    (t < 0.3
+      ? 24 + 6 * (t / 0.3)
+      : t < 0.55
+        ? 30 - 4 * Math.sin(((t - 0.3) / 0.25) * Math.PI)
+        : 30 + 6 * Math.sin(((t - 0.55) / 0.45) * Math.PI * 0.8) * toe);
+  const med = (t: number) =>
+    cap(t) *
+    (t < 0.3
+      ? 22 + 6 * (t / 0.3)
+      : t < 0.6
+        ? 28 - (1 - waist) * 26 * Math.sin(((t - 0.3) / 0.3) * Math.PI)
+        : 28 + 8 * Math.sin(((t - 0.6) / 0.4) * Math.PI * 0.85) * toe);
+  outline(g, med, lat);
+}
+
+/** A bare foot: heel, the lateral edge in contact, the medial arch lifted. */
+function bareFoot(g: CanvasRenderingContext2D) {
+  const cap = (t: number) => Math.sqrt(Math.max(0, 1 - ((t - 0.5) / 0.5) ** 6));
+  const lat = (t: number) =>
+    cap(t) * (t < 0.25 ? 22 + 4 * (t / 0.25) : 26 + 4 * Math.sin(t * 2));
+  // The arch: almost nothing touches between heel and ball on the medial side.
+  const med = (t: number) =>
+    cap(t) *
+    (t < 0.28
+      ? 20
+      : t < 0.62
+        ? 20 - 21 * Math.sin(((t - 0.28) / 0.34) * Math.PI) ** 1.4
+        : 26 + 4 * Math.sin(((t - 0.62) / 0.38) * Math.PI));
+  outline(g, med, lat, 14, 196);
+  g.fill();
+  // Five toes, big toe on the medial side, set just clear of the ball.
+  for (const [x, y, rx, ry] of [
+    [216, MID - 19, 17, 13],
+    [220, MID + 1, 9, 8],
+    [214, MID + 15, 8, 7],
+    [205, MID + 27, 7, 6],
+    [194, MID + 36, 6, 5],
+  ] as const) {
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    g.fill();
+  }
+}
+
+function dogPaw(g: CanvasRenderingContext2D) {
+  // The main pad: three lobes at the back, one broad front edge.
+  g.beginPath();
+  g.moveTo(70, MID);
+  g.bezierCurveTo(70, MID - 34, 130, MID - 40, 140, MID - 14);
+  g.bezierCurveTo(146, MID, 146, MID, 140, MID + 14);
+  g.bezierCurveTo(130, MID + 40, 70, MID + 34, 70, MID);
+  g.fill();
+  for (const [x, y] of [
+    [170, MID - 34],
+    [196, MID - 12],
+    [196, MID + 12],
+    [170, MID + 34],
+  ] as const) {
+    g.beginPath();
+    g.ellipse(x, y, 17, 13, 0, 0, Math.PI * 2);
+    g.fill();
+  }
+  // Claws: just the two middle ones mark, as on a real dog in dust.
+  for (const y of [MID - 14, MID + 14]) {
+    g.beginPath();
+    g.ellipse(226, y, 5, 3, 0, 0, Math.PI * 2);
+    g.fill();
+  }
+}
+
+/** The pattern a sole presses into the floor, clipped to the sole. */
+function pattern(g: CanvasRenderingContext2D, kind: PrintKind) {
+  g.lineCap = "round";
+  switch (kind) {
+    case "chevron":
+      g.lineWidth = 5;
+      for (let x = 40; x < 236; x += 16) {
+        g.beginPath();
+        g.moveTo(x - 8, MID - 40);
+        g.lineTo(x + 6, MID);
+        g.lineTo(x - 8, MID + 40);
+        g.stroke();
+      }
+      break;
+    case "canvas":
+      g.lineWidth = 2.5;
+      for (let d = -140; d < 300; d += 13) {
+        g.beginPath();
+        g.moveTo(d, 0);
+        g.lineTo(d + 128, H);
+        g.stroke();
+        g.beginPath();
+        g.moveTo(d + 128, 0);
+        g.lineTo(d, H);
+        g.stroke();
+      }
+      // The toe cap's smooth band, as on a canvas shoe.
+      g.lineWidth = 7;
+      g.beginPath();
+      g.arc(236, MID, 30, Math.PI * 0.6, Math.PI * 1.4);
+      g.stroke();
+      break;
+    case "wave":
+      g.lineWidth = 4;
+      for (let x = 34; x < 240; x += 14) {
+        g.beginPath();
+        for (let y = MID - 44; y <= MID + 44; y += 4) {
+          const wx = x + Math.sin(y / 7) * 4;
+          if (y === MID - 44) g.moveTo(wx, y);
+          else g.lineTo(wx, y);
+        }
+        g.stroke();
+      }
+      break;
+    case "bars":
+      g.lineWidth = 6;
+      for (let x = 36; x < 238; x += 15) {
+        g.beginPath();
+        g.moveTo(x, MID - 42);
+        g.lineTo(x, MID + 42);
+        g.stroke();
+      }
+      g.lineWidth = 4;
+      g.beginPath();
+      g.moveTo(20, MID);
+      g.lineTo(236, MID);
+      g.stroke();
+      break;
+    case "slipper":
+      // A chappal is flat: one pressure hollow under the heel and the ball,
+      // and the toe post's little hole between the first two toes.
+      g.globalAlpha = 0.5;
+      g.beginPath();
+      g.ellipse(46, MID, 24, 20, 0, 0, Math.PI * 2);
+      g.fill();
+      g.beginPath();
+      g.ellipse(176, MID - 4, 34, 24, 0, 0, Math.PI * 2);
+      g.fill();
+      g.globalAlpha = 1;
+      g.beginPath();
+      g.ellipse(214, MID - 14, 4, 3, 0, 0, Math.PI * 2);
+      g.fill();
+      break;
+    case "loafer":
+      // Smooth leather, with the heel block standing apart from the sole.
+      g.lineWidth = 6;
+      g.beginPath();
+      g.moveTo(78, MID - 40);
+      g.lineTo(78, MID + 40);
+      g.stroke();
+      break;
+    default:
+      break;
+  }
+}
 
 function printTexture(kind: PrintKind): THREE.Texture {
-  // Toe towards +u, heel at the left. Drawn soft: blurred shapes read as a
-  // mark pressed into earth, hard ones as a sticker lying on it.
   const c = document.createElement("canvas");
-  c.width = 128;
-  c.height = 64;
+  c.width = W;
+  c.height = H;
   const g = c.getContext("2d")!;
-  g.filter = "blur(2.5px)";
-  g.fillStyle = "#fff";
-  const blob = (x: number, y: number, rx: number, ry: number, rot = 0) => {
-    g.beginPath();
-    g.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2);
-    g.fill();
+
+  // The shape, as a mask.
+  const mask = document.createElement("canvas");
+  mask.width = W;
+  mask.height = H;
+  const m = mask.getContext("2d")!;
+  m.fillStyle = "#fff";
+  if (kind === "bare") bareFoot(m);
+  else if (kind === "paw") dogPaw(m);
+  else if (kind === "tread") {
+    for (let x = 18; x <= 222; x += 26) m.fillRect(x, MID - 40, 20, 80);
+  } else {
+    sole(
+      m,
+      kind === "slipper" ? 0.85 : kind === "loafer" ? 0.6 : 0.7,
+      kind === "wave" ? 0.8 : 1,
+    );
+    m.fill();
+  }
+
+  const layer = (fill: string, blur: number, dx = 0, dy = 0, scale = 1) => {
+    const l = document.createElement("canvas");
+    l.width = W;
+    l.height = H;
+    const lg = l.getContext("2d")!;
+    lg.filter = `blur(${blur}px)`;
+    lg.translate(W / 2 + dx, MID + dy);
+    lg.scale(scale, scale);
+    lg.translate(-W / 2, -MID);
+    lg.drawImage(mask, 0, 0);
+    lg.filter = "none";
+    lg.setTransform(1, 0, 0, 1, 0, 0);
+    lg.globalCompositeOperation = "source-in";
+    lg.fillStyle = fill;
+    lg.fillRect(0, 0, W, H);
+    return l;
   };
-  switch (kind) {
-    case "shoe":
-    case "smallShoe": {
-      blob(78, 32, 34, 18); // forefoot
-      blob(30, 32, 18, 14); // heel
-      g.globalCompositeOperation = "destination-out";
-      g.filter = "blur(1px)";
-      for (let x = 50; x <= 104; x += 9) g.fillRect(x, 20, 3, 24); // tread bars
-      g.fillRect(44, 22, 6, 20); // arch gap
-      break;
-    }
-    case "sandal": {
-      blob(76, 32, 36, 17);
-      blob(30, 32, 19, 15);
-      g.globalCompositeOperation = "destination-out";
-      g.filter = "blur(1.5px)";
-      blob(96, 30, 5, 3); // the thong post between the toes
-      g.fillRect(56, 18, 4, 28); // strap line pressed across
-      break;
-    }
-    case "tread": {
-      g.filter = "blur(1.5px)";
-      for (let x = 12; x <= 108; x += 16) g.fillRect(x, 14, 11, 36); // blocks
-      break;
-    }
-    case "paw": {
-      blob(52, 32, 15, 13); // main pad
-      blob(78, 16, 7, 6);
-      blob(84, 29, 7, 6);
-      blob(84, 42, 7, 6);
-      blob(76, 54, 7, 6);
-      break;
-    }
-    case "bare": {
-      blob(68, 34, 30, 15, -0.08); // ball and outer edge
-      blob(28, 33, 16, 13); // heel
-      blob(48, 38, 16, 8); // outer arch
-      for (const [x, y, r] of [
-        [104, 22, 6],
-        [102, 32, 4.5],
-        [99, 40, 4],
-        [95, 47, 3.5],
-        [90, 53, 3.2],
-      ] as const)
-        blob(x, y, r, r);
-      break;
-    }
+
+  // The lip: pale displaced dust just outside the edge, on the far side.
+  const lip = layer("rgba(222,196,160,0.55)", 3, 0, -4, 1.04);
+  const lipCut = lip.getContext("2d")!;
+  lipCut.globalCompositeOperation = "destination-out";
+  lipCut.drawImage(mask, 0, 0);
+  g.drawImage(lip, 0, 0);
+  // The rim, then the lighter floor inside it.
+  g.drawImage(layer("rgba(62,38,22,0.95)", 1.5), 0, 0);
+  g.drawImage(layer("rgba(104,70,44,0.85)", 2.5, 0, 1, 0.88), 0, 0);
+  // The sole's own pattern, pressed darker into the floor.
+  if (kind !== "bare" && kind !== "paw" && kind !== "tread") {
+    const pat = document.createElement("canvas");
+    pat.width = W;
+    pat.height = H;
+    const pg = pat.getContext("2d")!;
+    pg.strokeStyle = pg.fillStyle = "rgba(58,34,20,0.75)";
+    pattern(pg, kind);
+    pg.globalCompositeOperation = "destination-in";
+    pg.drawImage(mask, 0, 0);
+    g.filter = "blur(0.8px)";
+    g.drawImage(pat, 0, 0);
+    g.filter = "none";
   }
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
   return t;
 }
 
@@ -200,7 +423,11 @@ export function createFootprints(parent: THREE.Object3D): Footprints {
   const prints: Print[] = [];
   for (let i = 0; i < PRINTS; i++) {
     const mat = new THREE.MeshBasicMaterial({
-      color: 0x4a2c18,
+      // White: the colour is in the texture (rim, floor, pattern, lip).
+      color: 0xffffff,
+      // The left print is the right one mirrored (a negative scale), which
+      // with the lean turns its face away from the camera.
+      side: THREE.DoubleSide,
       transparent: true,
       depthWrite: false,
       opacity: 0,
