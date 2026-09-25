@@ -1284,6 +1284,25 @@
   line-height: 1;
 }
 
+// An icon on its chip's own colour — the tile every chip variant sets
+// `--tile-a`/`--tile-b` for. Keycap-sized, so an icon chip lines up with
+// the key chip beside it.
+.kidsTile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.4rem;
+  block-size: 1.4rem;
+  border-radius: 0.45rem;
+  color: #fff;
+  background: linear-gradient(180deg, var(--tile-a), var(--tile-b));
+
+  svg {
+    inline-size: 0.85rem;
+    block-size: 0.85rem;
+  }
+}
+
 // The key's own road to unlocking, small, inside its chip.
 .kidsMini {
   display: block;

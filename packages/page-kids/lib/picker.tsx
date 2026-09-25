@@ -294,7 +294,7 @@ export function Picker({
 
       <div className={styles.pickRows}>
         <div className={styles.pickRule} />
-        <div className={`${styles.pickGrp} ${styles.pickWho}`}>
+        <div className={styles.pickGrp}>
           <div className={styles.pickLab}>
             <b>Walking as</b>
           </div>
