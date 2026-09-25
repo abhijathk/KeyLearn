@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "e697a1652f8c";
+export const ASSET_VERSION = "7929a49007a9";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -1101,6 +1101,41 @@ export const ASSET_MAP: Readonly<
     "u": "vd90ca6c3/models/village-util/Wooden_Bridge.glb",
     "b": 69760,
     "g": "village"
+  },
+  "picker/bg.webp": {
+    "u": "v01801e90/picker/bg.webp",
+    "b": 132310,
+    "g": "shared"
+  },
+  "picker/capsule.webp": {
+    "u": "vc6fc4602/picker/capsule.webp",
+    "b": 25316,
+    "g": "shared"
+  },
+  "picker/panel-wide.webp": {
+    "u": "vcc13a573/picker/panel-wide.webp",
+    "b": 34424,
+    "g": "shared"
+  },
+  "picker/panel.webp": {
+    "u": "ve2d22dab/picker/panel.webp",
+    "b": 26338,
+    "g": "shared"
+  },
+  "picker/plate.webp": {
+    "u": "va055ac8a/picker/plate.webp",
+    "b": 17886,
+    "g": "shared"
+  },
+  "picker/ring-on.webp": {
+    "u": "vf1aa8e59/picker/ring-on.webp",
+    "b": 23420,
+    "g": "shared"
+  },
+  "picker/ring.webp": {
+    "u": "v59493599/picker/ring.webp",
+    "b": 16032,
+    "g": "shared"
   },
   "textures/brown_mud_leaves_01_diff.jpg": {
     "u": "v3e3e1fbe/textures/brown_mud_leaves_01_diff.jpg",

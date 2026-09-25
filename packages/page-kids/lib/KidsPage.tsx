@@ -4430,8 +4430,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       setCastReady(true);
       return () => setCastReady(false);
     }
-    if (loaded || pickerRef.current == null) {
+    if (loaded) {
       return;
+    }
+    // NO TURNTABLE ANY MORE (owner, 25 Sep 2026): the picker chooses by face,
+    // on the owner's parchment art, and has no canvas for a scene to stand
+    // in. Nobody is going to stand on it, so it is ready now — set and
+    // cleared here, by the rule above.
+    if (pickerRef.current == null) {
+      setCastReady(true);
+      return () => setCastReady(false);
     }
     // `VILLAGE_THEME` by name rather than the world's own `theme`, which is
     // a local of the build effect and not in scope here — and this branch is
