@@ -339,6 +339,39 @@ export function mangroveStand(c: WildCrossing) {
   return trees.slice(1);
 }
 
+/**
+ * THE BIG MANGROVE — one full-grown tree (its own model, not the stand's)
+ * in the shallows off the approach bank, where lesson 36 walks up to the
+ * river (owner, 25 Sep 2026: "near the water.. mangroves grow in shallow
+ * waters near the bank"). 3 out from the bank: inside the shallows (the
+ * river is 1.2–2.3 deep there, measured on the built terrain), and clear of
+ * the bank stones, which sit at most 1.1 out. Back in the bay the bank
+ * opens into, not at the bridge head: there it stood behind Milestone 36
+ * and the walkers and read as a bush on the bank. The first spot that far
+ * back which is well clear of every trunk in the stand.
+ */
+export const BIG_MANGROVE = {
+  h: 7,
+  out: 3,
+  clear: 4,
+  back: 15,
+  offDeck: 12,
+} as const;
+export function bigMangroveAt(c: WildCrossing) {
+  const trunks = [...mangroveStand(c), islandMangroveAt(c)];
+  const { h, out, clear, back, offDeck } = BIG_MANGROVE;
+  for (let z = -back; z >= -30; z -= 0.5) {
+    const x = wildBanks(c, z).left + out;
+    if (z + MANGROVE_ROOT * h >= -DECK_BACK) continue;
+    if (x > c.approach - offDeck) continue;
+    if (wildToLand(c, x, z) > MANGROVE_SHALLOWS) continue;
+    if (trunks.every((t) => Math.hypot(t.x - x, t.z - z) >= clear)) {
+      return { x, z, h, turn: 0.9 };
+    }
+  }
+  return null;
+}
+
 /** Island sightings stay attached to their landmarks at every road length. */
 export function wildIslandNodes(bounds: readonly number[]) {
   const c = wildCrossing(bounds);

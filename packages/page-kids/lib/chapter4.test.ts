@@ -4,6 +4,8 @@ import { test } from "node:test";
 import { boundsForBand } from "./chapter1.ts";
 import { LESSONS_4, wildState } from "./chapter4.ts";
 import {
+  BIG_MANGROVE,
+  bigMangroveAt,
   bridgeModules,
   ISLAND_MANGROVE,
   ISLAND_SHORE,
@@ -230,3 +232,22 @@ test("one buffalo to every Chapter 3 and 4 lesson with open ground", async () =>
   const with4 = LESSONS_4.filter((l) => l.buffalo === true).map((l) => l.n);
   equal(with4.join(","), "1,2,3,4,5,6,8,9,10");
 });
+
+for (const band of ["5-6", "7-8", "9-10", "11+"]) {
+  test(`${band}: the big mangrove stands in the approach bank's shallows`, () => {
+    const b = boundsForBand(band);
+    const c = wildCrossing(b);
+    const at = bigMangroveAt(c);
+    ok(at != null, "a spot was found");
+    ok(at.x > b[5]! && at.x < b[6]!, `x ${at.x.toFixed(1)} in lesson 36`);
+    ok(at.x > wildBanks(c, at.z).left, "in the water, not on the bank");
+    ok(wildToLand(c, at.x, at.z) <= MANGROVE_SHALLOWS, "in the shallows");
+    ok(
+      at.z + MANGROVE_ROOT * BIG_MANGROVE.h < -6.8,
+      "root cage behind the deck",
+    );
+    for (const t of [...mangroveStand(c), islandMangroveAt(c)]) {
+      ok(Math.hypot(t.x - at.x, t.z - at.z) >= 1.6, "off every stand trunk");
+    }
+  });
+}

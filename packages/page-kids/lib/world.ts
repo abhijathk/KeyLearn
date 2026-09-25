@@ -42,6 +42,7 @@ import {
 } from "./chapter3-layout.ts";
 import { wildState } from "./chapter4.ts";
 import {
+  bigMangroveAt,
   bridgeModules,
   ISLAND_BANYAN,
   ISLAND_MANGROVE,
@@ -9370,7 +9371,7 @@ export function createKidsWorld(
         // The mangrove ships its own normals, and its leaf cards' are bent
         // out from each lobe so the canopy shades as one mass; recomputing
         // them from the cards turns it back into a pile of flat quads.
-        if (!/\/Mangrove_Kandal\.glb$/.test(url)) {
+        if (!/\/Mangrove_(?:Kandal|Large)\.glb$/.test(url)) {
           try {
             weldAndShade(m);
           } catch {
@@ -20191,6 +20192,28 @@ export function createKidsWorld(
             }
           }
         }
+        // THE BIG MANGROVE — one full-grown tree, its own model, in the
+        // approach bank's shallows where lesson 36 reaches the river (see
+        // `bigMangroveAt`). Seated on the water like the stand, but not
+        // batched with it: it is a different model, one draw of its own.
+        {
+          const big = bigMangroveAt(crossing);
+          if (big != null) {
+            const w = await stand(
+              "village-plants/Mangrove_Large",
+              big.x,
+              big.z,
+              big.h,
+              big.turn,
+              0,
+            );
+            if (w != null) {
+              w.position.y = RIVER_SURFACE - 0.3 * perspective(big.z);
+              w.name = "chapter4-big-mangrove";
+              builtGroup.add(w);
+            }
+          }
+        }
         // ── THE RIVER BANKS, DRESSED ─────────────────────────────────────
         //
         // Both banks were a clean ramp of turf into the water. A riverbank is
@@ -20619,6 +20642,12 @@ export function createKidsWorld(
       // written for, and two cows stacked in one spot is worse than one cow.
       if (CHAPTER != null) {
         let grazing = 0;
+        // Chapter 4's big mangrove stands in the shallows behind the bank
+        // (see "THE BIG MANGROVE"); an animal on the bank in front of it
+        // hides it from the road, so the ground before it is kept clear.
+        const bigTree = WILD == null ? null : bigMangroveAt(WILD);
+        const beforeBigTree = (tx: number, zz: number) =>
+          bigTree != null && zz > bigTree.z && Math.abs(tx - bigTree.x) < 6;
         for (const l of LESSONS) {
           if (l.herd.length === 0 && l.buffalo !== true) {
             continue;
@@ -20714,6 +20743,7 @@ export function createKidsWorld(
               (m: string, zz: number, dryR = m === "Buffalo" ? 6 : 3.5) =>
               (tx: number) =>
                 (WILD == null || wildDryAround(WILD, tx, zz, dryR)) &&
+                !beforeBigTree(tx, zz) &&
                 (zz <= MILESTONE_CLEAR_DEPTH ||
                   !atMilestone(tx, m === "Buffalo" ? 4 : 2.5));
             const offStone = (m: string) => offStoneAt(m, z);
