@@ -27,7 +27,8 @@ import * as THREE from "three";
  * Abee all wear trainers, so they differ by the sole they leave: a running
  * shoe's chevrons, a canvas shoe's diamond grid, a kid's wavy tread, a bar
  * tread. The villagers are barefoot, except the headman in rubber chappals
- * and the boy in leather slip-ons.
+ * and the boy in leather slip-ons — kept for when one of them walks with the
+ * child; the villagers going about their day leave none (owner, 25 Sep 2026).
  */
 export type PrintKind =
   | "chevron"
@@ -403,6 +404,12 @@ export type Footprints = {
   update(dt: number): void;
   /** Calm mode: prints stay (they are still), dust stops (it moves). */
   setCalm(calm: boolean): void;
+  /**
+   * Night: no prints (owner, 25 Sep 2026) — a pale mark on a dark road reads
+   * as a glitch, not a footstep. The dust still rises. Cheap to call every
+   * frame; it only acts on a change.
+   */
+  setNight(night: boolean): void;
   dispose(): void;
 };
 
@@ -420,6 +427,15 @@ export function createFootprints(parent: THREE.Object3D): Footprints {
   const plane = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
 
   type Print = { mesh: THREE.Mesh; mat: THREE.MeshBasicMaterial; t: number };
+  let night = false;
+  /** The dust a footfall raises — by day and by night alike. */
+  function kickDust(s: StepInput, px: number, pz: number, dir: number): void {
+    if (calm) return;
+    const k = kick(s.running);
+    if (k <= 0) return;
+    const n = Math.max(1, Math.round(rnd(1, s.running ? 3 : 2.2) * k));
+    for (let i = 0; i < n; i++) puff(px, s.y, pz, s.height, k, s.running, dir);
+  }
   const prints: Print[] = [];
   for (let i = 0; i < PRINTS; i++) {
     const mat = new THREE.MeshBasicMaterial({
@@ -548,6 +564,10 @@ export function createFootprints(parent: THREE.Object3D): Footprints {
       w.d -= stride;
       w.left = !w.left;
       const dir = s.dx < 0 ? -1 : 1;
+      if (night) {
+        kickDust(s, s.x, s.z, dir);
+        return;
+      }
       const kind = printKindFor(s.name, s.guide);
       const len = s.height * LENGTH_OF[kind];
       const side =
@@ -578,17 +598,7 @@ export function createFootprints(parent: THREE.Object3D): Footprints {
       p.mesh.visible = true;
       p.mat.opacity = PRINT_ALPHA * rnd(0.75, 1.1);
       p.mesh.userData.a0 = p.mat.opacity;
-      if (!calm) {
-        const k = kick(s.running);
-        if (k > 0) {
-          const n = Math.max(
-            1,
-            Math.round(rnd(s.running ? 1 : 1, s.running ? 3 : 2.2) * k),
-          );
-          for (let i = 0; i < n; i++)
-            puff(px, s.y, pz, s.height, k, s.running, dir);
-        }
-      }
+      kickDust(s, px, pz, dir);
     },
     update(dt) {
       for (const p of prints) {
@@ -614,6 +624,11 @@ export function createFootprints(parent: THREE.Object3D): Footprints {
         p.sprite.scale.setScalar((p.r0 + p.grow * u) * 2);
         p.mat.opacity = p.a0 * (1 - u);
       }
+    },
+    setNight(n) {
+      if (n === night) return;
+      night = n;
+      if (night) for (const p of prints) p.mesh.visible = false;
     },
     setCalm(c) {
       calm = c;

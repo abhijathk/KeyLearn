@@ -5403,6 +5403,7 @@ export function createKidsWorld(
       crossing: () => ({ island: WILD, decks: BRIDGES, waterY: RIVER_SURFACE }),
       walker: () => player?.wrap.position.toArray(),
       passage: () => ({ text: wordText, index: wordIdx }),
+      night: () => ({ blend: nightBlend, look: nightLook, now: nightNow }),
       // The ground read two ways — the grid and the raycast it replaced —
       // so the two can be checked against each other on a live road.
       surfaceBoth: (x: number, z: number) => {
@@ -9411,7 +9412,143 @@ export function createKidsWorld(
     if (/\/models\/dino\/(?!Sign\.)/.test(url)) {
       dressDinoSkin(gltf.scene);
     }
+    if (/\/Robot\.glb$/.test(url)) {
+      dressRobot(gltf.scene);
+    }
     return gltf;
+  }
+  /**
+   * THE ROBOT IS PAINTED METAL, NOT PLASTIC (owner, 25 Sep 2026): glossy
+   * white paint over metal, and a glass face.
+   *
+   * It is one mesh on one baked texture, so the finish is chosen per texel
+   * from the texture's own colour: the white panels are lacquered paint
+   * (smooth, under a clear coat); the black face screen — and the dark
+   * joints, which read as the same polished black — are glass, near-mirror
+   * smooth; and the saturated cyan of the eyes glows a little behind it,
+   * more after dark.
+   *
+   * Gloss needs something to reflect, and the village has no environment
+   * map (its sky is flat), so the robot carries its own: a sky, a pale
+   * horizon, the green-brown ground and a sun, which is what the road
+   * would show in it. Dimmed after dark with the rest of the light.
+   */
+  const robotLight = {
+    robotEnvScale: { value: 0.75 },
+    robotEyeGlow: { value: 0.35 },
+  };
+  let robotEnv: THREE.Texture | null = null;
+  function robotEnvMap(): THREE.Texture {
+    if (robotEnv != null) return robotEnv;
+    const room = new THREE.Scene();
+    const dome = new THREE.SphereGeometry(10, 32, 16);
+    const at = dome.attributes.position!;
+    const sky = new THREE.Color(0x8ec5ee);
+    const horizon = new THREE.Color(0xf2efe6);
+    const ground = new THREE.Color(0x6f7d4a);
+    const colours: number[] = [];
+    for (let i = 0; i < at.count; i++) {
+      const y = at.getY(i) / 10;
+      const c =
+        y > 0
+          ? horizon.clone().lerp(sky, Math.min(1, y * 1.6))
+          : horizon.clone().lerp(ground, Math.min(1, -y * 3));
+      colours.push(c.r, c.g, c.b);
+    }
+    dome.setAttribute("color", new THREE.Float32BufferAttribute(colours, 3));
+    const domeMat = new THREE.MeshBasicMaterial({
+      vertexColors: true,
+      side: THREE.BackSide,
+    });
+    room.add(new THREE.Mesh(dome, domeMat));
+    const sunGeo = new THREE.SphereGeometry(0.9, 16, 8);
+    const sunMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(1, 0.97, 0.9).multiplyScalar(6),
+    });
+    const sunBall = new THREE.Mesh(sunGeo, sunMat);
+    sunBall.position.set(4, 7, 5);
+    room.add(sunBall);
+    robotEnv = pmrem.fromScene(room, 0.02).texture;
+    dome.dispose();
+    domeMat.dispose();
+    sunGeo.dispose();
+    sunMat.dispose();
+    return robotEnv;
+  }
+  const robotPatch = (shader: THREE.WebGLProgramParametersWithUniforms) => {
+    shader.uniforms.robotEnvScale = robotLight.robotEnvScale;
+    shader.uniforms.robotEyeGlow = robotLight.robotEyeGlow;
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "void main() {",
+        "uniform float robotEnvScale;\nuniform float robotEyeGlow;\nvoid main() {",
+      )
+      .replace(
+        "#include <roughnessmap_fragment>",
+        `#include <roughnessmap_fragment>
+        float rbLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+        float rbSat = max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b))
+          - min(diffuseColor.r, min(diffuseColor.g, diffuseColor.b));
+        float rbGlass = 1.0 - smoothstep(0.05, 0.14, rbLum);
+        roughnessFactor = mix(0.3, 0.03, rbGlass);`,
+      )
+      .replace(
+        "#include <metalnessmap_fragment>",
+        `#include <metalnessmap_fragment>
+        metalnessFactor = mix(0.08, 0.0, rbGlass);`,
+      )
+      .replace(
+        "#include <emissivemap_fragment>",
+        `#include <emissivemap_fragment>
+        totalEmissiveRadiance += diffuseColor.rgb
+          * smoothstep(0.22, 0.45, rbSat) * robotEyeGlow;`,
+      )
+      .replace(
+        "#include <lights_fragment_maps>",
+        `#include <lights_fragment_maps>
+        radiance *= robotEnvScale;
+        iblIrradiance *= robotEnvScale;
+        #ifdef USE_CLEARCOAT
+          clearcoatRadiance *= robotEnvScale;
+        #endif`,
+      );
+  };
+  const robotPaint = (mat: THREE.MeshPhysicalMaterial) => {
+    mat.onBeforeCompile = robotPatch;
+    mat.customProgramCacheKey = () => "robot-paint";
+    // A fading or tinted character clones its materials, and a clone does
+    // not carry `onBeforeCompile` — see `dressDinoSkin`.
+    mat.clone = function (this: THREE.MeshPhysicalMaterial) {
+      const c = THREE.MeshPhysicalMaterial.prototype.clone.call(this);
+      robotPaint(c);
+      return c;
+    };
+    mat.needsUpdate = true;
+  };
+  function dressRobot(root: THREE.Object3D): void {
+    const env = robotEnvMap();
+    root.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      const src = m.material as THREE.MeshStandardMaterial;
+      if (!src?.isMeshStandardMaterial) return;
+      const mat = new THREE.MeshPhysicalMaterial({
+        map: src.map,
+        normalMap: src.normalMap,
+        // A shade under white: full white under a clear coat in noon sun
+        // read as glare rather than paint (owner, 25 Sep 2026).
+        color: src.color.clone().multiplyScalar(0.85),
+        envMap: env,
+        roughness: 0.22,
+        metalness: 0.12,
+        clearcoat: 0.85,
+        clearcoatRoughness: 0.08,
+      });
+      mat.name = "robot-paint";
+      robotPaint(mat);
+      m.material = mat;
+      src.dispose();
+    });
   }
   /**
    * DINOSAUR SKIN: lighter, softer, and scaled.
@@ -21330,8 +21467,6 @@ export function createKidsWorld(
             // watching is concerned. They start when the light does.
             f.wrap.userData.shift = HOURS[who] ?? (i < 2 ? [6, 22] : [7, 19]);
             f.wrap.userData.isChild = isChild(who);
-            // Who this is, for the print they leave — see footprints.ts.
-            f.wrap.userData.folkWho = who;
             f.wrap.userData.roadWalker = {
               dir,
               // MEASURED FROM THE CLIP, NOT CHOSEN.
@@ -24507,7 +24642,6 @@ export function createKidsWorld(
         // reaches 0.004, his walk 0.053 and his seated idle 0.113, so
         // planting on the run left him walking a twentieth of his height
         // above the road. Taller than everyone else, so more visible on him.
-        const fromX = f.wrap.position.x;
         f.wrap.position.set(
           nx,
           (deckY(nx, nz) ?? surfaceY(nx, nz)) -
@@ -24515,22 +24649,8 @@ export function createKidsWorld(
             (f.lifts?.walk ?? 0),
           nz,
         );
-        // Villagers print too: bare feet, the headman's chappals, the boy's
-        // slip-ons (owner, 25 Sep 2026) — see footprints.ts.
-        footprints?.step(f, {
-          name: String(f.wrap.userData.folkWho ?? ""),
-          guide: false,
-          x: nx,
-          y: f.wrap.position.y,
-          z: nz,
-          dx: nx - fromX,
-          running: false,
-          height: Number(f.wrap.userData.walkHeight ?? heightOf(f.wrap)),
-          // Only where the camera is: off-screen walkers would spend the
-          // pool on prints nobody sees.
-          allowed: seen && printsHere(nx, nz),
-          groundAt: (x, z) => surfaceY(x, z, 0),
-        });
+        // No prints for villagers (owner, 25 Sep 2026): the road is theirs
+        // every day, and only the walkers the child follows leave a trail.
       }
 
       // ── THE BOY WHO COMES OVER TO LOOK ──────────────────────────────
@@ -26732,8 +26852,13 @@ export function createKidsWorld(
         playing?: string;
         /** This animal's own playback pace, so no two keep time. */
         rate?: number;
-        /** Grazing or standing about, and how long before she changes. */
-        mode?: "graze" | "idle";
+        /**
+         * Grazing, standing about, or down for the night, and how long
+         * before she changes.
+         */
+        mode?: "graze" | "idle" | "rest";
+        /** How dark it must be before this one lies down — see below. */
+        restAt?: number;
         bout?: number;
         /** The action currently in charge of her pose. */
         cur?: THREE.AnimationAction;
@@ -26917,7 +27042,24 @@ export function createKidsWorld(
         // hand-over happens (clip seconds).
         const FEED_FROM = 1.2;
         const HAND_OVER = 0.7;
-        if (!walking) {
+        // ── DOWN FOR THE NIGHT (owner, 25 Sep 2026) ─────────────────────
+        //
+        // The herd lies down after dark and gets up at dawn, on the authored
+        // `Rest` clip. Each animal has its own threshold, so the field goes
+        // down one by one over the dusk rather than on a single frame, and
+        // the gap between lying down and getting up keeps one sitting on
+        // the line from bobbing. A buffalo coming over still gets her up —
+        // `walking` wins — and she lies down again once it has gone.
+        if (ud.restAt == null) ud.restAt = 0.45 + Math.random() * 0.3;
+        if (w.act.has("Rest")) {
+          if (ud.mode !== "rest" && nightBlend > ud.restAt) {
+            ud.mode = "rest";
+          } else if (ud.mode === "rest" && nightBlend < ud.restAt - 0.12) {
+            ud.mode = "idle";
+            ud.bout = 4 + Math.random() * 10;
+          }
+        }
+        if (!walking && ud.mode !== "rest") {
           ud.bout = (ud.bout ?? 0) - step;
           if (ud.bout <= 0) {
             ud.mode = ud.mode === "graze" ? "idle" : "graze";
@@ -26927,7 +27069,13 @@ export function createKidsWorld(
                 : 6 + Math.random() * 14;
           }
         }
-        const wants = walking ? "Walk" : ud.mode === "idle" ? "Idle" : "Graze";
+        const wants = walking
+          ? "Walk"
+          : ud.mode === "rest"
+            ? "Rest"
+            : ud.mode === "idle"
+              ? "Idle"
+              : "Graze";
         if (ud.playing !== wants) {
           const first = ud.playing == null;
           const from = ud.playing;
@@ -26937,6 +27085,16 @@ export function createKidsWorld(
               startClip(a, Math.random() * a.getClip().duration, 0.35, false);
               a.timeScale = 1; // the walking branch above sets it from the ground covered
             }
+          } else if (wants === "Rest") {
+            const a = w.act.get("Rest")!;
+            // Slow: folding her legs under her is not a quick pose change.
+            // Found already lying down if the world is built after dark.
+            startClip(
+              a,
+              Math.random() * a.getClip().duration,
+              first ? 0 : 2.5,
+              false,
+            );
           } else if (wants === "Idle") {
             const a = w.act.get("Idle") ?? w.act.get("Graze");
             if (a != null) {
@@ -28157,6 +28315,9 @@ export function createKidsWorld(
         }
       }
     }
+    footprints?.setNight(nightBlend > 0.5);
+    robotLight.robotEnvScale.value = 0.75 - 0.6 * nightBlend;
+    robotLight.robotEyeGlow.value = 0.35 + 0.55 * nightBlend;
     footprints?.update(dt * motionScale);
     for (let i = sparks.length - 1; i >= 0; i--) {
       const s = sparks[i];
@@ -28205,6 +28366,7 @@ export function createKidsWorld(
         sky: hemi.color,
         ground: hemi.groundColor,
         fill: hemi.intensity / grade.hemi,
+        glow: nightBlend,
       });
     }
     logo.render(renderer, elapsed);
@@ -28642,6 +28804,7 @@ export function createKidsWorld(
       (scene.environment as THREE.Texture | null)?.dispose?.();
       scene.background = null;
       scene.environment = null;
+      robotEnv?.dispose();
       pmrem.dispose();
       // The transcoder runs a pool of workers. One world that forgets
       // them is one pool that outlives it, and a child who flips between

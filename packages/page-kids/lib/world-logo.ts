@@ -42,6 +42,13 @@ export type WorldLogo = {
     sky: THREE.Color;
     ground: THREE.Color;
     fill: number;
+    /**
+     * How far into the night, 0 to 1. The sign glows a little after dark
+     * (owner, 25 Sep 2026): its paint lit from within and a faint warm
+     * halo, like a signboard with a lamp on it — enough to find, never
+     * enough to outshine the road.
+     */
+    glow?: number;
   }): void;
   dispose(): void;
 };
@@ -63,8 +70,12 @@ const MIN_H = 44;
 const MAX_H = 80;
 /** Gap from the canvas's top and right edges, in CSS pixels. */
 const MARGIN = 10;
-/** Room around the sign inside the viewport so the sway never clips it. */
-const PAD = 1.1;
+/**
+ * Room around the sign inside the viewport, so the sway never clips it and
+ * the night halo has somewhere to fall off. The sign keeps its size and
+ * place whatever this is — `render` pins its edges to the margin.
+ */
+const PAD = 1.6;
 /** A touch softened so it sits back from the scene, not a watermark. */
 const OPACITY = 0.94;
 
@@ -93,6 +104,26 @@ export function createWorldLogo(): WorldLogo {
   // back faces and inner walls showed through its front as a grey ghost;
   // laying down its depth first lets only the nearest surface take colour.
   const depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false });
+  // The night glow — see `setLight`. The painted materials, to light from
+  // within, and a soft lamp-light behind the sign.
+  const glowMats: THREE.MeshStandardMaterial[] = [];
+  const LAMP = new THREE.Color(0xffc978);
+  const haloTex = haloTexture();
+  const halo = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({
+      map: haloTex,
+      color: LAMP,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false,
+    }),
+  );
+  halo.visible = false;
+  halo.renderOrder = -1;
+  scene.add(halo);
 
   const cam = new THREE.PerspectiveCamera(18, 2, 0.1, 50);
   const pivot = new THREE.Group();
@@ -135,6 +166,10 @@ export function createWorldLogo(): WorldLogo {
         root.scale.setScalar(s);
         root.position.copy(ctr).multiplyScalar(-s);
         aspect = dims.x / Math.max(1e-6, dims.y);
+        // Wider and taller than the sign, so the light falls off past its
+        // edges rather than stopping at them.
+        halo.scale.set(1.45, 1.45 / aspect + 0.3, 1);
+        halo.position.set(0, 0, -0.08);
         root.traverse((o) => {
           const mesh = o as THREE.Mesh;
           if (!mesh.isMesh) return;
@@ -152,6 +187,11 @@ export function createWorldLogo(): WorldLogo {
             if (std.isMeshStandardMaterial) {
               std.metalness = 0;
               std.roughness = 0.62;
+              std.emissive.copy(LAMP);
+              std.emissiveMap = std.map;
+              std.emissiveIntensity = 0;
+              std.needsUpdate = true;
+              glowMats.push(std);
             }
           }
         });
@@ -198,9 +238,12 @@ export function createWorldLogo(): WorldLogo {
       renderer.setScissor(x, y, vw, vh);
       renderer.setScissorTest(true);
       renderer.clearDepth();
+      const haloOn = halo.visible;
+      halo.visible = false;
       scene.overrideMaterial = depthOnly;
       renderer.render(scene, cam);
       scene.overrideMaterial = null;
+      halo.visible = haloOn;
       renderer.render(scene, cam);
       renderer.setScissorTest(false);
       renderer.setViewport(vp);
@@ -230,6 +273,11 @@ export function createWorldLogo(): WorldLogo {
       // down with the world, but never below what still reads as a title.
       key.intensity = THREE.MathUtils.clamp(1.35 * l.key, 0.3, 1.6);
       hemi.intensity = THREE.MathUtils.clamp(1.55 * l.fill, 0.55, 1.8);
+      // Eased in, so dusk only hints at it and full night has all of it.
+      const g = THREE.MathUtils.smoothstep(l.glow ?? 0, 0.2, 1);
+      for (const m of glowMats) m.emissiveIntensity = 0.42 * g;
+      (halo.material as THREE.MeshBasicMaterial).opacity = 0.5 * g;
+      halo.visible = g > 0.01;
     },
 
     dispose() {
@@ -242,6 +290,9 @@ export function createWorldLogo(): WorldLogo {
       hemi.dispose();
       key.dispose();
       depthOnly.dispose();
+      halo.geometry.dispose();
+      (halo.material as THREE.Material).dispose();
+      haloTex.dispose();
     },
   };
 }
@@ -259,4 +310,24 @@ function disposeTree(root: THREE.Object3D): void {
       m.dispose();
     }
   });
+}
+
+/** A soft round falloff, brightest in the middle, for the night halo. */
+function haloTexture(): THREE.Texture {
+  const size = 64;
+  const canvas =
+    typeof document === "undefined" ? null : document.createElement("canvas");
+  if (canvas == null) return new THREE.Texture();
+  canvas.width = canvas.height = size;
+  const g = canvas.getContext("2d")!;
+  const r = size / 2;
+  const grad = g.createRadialGradient(r, r, 0, r, r, r);
+  grad.addColorStop(0, "rgba(255,255,255,1)");
+  grad.addColorStop(0.45, "rgba(255,255,255,0.45)");
+  grad.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = grad;
+  g.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }

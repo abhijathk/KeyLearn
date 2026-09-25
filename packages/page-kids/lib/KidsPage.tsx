@@ -118,7 +118,7 @@ import { deviceTier, type NightOverride, resolveNightStyle } from "./night.ts";
 import { paceTarget } from "./pace.ts";
 import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
-import { fitPassageToRoad } from "./run-length.ts";
+import { fitPassageToRoad, RUN_LEN } from "./run-length.ts";
 import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
 import { STORY, type StoryPart } from "./story.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
@@ -3185,6 +3185,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const [sessionSecs, setSessionSecs] = useState(prefs.timerMin * 60);
   const [sessionOver, setSessionOver] = useState(false);
   const [regenNonce, setRegenNonce] = useState(0);
+  // A fresh passage and nothing else — `regenNonce` also rebuilds the world.
+  const [passageNonce, setPassageNonce] = useState(0);
   const [landNonce, setLandNonce] = useState(0);
   /**
    * A canvas hands out ONE WebGL context in its lifetime, and
@@ -3240,6 +3242,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // Per-profile n-gram weakness stats: kids get the same bottleneck drill as
   // grown-ups, accruing across sessions so awkward transitions get smoothed out.
   const ngramsRef = useRef(loadNgramStats());
+  // Time Keepers results from passages walked part-way along a lesson, held
+  // until the milestone — see `recordRun`.
+  const heldResultsRef = useRef<Result[]>([]);
   const prevLettersRef = useRef<ReadonlySet<number> | null>(null);
   /**
    * When the flag celebration finishes, and the timer holding the
@@ -4369,9 +4374,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // boundary — to its share. The last one lands on the milestone: no
     // sliding to make up distance, no jump to the stone. A passage that
     // covers the whole lesson on its own (older children) is left as it is.
-    const road = onVillageRef.current
-      ? worldRef.current?.lessonRemaining()
-      : null;
+    //
+    // The first passage is usually made before the world is built. A world
+    // is always built with the child standing at a lesson's start, so until
+    // it exists the road ahead is one whole lesson.
+    const road = !onVillageRef.current
+      ? null
+      : worldRef.current != null
+        ? worldRef.current.lessonRemaining()
+        : { left: RUN_LEN, started: false };
     if (road != null) {
       flat = fitPassageToRoad(flat, road.left, road.started);
     }
@@ -4384,7 +4395,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // short words as for a twelve-year-old typing thirty.
     worldRef.current?.startRun(flat.length);
     forceTick();
-  }, [lesson, lessonKeys, included, settings, regenNonce]);
+  }, [lesson, lessonKeys, included, settings, regenNonce, passageNonce]);
 
   // A run here is thirty or forty-five seconds, and the words are long enough
   // that a small child can spend the whole of one without reaching the end of
@@ -5294,7 +5305,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         // Every finished passage is practice, milestone or not: the
         // algorithm learns from it, and recording it is what brings the
         // next passage.
-        const recordRun = () => {
+        //
+        // NEW LETTERS ARRIVE AT MILESTONES (owner, 25 Sep 2026). A letter
+        // unlocks when the saved results say so, so on Time Keepers the
+        // results of passages part-way along a lesson are held and saved
+        // together at the stone. The key set cannot change mid-lesson, and
+        // the new-letter card lands on the milestone. A lesson abandoned
+        // half-way loses those held passages, which is the price of it.
+        const recordRun = (holdForStone: boolean) => {
           // Learn this run's key transitions so the bottleneck drill improves.
           ngramsRef.current.append(textInput.steps);
           saveNgramStats(ngramsRef.current);
@@ -5318,10 +5336,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             } else {
               // The same record the grown-up mode saves — the algorithm learns
               // from every kids run too.
-              appendResults([result]);
+              if (holdForStone) {
+                heldResultsRef.current.push(result);
+              } else {
+                appendResults([...heldResultsRef.current, result]);
+                heldResultsRef.current = [];
+              }
             }
-          } else {
+          } else if (!holdForStone) {
             setRegenNonce((n) => n + 1);
+          }
+          // Nothing saved means nothing new to build from: ask for the next
+          // passage directly.
+          if (holdForStone) {
+            setPassageNonce((n) => n + 1);
           }
         };
         // A PASSAGE PART-WAY ALONG A LESSON (Time Keepers: every band walks
@@ -5340,7 +5368,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           if (sounds) {
             kidsAudio.playPoint();
           }
-          recordRun();
+          recordRun(true);
         }
         if (textInput.completed && !midLesson) {
           // Reaching the camp flag is the one moment the run is won; the world
@@ -5383,7 +5411,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           if (sounds) {
             kidsAudio.playPoint();
           }
-          recordRun();
+          recordRun(false);
           // Every third camp, the trail map opens and the herd crosses into
           // a brand-new land — but never mid-sitting, where it would cover the
           // words with the clock still running.
