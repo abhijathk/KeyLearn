@@ -14420,6 +14420,11 @@ export function createKidsWorld(
       k.roofY = r.onRoof ? (at.roofY ?? 0) : 0;
       const az = r.onRoof && at.roofZ != null ? at.roofZ : at.z;
       k.wrap.position.set(at.x, terrainY(at.x, az) + k.roofY, az);
+      // SMALLER THE FURTHER BACK HE IS. He is fitted at his first spot's
+      // depth and was never re-fitted: at the mana, set well back from the
+      // road, he stood as tall as he does at the roadside (owner, 25 Sep
+      // 2026). The glimpses already did this — see `perspective` there.
+      k.wrap.scale.setScalar(perspective(az) / perspective(k.spots[0]!.z));
       faceChild(k);
       k.wrap.visible = true;
       k.hidden = false;
@@ -14442,6 +14447,7 @@ export function createKidsWorld(
           1,
         )[0]!;
         e.wrap.position.set(to.x, terrainY(to.x, to.z), to.z);
+        e.wrap.scale.setScalar(perspective(to.z) / perspective(k.spots[0]!.z));
         e.wrap.rotation.y = yawToward(
           to.x,
           to.z,
