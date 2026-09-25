@@ -1,6 +1,5 @@
 import { type ReactElement, useEffect, useRef, useState } from "react";
 import * as styles from "./kids.module.less";
-import * as fr from "./picker-frame.module.less";
 import { ASSETS } from "./world.ts";
 
 /**
@@ -30,22 +29,6 @@ import { ASSETS } from "./world.ts";
 /** Where the offline-rendered portraits live. See `scripts/glb-face.mjs`. */
 const faceUrl = (id: string) => `${ASSETS}/faces/${id}.webp`;
 
-/**
- * The owner's picker art (25 Sep 2026: "Selection window redesign"), trimmed
- * and compressed — 12 MB of PNGs to 265 KB of WebP. Handed to the sheet as
- * custom properties so the stylesheet stays free of asset paths.
- */
-const art = (f: string) => `url("${ASSETS}/picker/${f}")`;
-const FRAME_ART = {
-  "--pf-bg": art("bg.webp"),
-  "--pf-panel": art("panel.webp"),
-  "--pf-wide": art("panel-wide.webp"),
-  "--pf-plate": art("plate.webp"),
-  "--pf-capsule": art("capsule.webp"),
-  "--pf-ring": art("ring.webp"),
-  "--pf-ring-on": art("ring-on.webp"),
-} as React.CSSProperties;
-
 export type Pick = {
   readonly id: string;
   readonly label: string;
@@ -66,6 +49,7 @@ export function Picker({
   onRename,
   onConfirm,
   onRunning,
+  canvasRef,
 }: {
   /**
    * Whether this screen is the one being looked at.
@@ -104,8 +88,7 @@ export function Picker({
    * would say the opposite of what the screen now means.
    */
   onRunning(on: boolean): void;
-  /** No longer drawn into: the picker has no turntable. Kept so callers compile. */
-  readonly canvasRef?: React.RefObject<HTMLCanvasElement | null>;
+  readonly canvasRef: React.RefObject<HTMLCanvasElement | null>;
 }): ReactElement {
   /**
    * Confirmed, but the road has not caught up.
@@ -176,19 +159,16 @@ export function Picker({
     <div
       className={[
         styles.picker,
-        fr.root,
         open ? styles.pickerIn : "",
         sent ? styles.pickSent : "",
       ].join(" ")}
-      style={FRAME_ART}
       inert={!open || undefined}
       aria-hidden={!open}
     >
-      <div className={`${styles.pickSky} ${fr.sky}`} />
+      <div className={styles.pickSky} />
       <div
         className={[
           styles.pickTop,
-          fr.top,
           sign != null ? styles.pickTopSigned : "",
         ].join(" ")}
       >
@@ -209,18 +189,32 @@ export function Picker({
         </div>
         <button
           type="button"
-          className={`${styles.pickGo} ${fr.go}`}
+          className={styles.pickGo}
           onClick={() => setSent(true)}
         >
           Walk on <span aria-hidden="true">→</span>
         </button>
       </div>
 
-      {/* NO TURNTABLE (owner, 25 Sep 2026). The middle of the window is the
-          landscape itself; the child is chosen by face in the rows below. */}
-      <div className={`${styles.pickStage} ${fr.stage}`} />
+      <div className={styles.pickStage}>
+        {/*
+          360 across at the device ratio is 720 device pixels at 2x, which is
+          more than this is ever drawn at — the same sizing the loading card
+          uses, and for the same reason.
+        */}
+        <canvas
+          ref={canvasRef}
+          className={styles.pickArt}
+          width={360}
+          height={420}
+        />
+        {/* No progress bar on this screen: the road is the loader's and stays
+            there. This is the other half of what it was doing — a figure with
+            no shadow floats. */}
+        <div className={styles.pickShade} />
+      </div>
 
-      <div className={`${styles.pickIdent} ${fr.ident}`}>
+      <div className={styles.pickIdent}>
         {sent ? (
           /*
             CONFIRMED, AND THE ROAD IS STILL ARRIVING.
@@ -237,9 +231,7 @@ export function Picker({
           </div>
         ) : editing ? (
           <>
-            <span
-              className={`${styles.pickPlate} ${styles.pickPlateOn} ${fr.plate}`}
-            >
+            <span className={`${styles.pickPlate} ${styles.pickPlateOn}`}>
               <input
                 ref={inputRef}
                 className={styles.pickInput}
@@ -273,7 +265,7 @@ export function Picker({
           <>
             <button
               type="button"
-              className={`${styles.pickPlate} ${fr.plate}`}
+              className={styles.pickPlate}
               onClick={() => {
                 setDraft(chosen.label);
                 setEditing(true);
@@ -300,10 +292,10 @@ export function Picker({
         )}
       </div>
 
-      <div className={`${styles.pickRows} ${fr.rows}`}>
+      <div className={styles.pickRows}>
         <div className={styles.pickRule} />
-        <div className={`${styles.pickGrp} ${styles.pickWho} ${fr.grp}`}>
-          <div className={`${styles.pickLab} ${fr.lab}`}>
+        <div className={`${styles.pickGrp} ${styles.pickWho}`}>
+          <div className={styles.pickLab}>
             <b>Walking as</b>
           </div>
           <Row
@@ -316,12 +308,10 @@ export function Picker({
           className={[
             styles.pickGrp,
             styles.pickWith,
-            fr.grp,
-            fr.with,
             full ? styles.pickFull : "",
           ].join(" ")}
         >
-          <div className={`${styles.pickLab} ${fr.lab}`}>
+          <div className={styles.pickLab}>
             <b>Walking with</b>
             <i>
               {"· "}
@@ -388,21 +378,14 @@ function Row({
                 badge on the chosen one — the tick says "chosen" to a child
                 who cannot tell a gradient ring from a hover. */}
             <span
-              className={[
-                styles.pickAv,
-                fr.av,
-                on ? `${styles.pickOn} ${fr.on}` : "",
-              ].join(" ")}
+              className={[styles.pickAv, on ? styles.pickOn : ""].join(" ")}
             >
               <span
-                className={`${styles.pickFace} ${fr.face}`}
+                className={styles.pickFace}
                 style={{ backgroundImage: faceLayers(p.id) }}
               />
               {on && (
-                <span
-                  className={`${styles.pickCheck} ${fr.check}`}
-                  aria-hidden="true"
-                >
+                <span className={styles.pickCheck} aria-hidden="true">
                   <svg className={styles.pickTick} viewBox="0 0 24 24">
                     <path d="M5 12l5 5L20 7" />
                   </svg>
