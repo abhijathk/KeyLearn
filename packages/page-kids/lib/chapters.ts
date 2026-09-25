@@ -18,6 +18,7 @@
  * thing, and only ever needed dividing.
  */
 
+import { LAPS } from "./chapter-laps.ts";
 import { type Lesson, LESSONS, SEGMENT_COUNT } from "./chapter1.ts";
 import { LESSONS_2 } from "./chapter2.ts";
 import { LESSONS_3 } from "./chapter3.ts";
@@ -55,8 +56,10 @@ export type Chapter = {
    */
   readonly scenery: number;
   /**
-   * Names for the later times this road comes round, in order: the first
-   * entry is the second time through, and so on. See `chapterNo`.
+   * Other ways of describing this road on the card, used in turn as it
+   * comes round again. Only the BLURBS are read now: the names of every later
+   * chapter and its lessons live in chapter-laps.ts (the first entries there
+   * repeat the names these used to supply). See `chapterNo`.
    */
   readonly again?: readonly { readonly name: string; readonly blurb: string }[];
 };
@@ -207,13 +210,25 @@ export function chapterNo(n: number): Chapter {
   // Past the written chapters: which road, and which time round it.
   const road = roads[(k - 1) % roads.length]!;
   const lap = Math.floor((k - 1) / roads.length); // 1 = second time through
-  const names = road.again ?? [];
-  const alias = names.length > 0 ? names[(lap - 1) % names.length]! : null;
+  // Its own name and its own ten lesson names (chapter-laps.ts) — written
+  // for the first 500 lessons, then round again ROAD BY ROAD, so a reused
+  // name always lands on the scenery it describes. The road's own first
+  // names are in the rotation too, at the start of each new round.
+  const names = [
+    { name: road.name, lessons: road.lessons.map((l) => l.name) },
+    ...(LAPS[road.scenery] ?? []),
+  ];
+  const lapNames = names[lap % names.length]!;
+  const blurbs = [road.blurb, ...(road.again ?? []).map((a) => a.blurb)];
   return {
     ...road,
     n: k,
-    name: alias?.name ?? road.name,
-    blurb: alias?.blurb ?? road.blurb,
+    name: lapNames.name,
+    blurb: blurbs[lap % blurbs.length]!,
+    lessons: road.lessons.map((l, i) => ({
+      ...l,
+      name: lapNames.lessons[i] ?? l.name,
+    })),
   };
 }
 

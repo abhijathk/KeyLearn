@@ -2494,42 +2494,52 @@ function StoryDoc({
 }): ReactElement {
   const open = (part: StoryPart) =>
     part.graduate === true ? graduated : stones >= part.stone;
+  useCloseKeys(onClose);
+  // The same torn sheet as every other card on the road, torn wider: this
+  // is the one a child sits and reads, and it used to be a smooth parchment
+  // panel that looked like it came from another game.
   return (
-    <div
-      className={styles.storyBack}
-      role="dialog"
-      aria-modal="true"
-      aria-label="The story so far"
-      onClick={onClose}
+    <RoadCard
+      kind="story"
+      wide={true}
+      eyebrow="The story so far"
+      title="How three children ended up on this road"
+      keys={[
+        {
+          cap: "enter",
+          what: "back to the road",
+          zone: "rose",
+          onPress: onClose,
+        },
+      ]}
+      onDismiss={onClose}
     >
-      {/* Stops a click inside the paper from closing it. */}
-      <div className={styles.storyDoc} onClick={(ev) => ev.stopPropagation()}>
-        <h3 className={styles.storyTitle}>The story so far</h3>
-        <p className={styles.storySub}>
-          How three children from a very long way off ended up on this road.
-        </p>
+      <div className={styles.roadProse}>
         {STORY.map((part, i) => {
           const unlocked = open(part);
           const body = part.text.map(fill);
           return (
-            <div
+            <section
               key={part.title}
-              className={clsx(styles.storyPart, !unlocked && styles.storyShut)}
+              className={clsx(
+                styles.roadPart,
+                !unlocked && styles.roadPartShut,
+              )}
             >
-              <div className={styles.storyHead}>
-                <span className={styles.storyNo}>{`Part ${i + 1}`}</span>
+              <div className={styles.roadPartHead}>
+                <span className={styles.roadPartNo}>{`Part ${i + 1}`}</span>
                 <h4>{unlocked ? part.title : "Not yet"}</h4>
                 {unlocked ? (
                   <button
                     type="button"
-                    className={styles.storySpeak}
+                    className={styles.roadSpeak}
                     aria-label={`Read part ${i + 1} aloud`}
                     onClick={() => onRead(body.join(" "))}
                   >
-                    <SoundIcon size={14} color="#6b5227" />
+                    <SoundIcon size={14} color="currentColor" />
                   </button>
                 ) : (
-                  <span className={styles.storyWhen}>
+                  <span className={styles.roadPartWhen}>
                     {part.graduate === true
                       ? "when you know every letter"
                       : `at stone ${part.stone}`}
@@ -2537,15 +2547,69 @@ function StoryDoc({
                 )}
               </div>
               {unlocked && body.map((para, k) => <p key={k}>{para}</p>)}
-            </div>
+            </section>
           );
         })}
-        <button type="button" className={styles.storyClose} onClick={onClose}>
-          Back to the road
-        </button>
       </div>
-    </div>
+    </RoadCard>
   );
+}
+
+/** The sticker album on Time Keepers' torn sheet, like every other card there. */
+function AlbumCard({
+  album,
+  world,
+  onClose,
+}: {
+  readonly album: Parameters<typeof AlbumGrid>[0]["album"];
+  readonly world: Parameters<typeof AlbumGrid>[0]["world"];
+  readonly onClose: () => void;
+}): ReactElement {
+  useCloseKeys(onClose);
+  return (
+    <RoadCard
+      kind="album"
+      wide={true}
+      eyebrow="Stickers"
+      title="Your sticker album"
+      keys={[
+        {
+          cap: "enter",
+          what: "back to the road",
+          zone: "rose",
+          onPress: onClose,
+        },
+      ]}
+      onDismiss={onClose}
+    >
+      <AlbumGrid album={album} world={world} />
+    </RoadCard>
+  );
+}
+
+/**
+ * Enter or Escape closes a card the child opened to read. Captured, so the
+ * key never reaches the run behind the card.
+ */
+function useCloseKeys(onClose: () => void): void {
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key !== "Enter" && ev.key !== "Escape") return;
+      // A button in the card (read aloud) answers Enter itself.
+      if (
+        ev.key === "Enter" &&
+        (ev.target as HTMLElement | null)?.closest?.("button") != null
+      )
+        return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      close.current();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
 }
 
 function peekNextLandName(): string {
@@ -2679,19 +2743,36 @@ export function KidsPage() {
  * starts at the first value, so a fresh page does not flash all four
  * lines at a child who has not done anything yet.
  */
-function useFlash(value: unknown, ms = 750): boolean {
-  const [on, setOn] = useState(false);
+/**
+ * Lights an element for a moment whenever `value` changes.
+ *
+ * ON THE ELEMENT, NOT IN STATE. As a boolean in state this was two extra
+ * renders of the whole game for every point scored — one to light the row
+ * and one, 750ms later, to put it out — and the score changes on every
+ * correct key. The class is toggled on the element directly; the element's
+ * own `className` never changes, so React has no reason to write over it.
+ */
+function useFlash<T extends HTMLElement>(
+  value: unknown,
+  className: string | undefined,
+  ms = 750,
+) {
+  const el = useRef<T>(null);
   const prev = useRef(value);
   useEffect(() => {
     if (prev.current === value) {
       return;
     }
     prev.current = value;
-    setOn(true);
-    const id = setTimeout(() => setOn(false), ms);
+    const node = el.current;
+    if (node == null || className == null) {
+      return;
+    }
+    node.classList.add(className);
+    const id = setTimeout(() => node.classList.remove(className), ms);
     return () => clearTimeout(id);
-  }, [value, ms]);
-  return on;
+  }, [value, className, ms]);
+  return el;
 }
 
 /**
@@ -3132,7 +3213,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   );
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const loaderRef = useRef<HTMLCanvasElement>(null);
   const sceneCardRef = useRef<HTMLDivElement>(null);
   /** The last cap measured from the helper — see the capping effect. */
   const sceneCapRef = useRef(0);
@@ -3570,8 +3650,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   }, [clockTick, prefs.dayHour, prefs.night]);
   onVillageRef.current = onVillage;
   // Which line on the notice just moved. See `useFlash`.
-  const flashScore = useFlash(score);
-  const flashCombo = useFlash(combo);
+  const flashScore = useFlash<HTMLDivElement>(score, styles.noteFlash);
+  const flashCombo = useFlash<HTMLDivElement>(combo, styles.noteFlash);
   /**
    * WHICH LESSON THIS IS, AND WHAT IT IS CALLED.
    *
@@ -3640,10 +3720,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       ? chapterNow.lessons[forced.lesson - 1]
       : chapterNow.lessons[lessonIndexAt(stonesNow)]
     )?.name ?? "";
-  const flashStage = useFlash(
+  const flashStage = useFlash<HTMLDivElement>(
     stageOf(prefs.world)(dinoAgeOf(included, lesson.letters.length)),
+    styles.noteFlash,
   );
-  const flashBest = useFlash(best);
+  const flashBest = useFlash<HTMLDivElement>(best, styles.noteFlash);
   const storyOpenCount = STORY.filter((part) =>
     part.graduate === true
       ? included >= lesson.letters.length
@@ -4475,20 +4556,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           ? HERO_THEME
           : DINO_THEME;
     const chosen = charOf(prefsRef.current);
-    // Before the world, deliberately. Both want the same character file, and
-    // three de-duplicates requests already in flight — but the world queues
-    // a dozen models of its own, and whichever is asked for first is the one
-    // the browser fetches first. Created after it, the loading screen stood
-    // empty until every tree and companion had been fetched, which is most of
-    // the wait it exists to fill.
-    // The loading screen runs whoever the learner picked as their main
-    // character, in every world: waiting behind somebody else's hero, then
-    // arriving as your own, reads as the game having forgotten you.
-    const loaderWho = chosen;
-    const loader =
-      loaderRef.current != null
-        ? createLoaderScene(loaderRef.current, theme, loaderWho)
-        : null;
     const nav = navigator as Navigator & { deviceMemory?: number };
     // `?buffalo` or `?puppy` - one showcase, either animal.
     // `?puppy` shows the puppy alone. `?buffalo` shows BOTH: the buffalo held
@@ -4815,17 +4882,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         return world.setCompanions(friends).then(() => world.setGuide(guide));
       })
       .finally(() => {
-        // NOT `loader.dispose()` HERE.
-        //
-        // Disposing it calls `forceContextLoss`, which permanently spends the
-        // canvas element — and the loading screen is still on screen at this
-        // point, because the reveal waits for the name ticker to finish and
-        // for two frames after that. Killing the context under a canvas the
-        // child is still looking at leaves a dead image box in the middle of
-        // the loader for the last moments of the load. It is handed to the
-        // effect below instead, which lets it go when the loader actually
-        // comes off the screen.
-        loaderSceneRef.current = loader;
         if (!cancelled) {
           setWorldReady(true);
         }
@@ -4835,11 +4891,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     return () => {
       cancelled = true;
       observer.disconnect();
-      // Torn down before the loading screen ever came off — the effect that
-      // normally releases this never ran, so it is released here. Clearing
-      // the ref keeps that effect from disposing it a second time.
-      loader?.dispose();
-      loaderSceneRef.current = null;
       world.dispose();
       worldRef.current = null;
     };
@@ -5563,23 +5614,41 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   }, [worldReady, loaded, hourStaged, prefs.dayHour]);
 
   /**
-   * The loading screen's own little scene, released when it is no longer
-   * being looked at — see the `.finally` above for why not sooner.
+   * THE LOADING SCREEN'S LITTLE SCENE LIVES EXACTLY AS LONG AS ITS CANVAS.
+   *
+   * It used to be made at the top of the world's effect, from whatever
+   * canvas was mounted at that moment. On a first visit that is the loader's
+   * — `loaded` starts false — but a world rebuilt without a page load (a new
+   * world picked in Settings) runs that effect while `loaded` is still true
+   * and the loading pane is not on the page. There was no canvas, so no
+   * scene; the effect then put the card up, and the child waited in front
+   * of an empty frame until a refresh.
+   *
+   * Made from the canvas's own ref instead, it cannot miss: the scene is
+   * built when the element arrives and let go when it leaves. Leaving is
+   * also the only right moment to dispose — `forceContextLoss` spends the
+   * element for good, and doing it while the card is still fading out left
+   * a dead box in the middle of it. The element is keyed by `worldKey`, so
+   * a world changed mid-load gets a fresh canvas rather than a spent one.
+   *
+   * Whoever the learner picked runs across it, in every world: waiting
+   * behind somebody else's hero, then arriving as your own, reads as the
+   * game having forgotten you.
    */
-  const loaderSceneRef = useRef<{ dispose(): void } | null>(null);
-  useEffect(() => {
-    if (loaded && loaderSceneRef.current != null) {
-      loaderSceneRef.current.dispose();
-      loaderSceneRef.current = null;
+  const loaderCanvas = useCallback((canvas: HTMLCanvasElement | null) => {
+    if (canvas == null) {
+      return;
     }
-  }, [loaded]);
-  useEffect(
-    () => () => {
-      loaderSceneRef.current?.dispose();
-      loaderSceneRef.current = null;
-    },
-    [],
-  );
+    const p = prefsRef.current;
+    const theme =
+      p.world === "village"
+        ? VILLAGE_THEME
+        : p.world === "hero"
+          ? HERO_THEME
+          : DINO_THEME;
+    const scene = createLoaderScene(canvas, theme, charOf(p));
+    return () => scene.dispose();
+  }, []);
 
   /**
    * THE LOADING CARD LETS GO AS SOON AS SOMEBODY IS STANDING ON THE
@@ -5919,6 +5988,98 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       />
     );
 
+  // The naming card's parts, shared by both of its looks: Time Keepers'
+  // torn card and the other worlds' own.
+  const nameTitle = (
+    <>
+      {namingWho !== ""
+        ? `What shall we call ${castLabel(namingWho, prefs.names)}?`
+        : childCast(prefs.world)
+          ? prefs.world === "village"
+            ? "Someone joined you on the road!"
+            : "Someone joined your trail!"
+          : "Your dino hatched!"}
+    </>
+  );
+  const nameMsg = (
+    <>
+      {namingWho !== ""
+        ? "Pick any name you like. Leave it empty to give them their own name back."
+        : childCast(prefs.world)
+          ? prefs.world === "village"
+            ? "They will walk every step of the road with you. What will you call them?"
+            : "They will walk every step of the trail with you. What will you call them?"
+          : "It will run every step of the trail with you. What will you call it?"}
+    </>
+  );
+  const nameInput = (
+    <input
+      className={styles.nameInput}
+      maxLength={NAME_MAX}
+      placeholder={namingWho !== "" ? shippedLabel(namingWho) : companionName}
+      value={draftName}
+      autoFocus={true}
+      onChange={(ev) => setDraftName(ev.target.value)}
+      onKeyDown={(ev) => {
+        if (ev.key === "Enter") {
+          finishNaming();
+        }
+      }}
+    />
+  );
+  const askSoundBlock = (
+    <>
+      {/*
+        Asked here, once, and never again — this card is the only moment
+        before the session starts when somebody is looking at the screen
+        and not yet typing. Tapping a choice is also the gesture browsers
+        require before any audio may play at all, so the answer takes
+        effect immediately instead of on some later click.
+      */}
+      {!prefs.soundAsked && namingWho === "" && (
+        <div className={styles.askSound}>
+          <span className={styles.askSoundTitle}>
+            Shall {draftName.trim() || companionName} make noises?
+          </span>
+          <div className={styles.askSoundRow}>
+            <button
+              type="button"
+              className={clsx(
+                styles.askSoundBtn,
+                draftSounds && styles.askSoundOn,
+              )}
+              onClick={() => {
+                setDraftSounds(true);
+                // Let them hear what they just agreed to. This click is
+                // the user gesture that unlocks audio.
+                kidsAudio.init();
+                unlockVoice();
+                kidsAudio.playPoint();
+              }}
+            >
+              <SoundIcon size={20} color="currentColor" />
+              Yes please
+            </button>
+            <button
+              type="button"
+              className={clsx(
+                styles.askSoundBtn,
+                !draftSounds && styles.askSoundOn,
+              )}
+              onClick={() => setDraftSounds(false)}
+            >
+              <SoundIcon size={20} color="currentColor" muted={true} />
+              Keep it quiet
+            </button>
+          </div>
+          <span className={styles.askSoundNote}>
+            You can change this any time with the speaker button up top.
+          </span>
+        </div>
+      )}
+    </>
+  );
+
   const loaderPane =
     loaded || (pickOpen && !handing) ? null : (
       <div
@@ -5949,7 +6110,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           <div className={styles.loadRunner}>
             <span className={styles.loadShadow} aria-hidden="true" />
             <canvas
-              ref={loaderRef}
+              // KEYED LIKE THE WORLD'S CANVAS, for the same reason. The
+              // last loader's dispose() calls forceContextLoss, which spends
+              // the element for good: a world rebuilt without a page load
+              // (a new character from Settings) stood its loader up on that
+              // dead context and the runner never appeared until a refresh.
+              key={worldKey}
+              ref={loaderCanvas}
               className={styles.loadArt}
               width={360}
               height={240}
@@ -6612,21 +6779,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                     </span>
                   </div>
                 )}
-                <div
-                  className={clsx(
-                    styles.noteRow,
-                    flashScore && styles.noteFlash,
-                  )}
-                >
+                <div ref={flashScore} className={styles.noteRow}>
                   <span className={styles.noteLab}>Score</span>
                   <span className={styles.noteVal}>{score}</span>
                 </div>
-                <div
-                  className={clsx(
-                    styles.noteRow,
-                    flashCombo && styles.noteFlash,
-                  )}
-                >
+                <div ref={flashCombo} className={styles.noteRow}>
                   <span className={styles.noteLab}>
                     {onVillage ? `Lesson ${lessonNo}` : "Combo"}
                   </span>
@@ -6636,12 +6793,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                     <span className={styles.noteVal}>×{combo}</span>
                   )}
                 </div>
-                <div
-                  className={clsx(
-                    styles.noteRow,
-                    flashStage && styles.noteFlash,
-                  )}
-                >
+                <div ref={flashStage} className={styles.noteRow}>
                   <span className={styles.noteLab}>
                     {stageLabel(prefs.world)}
                   </span>
@@ -6651,12 +6803,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                     )}
                   </span>
                 </div>
-                <div
-                  className={clsx(
-                    styles.noteRow,
-                    flashBest && styles.noteFlash,
-                  )}
-                >
+                <div ref={flashBest} className={styles.noteRow}>
                   <span className={styles.noteLab}>Best</span>
                   <span className={styles.noteVal}>{best}</span>
                 </div>
@@ -7068,7 +7215,26 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </div>
       )}
 
-      {nameOpen && (
+      {nameOpen && onVillage && (
+        <RoadCard
+          kind="name"
+          eyebrow={namingWho !== "" ? "A new name" : "A new friend"}
+          title={nameTitle}
+          keys={[
+            {
+              cap: "enter",
+              what: "say hello!",
+              zone: "rose",
+              onPress: finishNaming,
+            },
+          ]}
+        >
+          <p>{nameMsg}</p>
+          {nameInput}
+          {askSoundBlock}
+        </RoadCard>
+      )}
+      {nameOpen && !onVillage && (
         <div className={styles.overlay}>
           <div className={clsx(styles.card, styles.finishCard)}>
             {/* The companion is whatever this world has. On the Hero Trail
@@ -7086,87 +7252,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               className={styles.cardTitle}
               style={{ justifyContent: "center" }}
             >
-              {namingWho !== ""
-                ? `What shall we call ${castLabel(namingWho, prefs.names)}?`
-                : childCast(prefs.world)
-                  ? prefs.world === "village"
-                    ? "Someone joined you on the road!"
-                    : "Someone joined your trail!"
-                  : "Your dino hatched!"}
+              {nameTitle}
             </div>
-            <div className={styles.finishMsg}>
-              {namingWho !== ""
-                ? "Pick any name you like. Leave it empty to give them their own name back."
-                : childCast(prefs.world)
-                  ? prefs.world === "village"
-                    ? "They will walk every step of the road with you. What will you call them?"
-                    : "They will walk every step of the trail with you. What will you call them?"
-                  : "It will run every step of the trail with you. What will you call it?"}
-            </div>
-            <input
-              className={styles.nameInput}
-              maxLength={NAME_MAX}
-              placeholder={
-                namingWho !== "" ? shippedLabel(namingWho) : companionName
-              }
-              value={draftName}
-              autoFocus={true}
-              onChange={(ev) => setDraftName(ev.target.value)}
-              onKeyDown={(ev) => {
-                if (ev.key === "Enter") {
-                  finishNaming();
-                }
-              }}
-            />
+            <div className={styles.finishMsg}>{nameMsg}</div>
+            {nameInput}
 
-            {/*
-              Asked here, once, and never again — this card is the only moment
-              before the session starts when somebody is looking at the screen
-              and not yet typing. Tapping a choice is also the gesture browsers
-              require before any audio may play at all, so the answer takes
-              effect immediately instead of on some later click.
-            */}
-            {!prefs.soundAsked && namingWho === "" && (
-              <div className={styles.askSound}>
-                <span className={styles.askSoundTitle}>
-                  Shall {draftName.trim() || companionName} make noises?
-                </span>
-                <div className={styles.askSoundRow}>
-                  <button
-                    type="button"
-                    className={clsx(
-                      styles.askSoundBtn,
-                      draftSounds && styles.askSoundOn,
-                    )}
-                    onClick={() => {
-                      setDraftSounds(true);
-                      // Let them hear what they just agreed to. This click is
-                      // the user gesture that unlocks audio.
-                      kidsAudio.init();
-                      unlockVoice();
-                      kidsAudio.playPoint();
-                    }}
-                  >
-                    <SoundIcon size={20} color="currentColor" />
-                    Yes please
-                  </button>
-                  <button
-                    type="button"
-                    className={clsx(
-                      styles.askSoundBtn,
-                      !draftSounds && styles.askSoundOn,
-                    )}
-                    onClick={() => setDraftSounds(false)}
-                  >
-                    <SoundIcon size={20} color="currentColor" muted={true} />
-                    Keep it quiet
-                  </button>
-                </div>
-                <span className={styles.askSoundNote}>
-                  You can change this any time with the speaker button up top.
-                </span>
-              </div>
-            )}
+            {askSoundBlock}
 
             <button type="button" className={styles.cta} onClick={finishNaming}>
               Say hello!
@@ -7402,7 +7493,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         </div>
       )}
 
-      {albumOpen && (
+      {albumOpen && onVillage && (
+        <AlbumCard
+          album={album}
+          world={prefs.world}
+          onClose={() => setAlbumOpen(false)}
+        />
+      )}
+      {albumOpen && !onVillage && (
         <div className={styles.overlay}>
           <div className={styles.card}>
             <div className={styles.cardTitle}>

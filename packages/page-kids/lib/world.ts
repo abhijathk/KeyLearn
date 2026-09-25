@@ -23534,6 +23534,19 @@ export function createKidsWorld(
     sunMap: SUN_MAP,
     easyWindows: 0,
     quietUntil: 0,
+    /**
+     * THE LAST STEP: the sun's shadow map redrawn every other frame.
+     *
+     * On a machine whose CPU is the limit (measured with Chrome's 4x
+     * throttle, a stand-in for a school Chromebook) the two steps above do
+     * nothing — pixels were never the cost — and the biggest single item
+     * left is re-rendering 359 shadow casters for the sun every frame. A
+     * skipped frame keeps the previous map WITH the matrix it was drawn
+     * under, so everything standing still is shadowed exactly right and
+     * only what moves trails its shadow by one frame. Nothing recompiles.
+     */
+    shadowEvery: 1,
+    frameNo: 0,
   };
   const setSunMap = (size: number) => {
     guard.sunMap = size;
@@ -23562,6 +23575,9 @@ export function createKidsWorld(
         renderer.setPixelRatio(guard.ratio);
       } else if (guard.sunMap > 2048) {
         setSunMap(2048);
+      } else if (guard.shadowEvery < 2) {
+        guard.shadowEvery = 2;
+        sun.shadow.autoUpdate = false;
       }
       return;
     }
@@ -23571,7 +23587,10 @@ export function createKidsWorld(
         return;
       }
       guard.easyWindows = 0;
-      if (guard.sunMap < SUN_MAP) {
+      if (guard.shadowEvery > 1) {
+        guard.shadowEvery = 1;
+        sun.shadow.autoUpdate = true;
+      } else if (guard.sunMap < SUN_MAP) {
         setSunMap(SUN_MAP);
       } else if (guard.ratio < RATIO_CAP) {
         guard.ratio = Math.min(RATIO_CAP, guard.ratio + 0.25);
@@ -28103,6 +28122,10 @@ export function createKidsWorld(
     // HTML shadows fell back to pointing straight down. Beside the render is
     // the one place that is reached whenever there is a frame to describe.
     publishLightDirection(1 - nightBlend);
+    if (guard.shadowEvery > 1) {
+      guard.frameNo += 1;
+      sun.shadow.needsUpdate = guard.frameNo % guard.shadowEvery === 0;
+    }
     renderer.render(scene, cam);
     // Time Keepers' title takes the same sun and moon as the road beneath it.
     if (theme.village != null) {

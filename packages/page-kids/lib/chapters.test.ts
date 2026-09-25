@@ -115,7 +115,15 @@ test("a repeat has its own name, not the first time's", () => {
     const c = chapterNo(n);
     const first = CHAPTERS[c.scenery - 1]!;
     ok(c.name !== first.name, `Chapter ${n} is still called ${c.name}`);
-    equal(c.lessons, first.lessons, `Chapter ${n} walks road ${c.scenery}`);
+    // The same road — every lesson built exactly as the first time — under
+    // new names.
+    const bare = (ls: typeof c.lessons) =>
+      ls.map(({ name: _, ...rest }) => rest);
+    deepEqual(
+      bare(c.lessons),
+      bare(first.lessons),
+      `Chapter ${n} walks road ${c.scenery}`,
+    );
   }
   // Second and third time round differ from each other too.
   ok(chapterNo(5).name !== chapterNo(9).name);
@@ -229,7 +237,9 @@ test("`?lesson=` runs on past forty into the repeats", () => {
   equal(addressLesson(47)?.lesson, 7);
   equal(addressLesson(77)?.chapter.n, 8);
   equal(addressLesson(77)?.chapter.scenery, 4);
-  equal(addressLesson(77)?.chapter.lessons[6]?.name, "Mangrove Island");
+  // The island again — the same lesson of the same road — under the name
+  // its second time round has (chapter-laps.ts), not the first time's.
+  equal(addressLesson(77)?.chapter.lessons[6]?.name, "Island Stop");
 });
 
 test("Chapter 3 continues directly from global lesson 20 at milestone 20", () => {
@@ -259,4 +269,121 @@ test("Milestone 40 opens Chapter 5, and every tenth stone after it", () => {
   // Remembered under its own key, so the village's second card is shown
   // even though the first one was seen long ago.
   ok(chapterSeenKey(chapterNo(5)) !== chapterSeenKey(chapterNo(1)));
+});
+
+// ── The owner's rule, 25 Sep 2026: four authored chapters, then those four
+// roads again and again with new chapter AND lesson names, numbers counting
+// on for ever; names written for 500 lessons, then reused. ──────────────────
+
+const ROADS = CHAPTERS.filter(isWalkable).length;
+
+test("the four roads come round in order, for ever", () => {
+  for (let n = 1; n <= 200; n++) {
+    const c = chapterNo(n);
+    equal(c.n, n, `Chapter ${n} carries its own number`);
+    equal(
+      c.scenery,
+      ((n - 1) % ROADS) + 1,
+      `Chapter ${n} is built on road ${c.scenery}`,
+    );
+    equal(c.lessons.length, SEGMENT_COUNT, `Chapter ${n} has ten lessons`);
+    ok(isWalkable(c), `Chapter ${n} can be walked`);
+  }
+});
+
+test("every chapter up to Lesson 500 has a name of its own", () => {
+  const seen = new Map<string, number>();
+  for (let n = 1; n <= 50; n++) {
+    const name = chapterNo(n).name.toLowerCase();
+    ok(
+      !seen.has(name),
+      `Chapter ${n} is called what Chapter ${seen.get(name)} was: ${name}`,
+    );
+    seen.set(name, n);
+  }
+});
+
+test("every lesson up to 500 has a name of its own", () => {
+  // The authored forty keep the names they shipped with (one pair already
+  // shares "Grazing Land" by design); every later one is new, and none of
+  // the new ones repeats anything before it.
+  const authored = new Set(
+    CHAPTERS.flatMap((c) => c.lessons.map((l) => l.name.toLowerCase())),
+  );
+  const seen = new Map<string, number>();
+  for (let stones = 40; stones < 500; stones++) {
+    const c = chapterAt(stones);
+    const name = c.lessons[lessonIndexAt(stones)]!.name;
+    const key = name.toLowerCase();
+    const lesson = lessonAtStones(stones);
+    ok(!authored.has(key), `Lesson ${lesson} reuses an authored name: ${name}`);
+    ok(
+      !seen.has(key),
+      `Lesson ${lesson} is called what Lesson ${seen.get(key)} was: ${name}`,
+    );
+    seen.set(key, lesson);
+  }
+  equal(seen.size, 460);
+});
+
+test("later names fit the scoreboard and the card, like the first ones", () => {
+  for (let n = 5; n <= 50; n++) {
+    const c = chapterNo(n);
+    ok(c.name.split(/\s+/).length <= 3, c.name);
+    ok(c.blurb.length > 40, `${c.name} blurb`);
+    for (const l of c.lessons) {
+      ok(l.name.split(/\s+/).length <= 2, `${c.name}: ${l.name}`);
+      ok(l.name.length <= 16, `${c.name}: ${l.name}`);
+    }
+  }
+});
+
+test("past Lesson 500 the names come round again, on the road they were written for", () => {
+  for (let n = 51; n <= 400; n++) {
+    const c = chapterNo(n);
+    // Some chapter at or below 50 on the same road had this exact name and
+    // these exact lesson names — a reused name never lands on other scenery.
+    let match = false;
+    for (let m = c.scenery; m <= 50; m += ROADS) {
+      const earlier = chapterNo(m);
+      if (
+        earlier.name === c.name &&
+        earlier.lessons.every((l, i) => l.name === c.lessons[i]!.name)
+      ) {
+        match = true;
+        break;
+      }
+    }
+    ok(match, `Chapter ${n} (${c.name}) reuses names from another road`);
+  }
+});
+
+test("the numbers never reset at 500, or anywhere", () => {
+  equal(lessonAtStones(499), 500);
+  equal(lessonAtStones(500), 501);
+  equal(chapterAt(499).n, 50);
+  equal(chapterAt(500).n, 51);
+  equal(chapterDueAt(500)?.n, 51);
+  equal(addressLesson(501)?.chapter.n, 51);
+  equal(addressLesson(501)?.lesson, 1);
+  equal(chapterAt(9_999).n, 1_000);
+  equal(lessonAtStones(9_999), 10_000);
+});
+
+test("every chapter's card is due on its own opening stone and nowhere else", () => {
+  for (let n = 1; n <= 120; n++) {
+    const c = chapterNo(n);
+    const at = chapterOpensAt(c);
+    equal(at, (n - 1) * CHAPTER_STONES);
+    equal(chapterDueAt(at)?.n, n, `Chapter ${n}'s card at stone ${at}`);
+    equal(chapterDueAt(at)?.name, c.name);
+    for (let s = at + 1; s < at + CHAPTER_STONES; s++) {
+      equal(chapterDueAt(s), null, `no card mid-chapter at stone ${s}`);
+    }
+    equal(
+      chapterSeenKey(c),
+      `chapter:${n}`,
+      "each repeat's card is remembered separately",
+    );
+  }
 });

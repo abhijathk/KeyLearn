@@ -22,21 +22,42 @@ export function RoadCard({
   letter,
   finger,
   keys,
+  wide = false,
+  onDismiss,
   children,
 }: {
   /** Only used to seed the tear, so a card type does not re-tear as it updates. */
   readonly kind: string;
   readonly eyebrow: string;
-  readonly title?: string;
+  readonly title?: ReactNode;
   /** The new letter, when this is the unlock card. */
   readonly letter?: string;
   readonly finger?: string | null;
   readonly keys: readonly KeyHint[];
+  /**
+   * For the cards a child READS rather than waves away — the story, the
+   * sticker album: the same sheet, torn wider, and the text set as prose.
+   */
+  readonly wide?: boolean;
+  /**
+   * The cards a child opened themselves, with a click, close the way they
+   * opened: a click on the dimmed road around them. The road's own cards
+   * arrive unasked and do not, so a stray click cannot skip one.
+   */
+  readonly onDismiss?: () => void;
   readonly children?: ReactNode;
 }): ReactNode {
   return (
-    <div className={styles.roadScrim} role="alertdialog" aria-modal={true}>
-      <div className={styles.roadCard}>
+    <div
+      className={styles.roadScrim}
+      role="alertdialog"
+      aria-modal={true}
+      onClick={onDismiss}
+    >
+      <div
+        className={clsx(styles.roadCard, wide && styles.roadCardWide)}
+        onClick={onDismiss == null ? undefined : (ev) => ev.stopPropagation()}
+      >
         <Tear seed={kind} />
         <div className={styles.roadBody}>
           <p className={styles.roadEyebrow}>{eyebrow}</p>
@@ -147,6 +168,12 @@ export type KeyHint = {
    */
   readonly zone: string;
   readonly wide?: boolean;
+  /**
+   * What the cap does when it is clicked or tapped. Given, the cap is a real
+   * button: the cards opened by a click must close by one too, and a child on
+   * a tablet has no Enter key to press.
+   */
+  readonly onPress?: () => void;
 };
 
 /**
@@ -164,20 +191,34 @@ export type KeyHint = {
 function KeyRow({ keys }: { readonly keys: readonly KeyHint[] }): ReactNode {
   return (
     <div className={styles.roadKeys}>
-      {keys.map(({ cap, what, zone, wide }) => (
-        <Fragment key={cap}>
-          <span
-            className={clsx(
-              styles.roadCap,
-              wide === true && styles.roadCapWide,
-            )}
-            style={{ ["--kz" as never]: `var(--${zone})` }}
+      {keys.map(({ cap, what, zone, wide, onPress }) => {
+        const face = (
+          <>
+            <span
+              className={clsx(
+                styles.roadCap,
+                wide === true && styles.roadCapWide,
+              )}
+              style={{ ["--kz" as never]: `var(--${zone})` }}
+            >
+              {cap}
+            </span>
+            <span className={styles.roadCapWhat}>{what}</span>
+          </>
+        );
+        return onPress == null ? (
+          <Fragment key={cap}>{face}</Fragment>
+        ) : (
+          <button
+            key={cap}
+            type="button"
+            className={styles.roadKeyBtn}
+            onClick={onPress}
           >
-            {cap}
-          </span>
-          <span className={styles.roadCapWhat}>{what}</span>
-        </Fragment>
-      ))}
+            {face}
+          </button>
+        );
+      })}
     </div>
   );
 }

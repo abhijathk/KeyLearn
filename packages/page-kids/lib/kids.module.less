@@ -1091,8 +1091,15 @@
    *
    * Matched to that blend, and on the properties that actually differ after
    * dark: what the paper is lit by, and the ink on it.
+   *
+   * 4.5s LINEAR, the world's own NIGHTFALL_S (owner, 25 Sep 2026): at 1.5s
+   * eased the notice and the story scrap had turned before the shadows had,
+   * which put the corner of the screen ahead of the scene it hangs in.
    */
-  transition: filter 1.5s ease;
+  /* Its own layer, so a 4.5s filter fade is composited rather than
+     repainted every frame — repainting the torn paper was the jitter. */
+  will-change: filter;
+  transition: filter 4.5s linear;
 }
 
 /*
@@ -1273,7 +1280,7 @@
   padding: 0.55rem 0.75rem 0.6rem;
   color: #23201a;
   /* With the paper — see `.sheet`. */
-  transition: color 1.5s ease;
+  transition: color 4.5s linear;
 }
 
 /* The masthead: the one line that is a sentence rather than a figure. */
@@ -1326,8 +1333,10 @@
   letter-spacing: 0.13em;
   text-transform: uppercase;
   white-space: nowrap;
+  /* No `color` here: the ink is inherited from `.notePrint`, which crosses
+     over 4.5s. A 0.2s colour transition on the child restarted every frame
+     of that fade and stepped the letters — the jitter at nightfall. */
   transition:
-    color 0.2s ease,
     opacity 0.2s ease,
     text-shadow 0.2s ease;
 }
@@ -1336,9 +1345,7 @@
   font-size: 0.92em;
   font-weight: 800;
   line-height: 1;
-  transition:
-    color 0.2s ease,
-    text-shadow 0.2s ease;
+  transition: text-shadow 0.2s ease;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1358,7 +1365,6 @@
   font-weight: 800;
   line-height: 1.15;
   text-align: end;
-  transition: color 0.2s ease;
   font-variant-numeric: normal;
 }
 
@@ -1375,19 +1381,12 @@
  * at roughly a third of it, fading over three quarters of a second.
  */
 .noteFlash {
-  .noteLab {
-    opacity: 0.86;
-  }
-
-  .noteVal {
-    color: #0f0c07;
-    text-shadow: 0 0 6px rgb(255 246 220 / 85%);
-  }
-}
-
-.rootDark .noteFlash .noteVal {
-  color: #e8c48c;
-  text-shadow: 0 0 7px rgb(255 168 60 / 62%);
+  /*
+   * NO LONGER LIT (owner, 25 Sep 2026: no lighting on the text inside). The
+   * score changes on nearly every key, so the glow flickered the whole time
+   * the child typed, and through a nightfall it jumped out of the fade. The
+   * class stays so the page can keep marking the row; it paints nothing.
+   */
 }
 
 /*
@@ -1490,7 +1489,8 @@
   border-radius: 0.5rem;
   color: #23201a;
   background: none;
-  transition: color 1.5s ease;
+  /* With the sheet and the shadows — see `.sheet`. */
+  transition: color 4.5s linear;
 
   // The disc the other two worlds use has no place here, and the ink lifts
   // instead — the icon draws in `currentColor`.
@@ -1510,7 +1510,8 @@
   position: absolute;
   inset: 0;
   /* The scrap crosses with the sheet and the sky — see `.sheet`. */
-  transition: filter 1.5s ease;
+  will-change: filter;
+  transition: filter 4.5s linear;
 }
 
 .scrapRim {
@@ -1635,173 +1636,6 @@
 @media (prefers-reduced-motion: reduce) {
   .storyBtn {
     animation: none;
-  }
-}
-
-/**
- * The manuscript itself: a floating panel over the scene, never full screen.
- *
- * The road stays visible and dimmed behind it, because the story is about the
- * place they are standing in and covering it makes the two feel unrelated.
- */
-.storyBack {
-  display: grid;
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  place-items: center;
-  padding: 1.2rem;
-  background: rgb(18 12 6 / 55%);
-  backdrop-filter: blur(2px);
-}
-
-/**
- * AGED PAPER, built rather than photographed.
- *
- * Three layers of gradient: a warm base, a pair of off-centre radial stains
- * the colour of weak tea, and a very fine repeating line that reads as the
- * grain of a pressed leaf. No image, so it costs nothing to load and it
- * cannot be blurry on a big screen.
- */
-/*
- * The story page is a prop lying on the road, so it takes the road's scale
- * too -- and its height is capped against the PANE rather than the viewport,
- * because it is inside the pane and `vb` knows nothing about that.
- */
-.storyDoc {
-  position: relative;
-  inline-size: min(calc(38rem * var(--kscale, 1)), 100%);
-  max-block-size: min(80vb, calc(44rem * var(--kscale, 1)));
-  padding: calc(1.6rem * var(--kscale, 1)) calc(1.5rem * var(--kscale, 1))
-    calc(1.9rem * var(--kscale, 1));
-  border-radius: 3px;
-  overflow: hidden auto;
-  color: #33281b;
-  background:
-    radial-gradient(60% 40% at 18% 12%, rgb(150 116 62 / 13%), transparent 70%),
-    radial-gradient(50% 35% at 88% 82%, rgb(126 96 48 / 15%), transparent 72%),
-    repeating-linear-gradient(
-      90deg,
-      rgb(120 92 48 / 5%) 0 1px,
-      transparent 1px 4px
-    ),
-    linear-gradient(170deg, #f3e6cd, #e8d7b4);
-  box-shadow:
-    0 18px 50px rgb(0 0 0 / 45%),
-    inset 0 0 0 1px rgb(96 72 36 / 22%);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: calc(1rem * var(--kscale, 1));
-}
-
-.storyTitle {
-  margin: 0 0 0.15em;
-  color: #4a3a22;
-  font-size: 1.45em;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-.storySub {
-  margin: 0 0 1.1em;
-  padding-block-end: 0.9em;
-  border-block-end: 1px solid rgb(96 72 36 / 28%);
-  color: #7b6748;
-  font-size: 0.82em;
-  font-style: italic;
-}
-
-/** One part of the story. */
-.storyPart {
-  padding: 1rem 0;
-  border-block-start: 1px solid rgb(96 72 36 / 18%);
-
-  &:first-of-type {
-    padding-block-start: 0.2rem;
-    border-block-start: 0;
-  }
-}
-
-.storyHead {
-  display: flex;
-  gap: 0.6rem;
-  align-items: baseline;
-}
-
-.storyNo {
-  color: #9a7c46;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.storyPart h4 {
-  flex: 1 1 auto;
-  margin: 0;
-  color: #3d2f1c;
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.storyPart p {
-  margin: 0.65rem 0 0;
-  font-size: 1rem;
-  line-height: 1.62;
-  text-wrap: pretty;
-}
-
-/**
- * A part not yet reached. Shown, never hidden — knowing there are three more
- * to come is most of why a child walks to the next stone.
- */
-.storyShut {
-  opacity: 0.5;
-
-  h4 {
-    font-style: italic;
-  }
-}
-
-.storyWhen {
-  color: #8a7148;
-  font-size: 0.76rem;
-  font-style: italic;
-}
-
-/** Read this part aloud. Icon only, like the button that opened the panel. */
-.storySpeak {
-  display: grid;
-  place-items: center;
-  inline-size: 1.9rem;
-  block-size: 1.9rem;
-  padding: 0;
-  border: 1px solid rgb(96 72 36 / 30%);
-  border-radius: 999px;
-  background: rgb(255 252 244 / 55%);
-  cursor: pointer;
-
-  &:hover {
-    background: rgb(255 252 244 / 95%);
-  }
-}
-
-.storyClose {
-  inline-size: 100%;
-  margin-block-start: 1.4rem;
-  padding: 0.7rem;
-  border: 0;
-  border-radius: 999px;
-  color: #f6ecd8;
-  background: #6b5227;
-  box-shadow: 0 4px 0 #4a3819;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:active {
-    box-shadow: 0 1px 0 #4a3819;
-    transform: translateY(3px);
   }
 }
 
@@ -4270,6 +4104,174 @@
 
 .roadCapWide {
   min-inline-size: 7.5rem;
+}
+
+/*
+ * THE CARDS A CHILD OPENS TO READ — the story, the sticker album — on the
+ * same torn sheet as the road's own cards, torn wider. They used to be a
+ * smooth parchment panel and a rounded white box: three different objects
+ * for one kind of thing, and none of them the scoreboard's paper.
+ */
+.roadCardWide {
+  inline-size: min(40rem, 92vi);
+}
+
+/* A cap that can be clicked: the cap itself, and what it says, as one target. */
+.roadKeyBtn {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+
+  &:active .roadCap {
+    box-shadow:
+      0 1.5px 0 color-mix(in srgb, var(--kz) 78%, #6a6a5a),
+      inset 0 0 0 2.5px var(--kz);
+    transform: translateY(2px);
+  }
+
+  &:focus-visible {
+    border-radius: 0.7rem;
+    outline: 3px solid var(--rcEyebrow);
+    outline-offset: 3px;
+  }
+}
+
+/*
+ * Prose is read left to right. `.roadBody p` centres every paragraph (the
+ * road's cards are a line or two); a story is pages, and centred pages are
+ * hard to read. Two classes deep so it outranks that rule.
+ */
+.roadBody .roadProse,
+.roadBody .roadProse p {
+  text-align: start;
+}
+
+.roadPart {
+  padding-block: 0.8rem 0.2rem;
+  border-block-start: 1px solid rgb(122 108 79 / 35%);
+}
+
+.roadPartHead {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block-end: 0.45rem;
+
+  h4 {
+    flex: 1;
+    margin: 0;
+    font-family: var(--rcUi);
+    font-size: 1.02rem;
+    text-shadow: var(--roadGlow);
+  }
+}
+
+.roadPartNo,
+.roadPartWhen {
+  color: var(--rcEyebrow);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: var(--roadGlow);
+  white-space: nowrap;
+}
+
+.roadPartWhen {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+.roadPartShut {
+  opacity: 0.6;
+}
+
+/* Read aloud: a small round cap on the paper, the colour of the eyebrow. */
+.roadSpeak {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.9rem;
+  block-size: 1.9rem;
+  border: 1.5px solid color-mix(in srgb, var(--rcEyebrow) 55%, transparent);
+  border-radius: 50%;
+  color: var(--rcEyebrow);
+  background: color-mix(in srgb, var(--rcPaper) 70%, #fff);
+  cursor: pointer;
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--rcEyebrow);
+    outline-offset: 2px;
+  }
+}
+
+.rootDark .roadSpeak {
+  background: color-mix(in srgb, var(--rcPaper) 80%, #000);
+}
+
+/*
+ * The naming card's box and sound question, printed on the sheet rather than
+ * floating on it as white pills from the other worlds' cards.
+ */
+.roadCard .nameInput {
+  margin-block: 0.3rem 0.2rem;
+  border: 2px solid color-mix(in srgb, var(--rcEyebrow) 60%, transparent);
+  border-radius: 0.6rem;
+  color: var(--rcPrint);
+  background: color-mix(in srgb, var(--rcPaper) 55%, #fff);
+  font-family: var(--rcKid);
+
+  &:focus {
+    border-color: var(--rcPrint);
+  }
+}
+
+.rootDark .roadCard .nameInput {
+  background: color-mix(in srgb, var(--rcPaper) 70%, #000);
+}
+
+.roadCard .askSound {
+  border-block-start: 1px solid rgb(122 108 79 / 35%);
+}
+
+.roadCard .askSoundTitle,
+.roadCard .askSoundNote {
+  color: var(--rcEyebrow);
+  font-family: var(--rcUi);
+}
+
+.roadCard .askSoundBtn {
+  border: 2px solid color-mix(in srgb, var(--rcEyebrow) 55%, transparent);
+  border-radius: 0.6rem;
+  color: var(--rcPrint);
+  background: color-mix(in srgb, var(--rcPaper) 60%, #fff);
+  font-family: var(--rcUi);
+}
+
+.roadCard .askSoundOn {
+  border-color: var(--rcPrint);
+  background: color-mix(in srgb, var(--rcPaper) 85%, var(--rcPrint));
+}
+
+.rootDark .roadCard .askSoundBtn {
+  background: color-mix(in srgb, var(--rcPaper) 75%, #000);
+}
+
+/* The album's own scroll gives way to the card's: one scrollbar, not two. */
+.roadCard .albumGrid {
+  max-block-size: none;
+  overflow: visible;
 }
 
 /*
