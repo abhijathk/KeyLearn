@@ -20477,6 +20477,12 @@ export function createKidsWorld(
                 const gx = out(-hashRange(side, z * 3 + k, 96, 0.4, 2.2));
                 const gz = jz + hashRange(side, z * 3 + k, 97, -1.2, 1.2);
                 if (!offTrunks(gx, gz)) continue;
+                // On dry ground only. Out along x is square to a straight
+                // bank but not to the diagonal one in Lessons 35–36, where
+                // it put tufts in the channel with their tips through the
+                // surface (owner, 26 Sep 2026). The stones are meant to be
+                // at the waterline; grass is not.
+                if (terrainY(gx, gz) < RIVER_SURFACE + 0.25) continue;
                 const fern = hash3(side, z * 3 + k, 98) < 0.3;
                 const g = await stand(
                   `village-plants/${fern ? "Kerala_Fern" : "Kerala_Grass_Tuft"}`,
@@ -21625,6 +21631,18 @@ export function createKidsWorld(
         // Layer heights, and what each layer is for. A canopy tree stands
         // over the road, the middle layer meets it at head height, and the
         // ground layer is what the child walks past.
+        /** Below the water line anywhere round a point — see the refusal below. */
+        const inWater = (x: number, z: number, r: number): boolean => {
+          if (RIVER == null && WILD == null) return false;
+          const wet = (px: number, pz: number) =>
+            terrainY(px, pz) < RIVER_SURFACE + 0.15;
+          if (wet(x, z)) return true;
+          for (let k = 0; k < 8; k++) {
+            const a = (k / 8) * Math.PI * 2;
+            if (wet(x + Math.cos(a) * r, z + Math.sin(a) * r)) return true;
+          }
+          return false;
+        };
         const LAYERS = [
           // `clear` is what an animal must keep OUT of, and only a trunk
           // qualifies. Registering the middle layer too put 508 circles on a
@@ -21736,6 +21754,21 @@ export function createKidsWorld(
           // the roadside that has to stay readable, and the same fault a
           // papaya caused at another stone once already. Grass and ferns
           // soften a marker's foot; a broad leaf hides it.
+          // NOTHING GROWS IN THE RIVER, AND NOTHING ON A BRIDGE (owner,
+          // 26 Sep 2026). The canopy check above only knows Chapter 4's
+          // crossing, and only for trees — so the banana plants, ferns and
+          // tufts of the lower layers were planted in the channel, stood on
+          // the river bed, and put only their leaf tips through the surface,
+          // where they read as flat green squares floating on the water
+          // (Lesson 36). Measured against the water itself, so it holds on
+          // any river, round the plant's own footprint.
+          if (
+            deckY(spot.x, spot.z) != null ||
+            inWater(spot.x, spot.z, layer.key === "ground" ? 0.6 : 1.4)
+          ) {
+            refused++;
+            continue;
+          }
           const smallAtStone = /Grass_Tuft|Fern/i.test(pick);
           if (
             !smallAtStone &&
