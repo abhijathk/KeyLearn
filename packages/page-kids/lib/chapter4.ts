@@ -18,6 +18,13 @@ const rock = (at: number, z = -13): Placed =>
 /** A granite boulder, big enough to read as rock and not as a stone. */
 const boulder = (at: number, z = -11, h = 2.6): Placed =>
   prop(S + "Granite_Boulder", at, z, h, 1.6);
+/**
+ * A palmyra, tall and alone, well back from the road — two or three to a
+ * chapter (owner, 25 Sep 2026). Hills and uplands, where they stand in
+ * ones and twos along the field edges.
+ */
+const karimpana = (at: number, z = -24, h = 26): Placed =>
+  prop(P + "Palmyra_Karimpana", at, z, h, 3);
 const tree = (at: number, z = -22, h = 17): Placed =>
   prop(trees[0]!, at, z, h, 4);
 const lesson = (
@@ -107,7 +114,12 @@ export const LESSONS_4: readonly Lesson[] = [
   lesson(
     3,
     "Grass Hills",
-    [rock(0.2), tree(0.72, -26, 14), boulder(0.45, -17, 3.8)],
+    [
+      rock(0.2),
+      tree(0.72, -26, 14),
+      boulder(0.45, -17, 3.8),
+      karimpana(0.9, -23),
+    ],
     {
       canopy: [P + "Coconut_Palm"],
       density: 0.55,
@@ -181,6 +193,7 @@ export const LESSONS_4: readonly Lesson[] = [
       tree(0.76, -27, 14),
       boulder(0.55, -16, 4.4),
       boulder(0.16, -21, 3.4),
+      karimpana(0.38, -27, 27),
     ],
     {
       density: 0.55,
@@ -193,7 +206,11 @@ export const LESSONS_4: readonly Lesson[] = [
   lesson(
     10,
     "Green Road",
-    [prop(P + "Coconut_Palm", 0.52, -27, 15, 3), boulder(0.3, -17, 3.6)],
+    [
+      prop(P + "Coconut_Palm", 0.52, -27, 15, 3),
+      boulder(0.3, -17, 3.6),
+      karimpana(0.78, -22, 25),
+    ],
     {
       density: 0.45,
       canopy: [P + "Coconut_Palm"],

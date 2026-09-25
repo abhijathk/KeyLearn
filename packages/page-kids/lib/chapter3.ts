@@ -99,6 +99,9 @@ export const LESSONS_3: readonly Lesson[] = [
       home(0.78, -29, "CottageVeranda"),
       prop(U + "Laterite_Wall", 0.72, -14, 1.8),
       prop(P + "Mango_Tree", 0.86, -23, 15, 3),
+      // Palmyras at the village's edges, two or three to a chapter (owner,
+      // 25 Sep 2026) — tall, alone, and well back.
+      prop(P + "Palmyra_Karimpana", 0.3, -24, 25, 3),
     ],
     {
       density: 1,
@@ -237,6 +240,7 @@ export const LESSONS_3: readonly Lesson[] = [
       home(0.1, -28),
       home(0.88, -30, "HouseThatch"),
       well(0.42),
+      prop(P + "Palmyra_Karimpana", 0.64, -26, 27, 3),
       ...garden(0.24),
       ...garden(0.76, -20),
       {
@@ -259,6 +263,7 @@ export const LESSONS_3: readonly Lesson[] = [
     [
       home(0.13, -32),
       prop("village-stone/Granite_Boulder", 0.58, -18, 3.8, 1.6),
+      prop(P + "Palmyra_Karimpana", 0.84, -24, 26, 3),
     ],
     {
       density: 0.9,

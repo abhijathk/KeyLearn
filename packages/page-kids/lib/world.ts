@@ -67,6 +67,7 @@ import {
 } from "./character-tint.ts";
 import { boneToRig, clipTimeForYaw, clipYaw, clipYawAt } from "./clip-yaw.ts";
 import { depthScale } from "./depth-scale.ts";
+import { createFootprints } from "./footprints.ts";
 import {
   anchorsFrom,
   beatAt,
@@ -9234,6 +9235,22 @@ export function createKidsWorld(
   // The title sign in the top-right corner — see `world-logo.ts`. Drawn by
   // this renderer as a second pass, so it costs no context of its own.
   const logo = createWorldLogo();
+  // Dust and prints underfoot on the Time Keepers road — see footprints.ts.
+  const footprints = theme.village != null ? createFootprints(scene) : null;
+  /** Each walker's height, measured once, for sizing its prints. */
+  const walkerHeights = new WeakMap<object, number>();
+  const heightOf = (wrap: THREE.Object3D) => {
+    let h = walkerHeights.get(wrap);
+    if (h == null) {
+      const b = measureBox(wrap);
+      h = Math.max(0.5, b.max.y - b.min.y);
+      walkerHeights.set(wrap, h);
+    }
+    return h;
+  };
+  /** A foot may print on dry ground, not on a deck. */
+  const printsHere = (x: number, z: number) =>
+    deckY(x, z) == null && (WILD == null || wildDry(WILD, x, z));
   const logoLightDir = new THREE.Vector3();
   logo.setStill(motionStilled());
   if (theme.sign != null) {
@@ -24589,7 +24606,7 @@ export function createKidsWorld(
         if (framesSinceJump > DOUBLE_TAP_FRAMES) {
           jumpCount = 0;
         }
-        dust(p.x, p.y + 0.04, p.z);
+        if (footprints == null) dust(p.x, p.y + 0.04, p.z);
       }
       const moving = Math.abs(dx) > 0.08;
       if (moving) {
@@ -24607,6 +24624,20 @@ export function createKidsWorld(
       // stride walking, two running, and running strides are shorter - which
       // is the whole difference between "a bit of dust" and "kicking it up"
       // without needing a second effect.
+      // DUST AND PRINTS ON THE TIME KEEPERS ROAD (owner, 25 Sep 2026) —
+      // unlike the cubes below, which stay off the packed village road.
+      footprints?.step(player, {
+        name: playerWho,
+        guide: false,
+        x: p.x,
+        y: p.y,
+        z: p.z,
+        dx,
+        running: runShare > 0.5,
+        height: heightOf(player.wrap),
+        allowed: jumpY < 0.05 && moving && printsHere(p.x, p.z),
+        groundAt: (x, z) => surfaceY(x, z, 0),
+      });
       if (dustyRoad && jumpY < 0.05) {
         footDust += Math.abs(dx);
         const running = runShare > 0.5;
@@ -25585,6 +25616,19 @@ export function createKidsWorld(
         // feet, and a friend gliding silently beside a child who is kicking up
         // dust is the sort of detail that reads as wrong without anyone being
         // able to say why. Its own counter, so the two are never in lockstep.
+        // And its own prints — shaped by who it is, see footprints.ts.
+        footprints?.step(companion, {
+          name: follower.name,
+          guide: follower.guide,
+          x: cw.position.x,
+          y: cw.position.y,
+          z: cw.position.z,
+          dx: cw.position.x - companionLastX,
+          running: runShare > 0.5,
+          height: heightOf(cw),
+          allowed: printsHere(cw.position.x, cw.position.z),
+          groundAt: (x, z) => surfaceY(x, z, 0),
+        });
         if (dustyRoad) {
           companionDust += Math.abs(cw.position.x - companionLastX);
           const running = runShare > 0.5;
@@ -27970,6 +28014,7 @@ export function createKidsWorld(
         }
       }
     }
+    footprints?.update(dt * motionScale);
     for (let i = sparks.length - 1; i >= 0; i--) {
       const s = sparks[i];
       s.position.add(s.userData.v);
@@ -28321,6 +28366,17 @@ export function createKidsWorld(
       }
     },
     burstAtPlayer(colors, count = 6, up = 0.12) {
+      // The per-key sand puff at the feet was this road's dust, in cubes.
+      // Where the footprints run they raise the dust, and the cubes read as
+      // big particles thrown up beside it (owner, 25 Sep 2026).
+      if (
+        footprints != null &&
+        colors.length === 2 &&
+        colors[0] === 0xd9c9a3 &&
+        colors[1] === 0xcbb98f
+      ) {
+        return;
+      }
       if (player) {
         const p = player.wrap.position;
         burst(p.x - 0.6, p.y + 0.2, p.z, colors, count, up);
@@ -28396,6 +28452,7 @@ export function createKidsWorld(
     },
     setCalm(calm) {
       calmMode = calm === true;
+      footprints?.setCalm(calmMode);
       logo.setStill(calmMode || motionScale === 0);
       if (calmMode) {
         // Anything already in the air comes down now rather than finishing its
@@ -28441,6 +28498,7 @@ export function createKidsWorld(
       // Dino Run and Hero Trail a few times ends up with several — which
       // is a slow page at best and a loader that never answers at worst.
       logo.dispose();
+      footprints?.dispose();
       ktx2.dispose();
       renderer.dispose();
       // dispose() frees the renderer's GL objects but never loses the

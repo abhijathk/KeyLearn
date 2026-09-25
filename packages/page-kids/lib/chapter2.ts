@@ -751,6 +751,10 @@ export const LESSONS_2: readonly Lesson[] = [
     props: [
       { model: `${STONE}/Mossy_Stone`, at: 0.44, z: -8, h: 0.85 },
       { model: `${STONE}/Laterite_Rock`, at: 0.76, z: -9.5, h: 0.7 },
+      // A third palmyra for the chapter (owner, 25 Sep 2026: two or three
+      // karimpana in every chapter), standing alone the way they do at a
+      // field's edge.
+      { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.28, z: -22, h: 26 },
     ],
     herd: ["Cow"],
     folk: [],

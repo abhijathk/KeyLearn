@@ -63,6 +63,10 @@ export const CHAPTER3_DIMENSIONS: Readonly<
     w: 1.4691297743055556,
     d: 1.4478081597222223,
   },
+  "village-plants/Palmyra_Karimpana": {
+    w: 0.4960652318194747,
+    d: 0.5122783729970608,
+  },
   "village-stone/Granite_Boulder": {
     w: 1.161926091825308,
     d: 0.9776035834266518,
