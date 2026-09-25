@@ -252,12 +252,21 @@ export const LESSONS_3: readonly Lesson[] = [
       herd: ["Cow"],
     },
   ),
-  lesson(10, "Quiet Road", [home(0.13, -32)], {
-    density: 0.9,
-    mix: [0.07, 0.08, 0.85],
-    mid: [P + "Kerala_Fern"],
-    herd: [],
-  }),
+  // One large boulder in the open ground (owner, 25 Sep 2026).
+  lesson(
+    10,
+    "Quiet Road",
+    [
+      home(0.13, -32),
+      prop("village-stone/Granite_Boulder", 0.58, -18, 3.8, 1.6),
+    ],
+    {
+      density: 0.9,
+      mix: [0.07, 0.08, 0.85],
+      mid: [P + "Kerala_Fern"],
+      herd: [],
+    },
+  ),
 ];
 
 /** Packed-earth lanes and common spaces, with no modern playground kit. */

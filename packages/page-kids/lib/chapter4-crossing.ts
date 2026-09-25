@@ -71,6 +71,18 @@ export function wildTerrain(
   );
   natural += rise * smooth((-z - 10) / 20);
   const bank = wildBanks(c, z);
+  // THE HILLS COME DOWN TO THE RIVER, NOT OFF A CLIFF INTO IT. The river cut
+  // lowers the ground to the bed over three units, which is a bank when the
+  // ground there is at bank height and a cliff when a hill stands at the
+  // water: behind the far bank the second hill put 2.4 above the bank on the
+  // waterline, and the cut dropped six units in three — a steep pale face
+  // behind the Lesson 38–39 mangroves (owner, 25 Sep 2026). So the land is
+  // eased down to bank height over the last eight units before either bank,
+  // and the cut starts from there, as it does everywhere else.
+  const toBank =
+    x <= bank.left ? bank.left - x : x >= bank.right ? x - bank.right : 0;
+  const ease = smooth(toBank / 8);
+  natural = natural * ease + bankY * (1 - ease);
   const cut = smooth(Math.min(x - bank.left, bank.right - x) / 3);
   const bed = bankY - 3.6;
   let y = natural * (1 - cut) + bed * cut;
@@ -92,6 +104,26 @@ export function wildDry(c: WildCrossing, x: number, z: number, margin = 0) {
     x > b.right + margin ||
     islandRadius(c, x, z) < 0.76 - margin / c.islandRX
   );
+}
+/**
+ * Dry ground all round a point, not just along the road. `wildDry`'s margin
+ * is measured in x, which is right for a bank square to the road and wrong
+ * for the diagonal one in Lessons 35–36: there the river opens BEHIND a
+ * point that passes, and a tree or a buffalo stood on the waterline with
+ * water two units back.
+ */
+export function wildDryAround(
+  c: WildCrossing,
+  x: number,
+  z: number,
+  r: number,
+) {
+  if (!wildDry(c, x, z)) return false;
+  for (let k = 0; k < 12; k++) {
+    const a = (k / 12) * Math.PI * 2;
+    if (!wildDry(c, x + Math.cos(a) * r, z + Math.sin(a) * r)) return false;
+  }
+  return true;
 }
 /** Stop an off-road step at either channel, including steps leaving the island. */
 export function wildLimit(
@@ -209,6 +241,22 @@ export function islandMangroveAt(c: WildCrossing, depth = 1) {
  *   - keep off the banyan's trunk and not share a trunk with a neighbour —
  *     roots may interlace (that is a mangrove thicket), trunks may not.
  */
+/**
+ * How far a point in the river is from dry land — the nearer bank or the
+ * island's shore, in world units. Mangroves stand in the shallows, and the
+ * shallows are the first few units out from land.
+ */
+export function wildToLand(c: WildCrossing, x: number, z: number) {
+  const bank = wildBanks(c, z);
+  let d = Math.min(Math.abs(x - bank.left), Math.abs(bank.right - x));
+  for (let deg = -180; deg < 180; deg += 3) {
+    const p = islandShore(c, deg, 0);
+    d = Math.min(d, Math.hypot(p.x - x, p.z - z));
+  }
+  return d;
+}
+/** Furthest a mangrove's trunk stands from land (owner, 25 Sep 2026). */
+export const MANGROVE_SHALLOWS = 3.2;
 export const MANGROVE_ROOT = 0.42; // root cage radius / height, off the model
 const DECK_BACK = 6.8;
 export function mangroveStand(c: WildCrossing) {
@@ -233,6 +281,9 @@ export function mangroveStand(c: WildCrossing) {
     if (x - r * 0.5 < bank.left || x + r * 0.5 > bank.right) return false;
     if (Math.hypot(x - banyan.x, z - banyan.z) < islandBanyanTrunkR() + r * 0.7)
       return false;
+    // IN THE SHALLOWS, NOT OUT IN THE RIVER. Clumps out along the bridges
+    // stood in open deep water, which is not where a mangrove grows.
+    if (wildToLand(c, x, z) > MANGROVE_SHALLOWS) return false;
     return trees.every(
       (t) => Math.hypot(t.x - x, t.z - z) > 0.45 * (MANGROVE_ROOT * (t.h + h)),
     );
@@ -263,29 +314,19 @@ export function mangroveStand(c: WildCrossing) {
     const p = islandShore(c, deg + range(-5, 5), -range(2.2, 3.6));
     clump(p.x, p.z, n, tall);
   }
-  // Along the entry bridge, thinning toward the far bank.
-  const { from, to } = c.spans[0];
-  for (const [along, n, tall, back] of [
-    [0.22, 3, 7.6, 12.5],
-    [0.5, 2, 6.2, 14.5],
-    [0.8, 2, 5.4, 11.5],
+  // Along the approach bank as well, in the shallows under it.
+  for (const [back, n, tall] of [
+    [11, 2, 5.6],
+    [16, 3, 6.4],
+    [21, 2, 4.8],
   ] as const) {
-    clump(
-      to - (to - from) * (along + range(-0.06, 0.06)),
-      -back + range(-1.2, 1.2),
-      n,
-      tall,
-    );
-  }
-  // And a few loners in the gaps.
-  for (let k = 0, placed = 0; k < 60 && placed < 3; k++) {
-    if (plant(range(from + 2, to), -range(9.5, 18), range(3.2, 5.2))) placed++;
+    const z = -back + range(-1, 1);
+    clump(wildBanks(c, z).left + range(1.8, 2.6), z, n, tall);
   }
   // THE FAR BANK, on the way to Milestone 38 and 39: clumps hugging the
   // right bank, where the child steps off the second bridge, and a few
   // out along that bridge. Measured from the bank itself, which opens
   // wider the further back it runs (`wildBanks`).
-  const exitSpan = c.spans[1];
   for (const [back, n, tall] of [
     [10.5, 3, 7.0],
     [14.0, 3, 5.8],
@@ -294,18 +335,6 @@ export function mangroveStand(c: WildCrossing) {
   ] as const) {
     const z = -back + range(-1, 1);
     clump(wildBanks(c, z).right - range(1.8, 2.6), z, n, tall);
-  }
-  for (const [along, n, tall, back] of [
-    [0.3, 2, 5.6, 12],
-    [0.6, 2, 6.8, 15],
-  ] as const) {
-    clump(
-      exitSpan.to -
-        (exitSpan.to - exitSpan.from) * (along + range(-0.06, 0.06)),
-      -back + range(-1, 1),
-      n,
-      tall,
-    );
   }
   return trees.slice(1);
 }

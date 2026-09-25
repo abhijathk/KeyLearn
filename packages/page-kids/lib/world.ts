@@ -54,6 +54,7 @@ import {
   type WildCrossing,
   wildCrossing,
   wildDry,
+  wildDryAround,
   wildIslandNodes,
   wildLimit,
   wildTerrain,
@@ -624,6 +625,19 @@ function sceneName(url: string): string {
 // moment the runner is running, so this is only ever reached on a line that
 // slow, where it is the right trade.
 const LOADER_FIRST_MS = 10000;
+/**
+ * The children the loading card runs, in a card-sized build of their own:
+ * the run clip only, the mesh simplified to about half, the texture at 256
+ * pixels. 1.2 MB / 1.0 MB / 0.9 MB became 280 / 513 / 431 KB — on a slow
+ * line that is most of the three seconds of empty shadow before the runner.
+ * Built by `scripts/kids-loader-lite.sh` from the shipped characters; the
+ * world still loads the full character for the road.
+ */
+const LOADER_LITE: ReadonlySet<string> = new Set([
+  "Explorer",
+  "Explorer6",
+  "Peeli",
+]);
 let loaderFirst: { who: string | null; hold: Promise<void> } = {
   who: null,
   hold: Promise.resolve(),
@@ -2644,6 +2658,16 @@ export type WorldTheme = {
   /** Camera framing. The hero world uses a flatter, side-on, zoomed view;
    * dino/cube keep the original 3/4 angle. */
   readonly view?: {
+    /**
+     * THE CAMERA RIDES THE ROAD'S HEIGHT. Off by default: the Time Keepers
+     * road is framed by hand, lesson by lesson, against a camera that
+     * never rises. The two procedural roads run over full-height hills
+     * (±4 units) under that same fixed camera, so in a dip the road and
+     * the word cards riding in front of it sank to the bottom edge and the
+     * words were cut off. With this on the camera rises and falls with the
+     * road ahead, and the road keeps its place in the pane.
+     */
+    readonly followRoad?: boolean;
     readonly camY: number;
     readonly camZ: number;
     readonly lookY: number;
@@ -2789,7 +2813,18 @@ export const DINO_THEME: WorldTheme = {
   sky: "flat",
   // The path and runner sit lower in the pane than they used to: the
   // bottom of the frame was empty ground. Same total view (top + bottom).
-  view: { camY: 11, camZ: 30, lookY: 3.0, frustum: 13, topF: 0.98, botF: 1.02 },
+  // Then a unit and a half back UP, and the camera following the road's
+  // height: in the hills' dips the word row was running off the bottom
+  // edge. camY and lookY move together, so the angle is unchanged.
+  view: {
+    followRoad: true,
+    camY: 9.5,
+    camZ: 30,
+    lookY: 1.5,
+    frustum: 13,
+    topF: 0.98,
+    botF: 1.02,
+  },
   // The word cards a little nearer the camera, which sits them lower in the
   // pane, below the runner's path rather than on it.
   wordZ: 14.5,
@@ -2884,7 +2919,15 @@ export const HERO_THEME: WorldTheme = {
   // enough to show the forest behind the trail. The runner sits high in the
   // frame (big botF) so the practice-text card never covers it.
   // Lowered in the pane for the same reason as Dino Run — see there.
-  view: { camY: 11, camZ: 33, lookY: 3.6, frustum: 12, topF: 0.84, botF: 1.04 },
+  view: {
+    followRoad: true,
+    camY: 11,
+    camZ: 33,
+    lookY: 3.6,
+    frustum: 12,
+    topF: 0.84,
+    botF: 1.04,
+  },
   // The word cards a little nearer the camera, which sits them lower in the
   // pane, below the runner's path rather than on it.
   wordZ: 14.5,
@@ -5755,6 +5798,26 @@ export function createKidsWorld(
   resize();
   cam.position.set(-(V.camX ?? 10), V.camY, V.camZ);
   cam.lookAt(0, V.lookY, 0);
+  /**
+   * The lowest the road gets across the stretch the word cards cover — a
+   * little behind the runner to well past the far edge of the row. The
+   * cards span the pane, so the dip that pushes one off the bottom can be
+   * anywhere in it, not just under the runner's feet.
+   */
+  const lowestRoad = (x: number) => {
+    let m = Infinity;
+    for (let at = x - 4; at <= x + 30; at += 2) {
+      m = Math.min(m, roadTopY(at));
+    }
+    return m;
+  };
+  /**
+   * What `view` was framed against: the same measure at the start of the
+   * run. The camera leaves `camY` only when the road ahead dips below it.
+   * Null on a road that does not follow — see `view.followRoad`.
+   */
+  const roadRef =
+    "followRoad" in V && V.followRoad === true ? lowestRoad(0) : null;
 
   // ── sky ────────────────────────────────────────────────────────────────
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -9606,9 +9669,15 @@ export function createKidsWorld(
         // spacing and stands it on the waterline, which is where a
         // riverbank tree grows. Only while that is still well behind the
         // road; nearer than that, the old rule.
+        // DRY BY THE TREE'S OWN SPREAD, NOT BY TWO UNITS. At a two-unit
+        // margin a 19-unit tree's root flare and trunk base hung over the
+        // water with the river right behind them (owner, 25 Sep 2026: "trees
+        // on the water in lesson 36"). A fifth of its height is the trunk
+        // and flare with a little bank showing in front of the water.
         if (/_Tree$|Peepal/.test(p.model) && p.x < crossing.islandX) {
+          const margin = Math.max(3, 0.2 * p.h);
           for (let z = p.z; z <= -13; z += 0.5) {
-            if (wildDry(crossing, p.x, z, 2)) return { ...p, z };
+            if (wildDryAround(crossing, p.x, z, margin)) return { ...p, z };
           }
         }
         const banks = wildBanks(crossing, p.z);
@@ -15235,6 +15304,18 @@ export function createKidsWorld(
       // stops short of them anyway, and an animal that broke off a charge to
       // avoid a stone would look like it had changed its mind.
       w.tx = clearOfMarkers(w.tx, nz);
+      // NOT INTO THE RIVER. Chapter 4's river opens behind the road, and a
+      // wander target out there walked a buffalo off the bank to hang over
+      // the water (seen in Lesson 36). A wet target is drawn back toward the
+      // animal's home ground until it is dry, and home itself was placed dry.
+      if (WILD != null) {
+        let k = 1;
+        while (k > 0 && !wildDryAround(WILD, w.tx, nz, 3)) {
+          k -= 0.2;
+          w.tx = w.homeX + (w.tx - w.homeX) * k;
+          nz = w.homeZ + (nz - w.homeZ) * k;
+        }
+      }
       w.tz = nz;
       // Come round to face it first if it is properly behind — an animal
       // does not set off sideways. A small correction it just walks into.
@@ -18584,6 +18665,24 @@ export function createKidsWorld(
         // however far back the pair are placed.
         wrap.position.set(x, surfaceY(x, z) + lift * perspective(z), z);
         wrap.rotation.y = turn;
+        // NO TWO ROCKS THE SAME WAY UP. A loose rock placed without a heading
+        // stood at 0 like every other one, so the same boulder turned up
+        // again and again in the same pose (owner, 25 Sep 2026). Hashed on
+        // position, so it is the same rock on every visit: any heading, a
+        // tilt of up to ten degrees, and sunk a little so the tilt never
+        // lifts an edge off the ground. Stepping stones and platforms stay
+        // flat — they are walked on.
+        if (
+          /village-stone\/(Granite_Boulder|River_Stone|Mossy_Stone|Laterite_Rock)$/.test(
+            name,
+          )
+        ) {
+          if (turn === 0)
+            wrap.rotation.y = hashRange(x, z, 111, 0, Math.PI * 2);
+          wrap.rotation.x = hashRange(x, z, 112, -0.18, 0.18);
+          wrap.rotation.z = hashRange(x, z, 113, -0.18, 0.18);
+          wrap.position.y -= 0.08 * h * perspective(z);
+        }
         // ── A PROP THAT BREATHES ────────────────────────────────────────
         //
         // Architecture does not move and neither did anything `stand`
@@ -20009,10 +20108,12 @@ export function createKidsWorld(
             2.2,
             0,
           );
+          // Placed one by one, then drawn as one — see "ONE DRAW FOR THE
+          // STAND" below.
+          const placedMangroves: THREE.Object3D[] = [];
           if (mangrove != null) {
             mangrove.position.y = RIVER_SURFACE - 0.3 * perspective(m.z);
-            mangrove.name = "chapter4-island-mangrove";
-            builtGroup.add(mangrove);
+            placedMangroves.push(mangrove);
           }
           // The rest of the stand, in clumps — see `mangroveStand` — seated
           // on the water the same way.
@@ -20027,8 +20128,130 @@ export function createKidsWorld(
             );
             if (w != null) {
               w.position.y = RIVER_SURFACE - 0.3 * perspective(b.z);
-              w.name = `chapter4-mangrove-${i + 1}`;
-              builtGroup.add(w);
+              placedMangroves.push(w);
+            }
+          }
+          // ONE DRAW FOR THE STAND. Each tree is two meshes (bark, leaves),
+          // so a stand of twenty was forty draw calls and forty more in the
+          // shadow pass — measured at +23% triangles in the island view. The
+          // trees are placed exactly as before, by `stand`, and then their
+          // bark and their leaves are gathered into one InstancedMesh each:
+          // the same geometry, the same materials, the same transforms, two
+          // draws. The per-tree clones share their geometry and materials
+          // with the cached model, so they are taken out of the scene but
+          // NOT disposed.
+          if (placedMangroves.length > 0) {
+            builtGroup.updateMatrixWorld(true);
+            const toGroup = builtGroup.matrixWorld.clone().invert();
+            const parts: { mesh: THREE.Mesh; at: THREE.Matrix4[] }[] = [];
+            for (const tree of placedMangroves) {
+              tree.updateMatrixWorld(true);
+              let k = 0;
+              tree.traverse((o) => {
+                const mesh = o as THREE.Mesh;
+                if (!mesh.isMesh) return;
+                (parts[k] ??= { mesh, at: [] }).at.push(
+                  toGroup.clone().multiply(mesh.matrixWorld),
+                );
+                k++;
+              });
+              scene.remove(tree);
+              characterRoots.delete(tree);
+            }
+            for (const [k, part] of parts.entries()) {
+              const batch = new THREE.InstancedMesh(
+                part.mesh.geometry,
+                part.mesh.material,
+                part.at.length,
+              );
+              part.at.forEach((m, i) => batch.setMatrixAt(i, m));
+              batch.instanceMatrix.needsUpdate = true;
+              batch.castShadow = true;
+              batch.receiveShadow = true;
+              batch.computeBoundingSphere();
+              batch.name = `chapter4-mangroves-${k}`;
+              builtGroup.add(batch);
+            }
+          }
+        }
+        // ── THE RIVER BANKS, DRESSED ─────────────────────────────────────
+        //
+        // Both banks were a clean ramp of turf into the water. A riverbank is
+        // stones the current has left and grass growing down between them
+        // (owner, 25 Sep 2026: "more rocks and grass on the river bank
+        // slope"). Behind the decks: stones AT the waterline, some half in,
+        // a few of them boulders, with a tuft on the landward slope above.
+        // In front of the decks, nearer the camera: low stones and grass
+        // only, so nothing stands between the child and the road. Hashed on
+        // position, so the banks look the same on every visit, and kept off
+        // the mangroves' trunks.
+        {
+          const trunks = mangroveStand(crossing);
+          trunks.push({
+            ...islandMangroveAt(crossing),
+            h: ISLAND_MANGROVE.h,
+            turn: 0,
+          });
+          const offTrunks = (x: number, z: number) =>
+            trunks.every((t) => Math.hypot(t.x - x, t.z - z) > 1.6);
+          for (const side of [-1, 1] as const) {
+            for (let z = -34; z <= 13; z += 3) {
+              if (z > -8 && z < 7.5) continue; // the deck and its approach
+              const front = z > 0;
+              const jz = z + hashRange(side, z, 91, -1, 1);
+              const bank = wildBanks(crossing, jz);
+              const edge = side < 0 ? bank.left : bank.right;
+              // Positive is out into the water, negative up the slope.
+              const out = (d: number) => edge - side * d;
+              const roll = hash3(side, z, 92);
+              const sx = out(hashRange(side, z, 93, -0.6, 1.1));
+              if (roll < 0.82 && offTrunks(sx, jz)) {
+                const big = !front && roll < 0.24;
+                const kind = big
+                  ? "Granite_Boulder"
+                  : roll < 0.55
+                    ? "River_Stone"
+                    : "Mossy_Stone";
+                const w = await stand(
+                  `village-stone/${kind}`,
+                  sx,
+                  jz,
+                  big
+                    ? hashRange(side, z, 94, 1.5, 2.5)
+                    : hashRange(
+                        side,
+                        z,
+                        94,
+                        front ? 0.5 : 0.7,
+                        front ? 0.85 : 1.2,
+                      ),
+                  hashRange(side, z, 95, 0, Math.PI * 2),
+                  0,
+                );
+                if (w != null) {
+                  w.name = "chapter4-bank-stone";
+                  builtGroup.add(w);
+                }
+              }
+              // Grass and fern on the slope above the stone.
+              for (let k = 0; k < 2; k++) {
+                const gx = out(-hashRange(side, z * 3 + k, 96, 0.4, 2.2));
+                const gz = jz + hashRange(side, z * 3 + k, 97, -1.2, 1.2);
+                if (!offTrunks(gx, gz)) continue;
+                const fern = hash3(side, z * 3 + k, 98) < 0.3;
+                const g = await stand(
+                  `village-plants/${fern ? "Kerala_Fern" : "Kerala_Grass_Tuft"}`,
+                  gx,
+                  gz,
+                  hashRange(side, z * 3 + k, 99, 0.9, 1.4),
+                  hashRange(side, z * 3 + k, 100, 0, Math.PI * 2),
+                  0,
+                );
+                if (g != null) {
+                  g.name = "chapter4-bank-grass";
+                  builtGroup.add(g);
+                }
+              }
             }
           }
         }
@@ -20470,12 +20693,56 @@ export function createKidsWorld(
             // AND ON DRY GROUND. Chapter 4's river opens behind the road
             // (`wildBanks`), and the open ground a herd is sent to is, there,
             // open water: the animal would stand on the river bed.
-            const offStone = (m: string) => (tx: number) =>
-              (WILD == null || wildDry(WILD, tx, z, 2)) &&
-              (z <= MILESTONE_CLEAR_DEPTH ||
-                !atMilestone(tx, m === "Buffalo" ? 4 : 2.5));
+            const offStoneAt =
+              (m: string, zz: number, dryR = m === "Buffalo" ? 6 : 3.5) =>
+              (tx: number) =>
+                (WILD == null || wildDryAround(WILD, tx, zz, dryR)) &&
+                (zz <= MILESTONE_CLEAR_DEPTH ||
+                  !atMilestone(tx, m === "Buffalo" ? 4 : 2.5));
+            const offStone = (m: string) => offStoneAt(m, z);
             let spot =
               model == null ? null : clearSpot(x, z, room, offStone(model));
+            // THE LESSON'S OWN BUFFALO LOOKS AT OTHER DEPTHS TOO. The search
+            // only slides along the road at the one depth it was dealt, and
+            // a forest, a village lane or the river opening behind the bank
+            // can fill that whole line — three of Chapter 4's nine buffalo
+            // were refused that way. Nearer the road and further back are
+            // both open ground the child can see; a smaller paddock last.
+            // AND IT STAYS IN ITS LESSON. The search slides up to thirty units
+            // along the road, which put this buffalo in the next lesson over
+            // as often as not — three in one lesson, none in the next.
+            // Six units in from each end, so it never stands looming over the
+            // milestone a lesson begins or ends at.
+            const inLesson = (tx: number) =>
+              tx >= from + 6 && tx <= from + len - 6;
+            if (
+              model === "Buffalo" &&
+              l.buffalo === true &&
+              spot != null &&
+              !inLesson(spot.x)
+            ) {
+              spot = null;
+            }
+            if (spot == null && model === "Buffalo" && l.buffalo === true) {
+              // The last try is for the river lessons: a smaller paddock and
+              // four units of dry ground round it rather than six.
+              for (const [r, dryR] of [
+                [room, 6],
+                [Math.min(room, 6), 6],
+                [4, 6],
+                [3, 4],
+              ] as const) {
+                for (const zz of [z, -15, -19, -12.5, -22, -26, -10.5]) {
+                  const base = offStoneAt(model, zz, dryR);
+                  spot = clearSpot(x, zz, r, (tx) => inLesson(tx) && base(tx));
+                  if (spot != null) break;
+                }
+                if (spot != null) {
+                  room = r;
+                  break;
+                }
+              }
+            }
             // A BUFFALO WITH NO PADDOCK IS A COW, NOT A GAP. The second
             // buffalo of a lesson already becomes a cow; the first one
             // could be refused for want of a paddock and take the field's
@@ -21177,7 +21444,10 @@ export function createKidsWorld(
             spot == null ||
             (WILD != null &&
               layer.key === "canopy" &&
-              islandRadius(WILD, spot.x, spot.z) < 1)
+              (islandRadius(WILD, spot.x, spot.z) < 1 ||
+                // A tree's flare needs more bank than a fern's 1.6 does:
+                // at that margin canopy trees stood on the waterline.
+                !wildDryAround(WILD, spot.x, spot.z, 3.5)))
           ) {
             refused++;
             continue;
@@ -26006,6 +26276,14 @@ export function createKidsWorld(
         }
       }
       cam.position.x += (p.x - 2 - cam.position.x) * 0.06;
+      if (roadRef != null) {
+        // Down only, and only by as much as the road has dipped below where
+        // the framing was set: a crest lifts the picture, which never hides
+        // a word; a dip is what ran the row off the bottom. Eased like x,
+        // so it is a glide and not a lurch.
+        const dip = Math.min(0, lowestRoad(p.x) - roadRef);
+        cam.position.y += (V.camY + dip - cam.position.y) * 0.04;
+      }
       // The sun sets and the moon rises, as one move. `SUN_AT` is eased
       // between the two rigs by the same blend that fades the rest of the
       // night, so the shadows swing round and shorten over the same second
@@ -28268,7 +28546,11 @@ export function createLoaderScene(
   serveTranscoderFromUrl(previewKtx2);
   loader.setKTX2Loader(previewKtx2);
   loader
-    .loadAsync(modelUrl(theme.modelDir, playerName))
+    .loadAsync(
+      LOADER_LITE.has(playerName)
+        ? `${ASSETS}/models/loader/${playerName}.glb`
+        : modelUrl(theme.modelDir, playerName),
+    )
     .then((gltf) => {
       if (disposed) {
         return;

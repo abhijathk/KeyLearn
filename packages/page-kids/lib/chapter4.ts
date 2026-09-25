@@ -102,19 +102,36 @@ export const LESSONS_4: readonly Lesson[] = [
       shade: 0.85,
     },
   ),
-  lesson(3, "Grass Hills", [rock(0.2), tree(0.72, -26, 14)], {
-    canopy: [P + "Coconut_Palm"],
-    density: 0.55,
-    mix: [0.04, 0.16, 0.8],
-    herd: ["Cow"],
-    // "Occasional worn side tracks or cattle paths across the grass."
-    tracks: 2,
-  }),
-  lesson(4, "Hilltop Meadow", [tree(0.62, -24, 16), rock(0.26, -18)], {
-    density: 0.4,
-    mix: [0, 0.16, 0.84],
-    mid: [P + "Hibiscus_Chemparathi", P + "Kerala_Fern"],
-  }),
+  // Large boulders in the open ground (owner, 25 Sep 2026: "large rocks on
+  // the empty spaces… one or two is enough"), set back so no stone is hidden.
+  lesson(
+    3,
+    "Grass Hills",
+    [rock(0.2), tree(0.72, -26, 14), boulder(0.45, -17, 3.8)],
+    {
+      canopy: [P + "Coconut_Palm"],
+      density: 0.55,
+      mix: [0.04, 0.16, 0.8],
+      herd: ["Cow"],
+      // "Occasional worn side tracks or cattle paths across the grass."
+      tracks: 2,
+    },
+  ),
+  lesson(
+    4,
+    "Hilltop Meadow",
+    [
+      tree(0.62, -24, 16),
+      rock(0.26, -18),
+      boulder(0.42, -15, 4.2),
+      boulder(0.84, -20, 3.2),
+    ],
+    {
+      density: 0.4,
+      mix: [0, 0.16, 0.84],
+      mid: [P + "Hibiscus_Chemparathi", P + "Kerala_Fern"],
+    },
+  ),
   lesson(
     5,
     "River Descent",
@@ -156,18 +173,33 @@ export const LESSONS_4: readonly Lesson[] = [
     [tree(0.6, -23, 19), rock(0.75, -15), tree(0.94, -29, 17)],
     { density: 1.05, mid: wet, mix: [0.12, 0.25, 0.63] },
   ),
-  lesson(9, "Sunny Uplands", [rock(0.32), tree(0.76, -27, 14)], {
-    density: 0.55,
-    canopy: [P + "Coconut_Palm"],
-    mix: [0.04, 0.16, 0.8],
-    // "Light field paths or worn patches" — travelled, without buildings.
-    tracks: 2,
-  }),
-  lesson(10, "Green Road", [prop(P + "Coconut_Palm", 0.52, -27, 15, 3)], {
-    density: 0.45,
-    canopy: [P + "Coconut_Palm"],
-    mix: [0.04, 0.12, 0.84],
-  }),
+  lesson(
+    9,
+    "Sunny Uplands",
+    [
+      rock(0.32),
+      tree(0.76, -27, 14),
+      boulder(0.55, -16, 4.4),
+      boulder(0.16, -21, 3.4),
+    ],
+    {
+      density: 0.55,
+      canopy: [P + "Coconut_Palm"],
+      mix: [0.04, 0.16, 0.8],
+      // "Light field paths or worn patches" — travelled, without buildings.
+      tracks: 2,
+    },
+  ),
+  lesson(
+    10,
+    "Green Road",
+    [prop(P + "Coconut_Palm", 0.52, -27, 15, 3), boulder(0.3, -17, 3.6)],
+    {
+      density: 0.45,
+      canopy: [P + "Coconut_Palm"],
+      mix: [0.04, 0.12, 0.84],
+    },
+  ),
 ];
 
 export const WILD_INTENSITY = [

@@ -63,6 +63,10 @@ export const CHAPTER3_DIMENSIONS: Readonly<
     w: 1.4691297743055556,
     d: 1.4478081597222223,
   },
+  "village-stone/Granite_Boulder": {
+    w: 1.161926091825308,
+    d: 0.9776035834266518,
+  },
   "village-stone/Stepping_Stone": {
     w: 4.195217287150835,
     d: 3.079550966699213,

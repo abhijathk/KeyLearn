@@ -13,6 +13,7 @@ import {
   islandRadius,
   islandShore,
   MANGROVE_ROOT,
+  MANGROVE_SHALLOWS,
   mangroveStand,
   wildBanks,
   wildCrossing,
@@ -20,6 +21,7 @@ import {
   wildIslandNodes,
   wildLimit,
   wildTerrain,
+  wildToLand,
 } from "./chapter4-crossing.ts";
 
 test("all authored Chapter 4 assets exist, without market or shop occupants", () => {
@@ -183,6 +185,10 @@ for (const band of ["5-6", "7-8", "9-10", "11+"]) {
       ok(
         Math.hypot(m.x - b.x, m.z - b.z) > islandBanyanTrunkR(),
         "off the banyan trunk",
+      );
+      ok(
+        wildToLand(c, m.x, m.z) <= MANGROVE_SHALLOWS,
+        "in the shallows by land",
       );
       for (const o of all) {
         if (o === m) continue;

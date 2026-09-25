@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "e39ea1ff3d81";
+export const ASSET_VERSION = "3182e06ddf10";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -348,8 +348,8 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "cards/world-village.webp": {
-    "u": "v1ad8f016/cards/world-village.webp",
-    "b": 5636,
+    "u": "vc6317a0c/cards/world-village.webp",
+    "b": 15924,
     "g": "village"
   },
   "env/day.hdr": {
@@ -716,6 +716,21 @@ export const ASSET_MAP: Readonly<
     "u": "v778d0792/models/kuttichathan/Kuttichathan.glb",
     "b": 1716492,
     "g": "village"
+  },
+  "models/loader/Explorer.glb": {
+    "u": "vba97fe4e/models/loader/Explorer.glb",
+    "b": 513276,
+    "g": "shared"
+  },
+  "models/loader/Explorer6.glb": {
+    "u": "v1beb1d9f/models/loader/Explorer6.glb",
+    "b": 280316,
+    "g": "shared"
+  },
+  "models/loader/Peeli.glb": {
+    "u": "v8931e35c/models/loader/Peeli.glb",
+    "b": 431368,
+    "g": "shared"
   },
   "models/nature/BirchTrees.glb": {
     "u": "v8e8002b7/models/nature/BirchTrees.glb",
