@@ -90,7 +90,7 @@ const FADE = 1.2;
 const PRINTS = 240;
 const PUFFS = 64;
 /** How strong a fresh print is. Subtle by request: a mark in the dust. */
-const PRINT_ALPHA = 0.5;
+const PRINT_ALPHA = 0.3;
 
 /*
  * A PRINT PRESSED INTO DUST, NOT A STAMP ON IT (owner: "nicer, real looking").
