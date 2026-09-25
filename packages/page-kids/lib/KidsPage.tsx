@@ -118,6 +118,7 @@ import { deviceTier, type NightOverride, resolveNightStyle } from "./night.ts";
 import { paceTarget } from "./pace.ts";
 import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
+import { fitPassageToRoad } from "./run-length.ts";
 import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
 import { STORY, type StoryPart } from "./story.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
@@ -4361,6 +4362,19 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       }
       flat = ws.slice(0, wordCount).join(" ");
     }
+    // THE WORDS FIT THE ROAD (owner, 25 Sep 2026). On Time Keepers every
+    // band walks 64-unit lessons at no more than MAX_UNITS_PER_KEY a key, so
+    // a lesson a child's passage cannot cover in one go is shared out evenly
+    // between as many passages as it needs, and each is trimmed — at a word
+    // boundary — to its share. The last one lands on the milestone: no
+    // sliding to make up distance, no jump to the stone. A passage that
+    // covers the whole lesson on its own (older children) is left as it is.
+    const road = onVillageRef.current
+      ? worldRef.current?.lessonRemaining()
+      : null;
+    if (road != null) {
+      flat = fitPassageToRoad(flat, road.left, road.started);
+    }
     passageRef.current = flat;
     textInputRef.current = new TextInput(flat, toTextInputSettings(settings));
     lastStampRef.current = 0;
@@ -5277,7 +5291,58 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             ),
           );
         }
-        if (textInput.completed) {
+        // Every finished passage is practice, milestone or not: the
+        // algorithm learns from it, and recording it is what brings the
+        // next passage.
+        const recordRun = () => {
+          // Learn this run's key transitions so the bottleneck drill improves.
+          ngramsRef.current.append(textInput.steps);
+          saveNgramStats(ngramsRef.current);
+          const result = Result.fromStats(
+            settings.get(keyboardProps.layout),
+            settings.get(lessonProps.type).textType,
+            Date.now(),
+            makeStats(textInput.steps),
+          );
+          if (result.validate()) {
+            if (assessmentRef.current != null) {
+              // A sitting is measured, not recorded: assessment runs stay out
+              // of the practice history, because the retention rule judges the
+              // assessment against the pace this learner practises at.
+              assessmentRef.current.report({
+                // Storage counts characters a minute; a word is five of them.
+                speed: result.speed / 5,
+                accuracy: result.accuracy,
+                time: result.time,
+              });
+            } else {
+              // The same record the grown-up mode saves — the algorithm learns
+              // from every kids run too.
+              appendResults([result]);
+            }
+          } else {
+            setRegenNonce((n) => n + 1);
+          }
+        };
+        // A PASSAGE PART-WAY ALONG A LESSON (Time Keepers: every band walks
+        // 64-unit lessons, so a younger child's lesson takes several
+        // passages). It is real practice — its result is recorded like
+        // any other — but it is not the milestone: a hop and a few points,
+        // and the next passage carries on up the road.
+        const midLesson =
+          textInput.completed &&
+          prefsRef.current.world === "village" &&
+          worldRef.current?.runReachesStone() === false;
+        if (midLesson) {
+          worldRef.current?.hop();
+          setScore((s) => saveBest(s + 5));
+          setWords((w) => w + 1);
+          if (sounds) {
+            kidsAudio.playPoint();
+          }
+          recordRun();
+        }
+        if (textInput.completed && !midLesson) {
           // Reaching the camp flag is the one moment the run is won; the world
           // decides what that looks like for a dino and for a hero. It
           // reports how long that takes so the new-key ceremony can wait
@@ -5318,34 +5383,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           if (sounds) {
             kidsAudio.playPoint();
           }
-          // Learn this run's key transitions so the bottleneck drill improves.
-          ngramsRef.current.append(textInput.steps);
-          saveNgramStats(ngramsRef.current);
-          const result = Result.fromStats(
-            settings.get(keyboardProps.layout),
-            settings.get(lessonProps.type).textType,
-            Date.now(),
-            makeStats(textInput.steps),
-          );
-          if (result.validate()) {
-            if (assessmentRef.current != null) {
-              // A sitting is measured, not recorded: assessment runs stay out
-              // of the practice history, because the retention rule judges the
-              // assessment against the pace this learner practises at.
-              assessmentRef.current.report({
-                // Storage counts characters a minute; a word is five of them.
-                speed: result.speed / 5,
-                accuracy: result.accuracy,
-                time: result.time,
-              });
-            } else {
-              // The same record the grown-up mode saves — the algorithm learns
-              // from every kids run too.
-              appendResults([result]);
-            }
-          } else {
-            setRegenNonce((n) => n + 1);
-          }
+          recordRun();
           // Every third camp, the trail map opens and the herd crosses into
           // a brand-new land — but never mid-sitting, where it would cover the
           // words with the clock still running.

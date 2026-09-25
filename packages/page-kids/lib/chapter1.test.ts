@@ -8,6 +8,7 @@ import {
   BAND_CHARS,
   BLEED,
   blendAt,
+  boundsForBand,
   chapterBounds,
   chapterEnd,
   childrenOut,
@@ -25,6 +26,7 @@ import {
   placements,
   SEGMENT_COUNT,
   segmentLen,
+  TIME_KEEPERS_BOUNDS,
   tiredWalkAt,
   villageDay,
 } from "./chapter1.ts";
@@ -130,12 +132,17 @@ test("a saved stone count names where the next lesson starts", () => {
 });
 
 /**
- * The world is built to the SHORTEST chapter when nobody says otherwise.
- * Guessing high builds ground nobody reaches; guessing low runs a child off
- * the end of the terrain, which is the failure that shows.
+ * Every band walks the same Time Keepers road (owner, 25 Sep 2026): ten
+ * 64-unit lessons. Younger children cover a lesson in several passages.
  */
-test("the default is the youngest band", () => {
-  equal(DEFAULT_BOUNDS.join(), chapterBounds(24, 36).join());
+test("every band walks the same 64-unit road", () => {
+  equal(DEFAULT_BOUNDS.join(), TIME_KEEPERS_BOUNDS.join());
+  for (const band of ["5-6", "7-8", "9-10", "11+", undefined]) {
+    equal(boundsForBand(band).join(), TIME_KEEPERS_BOUNDS.join());
+  }
+  for (let k = 0; k < SEGMENT_COUNT; k++) {
+    equal(TIME_KEEPERS_BOUNDS[k + 1]! - TIME_KEEPERS_BOUNDS[k]!, RUN_LEN);
+  }
 });
 
 test("there are ten lessons and eleven stones", () => {

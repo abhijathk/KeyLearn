@@ -81,7 +81,12 @@ import {
   thinAnchors,
 } from "./kuttichathan.ts";
 import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
-import { MAX_UNITS_PER_KEY, RUN_LEN, runLengthFor } from "./run-length.ts";
+import {
+  MAX_UNITS_PER_KEY,
+  RUN_LEN,
+  runAlongLesson,
+  runLengthFor,
+} from "./run-length.ts";
 import { MIN_STONE_GAP, stoneXFor } from "./stone-x.ts";
 import { createWorldLogo } from "./world-logo.ts";
 
@@ -4464,6 +4469,21 @@ export type KidsWorld = {
    * `runLengthFor`. Omitted, the run is the full length.
    */
   startRun(passageChars?: number): void;
+  /**
+   * Does the run being typed end at the next milestone? On the Time Keepers
+   * road a lesson can take several passages; only the one that arrives at
+   * the stone is the milestone. Always true on a road without chapters.
+   */
+  runReachesStone(): boolean;
+  /**
+   * How much of the current lesson is left to walk, and whether some of it
+   * has been walked already. Null on a road without chapters. The page sizes
+   * the next passage from it so the words fit the road exactly.
+   */
+  lessonRemaining(): {
+    readonly left: number;
+    readonly started: boolean;
+  } | null;
   jump(): void;
   /** A happy little bounce — for streaks and other proud moments. */
   hop(): void;
@@ -28298,59 +28318,62 @@ export function createKidsWorld(
     canTintCharacter(): boolean {
       return playerTint != null;
     },
+    lessonRemaining() {
+      if (CHAPTER == null) return null;
+      const lessonStart =
+        CHAPTER[Math.min(SEGMENT_COUNT - 1, Math.max(0, milestoneNo))]!;
+      const stone = CHAPTER[Math.min(SEGMENT_COUNT, milestoneNo + 1)]!;
+      const from = Math.min(Math.max(lessonStart, targetX), stone);
+      return {
+        left: Math.max(0, stone - from),
+        started: from > lessonStart + 0.5,
+      };
+    },
+    runReachesStone() {
+      if (CHAPTER == null) return true;
+      const stone = CHAPTER[Math.min(SEGMENT_COUNT, milestoneNo + 1)]!;
+      return runEnd >= stone - 0.01;
+    },
     setProgress(frac) {
       targetX = runStart + Math.max(0, Math.min(1, frac)) * (runEnd - runStart);
     },
     startRun(passageChars) {
       scaredThisRun = false;
       runLen = runLengthFor(passageChars ?? Number.NaN);
-      // IN A CHAPTER THE RUN STARTS AT A STONE. Lesson n runs from Milestone
-      // n-1 to Milestone n, which is the whole arrangement — the child walks
-      // to the marker rather than the marker being planted where they
-      // stopped.
-      //
-      // AND THE CHAPTER MUST NOT END BEFORE LESSON 10. The clamp below was
-      // against RUN_LEN, which is the 64-unit MAXIMUM rather than this
-      // child's actual run, and for a five-year-old that ended the chapter
-      // early every time: their road is 270 units, Milestone 9 stands at
-      // 237.6, and `TRAIL_END - RUN_LEN` pinned the last lesson's start at
-      // 206 — thirty units behind its own stone, with the last stretch of
-      // road never walked. Clamping against `runLen` is the honest version:
-      // a run may start as far along as it can still finish.
-      runStart =
-        CHAPTER != null
-          ? CHAPTER[Math.min(SEGMENT_COUNT - 1, Math.max(0, milestoneNo))]!
-          : Math.min(targetX, TRAIL_END - runLen);
-      // AND IT CARRIES THEM ALL THE WAY TO THE STONE.
-      //
-      // `chapterBounds` PREDICTS where each lesson ends, from the band's
-      // measured passage curve; the lesson generator produces the real
-      // passage. Where the two disagree the child ran out of words before
-      // reaching the marker and stopped in the middle of a field — the
-      // milestone they were walking to sitting a few units further on,
-      // untouched. That is the break being seen.
-      //
-      // A lesson ends AT its milestone. That is the whole arrangement, so
-      // the distance is the segment's, not the passage's, and the pace
-      // adjusts to fit. Guarded, because the pace is what `MAX_UNITS_PER_KEY`
-      // exists to protect: if honouring the stone would push a character past
-      // 1.25 units a keystroke their feet start to slide, and a sliding
-      // character is worse than a short walk. Then, and only then, the
-      // passage wins and the stone is reached next run.
       if (CHAPTER != null) {
+        // A LESSON MAY TAKE SEVERAL PASSAGES (owner, 25 Sep 2026: every band
+        // walks 64-unit lessons — see TIME_KEEPERS_BOUNDS). Lesson n still
+        // runs from Milestone n-1 to Milestone n, but a passage carries on
+        // from where the typing got to — `targetX`, which is exactly the
+        // last run's end once it was finished — and covers at most
+        // MAX_UNITS_PER_KEY per key, so a five-year-old's short passage takes
+        // them part of the way and the next one continues up the road.
+        //
+        // It goes all the way to the stone once the rest of the lesson fits
+        // in up to 1.4 of a normal run (~1.26 per key, under the 1.25-ish
+        // point where feet start to slide), so a lesson ends AT its milestone
+        // and its last passage is never a crawl over a few units.
+        const lessonStart =
+          CHAPTER[Math.min(SEGMENT_COUNT - 1, Math.max(0, milestoneNo))]!;
         const stone = CHAPTER[Math.min(SEGMENT_COUNT, milestoneNo + 1)]!;
-        const reach = stone - runStart;
-        const chars = passageChars ?? Number.NaN;
-        const perKey = Number.isFinite(chars) && chars > 0 ? reach / chars : 0;
-        if (reach > 0 && (perKey === 0 || perKey <= 1.25)) {
-          runLen = reach;
+        runStart = Math.min(Math.max(lessonStart, targetX), stone);
+        const reach = Math.max(0, stone - runStart);
+        // Never faster than MAX_UNITS_PER_KEY: `runLen` is already
+        // `chars * 0.9` capped at the lesson. The page sizes a younger
+        // child's passages to share the lesson out evenly (see
+        // `lessonRemaining`), so the last one lands on the stone; a sliver
+        // left over by word boundaries (under 15% of a run) is taken in this
+        // run rather than left as a crawl — at most ~1.04 per key.
+        runLen = runAlongLesson(passageChars ?? Number.NaN, reach);
+        // Resuming, or a rebuild: stand them at the lesson's stone rather
+        // than making them walk back up the road to it. Mid-lesson they walk
+        // on from where they are.
+        if (playerX < lessonStart - 0.5) {
+          playerX = lessonStart;
+          targetX = lessonStart;
         }
-      }
-      if (CHAPTER != null && playerX < runStart - 0.5) {
-        // Resuming, or a rebuild: stand them at the stone rather than making
-        // them walk back up the road to it.
-        playerX = runStart;
-        targetX = runStart;
+      } else {
+        runStart = Math.min(targetX, TRAIL_END - runLen);
       }
       runEnd = runStart + runLen;
       placeFlag();

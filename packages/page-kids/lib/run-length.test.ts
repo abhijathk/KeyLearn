@@ -1,6 +1,12 @@
 import test from "node:test";
 import { equal, isTrue } from "rich-assert";
-import { MAX_UNITS_PER_KEY, RUN_LEN,runLengthFor } from "./run-length.ts";
+import {
+  fitPassageToRoad,
+  MAX_UNITS_PER_KEY,
+  RUN_LEN,
+  runAlongLesson,
+  runLengthFor,
+} from "./run-length.ts";
 
 /**
  * A keystroke must move every child the same distance.
@@ -53,4 +59,37 @@ test("a missing or nonsense length falls back to the full run", () => {
   equal(runLengthFor(Number.NaN), RUN_LEN);
   equal(runLengthFor(0), RUN_LEN);
   equal(runLengthFor(-5), RUN_LEN);
+});
+
+/**
+ * Walk one 64-unit lesson the way KidsPage and world.ts do together: fit
+ * each passage to what is left, then move the run that passage earns.
+ */
+function walkLesson(passage: string): number[] {
+  const runs: number[] = [];
+  let left = RUN_LEN;
+  while (left > 0.01 && runs.length < 20) {
+    const text = fitPassageToRoad(passage, left, left < RUN_LEN - 0.5);
+    const run = runAlongLesson(text.length, left);
+    runs.push(run / text.length);
+    left -= run;
+  }
+  equal(Math.abs(left) < 0.01, true); // landed ON the stone — no jump
+  return runs;
+}
+
+test("every band's passages land exactly on the milestone", () => {
+  const words = ["asdf", "jkl", "fads", "sad", "lads", "flask", "jak", "dash"];
+  for (const n of [4, 5, 6, 7, 8, 9, 12, 16]) {
+    const passage = Array.from({ length: n }, (_, i) => words[i % 8]).join(" ");
+    for (const perKey of walkLesson(passage)) {
+      // No slide: never much faster than a key's worth of gait.
+      isTrue(perKey <= MAX_UNITS_PER_KEY * 1.15 + 1e-9);
+    }
+  }
+});
+
+test("a passage that covers the lesson alone is left untrimmed", () => {
+  const long = "asdf jkl ".repeat(10).trim();
+  equal(fitPassageToRoad(long, RUN_LEN, false), long);
 });

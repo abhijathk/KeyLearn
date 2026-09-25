@@ -1,4 +1,4 @@
-import { runLengthFor } from "./run-length.ts";
+import { RUN_LEN, runLengthFor } from "./run-length.ts";
 
 /**
  * CHAPTER 1: THE VILLAGE — the authored road, as data.
@@ -77,21 +77,34 @@ export const BAND_CHARS: Readonly<
   "11+": { start: 102, full: 153 },
 };
 
-/** This band's chapter, or the youngest band's if the name is unknown. */
-export function boundsForBand(band: string | undefined): readonly number[] {
-  const c = BAND_CHARS[band ?? ""] ?? BAND_CHARS["5-6"]!;
-  return chapterBounds(c.start, c.full);
+/**
+ * EVERY BAND WALKS THE SAME ROAD (owner, 25 Sep 2026).
+ *
+ * Time Keepers is the only world with a chapter road, and every lesson on it
+ * is now RUN_LEN (64) long whatever the child's age. The chapters are
+ * authored scenery — villages, a market, a river crossing — placed at
+ * fractions of a lesson, and on the youngest band's 22-unit lessons all of
+ * it was squeezed into a 270-unit chapter. One length means one layout, the
+ * same place for every child.
+ *
+ * What still differs by band is the TYPING: passages keep their band's
+ * length (see BAND_CHARS and `age.ts`), and a younger child simply covers a
+ * lesson in more of them — `startRun` carries each passage on from where
+ * the last one stopped, at no more than MAX_UNITS_PER_KEY per key, and the
+ * milestone is only reached when a run arrives at the stone. The band
+ * argument is kept so callers and tests read the same; it no longer changes
+ * the road. Dino Run and Hero Trail have no chapter road and are untouched.
+ */
+export const TIME_KEEPERS_BOUNDS: readonly number[] = Array.from(
+  { length: SEGMENT_COUNT + 1 },
+  (_, k) => k * RUN_LEN,
+);
+export function boundsForBand(_band?: string): readonly number[] {
+  return TIME_KEEPERS_BOUNDS;
 }
 
-/**
- * The youngest band, and the default when nobody says otherwise.
- *
- * 5-6 is the right default rather than an average: it is the shortest
- * chapter, so a world built to it is never SHORTER than the road a child
- * walks. Guessing high would build ground nobody reaches; guessing low runs
- * them off the end of the terrain, which is the failure that shows.
- */
-export const DEFAULT_BOUNDS = chapterBounds(24, 36);
+/** The chapter road when nobody says otherwise — the same for every band. */
+export const DEFAULT_BOUNDS = TIME_KEEPERS_BOUNDS;
 
 /** Where the chapter ends, for a given set of stones. */
 export function chapterEnd(bounds: readonly number[] = DEFAULT_BOUNDS): number {
