@@ -155,6 +155,50 @@ test("handle invalid client request", async () => {
   deepEqual(messages, ["ERROR: Server error - Internal bug"]);
 });
 
+test("a client that went away is logged at debug, not as a server error", async () => {
+  // Arrange.
+
+  const { app, messages } = init();
+  app.use((ctx) => {
+    // What a closed tab looks like by the time the body is read.
+    (ctx.request as unknown as { req: { destroy(): void } }).req.destroy();
+    throw new Error("Destroyed stream");
+  });
+
+  // Act.
+
+  await request
+    .use(start(createTestServer(app.callback())))
+    .GET("/")
+    .send()
+    .catch(() => null);
+
+  // Assert.
+
+  deepEqual(messages, ["DEBUG: Client went away - Destroyed stream"]);
+});
+
+test("the same error on a live connection is still a server error", async () => {
+  // Arrange.
+
+  const { app, messages } = init();
+  app.use(() => {
+    throw new Error("Destroyed stream");
+  });
+
+  // Act.
+
+  const { status } = await request
+    .use(start(createTestServer(app.callback())))
+    .GET("/")
+    .send();
+
+  // Assert.
+
+  equal(status, 500);
+  deepEqual(messages, ["ERROR: Server error - Destroyed stream"]);
+});
+
 function init() {
   const messages: string[] = [];
 

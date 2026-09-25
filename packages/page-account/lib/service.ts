@@ -250,13 +250,25 @@ export namespace AccountService {
     );
   }
 
-  /** Confirm the app is set up, switching it on. Returns the recovery codes. */
-  export async function twoFactorEnable(code: string): Promise<string[]> {
+  /**
+   * Confirm the app is set up, switching it on. Returns the recovery codes.
+   * The server also wants proof of who is asking: the password, or for an
+   * account without one the code {@link sendIdentityCode} emails.
+   */
+  export async function twoFactorEnable(
+    code: string,
+    proof: { readonly password?: string; readonly identityCode?: string },
+  ): Promise<string[]> {
     const body = await postAuthJson<{ recoveryCodes: string[] }>(
       "/_/account/2fa/enable",
-      { code },
+      { code, ...proof },
     );
     return body.recoveryCodes;
+  }
+
+  /** Email a confirmation code to the account's own address. */
+  export async function sendIdentityCode(): Promise<void> {
+    await postAuth("/auth/change-email/identity-code", {});
   }
 
   export async function twoFactorDisable(data: {

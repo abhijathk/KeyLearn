@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -52,5 +52,45 @@ export function Overlay({
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [onClose]);
-  return host == null ? null : createPortal(children, host);
+  // Portalled to <body>, so it sits OUTSIDE the account window, which is
+  // itself an aria-modal dialog: to a screen reader everything outside that
+  // is inert, and focus stayed on the button that opened it, behind the
+  // scrim. So this is a modal of its own, takes focus when it opens (unless
+  // something inside already did, like a PIN field) and gives it back after.
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (host == null) {
+      return;
+    }
+    const opener =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const inner = box.current;
+    if (inner != null && !inner.contains(document.activeElement)) {
+      inner
+        .querySelector<HTMLElement>(
+          "input:not([disabled]), select, textarea, button:not([disabled]), [href], [tabindex]:not([tabindex='-1'])",
+        )
+        ?.focus();
+    }
+    return () => {
+      if (opener?.isConnected) {
+        opener.focus();
+      }
+    };
+  }, [host]);
+  return host == null
+    ? null
+    : createPortal(
+        <div
+          ref={box}
+          role="dialog"
+          aria-modal={true}
+          style={{ display: "contents" }}
+        >
+          {children}
+        </div>,
+        host,
+      );
 }

@@ -3,8 +3,8 @@ import { Button, FloatingShell } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
-import loginPromptBanner from "../assets/login-prompt-banner.png";
-import loginPromptBannerLight from "../assets/login-prompt-banner-light.png";
+import loginPromptBanner from "../assets/login-prompt-banner.webp";
+import loginPromptBannerLight from "../assets/login-prompt-banner-light.webp";
 import * as styles from "./LoginPrompt.module.less";
 
 const LAST_SHOWN_KEY = "keylearn.loginPromptLastShown";
@@ -94,8 +94,23 @@ export function LoginPrompt({ path }: { readonly path: string }): ReactNode {
         defaultMessage: "Continue without an account",
       })}
     >
-      <img className={styles.banner} src={loginPromptBanner} alt="" />
-      <img className={styles.bannerLight} src={loginPromptBannerLight} alt="" />
+      {/* Lazy so the one the theme hides (display: none) is never fetched. */}
+      <img
+        className={styles.banner}
+        src={loginPromptBanner}
+        alt=""
+        width={900}
+        height={300}
+        loading="lazy"
+      />
+      <img
+        className={styles.bannerLight}
+        src={loginPromptBannerLight}
+        alt=""
+        width={900}
+        height={300}
+        loading="lazy"
+      />
       <h1 className={styles.title}>
         <FormattedMessage
           id="loginPrompt.title"

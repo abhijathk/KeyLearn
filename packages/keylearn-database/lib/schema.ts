@@ -1,5 +1,6 @@
 import { envStaffEmails } from "@keylearn/config";
 import { type Knex } from "knex";
+import { Model } from "objection";
 import { AccountDeletionRequest } from "./account-deletion-request.ts";
 import { AdCampaign } from "./ad-campaign.ts";
 import { AdSeen, AdStat } from "./ad-stat.ts";
@@ -134,6 +135,7 @@ export async function createSchema(knex: Knex): Promise<void> {
   await addColumn("certificate_sitting", "criteria_version", (table) => {
     table.integer("criteria_version").unsigned().notNullable().defaultTo(1);
   });
+  await ensureCertificateSchema(knex);
   await addColumn("site_config", "default_at_write", (table) => {
     table.text("default_at_write").nullable();
   });
@@ -836,5 +838,139 @@ export async function createSchema(knex: Knex): Promise<void> {
       return true;
     }
     return false;
+  }
+}
+
+/**
+ * The certificate table's two late changes, safe to run on every boot: the
+ * `evidence` column, and certificates outliving their learner. Run from
+ * `createSchema` and, because a development server never runs that, from the
+ * server's own start as well — a certificate must not be erased with an
+ * account just because nobody ran initdb.
+ */
+export async function ensureCertificateSchema(
+  knex: Knex = Model.knex(),
+): Promise<void> {
+  if (!(await knex.schema.hasColumn("certificate", "evidence"))) {
+    await knex.schema.alterTable("certificate", (table) => {
+      table.string("evidence", 8).nullable();
+    });
+  }
+  await migrateCertificateRetention(knex);
+}
+
+/**
+ * Certificates outlive the learner and the account (owner decision, 25
+ * Sep 2026): `profile_id` and `user_id` become nullable and the profile
+ * foreign key SET NULL instead of CASCADE, so erasing an account keeps
+ * what the certificate printed and verification still answers. Idempotent:
+ * a table already in the new shape is left alone.
+ */
+async function migrateCertificateRetention(knex: Knex): Promise<void> {
+  const client = (knex.client.config as { __client?: string }).__client;
+  if (client === "mysql") {
+    const [cols] = (await knex.raw(
+      `SELECT COLUMN_NAME AS c, IS_NULLABLE AS n FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificate'
+          AND COLUMN_NAME IN ('profile_id', 'user_id')`,
+    )) as unknown as [{ c: string; n: string }[]];
+    if (cols.every((col) => col.n === "YES")) {
+      return;
+    }
+    const [fks] = (await knex.raw(
+      `SELECT CONSTRAINT_NAME AS name FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificate'
+          AND COLUMN_NAME = 'profile_id' AND REFERENCED_TABLE_NAME = 'profile'`,
+    )) as unknown as [{ name: string }[]];
+    for (const { name } of fks) {
+      await knex.raw(
+        `ALTER TABLE \`certificate\` DROP FOREIGN KEY \`${name}\``,
+      );
+    }
+    await knex.raw(
+      "ALTER TABLE `certificate` MODIFY `profile_id` INT UNSIGNED NULL, MODIFY `user_id` INT UNSIGNED NULL",
+    );
+    await knex.raw(
+      "ALTER TABLE `certificate` ADD CONSTRAINT `certificate_profile_id_foreign` FOREIGN KEY (`profile_id`) REFERENCES `profile` (`id`) ON DELETE SET NULL ON UPDATE CASCADE",
+    );
+    return;
+  }
+  const info = (await knex.raw(
+    `PRAGMA table_info(certificate)`,
+  )) as unknown as { name: string; notnull: number }[];
+  const profileId = info.find((c) => c.name === "profile_id");
+  if (profileId == null || profileId.notnull === 0) {
+    await canonicalIndexNames(knex);
+    return;
+  }
+  // A rebuild interrupted part way leaves its scratch table behind; it holds
+  // nothing the real table does not, and would block this one.
+  await knex.raw("DROP TABLE IF EXISTS certificate__rebuild");
+  // The same documented rebuild as the profile table's (createSchema).
+  await knex.raw("PRAGMA foreign_keys = OFF");
+  try {
+    await knex.schema.createTable("certificate__rebuild", (table) => {
+      Certificate.createTable(knex, table);
+    });
+    // The rebuild keeps only what createTable declares, so a column that
+    // exists only by migration would be lost. Refuse rather than drop it:
+    // the old table stays exactly as it was until createTable is updated.
+    const kept = new Set(
+      (
+        (await knex.raw(
+          `PRAGMA table_info(certificate__rebuild)`,
+        )) as unknown as {
+          name: string;
+        }[]
+      ).map((c) => c.name),
+    );
+    const lost = info.map((c) => c.name).filter((name) => !kept.has(name));
+    if (lost.length > 0) {
+      await knex.raw("DROP TABLE certificate__rebuild");
+      throw new Error(
+        `certificate rebuild would lose column(s) ${lost.join(", ")}; left unchanged`,
+      );
+    }
+    const cols = info.map((c) => "`" + c.name + "`").join(", ");
+    await knex.raw(
+      `INSERT INTO certificate__rebuild (${cols}) SELECT ${cols} FROM certificate`,
+    );
+    // DROP TABLE takes the table's triggers with it (the trap the profile
+    // rebuild hit), so any are read out first and put back after.
+    const triggers = (await knex.raw(
+      `SELECT sql FROM sqlite_master
+        WHERE type = 'trigger' AND tbl_name = 'certificate' AND sql IS NOT NULL`,
+    )) as unknown as { sql: string }[];
+    await knex.raw("DROP TABLE certificate");
+    await knex.raw("ALTER TABLE certificate__rebuild RENAME TO certificate");
+    for (const { sql } of triggers) {
+      await knex.raw(sql);
+    }
+  } finally {
+    await knex.raw("PRAGMA foreign_keys = ON");
+  }
+  await canonicalIndexNames(knex);
+}
+
+/**
+ * A rebuilt table's indexes are named for the scratch table they were made
+ * on, `certificate__rebuild_…`, and SQLite keeps those names through the
+ * rename. Harmless to queries, but a trap for any later rebuild of this
+ * table, whose indexes would want names that already exist. So they get the
+ * names a freshly created table has. Idempotent.
+ */
+async function canonicalIndexNames(knex: Knex): Promise<void> {
+  const indexes = (await knex.raw(
+    `SELECT name, sql FROM sqlite_master
+      WHERE type = 'index' AND tbl_name = 'certificate' AND sql IS NOT NULL`,
+  )) as unknown as { name: string; sql: string }[];
+  for (const { name, sql } of indexes) {
+    if (!name.startsWith("certificate__rebuild_")) {
+      continue;
+    }
+    const canonical =
+      "certificate_" + name.slice("certificate__rebuild_".length);
+    await knex.raw(`DROP INDEX \`${name}\``);
+    await knex.raw(sql.replace(`\`${name}\``, `\`${canonical}\``));
   }
 }

@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { nextQuote } from "@keylearn/content-quotes";
+import { nextQuote } from "@keylearn/content-quotes/lib/all.ts";
 import { type Task, Tasks, Timer } from "@keylearn/lang";
 import {
   CHAT_NOTICE_ID,

@@ -37,10 +37,13 @@ export function isCaptchaRequired(err: any): boolean {
 function TurnstileWidget({
   siteKey,
   onToken,
+  onError,
   eager = false,
 }: {
   readonly siteKey: string;
   readonly onToken: (token: string) => void;
+  /** The script or the challenge failed; no token is coming. */
+  readonly onError: () => void;
   /** Run invisibly from mount rather than waiting to be asked. */
   readonly eager?: boolean;
 }): ReactNode {
@@ -71,9 +74,10 @@ function TurnstileWidget({
           // them press send and be refused for having thought too long.
           "refresh-expired": "auto",
           "expired-callback": () => onToken(""),
+          "error-callback": onError,
         });
       })
-      .catch(() => {});
+      .catch(onError);
     return () => {
       cancelled = true;
       try {
@@ -99,6 +103,21 @@ export function useCaptcha({
   const siteKey = usePageData().turnstileSiteKey;
   const [needed, setNeeded] = useState(false);
   const [token, setToken] = useState<string | undefined>(undefined);
+  const [failed, setFailed] = useState(false);
+
+  // An eager widget is still earning its first token. Sending now would only
+  // be refused (428), so the caller holds Send until it lands. Once it has
+  // failed, expired (token ""), or simply taken too long, Send is released
+  // and the server's refusal brings up the visible challenge as before.
+  const pending =
+    eager && !needed && !failed && Boolean(siteKey) && token === undefined;
+  useEffect(() => {
+    if (!pending) {
+      return;
+    }
+    const timer = setTimeout(() => setFailed(true), 15000);
+    return () => clearTimeout(timer);
+  }, [pending]);
 
   // Eager mounts the widget immediately, so a token is in hand BEFORE the
   // first submission rather than after one has been refused. That is what
@@ -113,6 +132,7 @@ export function useCaptcha({
       <TurnstileWidget
         siteKey={siteKey}
         onToken={setToken}
+        onError={() => setFailed(true)}
         eager={eager && !needed}
       />
     ) : null;
@@ -122,6 +142,8 @@ export function useCaptcha({
     token,
     /** Whether the challenge is currently being shown. */
     needed,
+    /** An eager check is still running: hold Send until it finishes. */
+    pending,
     /** Show the challenge (call after a "captcha required" response). */
     require: () => setNeeded(true),
     /** The rendered widget (or null). Place it above the submit button. */

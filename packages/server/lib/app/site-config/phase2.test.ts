@@ -17,6 +17,7 @@ import {
   isNull,
   isTrue,
 } from "rich-assert";
+import { EvidenceSource } from "../certificate/evidence.ts";
 import { kMain } from "../module.ts";
 import { TestContext } from "../test/context.ts";
 import { startApp } from "../test/request.ts";
@@ -43,6 +44,21 @@ import { SiteConfigRefused, SiteConfigService } from "./service.ts";
  */
 
 const context = new TestContext();
+
+/** Practice that clears every condition for an adult. */
+const READY_EVIDENCE = {
+  kind: "typing",
+  audience: "adult",
+  age: 30,
+  learned: 26,
+  total: 26,
+  settled: 26,
+  volume: 1000,
+  daysPractised: 60,
+  elapsedDays: 90,
+  speed: 45,
+  accuracy: 0.97,
+} as const;
 const OPS_KEY = "Nq8s4Xb2m0PfTz1Lc7RkYw3Ve6Hd9Jg5";
 const ENV_KEYS = [
   "HOLDING_QUEUE_DAYS",
@@ -172,8 +188,20 @@ test("2.1 limits: caps and the one-way rules reach the readers; the password flo
   );
 });
 
-test("2.2 certificates: gates, attempts per day, and a version the certificate keeps", async () => {
+test("2.2 certificates: gates, attempts per day, and a version the certificate keeps", async (t) => {
   const { admin, service, request } = await fresh();
+  // Sittings are now held to the server's own view of the learner's practice
+  // and to a clock it starts (certificate/controller.ts). Give this learner
+  // eligible practice, and move the clock the length of a sitting.
+  context.bind(EvidenceSource).toValue({
+    derive: async () => ({ evidence: READY_EVIDENCE, language: "en" }),
+  } as unknown as EvidenceSource);
+  t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
+  const sit = async (pid: number, body: object) => {
+    await request.POST(`/_/certificate/sitting/${pid}/start`).send({});
+    t.mock.timers.tick(185_000);
+    return await request.POST(`/_/certificate/sitting/${pid}`).send(body);
+  };
   equal(await criteriaVersion(), 1, "shipped criteria are version 1");
   await service.set("certificates.adultTyping.wpm", 40, { userId: admin });
   equal(await criteriaVersion(), 2, "each criteria change bumps the version");
@@ -202,35 +230,18 @@ test("2.2 certificates: gates, attempts per day, and a version the certificate k
     runs: 3,
     seconds: 180,
   };
-  equal(
-    (await request.POST(`/_/certificate/sitting/${pid}`).send(sitting)).status,
-    204,
-  );
+  equal((await sit(pid, sitting)).status, 204);
   const rows = await CertificateSitting.query();
   equal(rows[0].criteriaVersion, 2, "a sitting records the criteria version");
 
   await service.set("certificates.attemptsPerDay", 3, { userId: admin });
-  equal(
-    (await request.POST(`/_/certificate/sitting/${pid}`).send(sitting)).status,
-    204,
-  );
-  equal(
-    (await request.POST(`/_/certificate/sitting/${pid}`).send(sitting)).status,
-    204,
-  );
-  equal(
-    (await request.POST(`/_/certificate/sitting/${pid}`).send(sitting)).status,
-    429,
-    "the daily limit holds",
-  );
+  equal((await sit(pid, sitting)).status, 204);
+  equal((await sit(pid, sitting)).status, 204);
+  equal((await sit(pid, sitting)).status, 429, "the daily limit holds");
   await service.set("certificates.attemptsPerDay", 0, { userId: admin });
 
   await service.set("certificates.issue", false, { userId: admin });
-  equal(
-    (await request.POST(`/_/certificate/sitting/${pid}`).send(sitting)).status,
-    403,
-    "certificates off",
-  );
+  equal((await sit(pid, sitting)).status, 403, "certificates off");
   await service.set("certificates.issue", true, { userId: admin });
 
   await service.set("certificates.publicVerify", false, { userId: admin });

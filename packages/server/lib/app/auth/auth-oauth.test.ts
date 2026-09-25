@@ -269,7 +269,7 @@ test("require email", async () => {
       .GET("/auth/oauth-callback/fake?" + params)
       .send();
     equal(response.status, 302);
-    equal(response.headers.get("Location"), "/");
+    equal(response.headers.get("Location"), "/?signedIn=1");
   }
 
   // Assert.
@@ -312,7 +312,7 @@ test("register a new user", async () => {
       .GET("/auth/oauth-callback/fake?" + params)
       .send();
     equal(response.status, 302);
-    equal(response.headers.get("Location"), "/");
+    equal(response.headers.get("Location"), "/?signedIn=1");
   }
 
   // Assert.
@@ -407,7 +407,7 @@ test("login an existing user", async () => {
       .GET("/auth/oauth-callback/fake?" + params)
       .send();
     equal(response.status, 302);
-    equal(response.headers.get("Location"), "/");
+    equal(response.headers.get("Location"), "/?signedIn=1");
   }
 
   // Assert.

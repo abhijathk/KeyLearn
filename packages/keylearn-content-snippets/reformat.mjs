@@ -18,7 +18,7 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { available, formatAll } from "./lib/format.ts";
-import { SNIPPET_SETS } from "./lib/index.ts";
+import { SNIPPET_SETS } from "./lib/sets.ts";
 
 const SNIPPET_DIR = fileURLToPath(new URL("./lib/snippets/", import.meta.url));
 

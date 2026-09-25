@@ -3,6 +3,10 @@ import { Application } from "@fastr/core";
 import { Container } from "@fastr/invert";
 import { Manifest } from "@keylearn/assets";
 import { ConfigModule, Env } from "@keylearn/config";
+import {
+  ensureCertificateSchema,
+  normalizeStoredTimes,
+} from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
 import { Game } from "@keylearn/multiplayer-server";
 import { AdSweep } from "./app/ads/index.ts";
@@ -24,7 +28,7 @@ import {
   StaffAuditSweep,
 } from "./app/support/index.ts";
 import { LearnerResponseSweep } from "./app/support/learner-response-sweep.ts";
-import { DataSnapshot } from "./app/sync/index.ts";
+import { DataSnapshot, OrgLearnerFiles } from "./app/sync/index.ts";
 import { ServerModule } from "./server/module.ts";
 import { Service } from "./server/service.ts";
 
@@ -91,6 +95,31 @@ if (cluster.isPrimary) {
   // Learner data lives in files on this machine's disk; the database is what
   // gets backed up. Copy one into the other at intervals.
   container.get(DataSnapshot).start();
+  // Org-owned learners' files written under a device account before they had
+  // a folder of their own. Idempotent; a no-op once nothing is misplaced.
+  container
+    .get(OrgLearnerFiles)
+    .relocate()
+    .then(({ moved, kept }) => {
+      if (moved > 0 || kept > 0) {
+        Logger.info("Org learner files relocated", { moved, kept });
+      }
+    })
+    .catch((err) => Logger.warn(err, "Org learner file relocation failed"));
+  // SQLite rows that took a CURRENT_TIMESTAMP default hold their time as
+  // text, which sorts after every other row and reads as local time.
+  // Idempotent; a no-op once every such value is a number.
+  // First, certificates outliving their learner (owner decision): a
+  // development server never runs initdb, and without this an account
+  // deletion would still cascade into the certificates it earned.
+  ensureCertificateSchema()
+    .then(() => normalizeStoredTimes())
+    .then(({ fixed, unparsed }) => {
+      if (fixed > 0 || unparsed > 0) {
+        Logger.info("Stored times normalised", { fixed, unparsed });
+      }
+    })
+    .catch((err) => Logger.warn(err, "Boot-time schema tidy-up failed"));
   // Brotli the kids world's models once, here, while the workers already
   // serve — so no learner's request waits on the slow encoder and no two
   // workers spend the same minutes on the same file. See static-cache.ts.

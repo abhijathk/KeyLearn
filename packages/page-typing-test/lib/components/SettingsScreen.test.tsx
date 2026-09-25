@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import { FakeIntlProvider } from "@keylearn/intl";
 import { KeyboardProvider } from "@keylearn/keyboard";
+import { type PageData, PageDataContext } from "@keylearn/pages-shared";
 import { FakePhoneticModel } from "@keylearn/phonetic-model";
 import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import { FakeSettingsContext } from "@keylearn/settings";
@@ -12,11 +13,15 @@ test("render", async () => {
 
   const r = render(
     <FakeIntlProvider>
-      <FakeSettingsContext>
-        <KeyboardProvider>
-          <SettingsScreen />
-        </KeyboardProvider>
-      </FakeSettingsContext>
+      {/* The keyboard settings read page data (whether the board choice is
+          locked by the site), so the screen needs the context. */}
+      <PageDataContext.Provider value={{ publicUser: { id: "abc" } } as PageData}>
+        <FakeSettingsContext>
+          <KeyboardProvider>
+            <SettingsScreen />
+          </KeyboardProvider>
+        </FakeSettingsContext>
+      </PageDataContext.Provider>
     </FakeIntlProvider>,
   );
 

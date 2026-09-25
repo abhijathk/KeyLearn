@@ -107,9 +107,28 @@ export class Controller {
     return this.renderPage(ctx, Pages.profiles);
   }
 
+  // The four locale forms below were missing, so /ar/verify/… (the address a
+  // certificate's reader types in their own language) and the account's
+  // learner and school pages answered 404 in every language but English.
+  @http.GET(`/{locale:${localePattern}}${Pages.profiles.path}`)
+  async ["profiles-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.profiles, intl);
+  }
+
   @http.GET(`${Pages.verify.path}`)
   async ["verify-page"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.verify);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.verify.path}`)
+  async ["verify-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.verify, intl);
   }
 
   @http.GET(`${Pages.verify.path}/{number:[A-Za-z0-9]+}`)
@@ -117,9 +136,27 @@ export class Controller {
     return this.renderPage(ctx, Pages.verify);
   }
 
+  @http.GET(
+    `/{locale:${localePattern}}${Pages.verify.path}/{number:[A-Za-z0-9]+}`,
+  )
+  async ["verify-page-number-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.verify, intl);
+  }
+
   @http.GET(`${Pages.org.path}`)
   async ["org-desk-page"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.org);
+  }
+
+  @http.GET(`/{locale:${localePattern}}${Pages.org.path}`)
+  async ["org-desk-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.org, intl);
   }
 
   @http.GET(`${Pages.forSchools.path}`)

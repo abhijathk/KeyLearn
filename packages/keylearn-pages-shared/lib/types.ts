@@ -240,6 +240,14 @@ export type SupportMessageDetails = {
   readonly qdeskMessageId: number | null;
   /** The customer's thumbs on this reply, if they gave one. */
   readonly feedback: "good" | "bad" | null;
+  /** Files that came with it — on the guest thread, the ones the desk sent. */
+  readonly attachments?: readonly {
+    readonly id: number;
+    readonly fileName: string;
+    readonly mimeType: string;
+    readonly size: number;
+    readonly isImage: boolean;
+  }[];
   readonly createdAt: string;
 };
 

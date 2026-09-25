@@ -425,7 +425,7 @@ export function AboutPage() {
       <p>
         <FormattedMessage
           id="about.oss.art"
-          defaultMessage="One exception: the 3-D characters in the children's game are the AK 3D Pack, a KeyLearn product licensed separately from this code, not under the AGPL. It sits in a folder of its own — if you fork KeyLearn, either delete that folder or contact support to license the pack. Everything else, code included, is free to reuse."
+          defaultMessage="One exception: the 3-D characters in the children’s game are the AK 3D Pack, a KeyLearn product licensed separately from this code, not under the AGPL. It sits in a folder of its own — if you fork KeyLearn, either delete that folder or contact support to license the pack. Everything else, code included, is free to reuse."
         />
       </p>
 

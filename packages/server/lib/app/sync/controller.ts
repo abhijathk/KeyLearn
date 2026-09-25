@@ -14,6 +14,7 @@ import { parseMessage } from "@keylearn/result-io";
 import { UserDataFactory } from "@keylearn/result-userdata";
 import { File } from "@sosimple/fsx-file";
 import { actorFor } from "../access/actor.ts";
+import { learnerOwner } from "../access/owner.ts";
 import { type ProfileAction, reachProfile } from "../access/resolver.ts";
 import { type AuthState, pProfileOwner } from "../auth/index.ts";
 import { partitionPlausible } from "./plausible.ts";
@@ -77,11 +78,16 @@ const ACCOUNT_DOCS: ReadonlySet<string> = new Set(["local"]);
  * learner's save, which is why the error is logged rather than thrown.
  */
 async function mirrorToDb(
-  userId: number,
+  userId: number | null,
   profileId: number | null,
   kind: ProfileDataKind,
   file: File,
 ): Promise<void> {
+  // An organisation's learner has no account to hang a snapshot row on
+  // (`profile_data.user_id` is the owning account); their file is the copy.
+  if (userId == null) {
+    return;
+  }
   try {
     if (!(await file.exists())) {
       await ProfileData.deleteFor(userId, profileId, kind);
@@ -135,6 +141,11 @@ async function writeMerged(file: File, value: unknown): Promise<void> {
       break;
     }
     const had = merged[key];
+    // The ceiling is on what the learner holds, not on one write: counted per
+    // request only, a few writes of new keys each grew the file without bound.
+    if (had == null && Object.keys(merged).length >= MAX_DOC_KEYS) {
+      continue;
+    }
     if (had == null || one.t >= had.t) {
       merged[key] = { v: (one.v as string | null) ?? null, t: one.t };
     }
@@ -216,7 +227,9 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
-    await this.userData.loadProfile(user.id!, profile.id!).serve(ctx);
+    await this.userData
+      .loadProfile(storageOwner(profile, user), profile.id!)
+      .serve(ctx);
   }
 
   @http.POST("/_/sync/data/profile/{pid:[0-9]+}")
@@ -235,7 +248,9 @@ export class Controller {
       throw new ForbiddenError();
     }
     const results = await parseResults(value);
-    await this.userData.loadProfile(user.id!, profile.id!).append(results);
+    await this.userData
+      .loadProfile(storageOwner(profile, user), profile.id!)
+      .append(results);
     // Only grown-up profiles count toward the account's leaderboard; kids are
     // kept off the public high scores.
     if (profile.kind === "adult") {
@@ -263,8 +278,12 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
-    await this.userData.loadProfile(user.id!, profile.id!).delete();
-    await ProfileData.deleteFor(user.id!, profile.id!, "results");
+    await this.userData
+      .loadProfile(storageOwner(profile, user), profile.id!)
+      .delete();
+    if (profile.userId != null) {
+      await ProfileData.deleteFor(profile.userId, profile.id!, "results");
+    }
     ctx.response.status = 204;
   }
 
@@ -283,7 +302,11 @@ export class Controller {
   ) {
     const profile = await this.#owned(ctx, pid, "read");
     await this.userData
-      .loadProfile(ctx.state.requireUser().id!, profile.id!, course)
+      .loadProfile(
+        storageOwner(profile, ctx.state.requireUser()),
+        profile.id!,
+        this.#course(course),
+      )
       .serve(ctx);
   }
 
@@ -298,7 +321,11 @@ export class Controller {
     const profile = await this.#owned(ctx, pid, "write");
     const results = await parseResults(value);
     await this.userData
-      .loadProfile(user.id!, profile.id!, this.#course(course))
+      .loadProfile(
+        storageOwner(profile, user),
+        profile.id!,
+        this.#course(course),
+      )
       .append(results);
     // The board is one board. A course is a separate history, not a separate
     // leaderboard, so a fast run counts wherever it was typed.
@@ -321,7 +348,11 @@ export class Controller {
     const user = ctx.state.requireUser();
     const profile = await this.#owned(ctx, pid, "write");
     await this.userData
-      .loadProfile(user.id!, profile.id!, this.#course(course))
+      .loadProfile(
+        storageOwner(profile, user),
+        profile.id!,
+        this.#course(course),
+      )
       .delete();
     ctx.response.status = 204;
   }
@@ -371,7 +402,7 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @pathParam("pid") pid: string,
   ) {
-    const file = await this.#brailleFile(ctx, pid, "read");
+    const { file } = await this.#brailleFile(ctx, pid, "read");
     ctx.response.type = "application/json";
     // An empty document rather than a 404: "this learner has done no braille
     // yet" is an ordinary answer, not an error, and the client would have to
@@ -387,14 +418,13 @@ export class Controller {
     // verbatim — so whatever arrives, the file this serves back is JSON.
     @body.json(null, { maxLength: 262144 }) value: unknown,
   ) {
-    const user = ctx.state.requireUser();
-    const file = await this.#brailleFile(ctx, pid, "write");
+    const { file, owner } = await this.#brailleFile(ctx, pid, "write");
     if (value == null || typeof value !== "object" || Array.isArray(value)) {
       throw new BadRequestError("Not a progress document");
     }
     await file.dir().create(true);
     await file.write(JSON.stringify(value), "utf8");
-    await mirrorToDb(user.id!, Number(pid), "braille", file);
+    await mirrorToDb(owner, Number(pid), "braille", file);
     ctx.response.status = 204;
   }
 
@@ -403,9 +433,9 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @pathParam("pid") pid: string,
   ) {
-    await (await this.#brailleFile(ctx, pid, "write")).delete();
-    const user = ctx.state.requireUser();
-    await ProfileData.deleteFor(user.id!, Number(pid), "braille");
+    const { file, owner } = await this.#brailleFile(ctx, pid, "write");
+    await file.delete();
+    await forgetSnapshot(owner, Number(pid), "braille");
     ctx.response.status = 204;
   }
 
@@ -433,7 +463,7 @@ export class Controller {
     @pathParam("pid") pid: string,
     @pathParam("name") name: string,
   ) {
-    const file = await this.#profileDoc(ctx, pid, name, "read");
+    const { file } = await this.#profileDoc(ctx, pid, name, "read");
     ctx.response.type = "application/json";
     ctx.response.body = (await file.exists()) ? await file.read("utf8") : "{}";
   }
@@ -445,10 +475,9 @@ export class Controller {
     @pathParam("name") name: string,
     @body.json(null, { maxLength: 262144 }) value: unknown,
   ) {
-    const user = ctx.state.requireUser();
-    const file = await this.#profileDoc(ctx, pid, name, "write");
+    const { file, owner } = await this.#profileDoc(ctx, pid, name, "write");
     await writeMerged(file, value);
-    await mirrorToDb(user.id!, Number(pid), "local", file);
+    await mirrorToDb(owner, Number(pid), "local", file);
     ctx.response.status = 204;
   }
 
@@ -458,12 +487,9 @@ export class Controller {
     @pathParam("pid") pid: string,
     @pathParam("name") name: string,
   ) {
-    await (await this.#profileDoc(ctx, pid, name, "write")).delete();
-    await ProfileData.deleteFor(
-      ctx.state.requireUser().id!,
-      Number(pid),
-      "local",
-    );
+    const { file, owner } = await this.#profileDoc(ctx, pid, name, "write");
+    await file.delete();
+    await forgetSnapshot(owner, Number(pid), "local");
     ctx.response.status = 204;
   }
 
@@ -505,7 +531,7 @@ export class Controller {
     pid: string,
     name: string,
     action: ProfileAction,
-  ): Promise<File> {
+  ): Promise<LearnerFile> {
     const safe = requireDocName(name, PROFILE_DOCS);
     const user = ctx.state.requireUser();
     const profile = await reachProfile(
@@ -516,7 +542,14 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
-    return new File(this.dataDir.profileDocFile(user.id!, profile.id!, safe));
+    return learnerFile(
+      profile,
+      this.dataDir.profileDocFile(
+        storageOwner(profile, user),
+        profile.id!,
+        safe,
+      ),
+    );
   }
 
   // ── A learner's accessibility preferences ──────────────────────────
@@ -537,7 +570,7 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @pathParam("pid") pid: string,
   ) {
-    const file = await this.#a11yFile(ctx, pid, "read");
+    const { file } = await this.#a11yFile(ctx, pid, "read");
     ctx.response.type = "application/json";
     // An empty document, not a 404: "this learner has set nothing yet" is an
     // ordinary answer, and it is what tells the client to offer its own local
@@ -553,14 +586,13 @@ export class Controller {
     // this serves back is JSON. Small: a dozen scalar settings.
     @body.json(null, { maxLength: 8192 }) value: unknown,
   ) {
-    const user = ctx.state.requireUser();
-    const file = await this.#a11yFile(ctx, pid, "write");
+    const { file, owner } = await this.#a11yFile(ctx, pid, "write");
     if (value == null || typeof value !== "object" || Array.isArray(value)) {
       throw new BadRequestError("Not a preferences document");
     }
     await file.dir().create(true);
     await file.write(JSON.stringify(value), "utf8");
-    await mirrorToDb(user.id!, Number(pid), "a11y", file);
+    await mirrorToDb(owner, Number(pid), "a11y", file);
     ctx.response.status = 204;
   }
 
@@ -569,12 +601,9 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @pathParam("pid") pid: string,
   ) {
-    await (await this.#a11yFile(ctx, pid, "write")).delete();
-    await ProfileData.deleteFor(
-      ctx.state.requireUser().id!,
-      Number(pid),
-      "a11y",
-    );
+    const { file, owner } = await this.#a11yFile(ctx, pid, "write");
+    await file.delete();
+    await forgetSnapshot(owner, Number(pid), "a11y");
     ctx.response.status = 204;
   }
 
@@ -582,7 +611,7 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     pid: string,
     action: ProfileAction,
-  ): Promise<File> {
+  ): Promise<LearnerFile> {
     const user = ctx.state.requireUser();
     const profile = await reachProfile(
       actorFor(ctx, user),
@@ -592,14 +621,17 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
-    return new File(this.dataDir.a11yPrefsFile(user.id!, profile.id!));
+    return learnerFile(
+      profile,
+      this.dataDir.a11yPrefsFile(storageOwner(profile, user), profile.id!),
+    );
   }
 
   async #brailleFile(
     ctx: Context<RouterState & AuthState>,
     pid: string,
     action: ProfileAction,
-  ): Promise<File> {
+  ): Promise<LearnerFile> {
     const user = ctx.state.requireUser();
     const profile = await reachProfile(
       actorFor(ctx, user),
@@ -609,7 +641,13 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
-    return new File(this.dataDir.brailleProgressFile(user.id!, profile.id!));
+    return learnerFile(
+      profile,
+      this.dataDir.brailleProgressFile(
+        storageOwner(profile, user),
+        profile.id!,
+      ),
+    );
   }
 }
 
@@ -632,6 +670,32 @@ function creditable(results: readonly Result[], userId: number): Result[] {
     );
   }
   return credited;
+}
+
+/** A learner's file, and the account its database snapshot belongs to. */
+type LearnerFile = { readonly file: File; readonly owner: number | null };
+
+function learnerFile(profile: Profile, path: string): LearnerFile {
+  return { file: new File(path), owner: profile.userId ?? null };
+}
+
+async function forgetSnapshot(
+  owner: number | null,
+  profileId: number,
+  kind: ProfileDataKind,
+): Promise<void> {
+  if (owner != null) {
+    await ProfileData.deleteFor(owner, profileId, kind);
+  }
+}
+
+/**
+ * Whose folder a learner's files are in — see `learnerOwner`. Every route
+ * below reaches the profile through the resolver first, so this only decides
+ * WHERE, never WHETHER.
+ */
+function storageOwner(profile: Profile, user: { readonly id?: number }) {
+  return learnerOwner(profile) ?? user.id!;
 }
 
 // TODO Parse asynchronously in batches.

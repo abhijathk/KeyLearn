@@ -23,6 +23,32 @@ export function siteConfigRefreshSeconds(): number {
 
 let timer: NodeJS.Timeout | null = null;
 
+const listeners = new Set<() => void>();
+
+/**
+ * Called after every load of the stored values, so something that read a
+ * setting before the first load finished — a sweep scheduling its first
+ * tick at boot, when every read still answers with the default — can read
+ * it again. Returns the unsubscribe.
+ */
+export function onSiteConfigRefresh(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/** Tells the listeners the values may have changed. Exported for tests. */
+export function siteConfigRefreshed(): void {
+  for (const listener of [...listeners]) {
+    try {
+      listener();
+    } catch (err) {
+      Logger.warn("site-config: a refresh listener failed", { err });
+    }
+  }
+}
+
 /**
  * Loads the stored values once.
  *
@@ -36,6 +62,7 @@ let timer: NodeJS.Timeout | null = null;
 export async function refreshSiteConfigCache(): Promise<void> {
   try {
     setSiteConfigValues(await SiteConfig.all());
+    siteConfigRefreshed();
   } catch (err) {
     Logger.warn("site-config: could not refresh, keeping the last values", {
       err,

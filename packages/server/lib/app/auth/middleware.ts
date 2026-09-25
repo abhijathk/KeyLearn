@@ -28,6 +28,28 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB);
 }
 
+/**
+ * The ops key, checked for every `/_/internal/*` request before the router
+ * runs.
+ *
+ * Each internal route also checks it itself, but only inside its handler —
+ * after the framework has parsed and validated the body. A caller with no key
+ * therefore got a 400 describing the body the route wanted, instead of the
+ * 403 that says nothing. Checking here first makes the key the first thing
+ * any internal route asks for. Every route under the prefix is ops-key only.
+ */
+export function opsApiGate(): Middleware<SessionState & AuthState> {
+  return async (
+    ctx: Context<SessionState & AuthState>,
+    next: Next,
+  ): Promise<void> => {
+    if (ctx.request.path.startsWith("/_/internal/")) {
+      ctx.state.requireOpsApi();
+    }
+    return next();
+  };
+}
+
 // How long a "don't keep me signed in" session lasts before it lapses.
 const SHORT_SESSION_TTL_MS = 24 * 3600 * 1000;
 

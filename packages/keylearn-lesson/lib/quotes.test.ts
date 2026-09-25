@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { loadQuotes } from "@keylearn/content-quotes";
 import { Layout, loadKeyboard } from "@keylearn/keyboard";
 import { FakePhoneticModel } from "@keylearn/phonetic-model";
 import { LCG } from "@keylearn/rand";
@@ -10,9 +11,10 @@ import { lessonProps } from "./settings.ts";
 
 const keyboard = loadKeyboard(Layout.EN_US);
 const model = new FakePhoneticModel();
+const quotes = await loadQuotes();
 
 function generate(settings: Settings, seed = 123): string {
-  const lesson = new QuotesLesson(settings, keyboard, model);
+  const lesson = new QuotesLesson(settings, keyboard, model, quotes);
   const lessonKeys = lesson.update(makeKeyStatsMap(lesson.letters, []));
   return lesson.generate(lessonKeys, LCG(seed));
 }

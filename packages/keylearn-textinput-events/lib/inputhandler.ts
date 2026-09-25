@@ -18,6 +18,12 @@ export class InputHandler implements Focusable {
   readonly #timeToType = new TimeToType();
   #callbacks: Callbacks = {};
   #input: HTMLTextAreaElement | null = null;
+  // Escape lets go of Tab. The lesson keeps Tab for itself (a code snippet
+  // has real indents), which made the text a keyboard trap (WCAG 2.1.2):
+  // nothing but a mouse could take focus anywhere else. The editor pattern:
+  // Escape, then Tab or Shift+Tab leaves; any other key, or coming back,
+  // takes Tab back.
+  #released = false;
 
   setCallbacks(callbacks: Callbacks) {
     this.#callbacks = callbacks;
@@ -82,6 +88,7 @@ export class InputHandler implements Focusable {
   }
 
   handleFocus = () => {
+    this.#released = false;
     this.#callbacks.onFocus?.();
   };
 
@@ -98,6 +105,17 @@ export class InputHandler implements Focusable {
     if (event.repeat) {
       event.preventDefault();
       return;
+    }
+    if (event.type === "keydown") {
+      if (event.key === "Tab" && this.#released) {
+        // Not reported, not prevented: the browser moves focus on.
+        return;
+      }
+      if (event.key === "Escape") {
+        this.#released = true;
+      } else if (!MODIFIER_KEYS.has(event.key)) {
+        this.#released = false;
+      }
     }
     const mapped = mapEvent(event);
     if (isTextInput(mapped.modifiers) && event.key === "Tab") {
@@ -202,3 +220,13 @@ export class InputHandler implements Focusable {
     }
   }
 }
+
+/** Keys pressed on the way to Shift+Tab, which must not take Tab back. */
+const MODIFIER_KEYS: ReadonlySet<string> = new Set([
+  "Shift",
+  "Control",
+  "Alt",
+  "AltGraph",
+  "Meta",
+  "CapsLock",
+]);

@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import {
   body,
   controller,
@@ -10,7 +11,7 @@ import { ApplicationError, HttpError } from "@fastr/errors";
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { type SessionState } from "@fastr/middleware-session";
-import { Env, listStaffEmails } from "@keylearn/config";
+import { DataDir, Env, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
   AgentStatus,
@@ -28,6 +29,7 @@ import {
   SecurityEvent,
   StaffAuditEvent,
   StaffSettings,
+  SupportAttachment,
   SupportBlock,
   SupportMessage,
   SupportTicket,
@@ -66,9 +68,11 @@ import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
 import { threadLinkMs } from "../site-config/readers.ts";
+import { storeDeskAttachments } from "./desk-attachments.ts";
 import { matchAnswers } from "./matching.ts";
 import { priorTicketsFor } from "./prior-ticket.ts";
 import {
+  deskPageUrl,
   fetchDeskNotice,
   fetchDeskNotices,
   fetchHelpArticles,
@@ -218,6 +222,22 @@ const TDeliverReply = z.object({
    * back with. Optional so an older desk build simply omits it.
    */
   qdeskMessageId: z.number().int().positive().nullable().optional(),
+  /**
+   * Files the staffer attached on the desk, described; each is fetched back
+   * from the desk by id and held to the customer-upload rules before it is
+   * stored here. Optional so an older desk build simply sends none.
+   */
+  attachments: z
+    .array(
+      z.object({
+        id: z.number().int().positive(),
+        fileName: z.string().trim().min(1).max(200),
+        mimeType: z.string().trim().min(1).max(100),
+        size: z.number().int().nonnegative(),
+      }),
+    )
+    .max(10)
+    .optional(),
 });
 type TDeliverReply = z.infer<typeof TDeliverReply>;
 const PDeliverReply = zod(TDeliverReply);
@@ -400,6 +420,15 @@ const PSettings = zod(TSettings);
 
 const pId = zod(z.coerce.number().int().positive());
 const pToken = zod(z.string().trim().min(1).max(128));
+// Only ever spliced into a same-site path, so it is held to the thread
+// token's own alphabet; anything else is dropped rather than redirected to.
+const pOptionalThreadToken = zod(
+  z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{1,128}$/)
+    .optional()
+    .catch(undefined),
+);
 // A missing query param arrives as `null`, not `undefined` — `.optional()`
 // only accepts the latter, so an absent filter would 400 rather than mean
 // "no filter". `.catch(undefined)` absorbs that (and anything else
@@ -844,12 +873,22 @@ export function deriveSignInMethod(user: User): string {
   return user.passwordHash != null ? "password" : "magic-link";
 }
 
+/** A guest thread's messages, each with the desk files it carried. */
+async function guestThreadMessages(ticketId: number) {
+  const files = await SupportAttachment.byMessage(ticketId);
+  return (await SupportMessage.listForTicket(ticketId)).map((m) => ({
+    ...m.toDetails(),
+    attachments: (files.get(m.id!) ?? []).map((a) => a.toDetails()),
+  }));
+}
+
 @injectable()
 @controller()
 export class Controller {
   constructor(
     @inject("canonicalUrl") readonly canonicalUrl: string,
     readonly mailer: Mailer,
+    @inject(DataDir) readonly dataDir: DataDir,
   ) {}
 
   #link(path: string): string {
@@ -907,30 +946,47 @@ export class Controller {
     // ticket instead of opening a second one. A simple exact-text match is
     // enough here — no fuzzy matching needed for "I hit submit twice".
     const dupSince = new Date(Date.now() - DEDUP_WINDOW_MS);
+    // Only the same submitter's ticket: a guest never folds into an
+    // account's ticket, nor one account into another's.
     const dup = await SupportTicket.query()
       .where("email", input.email)
       .where("message", input.message)
+      .where((q) => {
+        const userId = ctx.state.user?.id;
+        if (userId != null) {
+          q.where("userId", userId);
+        } else {
+          q.whereNull("userId");
+        }
+      })
       .whereNotIn("status", ["closed", "spam"])
       .where("createdAt", ">=", dupSince)
       .orderBy("createdAt", "desc")
       .first();
 
     if (dup != null) {
-      const dupMessage = await SupportMessage.create({
-        ticketId: dup.id!,
-        sender: "them",
-        body: input.message,
-      });
+      // Only once the ticket is live. A holding ticket's first message is
+      // written from `ticket.message` at confirm time — the same words — so
+      // adding them here too showed the guest their message twice.
       if (dup.confirmed) {
+        const dupMessage = await SupportMessage.create({
+          ticketId: dup.id!,
+          sender: "them",
+          body: input.message,
+        });
         forwardReplyToQdesk(dup.id!, input.message, dupMessage.id!);
       }
-      const threadToken = await SupportTicket.reissueThreadToken(dup.id!);
+      // No thread token in the answer. Knowing an address and the words
+      // sent from it is not proof of owning it, and handing back (and
+      // rotating) the live token gave anyone who could repeat a message
+      // the whole conversation. The link travels by email only.
       const holding = !dup.confirmed;
       if (holding) {
+        const threadToken = await SupportTicket.reissueThreadToken(dup.id!);
         const confirmToken = await SupportTicket.issueConfirmToken(dup.id!);
         this.#sendConfirmEmail(dup, confirmToken, threadToken);
       }
-      ctx.response.body = { ok: true, threadToken, holding };
+      ctx.response.body = { ok: true, holding };
       ctx.response.headers.set("X-Ticket-Id", String(dup.id));
       return;
     }
@@ -984,25 +1040,39 @@ export class Controller {
         email: input.email,
         excludeId: ticket.id!,
       }).catch(() => []);
-      forwardTicketToQdesk({
-        id: ticket.id!,
-        kind: input.kind,
-        name: input.name,
-        email: input.email,
-        subject: input.subject,
-        message: input.message,
-        userId: ctx.state.user?.id ?? null,
-        messageId: first.id!,
-        priorTickets,
-        // Same two independent facts my-controller sends (see the note
-        // there): country from the network edge, zone from the browser.
-        // They were missing here, so every ticket filed through the
-        // public form reached QDesk with no location and no local time —
-        // which costs the crisis script its emergency number and the
-        // assistant its sense of what time it is for the customer.
-        country: ctx.request.headers.get("cf-ipcountry"),
-        timeZone: input.timeZone ?? null,
-      });
+      forwardTicketToQdesk(
+        {
+          id: ticket.id!,
+          kind: input.kind,
+          name: input.name,
+          email: input.email,
+          subject: input.subject,
+          message: input.message,
+          userId: ctx.state.user?.id ?? null,
+          messageId: first.id!,
+          priorTickets,
+          // Same two independent facts my-controller sends (see the note
+          // there): country from the network edge, zone from the browser.
+          // They were missing here, so every ticket filed through the
+          // public form reached QDesk with no location and no local time —
+          // which costs the crisis script its emergency number and the
+          // assistant its sense of what time it is for the customer.
+          country: ctx.request.headers.get("cf-ipcountry"),
+          timeZone: input.timeZone ?? null,
+        },
+        // The staff email for a business enquiry waits for the desk's own id,
+        // so its button opens that ticket on QDesk rather than a KeyLearn
+        // /desk page that no longer exists.
+        input.kind === "business"
+          ? (deskId) =>
+              this.#mailBusinessEnquiry(
+                input,
+                (deskId == null
+                  ? deskPageUrl("/inbox")
+                  : deskPageUrl(`/thread/${deskId}`)) ?? this.#link("/"),
+              )
+          : undefined,
+      );
       // With the QDesk bridge on, QDesk's own agent owns automation —
       // running the local auto-reply too would give the customer two
       // bots answering the same message.
@@ -1014,35 +1084,38 @@ export class Controller {
       this.#sendConfirmEmail(ticket, confirmToken, threadToken);
     }
 
-    if (input.kind === "business") {
-      const inbox = Env.getString("SUPPORT_INBOX_EMAIL", "");
-      if (inbox) {
-        void (async () => {
-          try {
-            await this.mailer.sendMail(
-              messageBusinessEnquiry({
-                to: inbox,
-                name: input.name,
-                fromEmail: input.email,
-                subject: input.subject,
-                message: input.message,
-                ticketLink: this.#link(`/desk/t/${ticket.id}`),
-              }),
-            );
-          } catch {
-            // A mail outage must never fail the submission — the ticket is
-            // already saved and still reachable from the queue.
-          }
-        })();
-      }
-    }
-
     // Wrapped in a real JSON body rather than a bare 204 — the client's
     // support-ticket request expects an application/json response even on
     // success, and an empty 204 carries no Content-Type for it to match,
     // which turned every successful submission into a client-side error.
-    ctx.response.body = { ok: true, threadToken, holding: !confirmed };
+    // The thread token is not returned: it reaches the address on the
+    // ticket by email, and the form never used it.
+    ctx.response.body = { ok: true, holding: !confirmed };
     ctx.response.headers.set("X-Ticket-Id", String(ticket.id));
+  }
+
+  /** Fire-and-forget, like the confirm email: a mail outage never fails a submission. */
+  #mailBusinessEnquiry(input: TCreateTicket, ticketLink: string): void {
+    const inbox = Env.getString("SUPPORT_INBOX_EMAIL", "");
+    if (!inbox) {
+      return;
+    }
+    void (async () => {
+      try {
+        await this.mailer.sendMail(
+          messageBusinessEnquiry({
+            to: inbox,
+            name: input.name,
+            fromEmail: input.email,
+            subject: input.subject,
+            message: input.message,
+            ticketLink,
+          }),
+        );
+      } catch {
+        // Deliberately swallowed — the ticket is already saved and on the desk.
+      }
+    })();
   }
 
   /** Fire-and-forget: a mail outage must never fail the ticket submission. */
@@ -1057,7 +1130,11 @@ export class Controller {
           messageConfirmSupportTicket({
             to: ticket.email!,
             name: ticket.name!,
-            confirmLink: this.#link(`/support/confirm/${confirmToken}`),
+            // The thread token rides along so the confirm page can land the
+            // guest in the conversation it has just opened.
+            confirmLink: this.#link(
+              `/support/confirm/${confirmToken}?t=${threadToken}`,
+            ),
             threadLink: this.#link(`/support/t/${threadToken}`),
           }),
         );
@@ -1140,10 +1217,36 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @pathParam("token", pToken) token: string,
   ) {
-    const ticket = await SupportTicket.redeemConfirmToken(token);
-    if (ticket == null) {
+    if (!(await this.#confirm(token))) {
       ctx.response.status = 404;
       return;
+    }
+    ctx.response.body = { ok: true };
+  }
+
+  /**
+   * The link in the confirmation email. It used to point here with no route
+   * behind it — only the JSON endpoint above existed — so every guest who
+   * clicked it got a 404 and their ticket sat in holding for good. Confirms,
+   * then opens the conversation (or the support page when the thread token
+   * is missing or the confirm token is spent).
+   */
+  @http.GET("/support/confirm/{token}")
+  async confirmTicketPage(
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("token", pToken) token: string,
+    @queryParam("t", pOptionalThreadToken) threadToken: string | undefined,
+  ) {
+    const ok = await this.#confirm(token);
+    ctx.response.redirect(
+      ok && threadToken != null ? `/support/t/${threadToken}` : "/support",
+    );
+  }
+
+  async #confirm(token: string): Promise<boolean> {
+    const ticket = await SupportTicket.redeemConfirmToken(token);
+    if (ticket == null) {
+      return false;
     }
     // The thread's first message only becomes visible once the ticket
     // leaves the holding queue — this is the first moment the sender (or
@@ -1187,7 +1290,7 @@ export class Controller {
     if (ticket.kind === "support" && !qdeskConfigured()) {
       await this.#tryAutoReply(ticket.id!, ticket.message!);
     }
-    ctx.response.body = { ok: true };
+    return true;
   }
 
   /**
@@ -1241,9 +1344,7 @@ export class Controller {
       ctx.response.status = 410;
       return;
     }
-    const messages = (await SupportMessage.listForTicket(ticket.id!)).map((m) =>
-      m.toDetails(),
-    );
+    const messages = await guestThreadMessages(ticket.id!);
     // `reveal` stays false: the person already knows their own email, and
     // this keeps the response shape identical to every other ticket view.
     ctx.response.body = {
@@ -1307,12 +1408,57 @@ export class Controller {
     if (ticket.status === "waiting") {
       updated = await ticket.setStatus("open");
     }
-    const messages = (await SupportMessage.listForTicket(updated.id!)).map(
-      (m) => m.toDetails(),
-    );
+    const messages = await guestThreadMessages(updated.id!);
     ctx.response.body = {
       ticket: updated.toDetails({ reveal: false, messages }),
     };
+  }
+
+  /**
+   * A file on a guest's own thread, addressed by the same unguessable token
+   * as the thread itself — a guest has no account to check it against.
+   *
+   * Only files the desk sent: a guest never uploads, and a file on some
+   * other ticket is the same 404 as one that does not exist.
+   */
+  @http.GET("/_/support/t/{token}/attachments/{id}")
+  async guestAttachment(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("token", pToken) token: string,
+    @pathParam("id", pId) id: number,
+  ) {
+    await requireParentPinForSupport(ctx, ctx.state.user);
+    const ticket = await SupportTicket.findByThreadToken(token);
+    if (ticket == null || !ticket.confirmed || this.#threadExpired(ticket)) {
+      ctx.response.status = 404;
+      return;
+    }
+    const row = await SupportAttachment.query().findById(id);
+    if (row == null || row.ticketId !== ticket.id || row.userId != null) {
+      ctx.response.status = 404;
+      return;
+    }
+    const bytes = await readFile(
+      this.dataDir.supportAttachmentFile(row.id!),
+    ).catch(() => null);
+    if (bytes == null) {
+      ctx.response.status = 404;
+      return;
+    }
+    ctx.response.headers.set("content-type", row.mimeType!);
+    // Same rule as the account's own download: `?download` forces a save, a
+    // bitmap may otherwise show in place, anything else is a download, and
+    // nosniff keeps a mislabelled file from being read as either.
+    const download = ctx.request.url.includes("download");
+    const inlineOk = !download && row.mimeType!.startsWith("image/");
+    const safeName = row.fileName!.replace(/[^\w.\- ]+/g, "_");
+    ctx.response.headers.set(
+      "content-disposition",
+      `${inlineOk ? "inline" : "attachment"}; filename="${safeName}"`,
+    );
+    ctx.response.headers.set("x-content-type-options", "nosniff");
+    ctx.response.headers.set("cache-control", "private, no-store");
+    ctx.response.body = bytes;
   }
 
   @http.POST("/_/support/t/{token}/resolve")
@@ -1521,7 +1667,32 @@ export class Controller {
       ctx.response.status = 404;
       return;
     }
-    await SupportMessage.create({
+    const notifiedVia =
+      input.kind === "crisis"
+        ? "none"
+        : ticket.userId != null
+          ? "app"
+          : "email";
+    // Idempotent on the desk's message id, which is what lets the desk retry
+    // a delivery whose answer it never heard: the copy that already landed
+    // is recognised, and the customer is neither shown it twice nor told
+    // about it twice.
+    if (input.qdeskMessageId != null) {
+      const landed = await SupportMessage.query()
+        .where("ticketId", id)
+        .where("qdeskMessageId", input.qdeskMessageId)
+        .first();
+      if (landed != null) {
+        ctx.response.body = {
+          ok: true,
+          status: ticket.status,
+          notifiedVia,
+          duplicate: true,
+        };
+        return;
+      }
+    }
+    const delivered = await SupportMessage.create({
       ticketId: id,
       sender: input.sender,
       body: input.body,
@@ -1530,6 +1701,16 @@ export class Controller {
       kind: input.kind ?? null,
       qdeskMessageId: input.qdeskMessageId ?? null,
     });
+    // Before the notification, so the email can say what came with it.
+    const attachmentsStored =
+      input.attachments == null || input.attachments.length === 0
+        ? 0
+        : await storeDeskAttachments(
+            this.dataDir,
+            id,
+            delivered.id!,
+            input.attachments,
+          );
     // A crisis redirect is not a reply waiting on the customer — it goes
     // in front of a person, and "waiting on you" is the wrong thing to
     // tell somebody who has just been handed an emergency number.
@@ -1566,21 +1747,21 @@ export class Controller {
     // What this does NOT report is whether the send SUCCEEDED. That answer
     // does not exist yet when this responds, and reporting it would mean
     // waiting on the mailer. It needs the async tick channel instead.
-    const notifiedVia =
-      input.kind === "crisis"
-        ? "none"
-        : ticket.userId != null
-          ? "app"
-          : "email";
     if (input.kind !== "crisis") {
       void this.#notifyReply(
         ticket,
         input.body,
         input.authorName ?? null,
         input.sender === "agent",
+        attachmentsStored,
       );
     }
-    ctx.response.body = { ok: true, status: updated.status, notifiedVia };
+    ctx.response.body = {
+      ok: true,
+      status: updated.status,
+      notifiedVia,
+      attachmentsStored,
+    };
   }
 
   /**
@@ -1676,6 +1857,8 @@ export class Controller {
     authorName: string | null = null,
     /** Whether the assistant wrote it, so the bell can say so. */
     fromAssistant = false,
+    /** Files that came with it — named in a guest's email, which cannot carry them. */
+    files = 0,
   ): Promise<void> {
     if (ticket.userId != null) {
       try {
@@ -1720,9 +1903,11 @@ export class Controller {
           // and asterisks. `plainText` is the same reading a screen reader
           // or the handoff packet gets; an email is one more thing that
           // must never render.
-          body: plainText(
-            parseReply(resolveDateMarks(body, { timeZone: "UTC" })),
-          ),
+          body:
+            plainText(parseReply(resolveDateMarks(body, { timeZone: "UTC" }))) +
+            (files > 0
+              ? `\n\n(${files === 1 ? "A file is" : `${files} files are`} attached. Open the conversation to see ${files === 1 ? "it" : "them"}.)`
+              : ""),
           threadLink: this.#link(`/support/t/${threadToken}`),
           authorName,
         }),

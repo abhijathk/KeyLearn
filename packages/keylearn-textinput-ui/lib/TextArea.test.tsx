@@ -15,7 +15,7 @@ test("render empty text", () => {
     </IntlProvider>,
   );
 
-  equal(r.container.textContent, "");
+  equal(shownText(r.container), "");
 
   r.unmount();
 });
@@ -30,7 +30,7 @@ test("render simple text", () => {
     </IntlProvider>,
   );
 
-  equal(r.container.textContent, "abcxyz");
+  equal(shownText(r.container), "abcxyz");
 
   r.unmount();
 });
@@ -51,7 +51,7 @@ test("render styled text", () => {
     </IntlProvider>,
   );
 
-  equal(r.container.textContent, "abcxyz");
+  equal(shownText(r.container), "abcxyz");
 
   r.unmount();
 });
@@ -67,7 +67,22 @@ test("render text with line template", () => {
     </IntlProvider>,
   );
 
-  equal(r.container.textContent, "[abc][xyz]");
+  equal(shownText(r.container), "[abc][xyz]");
 
   r.unmount();
 });
+
+/**
+ * What the lesson shows, without the screen-reader-only way-out hint the
+ * textarea is described by.
+ */
+function shownText(container: HTMLElement): string | null {
+  const copy = container.cloneNode(true) as HTMLElement;
+  const hint = container
+    .querySelector("textarea")
+    ?.getAttribute("aria-describedby");
+  if (hint != null) {
+    copy.querySelector(`[id="${hint}"]`)?.remove();
+  }
+  return copy.textContent;
+}

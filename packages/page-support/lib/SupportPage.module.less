@@ -479,6 +479,9 @@
   grid-template-columns: 1fr auto 1fr;
   gap: 0.75rem;
   align-items: center;
+  /* In the account window the close button floats over this corner and
+     sat on top of the status badge. */
+  padding-inline-end: var(--float-close-room, 0);
 }
 
 .threadTop > :last-child {
@@ -1163,6 +1166,11 @@
 .crisis {
   display: flex;
   flex-direction: column;
+  /* A flex item of the scrolling log, and `overflow: hidden` drops its
+     automatic minimum height to zero: whenever the log was shorter than its
+     content the emergency card was squeezed to a 4px red line, numbers and
+     all. It must never shrink. */
+  flex-shrink: 0;
   align-self: stretch;
   border: 2px solid var(--error);
   border-radius: 0.75rem;
@@ -1202,6 +1210,7 @@
    been raised once, so this reads as a steadying follow-up rather than a
    second alert — a plain bordered card, no red. */
 .crisisCalm {
+  flex-shrink: 0;
   align-self: stretch;
   border: 1px solid var(--secondary-l2);
   border-radius: 0.75rem;

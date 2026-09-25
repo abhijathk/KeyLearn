@@ -2,11 +2,20 @@ import { test } from "node:test";
 import { deepEqual, equal, isTrue } from "rich-assert";
 import { available, formatAll } from "./format.ts";
 import {
+  HIDE_COMMENTS,
   highlight,
-  SNIPPET_SETS,
+  SNIPPET_FLAGS,
   TYPESCRIPT,
   withoutComments,
 } from "./index.ts";
+import { SNIPPET_SETS } from "./sets.ts";
+
+test("the written-out flag list matches the corpora", () => {
+  deepEqual(SNIPPET_FLAGS, [
+    ...new Set(SNIPPET_SETS.flatMap((set) => set.topics.map(({ id }) => id))),
+    HIDE_COMMENTS,
+  ]);
+});
 
 /**
  * An id names one piece of code, wherever it appears.

@@ -1552,7 +1552,7 @@ EmailVerification.relationMappings = {};
  * the medians that decide eligibility, failing once would lock a learner out
  * by their own failure — which is the opposite of what an assessment is for.
  */
-export class CertificateSitting extends Model {
+export class CertificateSitting extends TimestampMixin(Model) {
   static override readonly tableName = "certificate_sitting";
   static override readonly columnNameMappers = snakeCaseMappers();
   static override jsonSchema = {
@@ -1617,7 +1617,7 @@ export class CertificateSitting extends Model {
  * true on the day it was issued, and later practice must not silently rewrite
  * a document somebody has already printed.
  */
-export class Certificate extends Model {
+export class Certificate extends TimestampMixin(Model) {
   static override readonly tableName = "certificate";
   static override readonly columnNameMappers = snakeCaseMappers();
   static override jsonSchema = {
@@ -1626,8 +1626,10 @@ export class Certificate extends Model {
     properties: {
       id: { type: "integer" },
       sequence: { type: "integer" },
-      profileId: { type: "integer" },
-      userId: { type: "integer" },
+      // Null once the learner or the account is deleted: the certificate
+      // outlives both, so whoever was shown it can still check it.
+      profileId: { type: ["integer", "null"] },
+      userId: { type: ["integer", "null"] },
       kind: { type: "string", enum: ["typing", "braille"] },
       audience: { type: "string", enum: ["adult", "kid"] },
       language: { type: "string", minLength: 1, maxLength: 32 },
@@ -1653,15 +1655,18 @@ export class Certificate extends Model {
     // Distinct from the primary key so the numbering space cannot be disturbed
     // by anything that renumbers rows.
     table.bigInteger("sequence").notNullable().unique();
+    // SET NULL, not CASCADE: an issued certificate stays verifiable after
+    // the learner or the whole account is erased. What it keeps is what was
+    // printed — name, date, figures, number — and no link back to anyone.
     table
       .integer("profile_id")
       .unsigned()
-      .notNullable()
+      .nullable()
       .references("id")
       .inTable("profile")
-      .onDelete("CASCADE")
+      .onDelete("SET NULL")
       .onUpdate("CASCADE");
-    table.integer("user_id").unsigned().notNullable().index();
+    table.integer("user_id").unsigned().nullable().index();
     table.string("kind", 8).notNullable();
     table.string("audience", 8).notNullable();
     table.string("language", 32).notNullable();
@@ -1675,6 +1680,10 @@ export class Certificate extends Model {
     // versioned): a later change never re-judges an issued one.
     table.integer("criteria_version").unsigned().notNullable().defaultTo(1);
     table.text("criteria_json").nullable();
+    // "server" when the server derived the evidence from the learner's own
+    // synced practice and timed the sittings itself; null for a certificate
+    // issued before that, on figures the browser reported.
+    table.string("evidence", 8).nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     // One certificate per learner per language per level: sitting again at the
     // same level reissues nothing, but reaching a higher one does.
@@ -1683,13 +1692,14 @@ export class Certificate extends Model {
 
   readonly id?: number;
   sequence?: number;
-  profileId?: number;
-  userId?: number;
+  profileId?: number | null;
+  userId?: number | null;
   kind?: string;
   audience?: string;
   language?: string;
   level?: string;
   sheet?: string;
+  evidence?: string | null;
   speed?: number;
   accuracy?: number;
   criteriaVersion?: number;

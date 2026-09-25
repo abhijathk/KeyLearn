@@ -1,12 +1,13 @@
 import { body, controller, http, pathParam } from "@fastr/controller";
 import { Context } from "@fastr/core";
-import { ForbiddenError } from "@fastr/errors";
+import { BadRequestError, ForbiddenError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { Profile } from "@keylearn/database";
 import { Settings } from "@keylearn/settings";
 import { SettingsDatabase } from "@keylearn/settings-database";
 import { actorFor } from "../access/actor.ts";
+import { learnerOwner } from "../access/owner.ts";
 import { reachProfile } from "../access/resolver.ts";
 import { type AuthState } from "../auth/index.ts";
 
@@ -28,7 +29,7 @@ export class Controller {
     @body.json(null, { maxLength: 65536 }) value: unknown,
   ) {
     const user = ctx.state.requireUser();
-    await this.database.set(user.id!, new Settings(value as any));
+    await this.database.set(user.id!, toSettings(value));
     ctx.response.status = 204;
   }
 
@@ -49,8 +50,15 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
+    // The owner's copy: a teacher on a guardian's grant reads the learner's
+    // settings, not an empty file of their own.
     ctx.response.body =
-      (await this.database.getProfile(user.id!, Number(id)))?.toJSON() ?? {};
+      (
+        await this.database.getProfile(
+          learnerOwner(profile) ?? user.id!,
+          Number(id),
+        )
+      )?.toJSON() ?? {};
     ctx.response.headers.set("Cache-Control", "private, no-cache");
   }
 
@@ -70,9 +78,9 @@ export class Controller {
       throw new ForbiddenError();
     }
     await this.database.setProfile(
-      user.id!,
+      learnerOwner(profile) ?? user.id!,
       Number(id),
-      new Settings(value as any),
+      toSettings(value),
     );
     ctx.response.status = 204;
   }
@@ -91,7 +99,19 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
-    await this.database.setProfile(user.id!, Number(id), null);
+    await this.database.setProfile(
+      learnerOwner(profile) ?? user.id!,
+      Number(id),
+      null,
+    );
     ctx.response.status = 204;
   }
+}
+
+/** A settings document is a JSON object; anything else is the caller's error, not a 500. */
+function toSettings(value: unknown): Settings {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    throw new BadRequestError("Not a settings document");
+  }
+  return new Settings(value as any);
 }

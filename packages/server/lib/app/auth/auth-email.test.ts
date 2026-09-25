@@ -133,7 +133,7 @@ test("login with an access token / new user", async () => {
   // Assert.
 
   equal(response.status, 302);
-  equal(response.headers.get("Location"), "/");
+  equal(response.headers.get("Location"), "/?signedIn=1");
 
   // One shot: redeeming the link consumes it, so the same link in a forwarded
   // email or a browser history is no longer a way in.
@@ -171,7 +171,7 @@ test("login with an access token / existing user", async () => {
   // Assert.
 
   equal(response.status, 302);
-  equal(response.headers.get("Location"), "/");
+  equal(response.headers.get("Location"), "/?signedIn=1");
 
   isNull(await UserLoginRequest.findByEmail("test@keylearn.org"));
 
@@ -227,4 +227,16 @@ test("ignore invalid access token", async () => {
   isNull(await request.who());
 
   deepEqual(context.mailer.dump(), []);
+});
+
+test("a sign-in link honours its own destination, and only on this site", async () => {
+  const { signedInLanding } = await import("./controller.ts");
+  equal(signedInLanding("/support/t/abc"), "/support/t/abc");
+  equal(signedInLanding("/account#security"), "/account#security");
+  // No destination: the marked landing a phone can move on from.
+  equal(signedInLanding(undefined), "/?signedIn=1");
+  // Never another host.
+  equal(signedInLanding("//evil.example/x"), "/?signedIn=1");
+  equal(signedInLanding("/\\evil.example"), "/?signedIn=1");
+  equal(signedInLanding("https://evil.example"), "/?signedIn=1");
 });

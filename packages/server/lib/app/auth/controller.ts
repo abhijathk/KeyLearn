@@ -16,7 +16,10 @@ import {
 import { inject, injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
 import { randomString, type SessionState } from "@fastr/middleware-session";
+import { FileStore } from "@fastr/middleware-session-file-store";
+import { type LearnerOwner } from "@keylearn/config";
 import {
+  Certificate,
   Credential,
   EmailVerification,
   generateRecoveryCodes,
@@ -30,6 +33,9 @@ import {
   type SecurityEventType,
   SecurityReset,
   type SecurityResetScope,
+  StaffSettings,
+  SupportDraft,
+  SupportPinProof,
   SupportTicket,
   totpUri,
   User,
@@ -60,6 +66,7 @@ import {
 import { File } from "@sosimple/fsx-file";
 import { z } from "zod";
 import { actorFor } from "../access/actor.ts";
+import { learnerOwner } from "../access/owner.ts";
 import { reachProfile } from "../access/resolver.ts";
 import { buildAccountExport } from "../account-export.ts";
 import { Mailer, Notifier } from "../mail/index.ts";
@@ -472,6 +479,11 @@ const PChangePassword = zod(TChangePassword, () => {
 
 const TTwoFactorEnable = z.object({
   code: z.string().regex(/^\d{6}$/),
+  // Proof that the person turning it on owns the account, not merely holds a
+  // session: the password, or for an account without one a code emailed to
+  // it (`/auth/change-email/identity-code`, the "identity" purpose).
+  password: z.string().max(128).optional(),
+  identityCode: z.string().trim().max(16).optional(),
 });
 type TTwoFactorEnable = z.infer<typeof TTwoFactorEnable>;
 const PTwoFactorEnable = zod(TTwoFactorEnable, () => {
@@ -557,6 +569,22 @@ const PPatchAccount = zod(TPatchAccount, () => {
   throw new ApplicationError("Invalid request");
 });
 
+/**
+ * Where a sign-in lands.
+ *
+ * The link's own destination when it names one on this site — a path, never
+ * a host (`//evil.example` and a backslash after the slash are hosts to a browser).
+ * Otherwise the practice page, marked `?signedIn=1` so a phone, which the
+ * practice page gates as "made for a bigger screen", can go on to the account
+ * instead of dead-ending there; see the browser's `SignedInLanding`.
+ */
+export function signedInLanding(next: string | undefined): string {
+  if (next != null && /^\/(?![/\\])/.test(next)) {
+    return next;
+  }
+  return "/?signedIn=1";
+}
+
 @injectable()
 @controller()
 export class Controller {
@@ -618,9 +646,12 @@ export class Controller {
 
   // Remove a profile's on-disk typing history — its data files, separate from
   // the DB row. Best-effort; a missing file is fine.
-  async #deleteProfileData(userId: number, profileId: number): Promise<void> {
+  async #deleteProfileData(
+    owner: LearnerOwner,
+    profileId: number,
+  ): Promise<void> {
     try {
-      await this.userData.loadProfile(userId, profileId).delete();
+      await this.userData.loadProfile(owner, profileId).delete();
     } catch (err: any) {
       Logger.warn(err, "Could not delete stats for profile %d", profileId);
     }
@@ -628,7 +659,7 @@ export class Controller {
     // It has to go the same way, or splitting the courses would have quietly
     // reintroduced the leak that deleting a learner used to have.
     try {
-      await this.userData.loadProfile(userId, profileId, "classic").delete();
+      await this.userData.loadProfile(owner, profileId, "classic").delete();
     } catch (err: any) {
       Logger.warn(err, "Could not delete classic stats for %d", profileId);
     }
@@ -638,16 +669,35 @@ export class Controller {
     // for it back.
     try {
       await new File(
-        this.userData.dataDir.brailleProgressFile(userId, profileId),
+        this.userData.dataDir.brailleProgressFile(owner, profileId),
       ).delete();
     } catch (err: any) {
       Logger.warn(err, "Could not delete braille progress for %d", profileId);
+    }
+    // The learner's settings, accessibility preferences and mirrored device
+    // storage (the sync routes' one profile document, "local") — each added
+    // after this method was written, and each was being left on disk.
+    const { dataDir } = this.userData;
+    for (const path of [
+      dataDir.profileSettingsFile(owner, profileId),
+      dataDir.a11yPrefsFile(owner, profileId),
+      dataDir.profileDocFile(owner, profileId, "local"),
+    ]) {
+      try {
+        await new File(path).delete();
+      } catch (err: any) {
+        Logger.warn(err, "Could not delete %s for %d", path, profileId);
+      }
     }
     // The database snapshot as well. Erasing only the file would leave a copy
     // behind in the one place that is backed up, which is the opposite of what
     // deleting a learner is for.
     try {
-      await ProfileData.deleteFor(userId, profileId);
+      // An organisation's learner has no snapshot rows (they hang off an
+      // account), so there is nothing to erase for one.
+      if (typeof owner === "number") {
+        await ProfileData.deleteFor(owner, profileId);
+      }
     } catch (err: any) {
       Logger.warn(err, "Could not delete snapshot for profile %d", profileId);
     }
@@ -806,7 +856,7 @@ export class Controller {
             break;
         }
       }
-      ctx.response.redirect("/");
+      ctx.response.redirect(signedInLanding(undefined));
     } else {
       throw new BadRequestError();
     }
@@ -1106,6 +1156,8 @@ export class Controller {
   async loginWithToken(
     ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("token", zod(z.string().min(1))) token: string,
+    @queryParam("next", zod(z.string().max(512).optional().catch(undefined)))
+    next: string | undefined,
   ) {
     ctx.state.session.destroy();
     const user = await UserLoginRequest.login(token);
@@ -1113,7 +1165,7 @@ export class Controller {
       ctx.state.session.start();
       ctx.state.session.set("userId", user.id!);
       ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
-      ctx.response.redirect("/");
+      ctx.response.redirect(signedInLanding(next));
     } else {
       throw new ForbiddenError("Invalid login link", {
         description:
@@ -1144,8 +1196,14 @@ export class Controller {
     @body.json(PCompleteProfile, jsonOpts) { dateOfBirth }: TCompleteProfile,
   ) {
     const user = ctx.state.requireUser();
+    // Only the missing-date step. Once a date is on file this would let any
+    // session rewrite it — or, by claiming to be under 13, erase the account
+    // with none of the deletion flow's confirmation.
+    if (user.dateOfBirth != null) {
+      throw new ForbiddenError("Your date of birth is already on file.");
+    }
     if (ageInYears(dateOfBirth) < minAge()) {
-      await user.$query().delete();
+      await this.deleteAccountById(user.id!);
       ctx.state.session.destroy();
       throw new ForbiddenError(
         "You need to be at least 13 to have an account. Ask a parent or guardian to create one and add you as a learner.",
@@ -1384,14 +1442,67 @@ export class Controller {
     } catch (err: any) {
       Logger.warn(err, "Could not delete account stats for %d", user.id!);
     }
+    // Likewise the account's own settings and its mirrored device storage.
+    for (const path of [
+      this.userData.dataDir.userSettingsFile(user.id!),
+      this.userData.dataDir.accountDocFile(user.id!, "local"),
+    ]) {
+      try {
+        await new File(path).delete();
+      } catch (err: any) {
+        Logger.warn(err, "Could not delete %s for %d", path, user.id!);
+      }
+    }
     await ProfileData.deleteFor(user.id!, null);
+    // Certificates stay (owner decision): an employer or school holding one
+    // must still be able to check it. What stays is what was printed — the
+    // name as it appears on the paper, the date, the figures, the number —
+    // and nothing that leads back to the account: the learner link goes with
+    // the profile below (SET NULL), and the account link goes here.
+    await Certificate.query().where("userId", user.id!).patch({ userId: null });
     await Profile.query().where("userId", user.id!).delete();
     // The trail goes with the account: keeping it would retain personal data
     // (addresses, device strings) about someone who asked to be erased.
     await SecurityEvent.deleteForUser(user.id!);
     // Poll votes and feedback comments go with the account (spec §8).
     await LearnerResponse.deleteForUser(user.id!);
+    // And the rest of what only ever described this person: the bell, an
+    // unsent support draft, PIN proofs, pending security resets, desk
+    // preferences. None has a foreign key to cascade it, so each was left.
+    // Support tickets stay: the desk's record of the conversation.
+    for (const model of [
+      Notification,
+      SupportDraft,
+      SupportPinProof,
+      SecurityReset,
+      StaffSettings,
+    ]) {
+      await model.query().where("userId", user.id!).delete();
+    }
     await user.$query().delete();
+    // Last, so a failure above leaves the account signed in and able to try
+    // again. The user row is gone, so these sessions already resolve to
+    // nobody; this removes the files that still name the account.
+    await this.#dropSessions(user.id!);
+  }
+
+  async #dropSessions(userId: number): Promise<void> {
+    // Read straight from the sessions directory (session.ts keeps both the
+    // learner's and the desk's sessions there) rather than through the
+    // request-path store, which only loads and saves one id at a time.
+    const store = new FileStore({
+      directory: this.userData.dataDir.dataPath("sessions"),
+    });
+    try {
+      for await (const { file, session } of store.listFiles()) {
+        const data = (session as { data?: { userId?: unknown } }).data;
+        if (data?.userId === userId) {
+          await file.delete();
+        }
+      }
+    } catch (err: any) {
+      Logger.warn(err, "Could not remove sessions for %d", userId);
+    }
   }
 
   // Append each ADULT profile's typing results — stripped to anonymous metrics
@@ -2036,7 +2147,8 @@ export class Controller {
   @http.POST({ name: "2fa-enable", path: "/_/account/2fa/enable" })
   async twoFactorEnable(
     ctx: Context<RouterState & SessionState & AuthState>,
-    @body.json(PTwoFactorEnable, jsonOpts) { code }: TTwoFactorEnable,
+    @body.json(PTwoFactorEnable, jsonOpts)
+    { code, password, identityCode }: TTwoFactorEnable,
   ) {
     rateLimit(ctx, "2fa", 10, 300_000);
     const user = ctx.state.requireUser();
@@ -2050,6 +2162,28 @@ export class Controller {
       )
     ) {
       throw new ForbiddenError("That code is not right. Try the next one.");
+    }
+    // Then re-confirm who this is: a second factor enrolled by whoever holds
+    // a stolen session is theirs, not the owner's, and locks the owner out
+    // at their next sign-in. Checked after the app code, so a mistyped app
+    // code does not use up the emailed one.
+    const proved =
+      user.passwordHash != null
+        ? password != null &&
+          (await User.loginWithPassword(user.email!, password)) != null
+        : user.email != null &&
+          identityCode != null &&
+          (await EmailVerification.verify(
+            user.email,
+            "identity",
+            identityCode,
+          ));
+    if (!proved) {
+      throw new ForbiddenError(
+        user.passwordHash != null
+          ? "Your password is incorrect."
+          : "That confirmation code is incorrect or has expired.",
+      );
     }
     const codes = generateRecoveryCodes();
     await user.$query().patch({ totpEnabled: true });
@@ -2442,7 +2576,13 @@ export class Controller {
     if (profile == null) {
       throw new ForbiddenError();
     }
-    await this.#deleteProfileData(user.id!, profile.id!);
+    // The learner's owner, not the caller: an organisation admin removing a
+    // mode-A learner must erase the organisation's files, not look in their
+    // own household's folder.
+    await this.#deleteProfileData(
+      learnerOwner(profile) ?? user.id!,
+      profile.id!,
+    );
     await profile.$query().delete();
     this.#audit(ctx, "profile-deleted", user.id!, profile.firstName ?? null);
     ctx.response.body = { profiles: await profileList(user.id!) };

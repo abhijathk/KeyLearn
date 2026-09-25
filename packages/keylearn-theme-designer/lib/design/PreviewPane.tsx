@@ -20,7 +20,10 @@ export function PreviewPane({ children }: { readonly children: ReactNode }) {
     <ThemeContext.Provider
       // The designer paints its own complete palette, so the preview must not
       // carry an accent theme that would fight it.
-      value={staticTheme({ color: "*", font: "*", accent: "*" }, theme.hash())}
+      value={staticTheme(
+        { color: "*", font: "*", textSize: "*", accent: "*" },
+        theme.hash(),
+      )}
     >
       <div
         ref={ref}

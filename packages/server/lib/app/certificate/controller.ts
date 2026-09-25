@@ -3,6 +3,7 @@ import { Context } from "@fastr/core";
 import { ApplicationError, ForbiddenError, NotFoundError } from "@fastr/errors";
 import { injectable } from "@fastr/invert";
 import { type RouterState } from "@fastr/middleware-router";
+import { type SessionState } from "@fastr/middleware-session";
 import {
   assess,
   type CertificateEvidence,
@@ -12,6 +13,7 @@ import {
   judge,
   nameCapacity,
   type NumberingKey,
+  planFor,
   sequenceOf,
   type Sitting,
 } from "@keylearn/certificate";
@@ -33,6 +35,7 @@ import {
   certificatesPublicVerify,
   kidsCertificates,
 } from "../site-config/readers.ts";
+import { EvidenceSource } from "./evidence.ts";
 import { numberingKey } from "./key.ts";
 import { flag, millis } from "./timestamp.ts";
 
@@ -48,7 +51,10 @@ import { flag, millis } from "./timestamp.ts";
 @injectable()
 @controller()
 export class Controller {
-  constructor(readonly dataDir: DataDir) {}
+  constructor(
+    readonly dataDir: DataDir,
+    readonly source: EvidenceSource,
+  ) {}
 
   /** The deployment's own scramble — see `numberingKey`. */
   get #key() {
@@ -62,9 +68,29 @@ export class Controller {
    * so a single sitting is never the answer to anything, and there is nothing
    * to be gained by sending a flattering one.
    */
+  /**
+   * The clock starts here, on the server.
+   *
+   * A sitting reported without one was a number anybody could post in the
+   * same second. Now the page asks to start, the start is kept in the
+   * session, and the sitting it later reports is held to the time that
+   * really passed (see `postSitting`).
+   */
+  @http.POST("/_/certificate/sitting/{pid:[0-9]+}/start")
+  async startSitting(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @pathParam("pid") pid: string,
+  ) {
+    rateLimit(ctx, "certificate-sitting-start", 30, 60_000);
+    const profile = await this.owned(ctx, pid);
+    requireCertificatesFor(profile);
+    ctx.state.session.set(SITTING_KEY, { pid: profile.id!, at: Date.now() });
+    ctx.response.body = { ok: true, plan: planOf(profile) };
+  }
+
   @http.POST("/_/certificate/sitting/{pid:[0-9]+}")
   async postSitting(
-    ctx: Context<RouterState & AuthState>,
+    ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("pid") pid: string,
     @body.json(null, { maxLength: 4096 }) value: unknown,
   ) {
@@ -74,7 +100,30 @@ export class Controller {
     rateLimit(ctx, "certificate-sitting", 20, 60_000);
     const profile = await this.owned(ctx, pid);
     requireCertificatesFor(profile);
-    const sitting = readSitting(value);
+    const claimed = readSitting(value);
+    // Held to what the server can see. The start is spent either way, so a
+    // refused sitting cannot be replayed against the same clock.
+    const started = ctx.state.session.get(SITTING_KEY) as
+      | { pid?: number; at?: number }
+      | undefined;
+    ctx.state.session.delete(SITTING_KEY);
+    const { evidence, language } = await this.source.derive(
+      profile,
+      claimed.kind,
+    );
+    const refusal = checkSitting(
+      claimed,
+      started?.pid === profile.id ? (started?.at ?? null) : null,
+      planOf(profile),
+      evidence,
+      (await criteriaSnapshot()).criteria,
+    );
+    if (refusal != null) {
+      ctx.response.status = 409;
+      ctx.response.body = { error: "sitting-refused", reason: refusal };
+      return;
+    }
+    const sitting = { ...claimed, language };
     // Control centre, certificates.attemptsPerDay (0 = unlimited).
     const perDay = certificateAttemptsPerDay();
     if (perDay > 0) {
@@ -140,7 +189,10 @@ export class Controller {
       ctx.response.body = { announced: false };
       return;
     }
-    const { evidence } = readClaim(value, profile);
+    const { evidence } = await this.source.derive(
+      profile,
+      readClaim(value, profile).evidence.kind,
+    );
     const snapshot = await criteriaSnapshot();
     if (!assess(evidence, snapshot.criteria).eligible) {
       ctx.response.body = { announced: false };
@@ -190,11 +242,15 @@ export class Controller {
     const user = ctx.state.requireUser();
     const profile = await this.owned(ctx, pid);
     requireCertificatesFor(profile);
-    const {
-      evidence,
-      language,
-      nameVisible: askedVisible,
-    } = readClaim(value, profile);
+    // Only what the learner chooses comes from the request: which kind of
+    // certificate and whether it may name them. Every figure is the server's
+    // own, from their synced practice (see `EvidenceSource`).
+    const claim = readClaim(value, profile);
+    const askedVisible = claim.nameVisible;
+    const { evidence, language } = await this.source.derive(
+      profile,
+      claim.evidence.kind,
+    );
     // Control centre, certificates.namedAdults: off means every new
     // certificate is anonymous, whatever was asked.
     const nameVisible = askedVisible && certificatesNamedAdults();
@@ -286,6 +342,7 @@ export class Controller {
       nameVisible,
       criteriaVersion: snapshot.version,
       criteriaJson: JSON.stringify(snapshot.criteria),
+      evidence: "server",
     });
     const saved = await Certificate.query()
       .patchAndFetchById(inserted.id!, { sequence: inserted.id! })
@@ -403,6 +460,13 @@ export class Controller {
         found.audience === "kid" || !flag(found.nameVisible)
           ? null
           : found.name,
+      // What it says, so whoever is checking can compare it with the paper.
+      speed: found.speed,
+      accuracy: found.accuracy,
+      // "server": judged on practice and a sitting the server itself saw.
+      // "self-reported": issued before that, on figures the browser sent —
+      // still a certificate we issued, but said plainly for what it is.
+      evidence: found.evidence === "server" ? "server" : "self-reported",
       // The criteria it was issued under, which a later change never re-judges.
       criteriaVersion: found.criteriaVersion ?? 1,
       criteria:
@@ -415,10 +479,13 @@ export class Controller {
     pid: string,
   ): Promise<Profile> {
     const user = ctx.state.requireUser();
+    // "write", not "read": every caller records a sitting, stamps the
+    // profile or issues a certificate. A read-only reach — a teacher on a
+    // guardian's grant — must not be able to do any of that for a learner.
     const profile = await reachProfile(
       actorFor(ctx, user),
       Number(pid),
-      "read",
+      "write",
     );
     if (profile == null) {
       throw new ForbiddenError();
@@ -445,6 +512,71 @@ function requireCertificatesFor(profile: Profile): void {
   }
 }
 
+/** The session key holding a sitting's server-side start. */
+const SITTING_KEY = "certificateSitting";
+
+function planOf(profile: Profile) {
+  return planFor(
+    profile.kind === "kid" ? "kid" : "adult",
+    profile.birthYear == null
+      ? null
+      : new Date().getFullYear() - profile.birthYear,
+  );
+}
+
+/**
+ * How much faster than their own practice a learner can plausibly be in the
+ * assessment. The assessment hides the keyboard and uses unseen text, so the
+ * honest direction is slower; this is only the ceiling above which a figure
+ * stops being a person having a good day.
+ */
+const SITTING_OVER_PRACTICE = 1.25;
+const SITTING_OVER_PRACTICE_SLACK = 5;
+
+/**
+ * Why a reported sitting cannot be recorded, or null when it can.
+ *
+ * Each rule is something the server can see for itself: that a sitting was
+ * started here, that the time which has passed since covers the runs it
+ * reports, and that its speed is one the learner's own synced practice makes
+ * believable. None of it trusts a figure because the page sent it.
+ */
+function checkSitting(
+  sitting: ReturnType<typeof readSitting>,
+  startedAt: number | null,
+  plan: ReturnType<typeof planFor>,
+  evidence: CertificateEvidence,
+  criteria: Parameters<typeof assess>[1],
+  now = Date.now(),
+): string | null {
+  if (startedAt == null) {
+    return "not-started";
+  }
+  if (!assess(evidence, criteria).eligible) {
+    return "not-eligible";
+  }
+  if (sitting.runs > plan.runs) {
+    return "too-many-runs";
+  }
+  // The runs themselves, at a little under their length, to allow for the
+  // page's own rounding; a sitting cannot report more time than has passed.
+  const needed = sitting.runs * plan.seconds * 0.9;
+  const elapsed = (now - startedAt) / 1000;
+  if (elapsed < needed || sitting.seconds < needed) {
+    return "too-fast";
+  }
+  if (sitting.seconds > elapsed + 5) {
+    return "more-time-than-passed";
+  }
+  if (
+    sitting.speed >
+    evidence.speed * SITTING_OVER_PRACTICE + SITTING_OVER_PRACTICE_SLACK
+  ) {
+    return "faster-than-practice";
+  }
+  return null;
+}
+
 function toDetails(row: Certificate, key: NumberingKey) {
   return {
     number: certificateNumber(row.sequence!, key),
@@ -458,6 +590,7 @@ function toDetails(row: Certificate, key: NumberingKey) {
     name: row.name,
     nameVisible: flag(row.nameVisible),
     criteriaVersion: row.criteriaVersion ?? 1,
+    evidence: row.evidence === "server" ? "server" : "self-reported",
     // Always ISO. SQLite hands back "2026-08-07 02:00:09", which is not a
     // format `new Date()` is required to parse and which browsers disagree
     // about — so the wire format is pinned here rather than left to whichever

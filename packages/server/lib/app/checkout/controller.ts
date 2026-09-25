@@ -19,6 +19,12 @@ export class Controller {
     ctx: Context<RouterState & AuthState>,
     @body.text(null, { expectType: "application/json" }) payload: string,
   ): Promise<void> {
+    if (!this.config.configured) {
+      ctx.response.status = 404;
+      ctx.response.body = "Payments are not configured";
+      ctx.response.type = "text/plain";
+      return;
+    }
     const paddle = this.config.makePaddle();
 
     // Parse.

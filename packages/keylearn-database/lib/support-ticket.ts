@@ -226,6 +226,10 @@ export class SupportTicket extends TimestampMixin(Model) {
       ip,
       country,
       timeZone,
+      // Set here, not left to the column default: on SQLite that default is
+      // CURRENT_TIMESTAMP, a UTC string with no zone, which `new Date()` reads
+      // as server-local time — a brand-new ticket showed as "10h" old.
+      updatedAt: new Date(),
     });
     return { ticket, threadToken };
   }

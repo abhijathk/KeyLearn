@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./ConfirmDialog.module.less";
 
@@ -35,16 +35,39 @@ export function ConfirmDialog({
   const matched =
     requireText == null ||
     typed.trim().toUpperCase() === requireText.toUpperCase();
-  // Escape closes; the dialog owns focus while open.
+  // Escape closes THIS dialog and nothing under it. Heard in the capture
+  // phase and stopped there: the account window behind listens for Escape on
+  // the window too, so one press used to close the confirm and the whole
+  // account window with it.
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") {
+        ev.stopPropagation();
         onCancel();
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [onCancel]);
+  // The dialog owns focus while open: Cancel, the safe choice, takes it
+  // (unless the typed-word field already has), and the control that opened
+  // it gets it back afterwards.
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const opener =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    if (requireText == null) {
+      cancelRef.current?.focus();
+    }
+    return () => {
+      if (opener?.isConnected) {
+        opener.focus();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
@@ -92,6 +115,7 @@ export function ConfirmDialog({
         {extra}
         <div className={styles.actions}>
           <button
+            ref={cancelRef}
             className={clsx(styles.btn, styles.cancel)}
             onClick={onCancel}
           >

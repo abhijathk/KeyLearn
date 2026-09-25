@@ -13,7 +13,7 @@ import {
 } from "@keylearn/pages-shared";
 import { IconButton, StrokeIcon } from "@keylearn/widget";
 import { clsx } from "clsx";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink, useNavigate } from "react-router";
 import { LanguagePanel } from "./LanguagePanel.tsx";
@@ -101,6 +101,59 @@ export function MenuDrawer({
     rememberMode("kids");
     onClose();
   };
+  // Keyboard: opening moves focus to the first item, Tab and Shift+Tab stay
+  // inside while it is open, and closing — Escape, the X, a choice — gives
+  // focus back to whatever opened it. Before, focus stayed on the header
+  // button and the drawer came last in the tab order, after the whole page.
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const here = panel.current;
+    const opener =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const items = () =>
+      [...(here?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])].filter(
+        (el) => el.closest("[inert]") == null,
+      );
+    const first =
+      items().find((el) => el.closest(`.${styles.body}`) != null) ?? items()[0];
+    first?.focus({ preventScroll: true });
+    const onTab = (event: KeyboardEvent) => {
+      if (
+        event.key !== "Tab" ||
+        here == null ||
+        !here.contains(document.activeElement)
+      ) {
+        return;
+      }
+      const all = items();
+      if (all.length === 0) {
+        return;
+      }
+      const edge = event.shiftKey ? all[0] : all[all.length - 1];
+      if (document.activeElement === edge) {
+        event.preventDefault();
+        (event.shiftKey ? all[all.length - 1] : all[0])!.focus();
+      }
+    };
+    document.addEventListener("keydown", onTab);
+    return () => {
+      document.removeEventListener("keydown", onTab);
+      const active = document.activeElement;
+      if (
+        opener?.isConnected &&
+        (active == null ||
+          active === document.body ||
+          here?.contains(active) === true)
+      ) {
+        opener.focus({ preventScroll: true });
+      }
+    };
+  }, [open]);
   useEffect(() => {
     if (!open) {
       return;
@@ -142,8 +195,12 @@ export function MenuDrawer({
         onClick={onClose}
       />
       <aside
+        ref={panel}
         className={clsx(styles.panel, open && styles.open)}
         aria-hidden={!open}
+        // Parked off-screen, not unmounted: without this its close button
+        // was still a Tab stop, focused invisibly inside an aria-hidden tree.
+        inert={!open}
       >
         {/* No wordmark here (owner decision). The panel opens from the
             header, which carries the mark a few centimetres away; repeating
@@ -502,3 +559,6 @@ export function MenuDrawer({
     </>
   );
 }
+
+const FOCUSABLE =
+  "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";

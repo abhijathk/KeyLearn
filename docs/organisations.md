@@ -181,6 +181,30 @@ This is P4 expressed where it cannot be forgotten. Do not model ownership
 polymorphically (`owner_type` + `owner_id`) — it reads as flexibility and costs
 real foreign keys, so the database can no longer prove an owner exists.
 
+#### Where mode-A files live
+
+A learner's files (results for every course, settings, braille progress,
+accessibility preferences, the mirrored device storage) sit in a folder named
+for their owner, the same owner the constraint above names:
+
+- a household learner under the account: `<store>/<a>/<b>/<account id>/<profile id>…`;
+- an organisation's learner under the organisation:
+  `<store>/org/<organisation id>/<profile id>…`.
+
+The owner comes from the profile (`learnerOwner` in `server/lib/app/access/owner.ts`),
+never from the session. A mode-A child practises on whatever account's device
+the classroom has, and keying files to that account split their history
+across machines and hid it from the organisation that owns it. Whether a
+caller may touch the files is still only the resolver's answer (§5.1).
+
+Mode-A learners have no `profile_data` snapshot: its rows hang off an account.
+Their files are the only copy until the snapshot grows an organisation owner.
+
+Files written under a device account before this layout are moved by an
+idempotent pass the server runs at boot (`OrgLearnerFiles`). It moves only a
+file named for a mode-A learner, and only when the organisation has no file
+of that name yet; otherwise it leaves the stray in place and logs it.
+
 ### 4.2 Batch membership
 
 `profile.batch_id` records where a learner **is**, not where they have been.

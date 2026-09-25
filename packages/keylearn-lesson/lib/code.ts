@@ -15,6 +15,8 @@ import { Lesson } from "./lesson.ts";
 import { lessonProps } from "./settings.ts";
 import { Target } from "./target.ts";
 
+export { loadSnippetSets } from "@keylearn/content-snippets";
+
 export class CodeLesson extends Lesson {
   constructor(settings: Settings, keyboard: Keyboard, model: PhoneticModel) {
     super(settings, keyboard, model);

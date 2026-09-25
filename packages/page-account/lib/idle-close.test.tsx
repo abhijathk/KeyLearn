@@ -1,5 +1,5 @@
 import { afterEach, test } from "node:test";
-import { act, cleanup, render } from "@testing-library/react";
+import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { type ReactNode } from "react";
 import { equal, isTrue } from "rich-assert";
 import { useIdleClose } from "./AccountPage.tsx";
@@ -33,6 +33,10 @@ const wait = (ms: number) =>
 test("it closes once nobody has been there for the whole window", async () => {
   let closed = 0;
   const r = render(<Probe onIdle={() => closed++} />);
+  // Start the clock now rather than at the first render: the hook stamps
+  // "last seen" while rendering, and on a loaded machine the render alone
+  // can eat the three ticks of slack this test allows.
+  fireEvent.pointerMove(window);
 
   await wait(CLOSE - WARN - TICK * 3);
   equal(closed, 0);

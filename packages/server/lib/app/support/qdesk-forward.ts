@@ -143,29 +143,37 @@ async function landCrisisReply(
   }
 }
 
-export function forwardTicketToQdesk(ticket: {
-  readonly id: number;
-  readonly kind: "support" | "business";
-  readonly name: string;
-  readonly email: string;
-  readonly subject: string;
-  readonly message: string;
-  readonly userId: number | null;
-  /** The row the opening message was written to, for its second tick. */
-  readonly messageId?: number | null;
-  /** ISO 3166-1 alpha-2 from the edge (cf-ipcountry) — network truth, not a preference. */
-  readonly country?: string | null;
-  /** The browser's own IANA zone. */
-  readonly timeZone?: string | null;
+export function forwardTicketToQdesk(
+  ticket: {
+    readonly id: number;
+    readonly kind: "support" | "business";
+    readonly name: string;
+    readonly email: string;
+    readonly subject: string;
+    readonly message: string;
+    readonly userId: number | null;
+    /** The row the opening message was written to, for its second tick. */
+    readonly messageId?: number | null;
+    /** ISO 3166-1 alpha-2 from the edge (cf-ipcountry) — network truth, not a preference. */
+    readonly country?: string | null;
+    /** The browser's own IANA zone. */
+    readonly timeZone?: string | null;
+    /**
+     * Earlier conversations this person quoted the number of, and owns.
+     *
+     * Already ownership-checked by the time it reaches here — see
+     * `priorTicketsFor`. Optional so a desk build that does not read it, and
+     * a caller that has not resolved any, both behave as before.
+     */
+    readonly priorTickets?: readonly PriorTicket[];
+  },
   /**
-   * Earlier conversations this person quoted the number of, and owns.
-   *
-   * Already ownership-checked by the time it reaches here — see
-   * `priorTicketsFor`. Optional so a desk build that does not read it, and
-   * a caller that has not resolved any, both behave as before.
+   * Told the desk's own id for the ticket once it lands, or null when it did
+   * not (bridge off, desk down — the retry sweep delivers it later). For a
+   * caller whose next step needs the desk's address for the ticket.
    */
-  readonly priorTickets?: readonly PriorTicket[];
-}): void {
+  onLanded?: (deskTicketId: number | null) => void,
+): void {
   const cfg = config();
   void attachmentsFor(ticket.messageId)
     .then((attachments) =>
@@ -201,7 +209,19 @@ export function forwardTicketToQdesk(ticket: {
       if (result != null && ticket.messageId != null) {
         void SupportMessage.markDelivered(ticket.messageId);
       }
+      const deskId = (result as { ticketId?: unknown } | null)?.ticketId;
+      onLanded?.(typeof deskId === "number" ? deskId : null);
     });
+}
+
+/**
+ * A page on the desk, for links in mail to staff. The desk is QDesk now, on
+ * its own origin; KeyLearn's old `/desk` pages are gone, so a link built on
+ * this app's own origin is a 404. Null when no desk is configured.
+ */
+export function deskPageUrl(path: string): string | null {
+  const url = Env.getString("QDESK_URL", "");
+  return url === "" ? null : String(new URL(path, url));
 }
 
 /**
@@ -424,6 +444,11 @@ export async function fetchHelpArticles(): Promise<readonly HelpArticle[]> {
       throw new Error(`status ${res.status}`);
     }
     const articles = (await res.json()) as HelpArticle[];
+    // A wrong shape is "not available", not a list — cached, it would reach
+    // the help page's `.map` for five minutes.
+    if (!Array.isArray(articles)) {
+      throw new Error("expected a list");
+    }
     cache = { at: Date.now(), articles };
     return articles;
   } catch (err) {
@@ -489,8 +514,11 @@ export async function fetchDeskNotices(): Promise<readonly DeskNotice[]> {
     if (!res.ok) {
       throw new Error(`status ${res.status}`);
     }
-    const body = (await res.json()) as { notices?: DeskNotice[] };
-    noticeCache = { at: Date.now(), notices: body.notices ?? [] };
+    const body = (await res.json()) as { notices?: DeskNotice[] } | null;
+    if (!Array.isArray(body?.notices)) {
+      throw new Error("expected a notices list");
+    }
+    noticeCache = { at: Date.now(), notices: body.notices };
     return noticeCache.notices;
   } catch (err) {
     console.error("qdesk notices failed", err);
@@ -537,5 +565,40 @@ export async function fetchExpectedReplyMinutes(): Promise<number | null> {
   } catch (err) {
     console.error("qdesk expected-reply failed", err);
     return expectedReplyCache?.medianMinutes ?? null;
+  }
+}
+
+/**
+ * The bytes of a file a staffer sent with a desk reply, fetched back from the
+ * desk by its own id. Null on any failure: the reply still lands, and the
+ * caller reports how many files did not.
+ */
+export async function fetchDeskAttachment(
+  ticketId: number,
+  attachmentId: number,
+): Promise<Buffer | null> {
+  const cfg = config();
+  if (cfg == null) {
+    return null;
+  }
+  try {
+    const res = await fetch(
+      new URL(
+        `/_/apps/tickets/${ticketId}/attachments/${attachmentId}`,
+        cfg.url,
+      ),
+      {
+        headers: { "x-qdesk-app-key": cfg.key },
+        signal: AbortSignal.timeout(15_000),
+      },
+    );
+    if (!res.ok) {
+      console.error(`qdesk attachment ${attachmentId} -> ${res.status}`);
+      return null;
+    }
+    return Buffer.from(await res.arrayBuffer());
+  } catch (err) {
+    console.error(`qdesk attachment ${attachmentId} failed`, err);
+    return null;
   }
 }

@@ -1,5 +1,5 @@
 import { test } from "node:test";
-import { deepEqual, isTrue } from "rich-assert";
+import { deepEqual, isFalse, isTrue } from "rich-assert";
 import { InputHandler } from "./inputhandler.ts";
 import { fakeEvent, type FakeEventInit, tracingListener } from "./testing.ts";
 
@@ -180,6 +180,44 @@ test("handle the tab", () => {
   // Tab is prevented so focus stays put, and reports an indent of its own —
   // the browser emits no input event for it, so nothing else would.
   deepEqual(target.trace, ["100,appendIndent,\u0000,100", "100,keydown,Tab,Tab", "200,keyup,Tab,Tab"]);
+});
+
+test("escape releases tab, and any other key takes it back", () => {
+  // Arrange.
+
+  const target = tracingListener();
+  const handler = new InputHandler();
+  handler.setCallbacks(target);
+  const tab = (timeStamp: number, shiftKey = false) =>
+    fakeEvent({
+      timeStamp,
+      type: "keydown",
+      code: "Tab",
+      key: "Tab",
+      shiftKey,
+    });
+
+  // Act.
+
+  handler.handleKeyboard(fakeEvent({ timeStamp: 100, type: "keydown", code: "Escape", key: "Escape" }));
+  handler.handleKeyboard(
+    fakeEvent({ timeStamp: 110, type: "keydown", code: "ShiftLeft", key: "Shift", shiftKey: true }),
+  );
+  const leaving = tab(120, true);
+  handler.handleKeyboard(leaving);
+  handler.handleFocus();
+  const indent = tab(200);
+  handler.handleKeyboard(indent);
+
+  // Assert.
+
+  // Shift on the way to Shift+Tab keeps the release; the Tab after it is left
+  // to the browser and reaches nobody.
+  isFalse(leaving.defaultPrevented);
+  isFalse(target.trace.some((line) => line.startsWith("120,")));
+  // Back in the text, Tab is an indent again.
+  isTrue(indent.defaultPrevented);
+  isTrue(target.trace.some((line) => line.startsWith("200,appendIndent,")));
 });
 
 test("incomplete events", () => {

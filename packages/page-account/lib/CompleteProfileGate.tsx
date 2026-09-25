@@ -1,6 +1,6 @@
 import { logout, usePageData } from "@keylearn/pages-shared";
-import { Button, TextField } from "@keylearn/widget";
-import { type ReactNode, useState } from "react";
+import { Button, TextField, type TextFieldRef } from "@keylearn/widget";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AuthPage.module.less";
 import { DobEntry, type DobResult, GrownUpGate } from "./DobEntry.tsx";
@@ -34,6 +34,26 @@ function Gate({ name }: { readonly name: string }): ReactNode {
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const titleId = useId();
+  const nameField = useRef<TextFieldRef>(null);
+  const card = useRef<HTMLDivElement>(null);
+
+  // The page underneath grabs focus as it mounts (the practice text area,
+  // which keeps Tab for itself, focuses itself after this gate has), and then
+  // a keyboard user can never reach this form. Hold focus inside the gate:
+  // anything that lands outside it is sent back to the name field.
+  useEffect(() => {
+    nameField.current?.focus();
+    const hold = (ev: FocusEvent) => {
+      if (!card.current?.contains(ev.target as Node)) {
+        nameField.current?.focus();
+      }
+    };
+    document.addEventListener("focusin", hold);
+    return () => {
+      document.removeEventListener("focusin", hold);
+    };
+  }, []);
 
   const save = async () => {
     if (dob.dateOfBirth == null || busy) {
@@ -68,8 +88,14 @@ function Gate({ name }: { readonly name: string }): ReactNode {
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.overlayCard}>
-        <div className={styles.overlayTitle}>
+      <div
+        ref={card}
+        className={styles.overlayCard}
+        role="dialog"
+        aria-modal={true}
+        aria-labelledby={titleId}
+      >
+        <div className={styles.overlayTitle} id={titleId}>
           <FormattedMessage
             id="auth.finish.welcome"
             defaultMessage="Welcome to KeyLearn, {name}!"
@@ -83,6 +109,7 @@ function Gate({ name }: { readonly name: string }): ReactNode {
           />
         </p>
         <TextField
+          ref={nameField}
           size="full"
           type="text"
           autoComplete="name"

@@ -228,7 +228,7 @@ Your KeyLearn ${copy.noun} code is:
 
 ${code}
 
-${copy.lead} The code expires in 15 minutes.
+${copy.lead.replace(/:$/, ".")} The code expires in 15 minutes.
 
 ${copy.ignore}, you can safely ignore this email — nothing happens until the code is entered.
 

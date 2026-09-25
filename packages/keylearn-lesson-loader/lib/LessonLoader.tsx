@@ -11,6 +11,8 @@ import {
   type Lesson,
   lessonProps,
   LessonType,
+  loadQuotes,
+  loadSnippetSets,
   NumbersLesson,
   QuotesLesson,
   WordListLesson,
@@ -96,8 +98,9 @@ function useLoader(model: PhoneticModel): Lesson | null {
           break;
         }
         case LessonType.QUOTES: {
+          const quotes = await loadQuotes();
           if (!didCancel) {
-            setResult(new QuotesLesson(settings, keyboard, model));
+            setResult(new QuotesLesson(settings, keyboard, model, quotes));
           }
           break;
         }
@@ -108,6 +111,7 @@ function useLoader(model: PhoneticModel): Lesson | null {
           break;
         }
         case LessonType.CODE: {
+          await loadSnippetSets();
           if (!didCancel) {
             setResult(new CodeLesson(settings, keyboard, model));
           }

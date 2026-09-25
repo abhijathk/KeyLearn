@@ -43,14 +43,16 @@ function onError(err: any): void {
       // Tests are run on the input code and therefore all ids are invalid.
       return;
     }
-    if (err.code === "MISSING_DATA") {
-      // Error: [@formatjs/intl Error MISSING_DATA]
-      // Missing locale data for locale: "pl" in Intl.NumberFormat.
-      // Using default locale: "en" as fallback.
-      // See https://formatjs.io/docs/react-intl#runtime-requirements for more
-      // details
-      return;
-    }
+  }
+  if (err.code === "MISSING_DATA") {
+    // Not a fault in KeyLearn: Chrome ships no number, date or list data for
+    // as, is, mn, ne, or and sq (Intl.NumberFormat.supportedLocalesOf returns
+    // nothing; PluralRules does have them, so messages still pluralise in the
+    // learner's language). react-intl then formats numbers and dates the
+    // English way, which is the fallback we want, and reported it as an error
+    // on every page load in those six languages. Nothing to fix at runtime
+    // short of shipping the formatjs locale-data polyfills.
+    return;
   }
   console.error("I18N error:", err);
 }

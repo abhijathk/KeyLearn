@@ -13,7 +13,7 @@ import { SessionHandler, type SessionOptions } from "@fastr/middleware-session";
 import { staticFiles } from "@fastr/middleware-static-files";
 import { Env } from "@keylearn/config";
 import { ManifestModule } from "./assets.ts";
-import { AuthModule, loadUser } from "./auth/index.ts";
+import { AuthModule, loadUser, opsApiGate } from "./auth/index.ts";
 import { bodyCeiling } from "./body-ceiling.ts";
 import { cacheControl } from "./cachecontrol.ts";
 import { csrfGuard } from "./csrf.ts";
@@ -94,6 +94,8 @@ export class ApplicationModule implements Module {
         // way the route ends — including the 428 that asks for the PIN.
         .use(noStoreSupport())
         .use(loadUser())
+        // No ops key, no internal route — before any of them parses a body.
+        .use(opsApiGate())
         // Website-only maintenance mode: after loadUser (it lets admins
         // through) and before the router. See maintenance.tsx.
         .use(MaintenanceGate)

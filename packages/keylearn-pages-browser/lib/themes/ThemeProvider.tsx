@@ -46,6 +46,18 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
   const [hash, setHash] = useState(0);
   usePreferredColorScheme();
 
+  // The server painted the page from the cookie, but the state can come from
+  // elsewhere: a theme synced down from another device (readPrefs adopts it
+  // from storage), or the next learner's own on a switch. The button then
+  // said Night over a Day page until the next full load. Keep the root's
+  // attributes on whatever the state says.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute(ThemePrefs.colorAttrName, color);
+    root.setAttribute(ThemePrefs.fontAttrName, font);
+    root.setAttribute(ThemePrefs.textSizeAttrName, textSize);
+  }, [color, font, textSize]);
+
   useEffect(() => {
     if (color === "custom") {
       readTheme()

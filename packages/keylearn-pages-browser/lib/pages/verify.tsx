@@ -8,7 +8,7 @@ import { verifyCertificate, type VerifyResult } from "@keylearn/pages-shared";
 import { FloatingShell } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, FormattedNumber, useIntl } from "react-intl";
 import { useParams } from "react-router";
 import * as styles from "./verify.module.less";
 
@@ -20,7 +20,7 @@ import * as styles from "./verify.module.less";
  * a CV. So it asks for nothing, stores nothing, and says as little as it can.
  */
 export default function Page(): ReactNode {
-  const { formatMessage } = useIntl();
+  const { formatDate, formatMessage } = useIntl();
   const { number: fromPath } = useParams();
   const [typed, setTyped] = useState(fromPath ?? "");
   const [result, setResult] = useState<VerifyResult | null>(null);
@@ -143,7 +143,7 @@ export default function Page(): ReactNode {
                       defaultMessage="Level"
                     />
                   </dt>
-                  <dd>{result.level}</dd>
+                  <dd className={styles.level}>{result.level}</dd>
                   <dt>
                     <FormattedMessage
                       id="verify.alphabet"
@@ -157,7 +157,22 @@ export default function Page(): ReactNode {
                       defaultMessage="Issued"
                     />
                   </dt>
-                  <dd>{new Date(result.issued).toLocaleDateString()}</dd>
+                  {/* In the page's language, not the browser's (which gave
+                      "25/09/2026" on a Japanese page), with the month named so
+                      nobody has to guess day-first or month-first. <bdi> keeps
+                      it in one piece inside a right-to-left page. Gregorian
+                      always, to match the date printed on the certificate
+                      (Persian would otherwise default to Solar Hijri). */}
+                  <dd>
+                    <bdi>
+                      {formatDate(result.issued, {
+                        calendar: "gregory",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </bdi>
+                  </dd>
                   {result.criteriaVersion != null && (
                     <>
                       <dt>
@@ -167,6 +182,48 @@ export default function Page(): ReactNode {
                         />
                       </dt>
                       <dd>{result.criteriaVersion}</dd>
+                    </>
+                  )}
+                  {result.speed != null && (
+                    <>
+                      <dt>
+                        <FormattedMessage
+                          id="assess.fig.speed"
+                          defaultMessage="Speed"
+                        />
+                      </dt>
+                      <dd>
+                        {result.kind === "braille" ? (
+                          <FormattedMessage
+                            id="verify.cpm"
+                            defaultMessage="{speed} cells per minute"
+                            values={{ speed: Math.round(result.speed) }}
+                          />
+                        ) : (
+                          <FormattedMessage
+                            id="report.sheet.wpm"
+                            defaultMessage="{speed} wpm"
+                            values={{ speed: Math.round(result.speed) }}
+                          />
+                        )}
+                      </dd>
+                    </>
+                  )}
+                  {result.accuracy != null && (
+                    <>
+                      <dt>
+                        <FormattedMessage
+                          id="assess.fig.acc"
+                          defaultMessage="Accuracy"
+                        />
+                      </dt>
+                      <dd>
+                        <FormattedNumber
+                          value={result.accuracy}
+                          style="percent"
+                          maximumFractionDigits={1}
+                        />
+                      </dd>
                     </>
                   )}
                   {result.name != null && (
@@ -181,6 +238,14 @@ export default function Page(): ReactNode {
                     </>
                   )}
                 </dl>
+                {result.evidence === "self-reported" && (
+                  <p className={styles.hint}>
+                    <FormattedMessage
+                      id="verify.selfReported"
+                      defaultMessage="Issued before KeyLearn checked certificates against the learner’s own recorded practice. Its figures were reported by the learner’s device, not measured by us."
+                    />
+                  </p>
+                )}
                 {result.name == null && (
                   <p className={styles.hint}>
                     <FormattedMessage

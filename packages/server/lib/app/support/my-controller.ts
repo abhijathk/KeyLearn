@@ -60,8 +60,16 @@ import { ScannerDown, scanningRequired, scanUpload } from "./virus-scan.ts";
  *    conversation, or another's attachment, by guessing a number.
  */
 
+/**
+ * The ticket row, the public form and the desk all hold 128. Clipped rather
+ * than refused: the composer already stops at 128, so only a stale draft or
+ * a direct call can exceed it, and neither should lose the message over it.
+ */
+const SUBJECT_MAX = 128;
+const clipSubject = (s: string) => s.slice(0, SUBJECT_MAX).trim();
+
 const TNewTicket = z.object({
-  subject: z.string().trim().min(1).max(200),
+  subject: z.string().trim().min(1).max(200).transform(clipSubject),
   message: z.string().trim().min(1).max(2000),
   /** Uploaded before send; bound to the first message once it exists. */
   attachmentIds: z.array(z.number().int().positive()).max(10).optional(),
@@ -95,7 +103,7 @@ const PReply = zod(TReply);
 
 const TDraft = z.object({
   ticketId: z.number().int().positive().nullable().optional(),
-  subject: z.string().max(200).nullable().optional(),
+  subject: z.string().max(200).transform(clipSubject).nullable().optional(),
   body: z.string().max(2000).nullable().optional(),
 });
 type TDraft = z.infer<typeof TDraft>;
@@ -484,6 +492,10 @@ export class MyTicketsController {
       message: input.message,
       status: "open",
       confirmed: true,
+      // Kept on the row for the retry sweep, which re-sends from the row
+      // alone — same reason the public form stores them.
+      country: ctx.request.headers.get("cf-ipcountry") || null,
+      timeZone: input.timeZone ?? null,
     });
 
     const first = await SupportMessage.create({
@@ -776,6 +788,15 @@ export class MyTicketsController {
     // lost: by then the bytes are on disk, in a backup, and in whatever
     // read them in between, and all it can do is describe the problem.
     const scanner = await this.#scan(bytes, userId);
+    // After the scan, so an infected file is named as infected whatever it
+    // claims to be.
+    // The type is the browser's claim; the bytes have to agree with it, or
+    // an HTML page labelled image/png is stored and later served as one.
+    if (!bytesMatchType(bytes, input.mimeType)) {
+      throw new ForbiddenError(
+        "That file isn't the kind it says it is. Screenshots and PDFs only.",
+      );
+    }
 
     const row = await SupportAttachment.query().insertAndFetch({
       ticketId,
@@ -1126,4 +1147,26 @@ export class MyTicketsController {
  */
 export function reference(id: number): string {
   return `KEY${String(id).padStart(7, "0")}`;
+}
+
+/** Whether the file's leading bytes are the signature of its claimed type. */
+export function bytesMatchType(bytes: Buffer, mimeType: string): boolean {
+  const starts = (sig: number[], at = 0) =>
+    sig.every((b, i) => bytes[at + i] === b);
+  switch (mimeType) {
+    case "image/png":
+      return starts([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    case "image/jpeg":
+      return starts([0xff, 0xd8, 0xff]);
+    case "image/gif":
+      return starts([0x47, 0x49, 0x46, 0x38]);
+    case "image/webp":
+      return (
+        starts([0x52, 0x49, 0x46, 0x46]) && starts([0x57, 0x45, 0x42, 0x50], 8)
+      );
+    case "application/pdf":
+      return starts([0x25, 0x50, 0x44, 0x46, 0x2d]);
+    default:
+      return false;
+  }
 }

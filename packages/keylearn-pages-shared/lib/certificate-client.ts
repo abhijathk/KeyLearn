@@ -29,9 +29,33 @@ export type VerifyResult =
       readonly issued: string;
       /** The criteria version the certificate was issued under. */
       readonly criteriaVersion?: number;
+      readonly speed?: number;
+      readonly accuracy?: number;
+      /**
+       * "server": judged on the learner's own recorded practice and a
+       * sitting the server timed. "self-reported": issued before that, on
+       * figures the learner's browser sent.
+       */
+      readonly evidence?: "server" | "self-reported";
       /** Null unless the holder asked to be named, and never for a child. */
       readonly name: string | null;
     };
+
+/**
+ * Start a sitting's clock on the server. The sitting reported afterwards is
+ * held to the time that really passed, so this has to happen first.
+ */
+export async function startSitting(profileId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/_/certificate/sitting/${profileId}/start`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Record a sitting.

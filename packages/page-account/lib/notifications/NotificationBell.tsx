@@ -307,12 +307,15 @@ export function NotificationBell(): ReactNode {
                     put "when" in front of "what", and wrapped it mid-value
                     at this width. */}
                   <span className={styles.time}>
-                    {new Date(n.createdAt).toLocaleString(undefined, {
-                      day: "numeric",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {/* The page's locale, isolated: see SupportThreadPage. */}
+                    <bdi>
+                      {new Date(n.createdAt).toLocaleString(locale, {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </bdi>
                   </span>
                 </button>
 

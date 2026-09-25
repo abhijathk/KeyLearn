@@ -140,8 +140,8 @@ function PendingScreen({
   readonly busy: boolean;
   readonly onCancel: () => void;
 }): ReactNode {
-  const { formatMessage } = useIntl();
-  const when = new Date(request.executeAt).toLocaleString(undefined, {
+  const { formatMessage, locale } = useIntl();
+  const when = new Date(request.executeAt).toLocaleString(locale, {
     dateStyle: "long",
     timeStyle: "short",
   });

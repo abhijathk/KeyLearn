@@ -16,6 +16,7 @@ import { Mailer } from "../mail/index.ts";
 import { emailStaffDigest } from "../site-config/readers.ts";
 import { repeat } from "../site-config/repeat.ts";
 import { forwardResolutionToQdesk } from "./qdesk-forward.ts";
+import { deskPageUrl } from "./qdesk-forward.ts";
 import { QdeskRetrySweep } from "./qdesk-retry.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -169,7 +170,9 @@ export class DigestSweep {
             .resultSize(),
         ]);
       const abandoned = await QdeskRetrySweep.abandoned();
-      const deskLink = String(new URL("/desk", this.canonicalUrl));
+      // The desk is QDesk, on its own origin — this app's /desk is a 404.
+      const deskLink =
+        deskPageUrl("/dashboard") ?? String(new URL("/", this.canonicalUrl));
       await Promise.all(
         listStaffEmails().map((to) =>
           this.mailer.sendMail(
@@ -493,13 +496,17 @@ export class AccountDeletionSweep {
       return;
     }
     // Re-read each tick: the period is a control-centre setting.
+    // Logged once the settings have loaded, so it names the period in
+    // force rather than the default a boot-time read answers with.
     this.#timer = repeat(
       accountDeletionSweepIntervalMs,
       () => void this.runOnce(),
+      (ms) => {
+        Logger.info("Account deletion sweep scheduled", {
+          everyMinutes: ms / (60 * 1000),
+        });
+      },
     );
-    Logger.info("Account deletion sweep scheduled", {
-      everyMinutes: accountDeletionSweepIntervalMs() / (60 * 1000),
-    });
   }
 
   stop(): void {

@@ -33,3 +33,14 @@
   block-size: 1.2rem;
   color: var(--accent);
 }
+
+// Read by a screen reader and by nothing else: the way out of the text.
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}

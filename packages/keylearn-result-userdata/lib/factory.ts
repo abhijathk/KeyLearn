@@ -1,5 +1,5 @@
 import { injectable } from "@fastr/invert";
-import { DataDir } from "@keylearn/config";
+import { DataDir, type LearnerOwner } from "@keylearn/config";
 import { PublicId } from "@keylearn/publicid";
 import { File } from "@sosimple/fsx-file";
 import { UserData } from "./userdata.ts";
@@ -20,15 +20,20 @@ export class UserDataFactory {
     }
   }
 
-  /** A learner profile's own stats file, under its owning account. */
+  /**
+   * A learner profile's own stats file, under its owner: the household
+   * account, or the organisation for an org-owned learner.
+   */
   loadProfile(
-    userId: number,
+    owner: LearnerOwner,
     profileId: number,
     course: string | null = null,
   ): UserData {
     return new UserData(
-      new PublicId(userId),
-      new File(this.dataDir.profileStatsFile(userId, profileId, course)),
+      // Only the ETag reads this id; an organisation's learner has no
+      // account, so the learner's own id stands in.
+      new PublicId(typeof owner === "number" ? owner : profileId),
+      new File(this.dataDir.profileStatsFile(owner, profileId, course)),
     );
   }
 }

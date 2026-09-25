@@ -111,6 +111,14 @@ export class ErrorHandler implements HandlerObject {
 
   handleError(ctx: Context, err: Error) {
     const req = describeRequest(ctx);
+    if (clientWentAway(ctx, err)) {
+      // The browser closed the connection before its body could be read —
+      // a tab closed or a page navigated away mid-save. Nobody is left to
+      // answer, and nothing on our side failed.
+      Logger.debug(err, "Client went away", req);
+      ctx.response.status = 400;
+      return;
+    }
     if (err instanceof ApplicationError) {
       Logger.debug(err, "Application error", req);
       const { status, body } = err;
@@ -160,4 +168,24 @@ export class ErrorHandler implements HandlerObject {
         break;
     }
   }
+}
+
+/**
+ * Whether this error is only the request's own connection having closed.
+ * Narrow on purpose: the request stream must actually be destroyed AND the
+ * error must be one a closed connection produces, so a real fault that
+ * happens to coincide with a disconnect is still reported as one.
+ */
+function clientWentAway(ctx: Context, err: Error): boolean {
+  const raw = (ctx.request as unknown as { req?: { destroyed?: boolean } }).req;
+  if (raw?.destroyed !== true) {
+    return false;
+  }
+  const code = (err as { code?: unknown }).code;
+  return (
+    err.message === "Destroyed stream" ||
+    err.message === "aborted" ||
+    code === "ECONNRESET" ||
+    code === "ECONNABORTED"
+  );
 }

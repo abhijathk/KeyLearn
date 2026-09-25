@@ -15,7 +15,7 @@ test.beforeEach(() => {
 });
 
 test.beforeEach(() => {
-  document.documentElement.dataset["color"] = "dark";
+  document.documentElement.dataset["color"] = "keylearn";
   document.documentElement.dataset["font"] = "spectral";
 
   // The theme is stored as well as cookied, so it now outlives a test. Clear
@@ -25,7 +25,7 @@ test.beforeEach(() => {
   localStorage.clear();
 
   document.cookie =
-    "prefs=%7B%22color%22%3A%22dark%22%2C%22font%22%3A%22spectral%22%7D";
+    "prefs=%7B%22color%22%3A%22keylearn%22%2C%22font%22%3A%22spectral%22%7D";
 });
 
 test.afterEach(() => {
@@ -45,7 +45,7 @@ test("mount and switch styles", async () => {
 
   // Assert.
 
-  equal(document.documentElement.dataset["color"], "dark");
+  equal(document.documentElement.dataset["color"], "keylearn");
   equal(document.documentElement.dataset["font"], "spectral");
 
   // Act.
@@ -182,7 +182,7 @@ test("a theme already chosen before it could travel is copied across once", () =
 
   const stored = localStorage.getItem("keylearn.theme");
   equal(typeof stored, "string");
-  equal(JSON.parse(stored!)["color"], "dark");
+  equal(JSON.parse(stored!)["color"], "keylearn");
   equal(JSON.parse(stored!)["font"], "spectral");
 
   // Cleanup.

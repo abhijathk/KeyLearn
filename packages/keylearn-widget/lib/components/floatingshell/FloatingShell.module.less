@@ -8,6 +8,10 @@
   position: fixed;
   inset: 0;
   z-index: 100;
+  // One track the width of the screen. Left to size itself, the track grew to
+  // a fixed-width window and the window's own `max-inline-size` had nothing
+  // smaller to hold on to — a 30rem notice ran off a 390px phone.
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 2rem;
   background-color: color-mix(in oklab, var(--primary-d2) 55%, transparent);
@@ -20,6 +24,11 @@
   backdrop-filter: blur(6px);
 
   .motion-respect-reduced();
+
+  // Two rems of margin a side is a quarter of a phone.
+  @media (max-width: 40rem) {
+    padding: 0.75rem;
+  }
 }
 
 @keyframes overlay-in {
@@ -34,6 +43,8 @@
   position: relative;
   flex-direction: column;
   inline-size: min(58rem, 100%);
+  // A caller's fixed `width` (an inline style) must still fit the screen.
+  max-inline-size: 100%;
   block-size: min(44rem, 100%);
   border: 1px solid color-mix(in oklab, var(--accent) 25%, var(--primary-d2));
   border-radius: 1.25rem;
@@ -127,6 +138,9 @@
 // Full-bleed body for the rail/pane account layout — the rail and pane manage
 // their own padding and scrolling.
 .windowBody.flush {
+  // The room the floating close button takes out of the top-right corner,
+  // for content that puts something of its own there (a thread's status).
+  --float-close-room: 2.4rem;
   padding: 0;
   overflow: hidden;
 }

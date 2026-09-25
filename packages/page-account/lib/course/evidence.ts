@@ -6,10 +6,16 @@
 // a quote or a custom word list has letters chosen by the text rather than by
 // the curriculum, so it cannot evidence coverage of an alphabet.
 
-import { brailleStats, loadProgress, practiceDays } from "@keylearn/braille";
+import {
+  loadProgress,
+  practiceDays,
+  Progress,
+  TEACHING_ORDER,
+} from "@keylearn/braille";
 import { type CertificateEvidence } from "@keylearn/certificate";
+import { type Layout, loadKeyboard } from "@keylearn/keyboard";
 import { type ProfileDetails } from "@keylearn/pages-shared";
-import { type Letter } from "@keylearn/phonetic-model";
+import { censor, Letter, makePhoneticModel } from "@keylearn/phonetic-model";
 import { makeKeyStatsMap, type Result } from "@keylearn/result";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -29,8 +35,26 @@ function median(xs: readonly number[]): number {
 /** The window the sustained figures are taken over. */
 const RECENT = 50;
 
+/**
+ * The alphabet a typing certificate covers: the language's letters that the
+ * learner's keyboard layout can type. Built from the model's own bytes, so the
+ * server — which judges the claim — reaches exactly the letters the page does.
+ */
+export function typingAlphabet(
+  layout: Layout,
+  model: Uint8Array,
+): readonly Letter[] {
+  return Letter.restrict(
+    censor(makePhoneticModel(layout.language, model)).letters,
+    loadKeyboard(layout).getCodePoints(),
+  );
+}
+
+/** Only the two fields of a learner the evidence depends on. */
+type EvidenceProfile = Pick<ProfileDetails, "kind" | "birthYear">;
+
 export function typingEvidence(
-  profile: ProfileDetails,
+  profile: EvidenceProfile,
   results: readonly Result[],
   letters: readonly Letter[],
 ): CertificateEvidence {
@@ -72,10 +96,27 @@ export function typingEvidence(
  * own definition rather than a second one invented here.
  */
 export function brailleEvidence(profile: ProfileDetails): CertificateEvidence {
-  const stats = brailleStats(profile.id);
-  const progress = loadProgress(profile.id);
+  return brailleEvidenceFrom(
+    profile,
+    loadProgress(profile.id),
+    practiceDays(profile.id),
+  );
+}
+
+/**
+ * The braille evidence from a progress record and the days practised — the
+ * pair the braille sync stores, so the server judges the same figures.
+ */
+export function brailleEvidenceFrom(
+  profile: EvidenceProfile,
+  progress: Progress,
+  days: readonly string[],
+): CertificateEvidence {
   const unlocked = progress.unlocked();
-  const days = practiceDays(profile.id);
+  let hits = 0;
+  for (const key of TEACHING_ORDER) {
+    hits += progress.statOf(key).hits;
+  }
   const times = days
     .map((d) => Date.parse(d))
     .filter((t) => Number.isFinite(t))
@@ -93,10 +134,10 @@ export function brailleEvidence(profile: ProfileDetails): CertificateEvidence {
       profile.birthYear == null
         ? null
         : new Date().getFullYear() - profile.birthYear,
-    learned: stats.learned,
-    total: stats.totalCells,
+    learned: unlocked.length,
+    total: TEACHING_ORDER.length,
     settled: unlocked.filter((key) => progress.isSettled(key)).length,
-    volume: stats.hits,
+    volume: hits,
     daysPractised: days.length,
     elapsedDays:
       times.length === 0
@@ -105,6 +146,18 @@ export function brailleEvidence(profile: ProfileDetails): CertificateEvidence {
     speed: Number.isFinite(msPerCell) ? 60000 / msPerCell : 0,
     accuracy: accuracies.length > 0 ? median(accuracies) : 0,
   };
+}
+
+/** A braille learner's synced record, as the sync route stores it. */
+export function brailleEvidenceFromSnapshot(
+  profile: EvidenceProfile,
+  snapshot: unknown,
+): CertificateEvidence {
+  const snap = (snapshot ?? {}) as { progress?: unknown; days?: unknown };
+  const days = Array.isArray(snap.days)
+    ? snap.days.filter((d): d is string => typeof d === "string")
+    : [];
+  return brailleEvidenceFrom(profile, Progress.fromJSON(snap.progress), days);
 }
 
 const meanOf = (xs: readonly number[]) =>

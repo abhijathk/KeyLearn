@@ -1,60 +1,8 @@
-import { json, yaml } from "./snippets/config-ts.ts";
-import { cpp } from "./snippets/cpp-set.ts";
-import { cypress } from "./snippets/cypress-ts.ts";
-import { go } from "./snippets/go-set.ts";
-import { java } from "./snippets/java-set.ts";
-import { kotlin, swift } from "./snippets/mobile-ts.ts";
-import { php } from "./snippets/php-set.ts";
-import { playwrightJs, playwrightTs } from "./snippets/playwright-ts.ts";
-import { python } from "./snippets/python-ts.ts";
-import { react } from "./snippets/react-ts.ts";
-import { regex } from "./snippets/regex-set.ts";
-import { rust } from "./snippets/rust-set.ts";
-import { seleniumJv, seleniumPy } from "./snippets/selenium-ts.ts";
-import { sqlPostgres, sqlServer } from "./snippets/sql-ts.ts";
-import { csharp, shell } from "./snippets/systems-ts.ts";
-import { typescript } from "./snippets/typescript-set.ts";
-import { css, html, javascript } from "./snippets/web-ts.ts";
 import { type Snippet, type SnippetSet } from "./types.ts";
 
 export * from "./highlight.ts";
 export * from "./themes.ts";
 export * from "./types.ts";
-
-/**
- * Every corpus we have, keyed by the `Syntax` id the practice settings use.
- *
- * A language appears here once its snippets are written and its formatter gate
- * passes; there is deliberately no placeholder for the ones that are not
- * written yet, so an empty menu entry can never appear.
- */
-export const SNIPPET_SETS: readonly SnippetSet[] = [
-  cpp,
-  csharp,
-  css,
-  cypress,
-  go,
-  html,
-  java,
-  javascript,
-  json,
-  kotlin,
-  php,
-  playwrightTs,
-  playwrightJs,
-  python,
-  react,
-  regex,
-  rust,
-  seleniumPy,
-  seleniumJv,
-  shell,
-  sqlPostgres,
-  sqlServer,
-  swift,
-  typescript,
-  yaml,
-];
 
 /** Set when the learner has asked not to be given the comments. */
 export const HIDE_COMMENTS = "hideComments";
@@ -65,11 +13,136 @@ export const HIDE_COMMENTS = "hideComments";
  * The setting that stores these validates against a fixed list and silently
  * drops anything it does not recognise — so a topic missing from here would
  * work until the page was reloaded and then quietly turn itself back on.
+ *
+ * Written out rather than derived from the corpora, because the settings need
+ * it when the page starts and the corpora are only fetched when a code lesson
+ * opens. `snippets.test.ts` fails if it ever drifts from the sets.
  */
 export const SNIPPET_FLAGS: readonly string[] = [
-  ...new Set(SNIPPET_SETS.flatMap((set) => set.topics.map(({ id }) => id))),
+  "basics",
+  "ownership",
+  "types",
+  "collections",
+  "templates",
+  "errors",
+  "structure",
+  "c",
+  "nullability",
+  "patterns",
+  "linq",
+  "async",
+  "testing",
+  "layout",
+  "selectors",
+  "typography",
+  "motion",
+  "accessibility",
+  "locators",
+  "actions",
+  "assertions",
+  "network",
+  "api",
+  "ui",
+  "interfaces",
+  "concurrency",
+  "stdlib",
+  "forms",
+  "media",
+  "interactive",
+  "streams",
+  "generics",
+  "functions",
+  "arrays",
+  "objects",
+  "modules",
+  "dom",
+  "syntax",
+  "tooling",
+  "schema",
+  "null",
+  "control",
+  "idiom",
+  "coroutines",
+  "database",
+  "locator",
+  "action",
+  "assertion",
+  "config",
+  "select",
+  "transform",
+  "aggregate",
+  "join",
+  "reshape",
+  "quality",
+  "timeseries",
+  "stats",
+  "viz",
+  "performance",
+  "component",
+  "jsx",
+  "hooks",
+  "state",
+  "effect",
+  "groups",
+  "lookaround",
+  "flags",
+  "using",
+  "matching",
+  "traits",
+  "iterators",
+  "waits",
+  "browser",
+  "conditionals",
+  "loops",
+  "safety",
+  "ddl",
+  "index",
+  "dml",
+  "transaction",
+  "subquery",
+  "window",
+  "cte",
+  "analytics",
+  "optionals",
+  "protocols",
+  "swiftui",
+  "narrowing",
+  "utility",
+  "advanced",
+  "classes",
+  "ci",
+  "docker",
+  "kubernetes",
   HIDE_COMMENTS,
 ];
+
+let loaded: readonly SnippetSet[] | null = null;
+let loading: Promise<readonly SnippetSet[]> | null = null;
+
+/**
+ * Every corpus, fetched on first use as its own chunk rather than inside the
+ * bundle every page loads. The lesson loader awaits this before it builds a
+ * code lesson, so the synchronous lookups below always have it by then.
+ */
+export function loadSnippetSets(): Promise<readonly SnippetSet[]> {
+  loading ??= import(/* webpackChunkName: "code-snippets" */ "./sets.ts").then(
+    (module) => (loaded = module.SNIPPET_SETS),
+    (err: unknown) => {
+      loading = null;
+      throw err;
+    },
+  );
+  return loading;
+}
+
+function snippetSets(): readonly SnippetSet[] {
+  if (loaded == null) {
+    throw new Error(
+      "Code snippets are not loaded yet: await loadSnippetSets()",
+    );
+  }
+  return loaded;
+}
 
 /**
  * The same code with its comments taken out.
@@ -120,7 +193,7 @@ export function frameworks(): readonly {
   sets: readonly SnippetSet[];
 }[] {
   const byName = new Map<string, SnippetSet[]>();
-  for (const set of SNIPPET_SETS) {
+  for (const set of snippetSets()) {
     const sets = byName.get(set.framework) ?? [];
     sets.push(set);
     byName.set(set.framework, sets);
@@ -138,7 +211,7 @@ export function frameworkOf(syntax: string): {
 }
 
 export function snippetSetFor(syntax: string): SnippetSet | null {
-  return SNIPPET_SETS.find((set) => set.syntax === syntax) ?? null;
+  return snippetSets().find((set) => set.syntax === syntax) ?? null;
 }
 
 /**

@@ -184,6 +184,12 @@ let installed = false;
 let scheduled: ReturnType<typeof setTimeout> | null = null;
 /** Set while this module is writing, so its own writes do not restamp. */
 let adopting = false;
+/**
+ * Set once this device has been handed back at sign-out (see
+ * {@link forgetLocally}). From then on nothing is stamped or pushed: the page
+ * is on its way out, and a push now would carry the removals up as deletions.
+ */
+let released = false;
 
 /**
  * Keys written while the page was still starting up.
@@ -277,7 +283,7 @@ export function installLocalSync(): void {
 
 /** Records that a key changed, and schedules the push. */
 function touch(key: string): void {
-  if (!isPortable(key)) {
+  if (released || !isPortable(key)) {
     return;
   }
   const stamps = readStamps();
@@ -410,7 +416,7 @@ function syncable(profileId: string | null): boolean {
  * know something it has no reason to know.
  */
 export async function pushLocal(): Promise<void> {
-  if (signedOut()) {
+  if (released || signedOut()) {
     return;
   }
   const profileId = activeProfileId();
@@ -628,4 +634,63 @@ function claimReload(scope: string): boolean {
     // reload happens only once. Not reloading is the safe side of that.
     return false;
   }
+}
+
+/**
+ * Sends one scope's copy up now (a learner's, or the account's own when
+ * `null`), and says whether the account has it.
+ *
+ * For sign-out, which may only clear what the account already holds: true when
+ * the server took the document, or when there was nothing to send.
+ */
+export async function pushScopeNow(profileId: string | null): Promise<boolean> {
+  if (!syncable(profileId)) {
+    return false;
+  }
+  const mirror = collect(profileId);
+  if (Object.keys(mirror.keys).length === 0) {
+    return true;
+  }
+  try {
+    const response = await fetch(url(profileId), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(mirror),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Removes keys from this device WITHOUT telling the account.
+ *
+ * A normal removal is a decision to delete and travels as a tombstone. This is
+ * the device letting go of copies the account already holds, at sign-out, so
+ * it must not travel: the stamps go too (so the next sign-in adopts the
+ * account's copies as if this were a new device), and the mirror stops pushing
+ * for the rest of the page's life.
+ */
+export function forgetLocally(keys: readonly string[]): void {
+  released = true;
+  if (scheduled != null) {
+    clearTimeout(scheduled);
+    scheduled = null;
+  }
+  const stamps = readStamps();
+  adopting = true;
+  try {
+    for (const key of keys) {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        // Storage denied; nothing more to do for this one.
+      }
+      delete stamps[key];
+    }
+  } finally {
+    adopting = false;
+  }
+  writeStamps(stamps);
 }

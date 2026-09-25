@@ -72,10 +72,10 @@ test("the seed copies STAFF_EMAILS in", async () => {
 });
 
 test("a wrong passcode locks out after five tries, and a right one clears the count", async () => {
-  await DeskUnlock.setPasscode("123456");
+  await DeskUnlock.setPasscode("12345678");
 
   for (let i = 1; i <= 4; i++) {
-    const result = await checkUnlockPasscode("000000", "10.0.0.1");
+    const result = await checkUnlockPasscode("00000000", "10.0.0.1");
     equal(result.ok, false);
     equal(result.ok === false && result.reason, "wrong");
     equal(
@@ -84,15 +84,15 @@ test("a wrong passcode locks out after five tries, and a right one clears the co
     );
   }
   // The fifth stops it answering at all.
-  const locked = await checkUnlockPasscode("000000", "10.0.0.1");
+  const locked = await checkUnlockPasscode("00000000", "10.0.0.1");
   equal(locked.ok === false && locked.reason, "locked");
   // …including for the correct passcode, or the lockout would mean nothing.
-  const during = await checkUnlockPasscode("123456", "10.0.0.1");
+  const during = await checkUnlockPasscode("12345678", "10.0.0.1");
   equal(during.ok === false && during.reason, "locked");
 
   // Once it lapses, the right passcode works and resets the counter.
   await DeskUnlock.query().findById(1).patch({ lockedUntil: null });
-  isTrue((await checkUnlockPasscode("123456", "10.0.0.1")).ok);
+  isTrue((await checkUnlockPasscode("12345678", "10.0.0.1")).ok);
   equal((await DeskUnlock.current()).failedCount, 0);
 });
 
@@ -105,13 +105,17 @@ test("the lockout lengthens each time rather than staying at fifteen minutes", a
 });
 
 test("the passcode bootstrap runs once and never overwrites a changed one", async () => {
-  isTrue(await DeskUnlock.bootstrap("111111"));
-  isTrue((await checkUnlockPasscode("111111", null)).ok);
+  // Shorter than the floor: ignored, not adopted as a weak failsafe.
+  isFalse(await DeskUnlock.bootstrap("111111"));
+  isFalse(await DeskUnlock.hasPasscode());
+
+  isTrue(await DeskUnlock.bootstrap("11111111"));
+  isTrue((await checkUnlockPasscode("11111111", null)).ok);
 
   // An admin changes it in the app while a stale env var lingers on the server.
-  await DeskUnlock.setPasscode("222222");
-  isFalse(await DeskUnlock.bootstrap("111111"));
-  isTrue((await checkUnlockPasscode("222222", null)).ok);
+  await DeskUnlock.setPasscode("22222222");
+  isFalse(await DeskUnlock.bootstrap("11111111"));
+  isTrue((await checkUnlockPasscode("22222222", null)).ok);
 });
 
 test("an empty ADMIN_UNLOCK_PASSCODE does not create a passcode", async () => {

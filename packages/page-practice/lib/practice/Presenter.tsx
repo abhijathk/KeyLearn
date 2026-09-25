@@ -433,8 +433,11 @@ export class Presenter extends PureComponent<Props, State> {
     this.focusRef.current?.focus();
   };
 
+  // While the tour is up it owns the keyboard (Space turns its page), and the
+  // text behind it is a demo: a keystroke that reached the lesson here was
+  // scored, and every Space counted as a miss.
   handleKeyDown = (ev: IKeyboardEvent) => {
-    if (this.state.focus) {
+    if (this.state.focus && !this.state.tour) {
       this.props.onKeyDown(ev);
       this.#pokeTyping();
     }
@@ -447,7 +450,7 @@ export class Presenter extends PureComponent<Props, State> {
   };
 
   handleInput = (ev: IInputEvent) => {
-    if (this.state.focus) {
+    if (this.state.focus && !this.state.tour) {
       this.props.onInput(ev);
     }
   };

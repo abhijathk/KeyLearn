@@ -479,6 +479,60 @@
   overflow: hidden;
 }
 
+// A phone. The account window is linked from our own emails (security,
+// email preferences), so it has to open on one — but a 12.5rem rail beside
+// the pane left the pane a column of single words. Below 40rem the rail
+// becomes a strip of tabs across the top that scrolls sideways, and the pane
+// gets the full width. A stopgap to keep it usable, not a phone design.
+@media (max-width: 40rem) {
+  .b5 {
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rail {
+    flex-direction: row;
+    align-items: center;
+    // Clear of the window's floating close button, which sits in this corner.
+    margin-inline-end: 2.9rem;
+    padding: 0.45rem 0.5rem;
+    border-inline-end: none;
+    border-block-end: 1px solid var(--primary-d2);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .railArt {
+    display: none;
+  }
+
+  .rail > *:not(.railArt),
+  .nav,
+  .railLogout {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .who {
+    margin-block-end: 0;
+  }
+
+  .railFoot {
+    flex-direction: row;
+    margin-block-start: 0;
+    padding-block-start: 0;
+    border-block-start: none;
+  }
+
+  .railLogout {
+    padding: 0.6rem 0.7rem;
+  }
+
+  .paneScroll {
+    padding: 1.1rem 1rem;
+  }
+}
+
 .paneScroll {
   display: flex;
   flex-direction: column;

@@ -20,6 +20,16 @@
   }
 }
 
+// A page wider than the phone (the speed test, the profile charts) grows the
+// mobile layout viewport to its own width, and a fixed box centres in THAT —
+// the card lands off-screen and the phone shows a blank page. Clip it —
+// only where the gate is mounted; the kids app has no gate and must scroll.
+@media (width <=40rem) {
+  :global(html):has(.screen) {
+    overflow: hidden;
+  }
+}
+
 .card {
   display: flex;
   flex-direction: column;

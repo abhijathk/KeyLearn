@@ -93,7 +93,7 @@ export function StatusBadge({
 
 /** Short enough to scan; the exact time stays on hover and for a reader. */
 export function When({ iso }: { readonly iso: string }): ReactNode {
-  const { formatMessage } = useIntl();
+  const { formatMessage, locale } = useIntl();
   const then = new Date(iso);
   const mins = Math.round((Date.now() - then.getTime()) / 60000);
   // Each branch names its own message. Interpolating a unit into one shared
@@ -115,14 +115,18 @@ export function When({ iso }: { readonly iso: string }): ReactNode {
       { n: Math.round(mins / 60) },
     );
   } else {
-    short = then.toLocaleDateString(undefined, {
+    short = then.toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
     });
   }
   return (
-    <time className={styles.when} dateTime={iso} title={then.toLocaleString()}>
-      {short}
+    <time
+      className={styles.when}
+      dateTime={iso}
+      title={then.toLocaleString(locale)}
+    >
+      <bdi>{short}</bdi>
     </time>
   );
 }
@@ -200,12 +204,34 @@ export const formatSize = (bytes: number): string =>
 /** Thousands separated: 3,742 reads as a number, 3742 reads as an id. */
 export const formatCount = (n: number): string => n.toLocaleString();
 
-export function Attachment({
+/** What the two attachment views need to know about a file. */
+export type AttachmentFile = Pick<
+  SupportService.MyAttachment,
+  "id" | "fileName" | "mimeType" | "size" | "isImage"
+>;
+
+/**
+ * Where a file is fetched from. The account's own routes by default; the
+ * guest thread passes its token-scoped ones, so both views are one component.
+ */
+export type AttachmentUrls = {
+  readonly view: (id: number) => string;
+  readonly download: (id: number) => string;
+};
+
+const accountUrls: AttachmentUrls = {
+  view: SupportService.attachmentUrl,
+  download: SupportService.attachmentDownloadUrl,
+};
+
+export function Attachment<F extends AttachmentFile>({
   file,
   onView,
+  urls = accountUrls,
 }: {
-  readonly file: SupportService.MyAttachment;
-  readonly onView: (file: SupportService.MyAttachment) => void;
+  readonly file: F;
+  readonly onView: (file: F) => void;
+  readonly urls?: AttachmentUrls;
 }): ReactNode {
   const { formatMessage } = useIntl();
   if (file.isImage) {
@@ -221,7 +247,7 @@ export function Attachment({
       >
         <img
           className={styles.attImage}
-          src={SupportService.attachmentUrl(file.id)}
+          src={urls.view(file.id)}
           alt={file.fileName}
           loading="lazy"
         />
@@ -229,10 +255,7 @@ export function Attachment({
     );
   }
   return (
-    <a
-      className={styles.attFile}
-      href={SupportService.attachmentDownloadUrl(file.id)}
-    >
+    <a className={styles.attFile} href={urls.download(file.id)}>
       <span className={styles.ext}>
         {file.fileName.split(".").pop()?.toUpperCase() ?? "FILE"}
       </span>
@@ -246,9 +269,11 @@ export function Attachment({
 export function Lightbox({
   file,
   onClose,
+  urls = accountUrls,
 }: {
-  readonly file: SupportService.MyAttachment;
+  readonly file: AttachmentFile;
   readonly onClose: () => void;
+  readonly urls?: AttachmentUrls;
 }): ReactNode {
   const { formatMessage } = useIntl();
   useEffect(() => {
@@ -265,7 +290,7 @@ export function Lightbox({
     <div className={styles.lightbox}>
       <img
         className={styles.lightboxImage}
-        src={SupportService.attachmentUrl(file.id)}
+        src={urls.view(file.id)}
         alt={file.fileName}
       />
       <div className={styles.lightboxBar}>
@@ -273,7 +298,7 @@ export function Lightbox({
         <span className={styles.fileSize}>{formatSize(file.size)}</span>
         <a
           className={styles.attFile}
-          href={SupportService.attachmentDownloadUrl(file.id)}
+          href={urls.download(file.id)}
           style={{ marginInlineStart: "auto" }}
         >
           <Icon name="download" />

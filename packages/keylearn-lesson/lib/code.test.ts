@@ -7,8 +7,10 @@ import { makeKeyStatsMap } from "@keylearn/result";
 import { Settings } from "@keylearn/settings";
 import { flattenStyledText } from "@keylearn/textinput";
 import { isTrue } from "rich-assert";
-import { CodeLesson } from "./code.ts";
+import { CodeLesson, loadSnippetSets } from "./code.ts";
 import { lessonProps } from "./settings.ts";
+
+await loadSnippetSets();
 
 test("generate code fragment", () => {
   const settings = new Settings().set(lessonProps.code.syntax, Syntax.HTML);

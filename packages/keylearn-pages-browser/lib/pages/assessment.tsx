@@ -29,6 +29,7 @@ import {
   type IssuedCertificate,
   Pages,
   postSitting,
+  startSitting,
   usePageData,
 } from "@keylearn/pages-shared";
 import { Letter } from "@keylearn/phonetic-model";
@@ -214,6 +215,12 @@ function Sitting({
   const leave = useCallback(() => {
     void navigate(Pages.account.path);
   }, [navigate]);
+
+  // Each attempt starts its clock on the server as it begins, so the
+  // sitting it reports can be held to the time that really passed.
+  useEffect(() => {
+    void startSitting(String(profile.id));
+  }, [attempt, profile.id]);
 
   const onSitting = useCallback(
     async (runs: readonly Run[]) => {

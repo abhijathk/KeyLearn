@@ -26,6 +26,7 @@ import {
   type CSSProperties,
   type ReactNode,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -647,6 +648,11 @@ function ProfileEditor({
     };
   });
   const [consent, setConsent] = useState(false);
+  // The two ticks are buttons drawn as checkboxes; their sentences beside
+  // them are not <label>s, so they have to be named by reference or a screen
+  // reader announces an unnamed "checkbox, not checked".
+  const visionLabelId = useId();
+  const consentLabelId = useId();
   // Kept against the learner's id rather than on the profile record, so on a
   // new learner it is held here until the id exists and written straight after.
   const [appVoice, setAppVoice] = useState<string | null>(
@@ -1212,6 +1218,7 @@ function ProfileEditor({
               type="button"
               role="checkbox"
               aria-checked={visionSupport}
+              aria-labelledby={visionLabelId}
               className={clsx(styles.cbox, visionSupport && styles.cboxOn)}
               disabled={brailleOnly}
               // Turning this on is not a preference — it hands the learner a
@@ -1232,7 +1239,7 @@ function ProfileEditor({
                 </svg>
               )}
             </button>
-            <span className={styles.consentText}>
+            <span className={styles.consentText} id={visionLabelId}>
               <FormattedMessage
                 id="profiles.visionSupport"
                 defaultMessage="This learner uses KeyLearn without relying on sight, or finds it hard to see. Turns on spoken guidance and adds braille typing."
@@ -1261,6 +1268,7 @@ function ProfileEditor({
                 type="button"
                 role="checkbox"
                 aria-checked={shownAsGivenConsent ? true : consent}
+                aria-labelledby={consentLabelId}
                 aria-disabled={shownAsGivenConsent}
                 className={clsx(
                   styles.cbox,
@@ -1284,7 +1292,7 @@ function ProfileEditor({
                   </svg>
                 )}
               </button>
-              <span className={styles.consentText}>
+              <span className={styles.consentText} id={consentLabelId}>
                 <FormattedMessage
                   id="profiles.consentLabel"
                   defaultMessage="I’m the parent or guardian and I consent to my child using KeyLearn."

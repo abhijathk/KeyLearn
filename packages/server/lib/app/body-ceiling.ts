@@ -1,3 +1,4 @@
+import { body } from "@fastr/controller";
 import { type Middleware } from "@fastr/core";
 import { PayloadTooLargeError } from "@fastr/errors";
 
@@ -15,15 +16,18 @@ import { PayloadTooLargeError } from "@fastr/errors";
  * the attachment upload does — because this ceiling has to be generous
  * enough for the largest legitimate request on the whole app.
  *
- * Read from `content-length`, which is a claim rather than a measurement.
- * A chunked request without one still gets through to the route's own
- * limit; the point here is to make the cheap, common case cheap to
- * refuse, not to be the only thing standing between the app and memory
- * exhaustion.
+ * Two layers. `content-length` is a claim, refused here before anything
+ * is read. A chunked request has no length to claim, and a gzipped one can
+ * claim a small length and decode to a huge one (a 194 KB body inflating
+ * to 200 MB took ten seconds of CPU to refuse), so the same ceiling is also
+ * the default `maxLength` of every `@body.*` read — @fastr counts the
+ * decoded bytes as they stream and stops at it. A route's own, tighter
+ * `maxLength` still wins.
  */
 export const MAX_REQUEST_BODY = 16 * 1024 * 1024;
 
 export function bodyCeiling(max: number = MAX_REQUEST_BODY): Middleware {
+  body.setDefaultOptions({ maxLength: max });
   return async (ctx, next) => {
     const claimed = ctx.request.headers.get("content-length");
     if (claimed != null) {

@@ -211,6 +211,8 @@ test("create user from resource owner with null values", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -268,6 +270,8 @@ test("create user from resource owner with non-null values", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -325,6 +329,8 @@ test("create user from resource owner with invalid values", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -388,6 +394,8 @@ test("update user from resource owner with null values", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -451,6 +459,8 @@ test("update user from resource owner with non-null values", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -502,6 +512,8 @@ test("update user from resource owner with non-null values", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -565,6 +577,8 @@ test("update user from resource owner with invalid values", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -616,6 +630,8 @@ test("update user from resource owner with invalid values", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -673,6 +689,8 @@ test("merge multiple resource owners", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -727,6 +745,8 @@ test("merge multiple resource owners", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -873,6 +893,8 @@ test("generates unique name for resource owner", async (ctx) => {
       locale: null,
       signupCountry: null,
       supportPinRequired: 0,
+      mustChangePassword: 0,
+      tempPasswordExpiresAt: null,
       remindedAt: null,
       externalIds: [
         {
@@ -1071,6 +1093,8 @@ test("login with a valid access token", async (ctx) => {
     locale: null,
     signupCountry: null,
     supportPinRequired: 0,
+    mustChangePassword: 0,
+    tempPasswordExpiresAt: null,
     remindedAt: null,
     externalIds: [],
     order: null,

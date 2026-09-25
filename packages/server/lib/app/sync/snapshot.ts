@@ -57,14 +57,16 @@ export class DataSnapshot {
     if (this.#timer != null || !snapshotEnabled()) {
       return;
     }
-    const interval = snapshotIntervalMs();
     // The first pass waits a full interval: a restart loop must not turn into a
     // write storm against the database. Re-read each tick: the period is a
-    // control-centre setting.
-    this.#timer = repeat(snapshotIntervalMs, () => void this.runOnce());
-    Logger.info("Data snapshot scheduled", {
-      everyMinutes: interval / 60_000,
-    });
+    // control-centre setting, logged once the settings have loaded.
+    this.#timer = repeat(
+      snapshotIntervalMs,
+      () => void this.runOnce(),
+      (ms) => {
+        Logger.info("Data snapshot scheduled", { everyMinutes: ms / 60_000 });
+      },
+    );
   }
 
   stop(): void {

@@ -151,6 +151,11 @@ export class QdeskRetrySweep {
           message: ticket.message!,
           userId: ticket.userId ?? null,
           messageId: message.id!,
+          // Stored at submit for exactly this: a re-send carries no browser
+          // and no edge header, so without these a ticket that missed its
+          // first delivery reached the desk with no location and no clock.
+          country: ticket.country ?? null,
+          timeZone: ticket.timeZone ?? null,
         });
       } else {
         forwardReplyToQdesk(ticket.id!, message.body!, message.id!);

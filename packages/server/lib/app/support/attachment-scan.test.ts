@@ -178,3 +178,25 @@ test("with scanning switched off a file is stored, and says so", async () => {
     }
   }
 });
+
+test("a file whose bytes are not the type it claims is refused", async () => {
+  const user = await findUser("user1@keylearn.org");
+  const was = process.env["ATTACHMENT_SCAN"];
+  process.env["ATTACHMENT_SCAN"] = "off";
+  try {
+    const before = await SupportAttachment.query().resultSize();
+    const response = await upload(
+      user.id!,
+      "page.png",
+      Buffer.from("<html><body>hi</body></html>"),
+    );
+    equal(response.status, 403);
+    equal(await SupportAttachment.query().resultSize(), before);
+  } finally {
+    if (was == null) {
+      delete process.env["ATTACHMENT_SCAN"];
+    } else {
+      process.env["ATTACHMENT_SCAN"] = was;
+    }
+  }
+});

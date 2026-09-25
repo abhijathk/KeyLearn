@@ -20,6 +20,7 @@ export async function load(url: string, context: any, nextLoad: any) {
       ".stats",
       ".jpg",
       ".png",
+      ".webp",
       ".svg",
       ".mp3",
       ".wav",

@@ -17,8 +17,11 @@ export const TextEvents = memo(function TextEvents({
   onKeyUp,
   onInput,
   focusRef,
+  describedBy,
 }: Callbacks & {
   readonly focusRef?: RefObject<Focusable | null>;
+  /** Id of the text that tells a screen reader how to leave (Esc, then Tab). */
+  readonly describedBy?: string;
 }): ReactNode {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const handler = useInputHandler();
@@ -37,6 +40,7 @@ export const TextEvents = memo(function TextEvents({
         autoCapitalize="off"
         autoCorrect="off"
         spellCheck="false"
+        aria-describedby={describedBy}
         style={inputStyle}
       />
     </div>

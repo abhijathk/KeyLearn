@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import {
   body,
   controller,
@@ -35,6 +36,7 @@ import {
   PracticeSession,
   Profile,
   ProfileAccess,
+  ProfileData,
   SecurityEvent,
   Staff,
   StaffAuditEvent,
@@ -51,6 +53,7 @@ import {
   verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
 import { z } from "zod";
+import { learnerOwner } from "../access/owner.ts";
 import { buildAccountExport } from "../account-export.ts";
 import {
   messageAccountDeletionRequested,
@@ -1237,12 +1240,15 @@ export class Controller {
     let seatsActive = 0;
     let seatsUnmeasured = 0;
     for (const p of seen.values()) {
-      if (p.userId == null) {
+      // An organisation's own learners are measured from the organisation's
+      // folder now that their files live there (see access/owner.ts).
+      const owner = learnerOwner(p);
+      if (owner == null) {
         seatsUnmeasured++;
         continue;
       }
       const at = await this.userData
-        .loadProfile(p.userId, p.id!)
+        .loadProfile(owner, p.id!)
         .lastWrittenAt()
         .catch(() => null);
       if (at != null && at.getTime() >= cutoff) {
@@ -2181,10 +2187,24 @@ export class Controller {
       await UserExternalId.query().where("userId", fromId)
     ).filter((x) => !providersHere.has(x.provider!));
 
+    const profileIds = (
+      await Profile.query().where("userId", fromId).select("id")
+    ).map((p) => p.id!);
     const moved = await User.transaction(async (trx) => {
       const profiles = await Profile.query(trx)
         .where("userId", fromId)
         .patch({ userId: id });
+      // What hangs off those learners by account id as well as by profile.
+      if (profileIds.length > 0) {
+        await ProfileData.query(trx)
+          .where("userId", fromId)
+          .whereIn("profileId", profileIds)
+          .patch({ userId: id });
+        await Certificate.query(trx)
+          .where("userId", fromId)
+          .whereIn("profileId", profileIds)
+          .patch({ userId: id });
+      }
       const tickets = await SupportTicket.query(trx)
         .where("userId", fromId)
         .patch({ userId: id });
@@ -2201,6 +2221,12 @@ export class Controller {
 
     // Written against BOTH accounts, because somebody investigating will
     // start from whichever one they were handed.
+    // Each learner's files live under the account's id, so the rows moving
+    // without them left every merged learner with an empty history.
+    for (const profileId of profileIds) {
+      await this.#moveProfileFiles(fromId, id, profileId);
+    }
+
     for (const target of [id, fromId]) {
       void StaffAuditEvent.record({
         userId: parsed.data.actingStaffUserId ?? null,
@@ -2215,6 +2241,48 @@ export class Controller {
     }
 
     ctx.response.body = { ...moved, keptId: id, mergedFromId: fromId };
+  }
+
+  /**
+   * Moves one learner's files from one account's folders to another's:
+   * results (every course), settings, braille progress, accessibility
+   * preferences and the mirrored device storage.
+   */
+  async #moveProfileFiles(
+    fromId: number,
+    toId: number,
+    profileId: number,
+  ): Promise<void> {
+    const d = this.dataDir;
+    const locate = [
+      (u: number) => d.profileStatsFile(u, profileId),
+      (u: number) => d.profileSettingsFile(u, profileId),
+      (u: number) => d.brailleProgressFile(u, profileId),
+      (u: number) => d.a11yPrefsFile(u, profileId),
+      (u: number) => d.profileDocFile(u, profileId, "local"),
+    ];
+    const pid = String(profileId);
+    for (const at of locate) {
+      const from = dirname(at(fromId));
+      const to = dirname(at(toId));
+      let names: string[];
+      try {
+        names = await readdir(from);
+      } catch {
+        continue;
+      }
+      for (const name of names) {
+        if (name !== pid && !name.startsWith(`${pid}.`)) {
+          continue;
+        }
+        try {
+          await mkdir(to, { recursive: true });
+          await rename(join(from, name), join(to, name));
+        } catch (err: any) {
+          console.warn(`merge: could not move ${join(from, name)}:`, err);
+        }
+      }
+    }
   }
 
   @http.POST("/_/internal/accounts/{id}/reveal-email")

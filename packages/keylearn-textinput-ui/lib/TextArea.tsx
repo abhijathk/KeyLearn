@@ -7,7 +7,6 @@ import {
 import {
   type Focusable,
   StrokeIcon,
-  useHotkeys,
   useWindowEvent,
   type ZoomableProps,
 } from "@keylearn/widget";
@@ -18,8 +17,8 @@ import {
   type RefObject,
   useCallback,
   useEffect,
+  useId,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -64,6 +63,7 @@ export function TextArea({
 } & ZoomableProps): ReactNode {
   const ref = useRef<HTMLDivElement>(null);
   const innerRef = useRef<Focusable>(null);
+  const leaveHintId = useId();
   useImperativeHandle(focusRef, () => ({
     focus() {
       innerRef.current?.focus();
@@ -89,16 +89,26 @@ export function TextArea({
   // the text area has focus, Enter is a character being typed — a code snippet
   // has real lines in it — and this handler's preventDefault would stop the
   // browser ever producing the line break the engine is waiting for.
-  const startHotkey = useMemo(() => {
-    const map: Record<string, () => void> = {};
-    if (!focus) {
-      map["Enter"] = () => {
-        innerRef.current?.focus();
-      };
+  //
+  // And only when nothing else on the page has focus. Bound on the window,
+  // it used to swallow Enter on every focused button and link as well — the
+  // menu, the header, a dialog's Continue — so a keyboard user could not
+  // activate anything on the practice page.
+  useWindowEvent("keydown", (ev: KeyboardEvent) => {
+    if (
+      focus ||
+      ev.key !== "Enter" ||
+      ev.altKey ||
+      ev.ctrlKey ||
+      ev.metaKey ||
+      ev.shiftKey ||
+      ownsEnter(document.activeElement)
+    ) {
+      return;
     }
-    return map;
-  }, [focus]);
-  useHotkeys(startHotkey);
+    ev.preventDefault();
+    innerRef.current?.focus();
+  });
   const handleFocus = useCallback(() => {
     setFocus(true);
     onFocus?.();
@@ -130,7 +140,16 @@ export function TextArea({
         onKeyDown={onKeyDown}
         onKeyUp={onKeyUp}
         onInput={onInput}
+        describedBy={leaveHintId}
       />
+      {/* Said, not shown: Tab is an indent in here, so the way out has to be
+          announced to somebody who cannot see that the text has them. */}
+      <span id={leaveHintId} className={styles.srOnly}>
+        <FormattedMessage
+          id="textArea.leaveHint"
+          defaultMessage="Press Esc, then Tab to leave."
+        />
+      </span>
       <TextLines
         settings={settings}
         lines={lines}
@@ -162,4 +181,15 @@ export function TextArea({
 function setElementCursor(element: HTMLDivElement, cursor: string): void {
   const { style } = element;
   style.cursor = cursor;
+}
+
+/** Whether the focused element does something of its own with Enter. */
+function ownsEnter(element: Element | null): boolean {
+  return (
+    element != null &&
+    element !== document.body &&
+    element.matches(
+      "a[href], button, input, select, textarea, summary, [contenteditable], [role=button], [role=link], [role=menuitem], [role=option], [role=tab]",
+    )
+  );
 }

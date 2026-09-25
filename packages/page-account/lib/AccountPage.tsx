@@ -654,14 +654,14 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
           message={
             alsoEverywhere
               ? formatMessage({
-                  id: "account.logout.confirmMessageAll",
+                  id: "account.logout.confirmMessageAll.v2",
                   defaultMessage:
-                    "This device and every other phone, tablet or computer logged in to this account will be logged out. You’ll need to log back in to sync your progress. Learner profiles stay on this device.",
+                    "This device and every other phone, tablet or computer logged in to this account will be logged out. You’ll need to log back in to sync your progress. Learner profiles stay in your account and come back when you do.",
                 })
               : formatMessage({
-                  id: "account.logout.confirmMessage",
+                  id: "account.logout.confirmMessage.v2",
                   defaultMessage:
-                    "You’ll need to log back in to sync your progress. Learner profiles stay on this device.",
+                    "You’ll need to log back in to sync your progress. Learner profiles stay in your account and come back when you do.",
                 })
           }
           confirmLabel={formatMessage({
@@ -837,8 +837,8 @@ function AccountPane({
         </div>
         <p className={styles.cardNote}>
           <FormattedMessage
-            id="account.delete.note"
-            defaultMessage="Permanently erases your name and email from our servers. This can’t be undone. Your learner profiles stay on this device."
+            id="account.delete.note.v3"
+            defaultMessage="Permanently erases your name, your email and your learner profiles, with all their progress, from our servers. Certificates already earned can still be checked by their number: we keep the name printed on them, the date and the results. This can’t be undone."
           />
         </p>
         <button className={styles.dangerBtn} onClick={onDelete}>

@@ -99,6 +99,7 @@ function TwoFactorWindow({
   const [code, setCode] = useState("");
   const [codes, setCodes] = useState<string[]>([]);
   const [password, setPassword] = useState("");
+  const [identityCode, setIdentityCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -134,6 +135,12 @@ function TwoFactorWindow({
       setUri(uri);
       setSecret(secret);
       setStep("scan");
+      // Turning it on asks who this is. Without a password to ask for, the
+      // proof is a code sent to the account's email — sent now, so it is
+      // waiting by the time the app code is.
+      if (!user.hasPassword) {
+        await AccountService.sendIdentityCode();
+      }
     } catch (e: any) {
       setErr(e?.body?.error?.message ?? "Could not start setup.");
     } finally {
@@ -161,8 +168,15 @@ function TwoFactorWindow({
     setErr(null);
     setBusy(true);
     try {
-      setCodes(await AccountService.twoFactorEnable(code));
+      setCodes(
+        await AccountService.twoFactorEnable(
+          code,
+          user.hasPassword ? { password } : { identityCode },
+        ),
+      );
       setCode("");
+      setPassword("");
+      setIdentityCode("");
       setStep("codes");
       onChanged();
     } catch (e: any) {
@@ -302,11 +316,65 @@ function TwoFactorWindow({
             value={code}
             onChange={setCode}
           />
+          {user.hasPassword ? (
+            <PasswordField
+              placeholder={formatMessage({
+                id: "sec.yourPassword",
+                defaultMessage: "Your password",
+              })}
+              value={password}
+              autoComplete="current-password"
+              onChange={setPassword}
+            />
+          ) : (
+            <>
+              <p className={styles.prefHint}>
+                <FormattedMessage
+                  id="security.email.identityIntro"
+                  defaultMessage="Enter the 6-digit code we sent to your current email, {email}."
+                  values={{ email: <strong>{user.email}</strong> }}
+                />
+              </p>
+              <TextField
+                size="full"
+                autoComplete="one-time-code"
+                maxLength={6}
+                placeholder={formatMessage({
+                  id: "auth.verify.codePlaceholder",
+                  defaultMessage: "6-digit code",
+                })}
+                value={identityCode}
+                onChange={(v) =>
+                  setIdentityCode(v.replace(/\D/g, "").slice(0, 6))
+                }
+              />
+              <button
+                type="button"
+                className={styles.secBtn}
+                disabled={busy}
+                onClick={() => {
+                  setErr(null);
+                  AccountService.sendIdentityCode().catch((e: any) =>
+                    setErr(e?.body?.error?.message ?? "Could not send a code."),
+                  );
+                }}
+              >
+                <FormattedMessage
+                  id="auth.verify.resend"
+                  defaultMessage="Didn’t get it? Send a new code"
+                />
+              </button>
+            </>
+          )}
           {err != null && <p className={styles.secErr}>{err}</p>}
           <button
             type="button"
             className={styles.secBtn}
-            disabled={busy || code.length < 6}
+            disabled={
+              busy ||
+              code.length < 6 ||
+              (user.hasPassword ? password === "" : identityCode.length < 6)
+            }
             onClick={confirm}
           >
             <FormattedMessage

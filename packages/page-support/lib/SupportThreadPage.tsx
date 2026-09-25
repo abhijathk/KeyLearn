@@ -3,6 +3,12 @@ import { Button, TextField } from "@keylearn/widget";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link as RouterLink, useParams } from "react-router";
+import {
+  Attachment,
+  type AttachmentFile,
+  type AttachmentUrls,
+  Lightbox,
+} from "./MySupport.tsx";
 import { ReplyBody } from "./ReplyBody.tsx";
 import { SupportService, type ThreadView } from "./service.ts";
 import * as styles from "./SupportThreadPage.module.less";
@@ -31,6 +37,15 @@ export function SupportThreadPage(): ReactNode {
   >({ kind: "loading" });
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
+  // The same full-size view the account thread opens an image in.
+  const [viewing, setViewing] = useState<AttachmentFile | null>(null);
+  // The account thread's attachment component, pointed at this thread's
+  // token-scoped routes — a guest has no account for the other ones.
+  const fileUrls: AttachmentUrls = {
+    view: (id) => `/_/support/t/${encodeURIComponent(token)}/attachments/${id}`,
+    download: (id) =>
+      `/_/support/t/${encodeURIComponent(token)}/attachments/${id}?download=1`,
+  };
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -169,6 +184,18 @@ export function SupportThreadPage(): ReactNode {
     return null;
   };
 
+  if (viewing != null) {
+    return (
+      <Shell subject={thread.subject}>
+        <Lightbox
+          file={viewing}
+          urls={fileUrls}
+          onClose={() => setViewing(null)}
+        />
+      </Shell>
+    );
+  }
+
   return (
     <Shell subject={thread.subject}>
       <div className={styles.chat}>
@@ -186,6 +213,9 @@ export function SupportThreadPage(): ReactNode {
             onAsk={sendMessage}
             live={m.sender !== "them" && i === askLiveIndex}
             answer={m.sender === "them" ? null : nextCustomerReply(i)}
+            files={m.attachments ?? []}
+            fileUrls={fileUrls}
+            onViewFile={setViewing}
           />
         ))}
         <div ref={endRef} />
@@ -235,7 +265,7 @@ function Shell({
 }): ReactNode {
   return (
     <div className={styles.page}>
-      <h1 className={styles.headline}>
+      <h1 className={styles.headline} dir="auto">
         {subject ?? (
           <FormattedMessage
             id="supportThread.title"
@@ -261,6 +291,9 @@ function Bubble({
   onAsk,
   live = false,
   answer = null,
+  files = [],
+  fileUrls,
+  onViewFile = () => {},
 }: {
   readonly mine: boolean;
   readonly body: string;
@@ -273,21 +306,31 @@ function Bubble({
   readonly live?: boolean;
   /** The customer's next message after this one, if any. */
   readonly answer?: string | null;
+  /** Files the desk sent with this reply. */
+  readonly files?: readonly AttachmentFile[];
+  readonly fileUrls?: AttachmentUrls;
+  readonly onViewFile?: (file: AttachmentFile) => void;
 }): ReactNode {
+  const { locale } = useIntl();
   if (system) {
     return <p className={styles.system}>{body}</p>;
   }
   return (
     <div className={mine ? styles.mine : styles.theirs}>
       {from != null && <span className={styles.from}>{from}</span>}
+      {files.map((f) => (
+        <Attachment key={f.id} file={f} onView={onViewFile} urls={fileUrls} />
+      ))}
       {/* Same split as the in-app thread: the desk's replies render their
           paths and steps; the customer's own words stay exactly as they
           typed them. A <div> because a path rail and a step list are block
           elements, and a <p> may not contain them. */}
       {mine ? (
-        <p className={styles.body}>{body}</p>
+        <p className={styles.body} dir="auto">
+          {body}
+        </p>
       ) : (
-        <div className={styles.body}>
+        <div className={styles.body} dir="auto">
           <ReplyBody
             text={body}
             onAsk={onAsk}
@@ -297,12 +340,17 @@ function Bubble({
         </div>
       )}
       <span className={styles.at}>
-        {new Date(at).toLocaleString(undefined, {
-          day: "numeric",
-          month: "short",
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
+        {/* The page's own locale, not the browser's: an English-formatted
+            stamp inside an Arabic page was reordered by the bidi algorithm
+            into "Sept, 17:02 25". <bdi> keeps whatever it is in one piece. */}
+        <bdi>
+          {new Date(at).toLocaleString(locale, {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </bdi>
       </span>
     </div>
   );

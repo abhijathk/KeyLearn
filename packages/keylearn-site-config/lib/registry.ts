@@ -1121,7 +1121,9 @@ const BASE_REGISTRY: readonly SettingDef[] = [
     direction: "free",
     protection: "locked",
     reason:
-      "A child profile, the kids world and every school account never see a paid line. This is not a setting because it has no off position.",
+      // Only the WHY: the description already says what it does, and the
+      // desk printed both lines, so this repeated it word for word.
+      "This is not a setting because it has no off position.",
     enforcedAt: "app/ads/eligibility.ts adsAllowed",
   },
   {
@@ -1133,7 +1135,7 @@ const BASE_REGISTRY: readonly SettingDef[] = [
     direction: "free",
     protection: "locked",
     reason:
-      "The line is removed the moment a lesson starts and returns when it ends, so nothing moves beside the text being typed.",
+      "Nothing may move beside the text being typed, so this has no off position.",
     enforcedAt: "pages-browser/lib/Template.tsx AdSlot",
   },
   {

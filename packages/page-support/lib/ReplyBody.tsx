@@ -83,8 +83,11 @@ export function ReplyBody({
     // The control centre's reply accent (Settings → Replies), as CSS
     // custom properties every block below reads — see
     // ReplyBody.module.less for `--reply-accent`/`--reply-accent-ink`.
+    // dir="auto": the words' own script decides, not the page's — an English
+    // reply in an Arabic page otherwise ends ". …look further".
     <div
       className={styles.root}
+      dir="auto"
       data-accent={accent}
       style={replyAccentStyle(accent)}
     >

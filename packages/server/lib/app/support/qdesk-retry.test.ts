@@ -169,6 +169,44 @@ test("a message the desk never took is delivered later", async () => {
   }
 });
 
+test("a re-sent ticket still carries its country and zone", async () => {
+  // The re-send is built from the stored row — no browser, no edge header.
+  // It used to omit both, so a ticket that missed its first delivery reached
+  // the desk with no emergency-number country and no local time.
+  const desk = await fakeDesk();
+  const restore = withBridge(desk.url);
+  try {
+    desk.up = false;
+    resetRateLimits();
+    const request = startApp(context.get(Application, kMain));
+    await request.become((await findUser("user1@keylearn.org")).id!);
+    const response = await request
+      .POST("/_/support/tickets")
+      .header("cf-ipcountry", "AU")
+      .send({ ...newTicket(), timeZone: "Australia/Sydney" });
+    equal(response.status, 200);
+    const ticket = await SupportTicket.query().orderBy("id", "desc").first();
+    const message = await SupportMessage.query()
+      .where("ticketId", ticket!.id!)
+      .andWhere("sender", "them")
+      .first();
+    await settle(500);
+
+    desk.up = true;
+    await age(message!.id!, 10);
+    await onlyPending(message!.id!);
+    await new QdeskRetrySweep().runOnce();
+    await settle(500);
+
+    const resent = desk.calls.find((c) => c.path === "/_/apps/tickets");
+    equal(resent?.body.country, "AU");
+    equal(resent?.body.timeZone, "Australia/Sydney");
+  } finally {
+    restore();
+    await desk.close();
+  }
+});
+
 test("a delivery that already landed is not sent twice", async () => {
   // The reason the desk takes an idempotency key at all. Here the first
   // attempt reaches the desk and the answer is lost, so this side still

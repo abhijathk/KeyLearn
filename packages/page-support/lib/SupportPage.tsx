@@ -325,7 +325,7 @@ export function SupportPage({
   readonly gated?: boolean;
 } = {}): ReactNode {
   const { formatMessage } = useIntl();
-  const { publicUser } = usePageData();
+  const { publicUser, user } = usePageData();
   // Whether a reply can land in the app (Account → Support, with a bell
   // notification) or has to go by email — the only address a guest has
   // given us. See support.intro and support.form.sent below.
@@ -341,7 +341,8 @@ export function SupportPage({
   const [name, setName] = useState(
     publicUser.id != null ? publicUser.name : "",
   );
-  const [email, setEmail] = useState("");
+  // Prefilled like the name: the account's own address, still editable.
+  const [email, setEmail] = useState(user?.email ?? "");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
@@ -407,7 +408,7 @@ export function SupportPage({
     message.trim() !== "";
 
   const submit = () => {
-    if (!valid || busy) {
+    if (!valid || busy || captcha.pending) {
       return;
     }
     setBusy(true);
@@ -672,15 +673,24 @@ export function SupportPage({
               {error != null && <p className={styles.error}>{error}</p>}
               {captcha.widget}
 
-              <div className={styles.primary}>
+              {/* Polite live region: a screen reader hears "Checking…"
+                  give way to "Send message" once the check is done. */}
+              <div className={styles.primary} aria-live="polite">
                 <Button
                   size="full"
                   icon={<Icon shape={mdiEmailFastOutline} />}
-                  label={formatMessage({
-                    id: "support.form.submit",
-                    defaultMessage: "Send message",
-                  })}
-                  disabled={busy || !valid}
+                  label={
+                    captcha.pending
+                      ? formatMessage({
+                          id: "deletionCancel.checking",
+                          defaultMessage: "Checking…",
+                        })
+                      : formatMessage({
+                          id: "support.form.submit",
+                          defaultMessage: "Send message",
+                        })
+                  }
+                  disabled={busy || !valid || captcha.pending}
                 />
               </div>
             </form>

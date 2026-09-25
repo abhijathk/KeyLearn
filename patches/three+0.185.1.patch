@@ -1,0 +1,33 @@
+diff --git a/node_modules/three/build/three.module.js b/node_modules/three/build/three.module.js
+index ad13abf..ff2b9de 100644
+--- a/node_modules/three/build/three.module.js
++++ b/node_modules/three/build/three.module.js
+@@ -13513,6 +13513,20 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
+ 	this.setupFrameBufferTexture = setupFrameBufferTexture;
+ 	this.useMultisampledRTT = useMultisampledRTT;
+ 
++	// KeyLearn patch: the module-level textures (the empty placeholders and
++	// the shared DFG lookup table) outlive every renderer, so the dispose
++	// listener each renderer adds to them would keep that renderer (context,
++	// canvas and all) reachable after dispose().
++	this.dispose = function () {
++
++		for ( const texture of [ emptyTexture, emptyShadowTexture, emptyArrayTexture, empty3dTexture, emptyCubeTexture, lut ] ) {
++
++			if ( texture !== null ) texture.removeEventListener( 'dispose', onTextureDispose );
++
++		}
++
++	};
++
+ 	this.isReversedDepthBuffer = function () {
+ 
+ 		return state.buffers.depth.getReversed();
+@@ -17080,6 +17094,7 @@ class WebGLRenderer {
+ 			bindingStates.dispose();
+ 			uniformsGroups.dispose();
+ 			programCache.dispose();
++			textures.dispose();
+ 
+ 			xr.dispose();
+ 

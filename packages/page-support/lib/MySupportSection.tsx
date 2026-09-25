@@ -408,7 +408,9 @@ export function MySupportSection(): ReactNode {
         onClick={() => setView({ kind: "thread", id: t.id })}
       >
         <span className={styles.reference}>{t.reference}</span>
-        <span className={styles.chipSubject}>{t.subject}</span>
+        <span className={styles.chipSubject} dir="auto">
+          {t.subject}
+        </span>
         <span className={styles.chipMeta}>
           {(t.hasAttachments || t.hasDraft) && (
             <span className={styles.marks}>
@@ -1429,7 +1431,7 @@ function Thread({
         {/* `title` rather than a tooltip component: it is the browser's
             own, it works on a truncated element without any extra state,
             and it is what a screen reader reads anyway. */}
-        <h2 className={styles.threadSubject} title={thread.subject}>
+        <h2 className={styles.threadSubject} title={thread.subject} dir="auto">
           {thread.subject}
         </h2>
         {/* An expectation, only while a person has the thread and only
@@ -1521,14 +1523,14 @@ function Thread({
                             />
                           </span>
                         )}
-                        <div className={styles.crisisBody}>
+                        <div className={styles.crisisBody} dir="auto">
                           <CrisisBody text={m.body} loud={first} />
                         </div>
                       </div>
                     );
                   })()
                 ) : m.sender === "system" || m.kind === "handover" ? (
-                  <p className={styles.systemMsg}>
+                  <p className={styles.systemMsg} dir="auto">
                     {renderMessageText(m.body, undefined, locale)}
                   </p>
                 ) : (
@@ -1590,10 +1592,12 @@ function Thread({
                       />
                     </div>
                     <span className={styles.stamp}>
-                      {new Date(m.createdAt).toLocaleTimeString(locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      <bdi>
+                        {new Date(m.createdAt).toLocaleTimeString(locale, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </bdi>
                       {/* Only on your own: a tick on a message somebody
                           else sent you would be reporting on them. */}
                       {mine && (
@@ -1622,7 +1626,7 @@ function Thread({
               key={m.clientId}
               className={`${styles.msg} ${styles.msgMe} ${m.failed ? styles.msgFailed : ""}`}
             >
-              <div className={styles.bubble}>
+              <div className={styles.bubble} dir="auto">
                 {renderMessageText(m.body, undefined, locale)}
               </div>
               {m.failed ? (
@@ -2376,7 +2380,7 @@ function dayLabel(iso: string, intl: IntlShape): string {
       defaultMessage: "Yesterday",
     });
   }
-  return then.toLocaleDateString(undefined, {
+  return then.toLocaleDateString(intl.locale, {
     weekday: daysBack < 7 ? "long" : undefined,
     day: "numeric",
     month: "short",

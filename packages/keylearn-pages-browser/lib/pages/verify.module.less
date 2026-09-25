@@ -97,6 +97,12 @@
 .facts dd {
   margin: 0;
   font-weight: 600;
+}
+
+// Only the level arrives as a bare lower-case word ("completion"). Applied to
+// every value it turned "21 Zellen pro Minute" into "Zellen Pro Minute", "wpm"
+// into "Wpm", and would have re-cased a holder called "van der Berg".
+.level {
   text-transform: capitalize;
 }
 

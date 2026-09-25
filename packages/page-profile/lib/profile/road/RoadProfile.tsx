@@ -1205,7 +1205,7 @@ function AccuracySection({
         </div>
         <div className={styles.streaks}>
           {streaks.length === 0 && (
-            <div className={styles.whisper}>
+            <div className={clsx(styles.whisper, styles.whisperProse)}>
               <span>
                 <FormattedMessage
                   id="profile.accuracy.noData"

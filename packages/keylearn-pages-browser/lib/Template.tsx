@@ -17,8 +17,9 @@ import {
 } from "@keylearn/pages-shared";
 import { PortalContainer, Toaster } from "@keylearn/widget";
 import { clsx } from "clsx";
-import { type ReactNode, useCallback,useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
+import { useLocation, useNavigate } from "react-router";
 import { ComingSoon } from "./ComingSoon.tsx";
 import { Header } from "./Header.tsx";
 import { LoginPrompt } from "./LoginPrompt.tsx";
@@ -425,6 +426,62 @@ function LearnerVoiceSlot({
 // problem the old flag's one-hop design existed to avoid.
 let drawerOpen = false;
 
+/**
+ * A sign-in with no destination of its own lands on practice, marked
+ * `?signedIn=1` by the server. On a phone practice is gated, so a person who
+ * has just followed their sign-in link would meet "made for a bigger screen"
+ * and nothing else; they go on to their account instead. Anywhere else the
+ * marker is simply dropped, so the address bar reads as it always did.
+ */
+function useSignedInLanding(path: string): void {
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("signedIn") !== "1") {
+      return;
+    }
+    const phone = window.matchMedia("(max-width: 40rem)").matches;
+    if (phone && KEYBOARD_PAGES.has(path)) {
+      navigate(Pages.account.path, { replace: true });
+      return;
+    }
+    params.delete("signedIn");
+    const search = params.toString();
+    navigate(
+      {
+        pathname: location.pathname,
+        search: search === "" ? "" : `?${search}`,
+        hash: location.hash,
+      },
+      { replace: true },
+    );
+  }, [location, navigate, path]);
+}
+
+/**
+ * The pages that need a keyboard, and so the only ones the phone gate covers.
+ *
+ * An allow-list of typing pages rather than a list of exemptions, because the
+ * cost of a mistake runs one way: a page wrongly gated is a support thread, a
+ * crisis contact or a sign-in link that a person on their phone cannot open
+ * at all — which is where people read the emails that link to them. A new
+ * page is reachable on a phone until somebody decides it needs a keyboard.
+ */
+const KEYBOARD_PAGES: ReadonlySet<string> = new Set([
+  Pages.practice.path,
+  Pages.kids.path,
+  Pages.typingTest.path,
+  Pages.assessment.path,
+  Pages.braille.path,
+  Pages.multiplayer.path,
+  Pages.highScores.path,
+  Pages.layouts.path,
+  Pages.texts.path,
+  Pages.profile.path,
+  Pages.design.path,
+]);
+
 export function Template({
   path,
   children,
@@ -454,6 +511,7 @@ export function Template({
     setMenuOpenState(open);
   };
   const [supportOpen, setSupportOpen] = useState(false);
+  useSignedInLanding(path);
   const comingSoon = usePageComingSoon();
   const pageName = pageNameOfPath(path);
   const soon = pageName != null && comingSoon(pageName);
@@ -507,7 +565,7 @@ export function Template({
       <SupportDialog open={supportOpen} onClose={() => setSupportOpen(false)} />
       <EnvName />
       <CompleteProfileGate />
-      <SmallScreenGate />
+      {KEYBOARD_PAGES.has(path) && <SmallScreenGate />}
     </div>
   );
 }

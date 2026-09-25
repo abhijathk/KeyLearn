@@ -758,6 +758,8 @@ function Calendar({
   readonly from: number;
   readonly to: number;
 }): ReactNode {
+  // The report's language, not the browser's.
+  const { locale } = useIntl();
   const DAY = 24 * 60 * 60 * 1000;
   const counts = new Map<number, number>();
   for (const p of points) {
@@ -782,7 +784,7 @@ function Calendar({
           key={day}
           style={{ gridColumnStart: Math.floor((span - i) / 7) + 1 }}
         >
-          {date.toLocaleDateString(undefined, { month: "short" })}
+          {date.toLocaleDateString(locale, { month: "short" })}
         </span>,
       );
     }

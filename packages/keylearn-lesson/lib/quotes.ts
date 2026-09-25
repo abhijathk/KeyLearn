@@ -1,4 +1,4 @@
-import { randomQuote } from "@keylearn/content-quotes";
+import { type Quotes, randomQuote } from "@keylearn/content-quotes";
 import { filterText, type Keyboard } from "@keylearn/keyboard";
 import { type PhoneticModel } from "@keylearn/phonetic-model";
 import { type RNGStream } from "@keylearn/rand";
@@ -9,6 +9,8 @@ import { Lesson } from "./lesson.ts";
 import { lessonProps } from "./settings.ts";
 import { Target } from "./target.ts";
 
+export { loadQuotes } from "@keylearn/content-quotes";
+
 /**
  * Short, complete, properly punctuated passages.
  *
@@ -18,7 +20,12 @@ import { Target } from "./target.ts";
  * whole — a passage cut off mid-sentence would defeat the point of the mode.
  */
 export class QuotesLesson extends Lesson {
-  constructor(settings: Settings, keyboard: Keyboard, model: PhoneticModel) {
+  constructor(
+    settings: Settings,
+    keyboard: Keyboard,
+    model: PhoneticModel,
+    readonly quotes: Quotes,
+  ) {
     super(settings, keyboard, model);
   }
 
@@ -40,7 +47,7 @@ export class QuotesLesson extends Lesson {
     // A whole number of quotes, at least one — the last one may run past the
     // target length rather than be cut off.
     while (partsLength < length) {
-      const { text, author } = randomQuote(rng);
+      const { text, author } = randomQuote(this.quotes, rng);
       // A plain hyphen before the author: every layout can type it, where an
       // em-dash would be filtered out on most. The corpus is plain prose, but
       // the layout may still not cover everything — anything the keyboard
