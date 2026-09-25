@@ -8119,9 +8119,10 @@ export function createKidsWorld(
     // same relief under the child either way: the segment count follows the
     // width at a fixed two units apiece, so a 640-unit chapter gets more
     // triangles rather than coarser ground. 140 units of margin behind the
-    // start (the camera looks back along the road) and 40 past the last
-    // stone, so the terrain never runs out inside the frame.
-    const GROUND_WIDE = TRAIL_END + 180;
+    // start (the camera looks back along the road) and 80 past the last
+    // stone — 40 was enough to keep the terrain in frame, and doubled so the
+    // next chapter's preview has ground to stand on (owner, 25 Sep 2026).
+    const GROUND_WIDE = TRAIL_END + 220;
     const geo = new THREE.PlaneGeometry(
       GROUND_WIDE,
       GROUND_DEPTH,
@@ -8130,7 +8131,7 @@ export function createKidsWorld(
     );
     geo.rotateX(-Math.PI / 2);
     // Centre it on the road it carries, not on the origin.
-    geo.translate((TRAIL_END - 100) / 2, 0, 0);
+    geo.translate((TRAIL_END - 60) / 2, 0, 0);
     const pos = geo.attributes.position;
     const colors = new Float32Array(pos.count * 3);
     const cGrass = new THREE.Color(land.grass);
@@ -11579,6 +11580,13 @@ export function createKidsWorld(
         // walked the whole thing kept planting markers further and further
         // into ground that was never built. There are eleven stones in a
         // chapter and the eleventh is the end of it.
+        // NO STONE PAST THE CHAPTER'S LAST. Its eleventh marks the end, and
+        // the rule below for a road without a chapter planted one more up
+        // the road past it — a milestone standing in the next chapter's
+        // preview (owner, 25 Sep 2026).
+        if (CHAPTER != null && milestoneNo + 1 > SEGMENT_COUNT) {
+          return;
+        }
         const stoneX =
           CHAPTER != null && milestoneNo + 1 <= SEGMENT_COUNT
             ? CHAPTER[milestoneNo + 1]!
@@ -20006,6 +20014,34 @@ export function createKidsWorld(
         }
       }
 
+      // ── THE NEXT CHAPTER, SEEN FROM THE END OF THIS ONE ─────────────
+      //
+      // Past the last milestone the ground runs on for eighty units (see
+      // GROUND_WIDE), and it was an empty field with a stray stone at
+      // the far end (owner, 25 Sep 2026). What lies there is the next
+      // chapter: its first lesson's own authored props, set out past the end
+      // at the same fractions of a lesson's length — a preview, so the road
+      // visibly goes on somewhere. Only as far as the ground reaches, and not
+      // the walled runs, which need the full layout pass their chapter gives
+      // them.
+      if (CHAPTER != null) {
+        const nextRoad = CHAPTERS[CHAPTER_N % CHAPTERS.length];
+        const firstLesson = nextRoad?.lessons[0];
+        const lessonLen = CHAPTER[1]! - CHAPTER[0]!;
+        // Inside the ground, which now runs 80 past the end (GROUND_WIDE).
+        const reach = TRAIL_END + 72;
+        for (const p of firstLesson?.props ?? []) {
+          if (p.run != null) continue;
+          const x = TRAIL_END + p.at * lessonLen;
+          if (x > reach) continue;
+          const w = await stand(p.model, x, p.z, p.h, p.turn ?? 0, p.lift ?? 0);
+          if (w != null) {
+            w.name = "next-chapter-preview";
+            builtGroup.add(w);
+          }
+        }
+      }
+
       // ── THE BRIDGE ──────────────────────────────────────────────────
       //
       // Built from the river's own three numbers, so the two cannot drift:
@@ -21468,13 +21504,25 @@ export function createKidsWorld(
         };
         let planted = 0;
         let refused = 0;
-        for (let x = 0; x < TRAIL_END; ) {
+        // PAST THE LAST MILESTONE THE NEXT CHAPTER BEGINS: its first
+        // lesson's planting and density carry the field on into the preview
+        // (see "THE NEXT CHAPTER, SEEN FROM THE END OF THIS ONE"), so the road
+        // does not run out into bare grass.
+        const previewLesson =
+          CHAPTERS[CHAPTER_N % CHAPTERS.length]?.lessons[0] ?? null;
+        const plantTo = TRAIL_END + (previewLesson != null ? 60 : 0);
+        for (let x = 0; x < plantTo; ) {
+          const beyond = x >= TRAIL_END && previewLesson != null;
           const here = blendAt(x, CHAPTER);
           // The bleed picks WHICH lesson this plant belongs to, rather than
           // averaging the two into something neither of them has. A species
           // cannot be half a mango; what fades across a milestone is the
           // proportion of each, and that is a coin weighted by `mix`.
-          const from = hash3(x, 0, 11) < here.mix ? here.lesson : here.prev;
+          const from = beyond
+            ? previewLesson
+            : hash3(x, 0, 11) < here.mix
+              ? here.lesson
+              : here.prev;
           // WHICH LAYER, WEIGHTED BY THIS LESSON. An orchard and a fern
           // meadow can hold the same plants per unit of road and be nothing
           // alike, because one lesson's are overhead and the other's are
@@ -21486,7 +21534,8 @@ export function createKidsWorld(
             LAYERS.find((l, li) => (acc += from.mix[li]!) > roll) ?? LAYERS[2]!;
           const species = from[layer.key];
           const pick = hashPick(species, x, 2, 13);
-          const step = 1 / Math.max(0.2, densityAt(x, CHAPTER));
+          const step =
+            1 / Math.max(0.2, beyond ? from.density : densityAt(x, CHAPTER));
           x += step * hashRange(x, 3, 14, 0.6, 1.5);
           if (pick == null) {
             continue; // this lesson has no such layer — a meadow has no canopy
