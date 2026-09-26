@@ -18,10 +18,16 @@ export const TextEvents = memo(function TextEvents({
   onInput,
   focusRef,
   describedBy,
+  label,
 }: Callbacks & {
   readonly focusRef?: RefObject<Focusable | null>;
   /** Id of the text that tells a screen reader how to leave (Esc, then Tab). */
   readonly describedBy?: string;
+  /**
+   * The input's accessible name. Without one a screen reader announced an
+   * unnamed text area on every practice page (axe: "label", critical).
+   */
+  readonly label?: string;
 }): ReactNode {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const handler = useInputHandler();
@@ -41,6 +47,7 @@ export const TextEvents = memo(function TextEvents({
         autoCorrect="off"
         spellCheck="false"
         aria-describedby={describedBy}
+        aria-label={label}
         style={inputStyle}
       />
     </div>

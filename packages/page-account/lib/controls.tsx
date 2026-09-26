@@ -24,7 +24,12 @@ export function Toggle({
     if (label != null) {
       return;
     }
-    const row = ref.current?.previousElementSibling;
+    // Beside the row's text, or — when the switch shares a controls box with
+    // a slider (cursor glow, artwork behind the stats) — beside that box.
+    // Missing the second case left those two unnamed.
+    const row =
+      ref.current?.previousElementSibling ??
+      ref.current?.parentElement?.previousElementSibling;
     const text = (
       row?.firstElementChild?.textContent ?? row?.textContent
     )?.trim();

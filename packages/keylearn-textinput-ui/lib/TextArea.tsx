@@ -22,7 +22,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./TextArea.module.less";
 import { TextLines, type TextLineSize } from "./TextLines.tsx";
 
@@ -64,6 +64,7 @@ export function TextArea({
   const ref = useRef<HTMLDivElement>(null);
   const innerRef = useRef<Focusable>(null);
   const leaveHintId = useId();
+  const { formatMessage } = useIntl();
   useImperativeHandle(focusRef, () => ({
     focus() {
       innerRef.current?.focus();
@@ -141,6 +142,10 @@ export function TextArea({
         onKeyUp={onKeyUp}
         onInput={onInput}
         describedBy={leaveHintId}
+        label={formatMessage({
+          id: "textArea.label",
+          defaultMessage: "Type the text shown",
+        })}
       />
       {/* Said, not shown: Tab is an indent in here, so the way out has to be
           announced to somebody who cannot see that the text has them. */}
