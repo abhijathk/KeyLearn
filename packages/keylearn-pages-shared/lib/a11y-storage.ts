@@ -386,17 +386,66 @@ export async function pushA11y(profileId: string | null): Promise<void> {
   if (profileId == null || !/^[0-9]+$/.test(profileId)) {
     return; // Signed out, or no profile chosen: the device's copy is the copy.
   }
+  // Marked before the request and cleared only when the account has it, so a
+  // change made offline is known to be newer than whatever the server holds.
+  // The next pull sends it up instead of overwriting it — which is what used
+  // to happen, silently undoing the change the next time the page opened.
+  setA11yPending(profileId, true);
   try {
-    await fetch(`/_/sync/a11y/profile/${encodeURIComponent(profileId)}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(loadA11y(profileId)),
-    });
+    const response = await fetch(
+      `/_/sync/a11y/profile/${encodeURIComponent(profileId)}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(loadA11y(profileId)),
+      },
+    );
+    if (response.ok) {
+      setA11yPending(profileId, false);
+    }
   } catch {
-    // Applied and saved on the device. It goes up on the next change, or the
-    // next time this profile is opened.
+    // Applied and saved on the device, and marked pending: it goes up when the
+    // connection returns, or the next time this profile is opened.
   }
 }
+
+/** Kept under the sync module's own prefix, so the mirror never carries it. */
+const pendingKey = (profileId: string) =>
+  `keylearn.sync.a11yPending.${profileId}`;
+
+export function a11yPending(profileId: string): boolean {
+  try {
+    return localStorage.getItem(pendingKey(profileId)) != null;
+  } catch {
+    return false;
+  }
+}
+
+function setA11yPending(profileId: string, pending: boolean): void {
+  try {
+    if (pending) {
+      localStorage.setItem(pendingKey(profileId), "1");
+    } else {
+      localStorage.removeItem(pendingKey(profileId));
+    }
+  } catch {
+    // Storage denied: the pull may win, which is today's behaviour.
+  }
+}
+
+// Back online: anything saved while the connection was down goes now.
+globalThis.addEventListener?.("online", () => {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i) ?? "";
+      if (key.startsWith("keylearn.sync.a11yPending.")) {
+        void pushA11y(key.slice("keylearn.sync.a11yPending.".length));
+      }
+    }
+  } catch {
+    // Nothing to do.
+  }
+});
 
 /**
  * Whether this learner has a record at all.

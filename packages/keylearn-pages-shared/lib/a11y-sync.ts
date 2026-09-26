@@ -1,5 +1,6 @@
 import {
   A11Y_CHANGED_EVENT,
+  a11yPending,
   type A11yPrefs,
   pushA11y,
   saveA11yLocal,
@@ -57,6 +58,12 @@ function syncable(profileId: string | null): profileId is string {
  */
 export async function pullA11y(profileId: string | null): Promise<boolean> {
   if (!syncable(profileId)) {
+    return false;
+  }
+  if (a11yPending(profileId)) {
+    // Changed here while the account could not be reached: this device's copy
+    // is the newest there is. It goes up; the server's older copy stays out.
+    await pushA11y(profileId);
     return false;
   }
   let remote: Partial<A11yPrefs> | null = null;

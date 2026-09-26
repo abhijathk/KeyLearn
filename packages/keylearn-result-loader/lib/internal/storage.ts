@@ -78,7 +78,12 @@ function openRawResultStorage(
         const local = new PersistentResultStorage();
         return new ResultStorageOfAnonymousUser(local);
       } else {
-        const local = new PersistentResultStorage();
+        // Its OWN outbox, not the guest's `history`. Sharing one meant that
+        // the first time a signed-in page opened this store, every lesson
+        // typed on the device while signed out was sent up to the account —
+        // somebody else's practice, possibly, filed as theirs. A guest's
+        // history stays on the device; it moves by export and import.
+        const local = new PersistentResultStorage("history-account");
         const remote = new ResultSyncNamedUser();
         return new ResultStorageOfNamedUser(local, remote);
       }

@@ -120,15 +120,15 @@ test("named user - load from remote settings", async () => {
   equal(recorder.state, "not called");
 });
 
-test("named user - load from local settings", async () => {
+test("named user - a guest's settings on the device are not moved into the account", async () => {
   // Arrange.
 
   const recorder = new Recorder();
   fakeAdapter.on
     .PUT("/_/sync/settings")
     .replyWith("", { status: 204 }, recorder);
-  const settings = new Settings().set(stringProp("prop", "abc"), "xyz");
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings.toJSON()));
+  const guest = new Settings().set(stringProp("prop", "abc"), "xyz");
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(guest.toJSON()));
 
   // Act.
 
@@ -136,11 +136,10 @@ test("named user - load from local settings", async () => {
 
   // Assert.
 
-  deepEqual(loaded, settings);
-  equal(localStorage.getItem(STORAGE_KEY), null);
-  equal(recorder.requestCount, 1);
-  equal(recorder.state, "ended");
-  equal(recorder.request?.body, JSON.stringify(settings.toJSON()));
+  deepEqual(loaded, new Settings());
+  equal(localStorage.getItem(STORAGE_KEY), JSON.stringify(guest.toJSON()));
+  equal(recorder.requestCount, 0);
+  localStorage.removeItem(STORAGE_KEY);
 });
 
 test("named user - load default settings", async () => {
@@ -257,6 +256,33 @@ test("profile - load falls back to the local cache when offline", async () => {
   // Assert.
 
   deepEqual(loaded, cached);
+});
+
+test("profile - a change saved offline is not undone by the server's older copy", async () => {
+  // Arrange: offline, the learner changes a setting.
+
+  asProfile();
+  fakeAdapter.on.PUT(PROFILE_URL).throwError(new Error("offline"));
+  const edited = new Settings().set(stringProp("prop", "abc"), "offline-edit");
+  await openSettingsStorage("u1", null).store(edited);
+  fakeAdapter.reset();
+
+  // Back online: the server still holds the older value.
+  const older = new Settings().set(stringProp("prop", "abc"), "older");
+  const recorder = new Recorder();
+  fakeAdapter.on.GET(PROFILE_URL).replyWith(older.toJSON());
+  fakeAdapter.on.PUT(PROFILE_URL).replyWith("", { status: 204 }, recorder);
+
+  // Act.
+
+  const loaded = await openSettingsStorage("u1", null).load();
+
+  // Assert: the offline edit wins, and is sent up.
+
+  deepEqual(loaded, edited);
+  equal(recorder.requestCount, 1);
+  equal(recorder.request?.body, JSON.stringify(edited.toJSON()));
+  equal(localStorage.getItem(`${PROFILE_KEY}.pending`), null);
 });
 
 test("profile - load creates fresh settings when nothing exists anywhere", async () => {

@@ -286,11 +286,15 @@ test("what stays on the device is a decision, with a reason", () => {
   isFalse(isPortable("profile-9.keylearn.a11y")); // Has its own route.
   isFalse(isPortable("profile-9.keylearn.braille.progress")); // Merges, not copies.
   isFalse(isPortable("keylearn.support.outbox")); // A send queue.
-  isFalse(isPortable("profile-9.keylearn.ngrams")); // Derived, large, hot.
+  isFalse(isPortable("keylearn.braille.days.9")); // Merges, not copies.
 
   // And the settings the customer actually reported, every one of which was
   // device-local before this existed.
   isTrue(isPortable("profile-9.kids.prefs"));
+  // Nothing rebuilds these on a new device, so they travel.
+  isTrue(isPortable("profile-9.keylearn.ngrams"));
+  // Braille SETTINGS travel; only the merged practice records do not.
+  isTrue(isPortable("keylearn.braille.prefs.9"));
   isTrue(isPortable("profile-9.kids.best"));
   isTrue(isPortable("keylearn.theme[background]"));
   // Day or night, the font and the text size. Kept in a cookie for the
@@ -436,5 +440,69 @@ test("a signed-out guest makes no sync calls at all", async () => {
   } finally {
     restore();
     g.__PAGE_DATA__ = had;
+  }
+});
+
+test("a push that did not land is sent again, and one that did is not", async () => {
+  // Offline: the account cannot be reached.
+  localStorage.clear();
+  localSet("keylearn.mode", "kids", 5000);
+  const down = withFetch(() => {
+    throw new TypeError("Failed to fetch");
+  });
+  try {
+    await pushLocal();
+  } finally {
+    down.restore();
+  }
+  // Back online: the change that never arrived goes up now.
+  const up = withFetch(() => new Response(null, { status: 204 }));
+  try {
+    await pushLocal();
+    isTrue(pushedTo(up.calls, "/_/sync/doc/local") != null);
+    // And once the account has it, nothing is re-sent.
+    up.calls.length = 0;
+    await pushLocal();
+    equal(pushedTo(up.calls, "/_/sync/doc/local"), undefined);
+  } finally {
+    up.restore();
+  }
+});
+
+test("a refused push counts as not landed", async () => {
+  localStorage.clear();
+  localSet("keylearn.mode", "kids", 5000);
+  const refused = withFetch(() => new Response(null, { status: 503 }));
+  try {
+    await pushLocal();
+  } finally {
+    refused.restore();
+  }
+  const up = withFetch(() => new Response(null, { status: 204 }));
+  try {
+    await pushLocal();
+    isTrue(pushedTo(up.calls, "/_/sync/doc/local") != null);
+  } finally {
+    up.restore();
+  }
+});
+
+test("keys a guest wrote on this device are never sent to an account", async () => {
+  localStorage.clear();
+  localSet("kids.prefs", '{"world":"dino"}', 5000);
+  localSet("keylearn.mode", "kids", 5000);
+  // Written while nobody was signed in on this device.
+  localStorage.setItem("keylearn.sync.guest", JSON.stringify(["kids.prefs"]));
+  const { calls, restore } = withFetch(
+    () => new Response(null, { status: 204 }),
+  );
+  try {
+    await pushLocal();
+    const sent = pushedTo(calls, "/_/sync/doc/local");
+    isTrue(sent != null);
+    isTrue("keylearn.mode" in sent!.body.keys);
+    isFalse("kids.prefs" in sent!.body.keys);
+  } finally {
+    restore();
   }
 });

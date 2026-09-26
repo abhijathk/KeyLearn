@@ -67,6 +67,47 @@ type Mirror = { readonly keys: Record<string, Stamped> };
 const STAMPS_KEY = "keylearn.sync.stamps";
 
 /**
+ * The newest stamp the account has confirmed holding, per scope.
+ *
+ * This is what makes a change made offline certain to arrive. A push whose
+ * response is lost, refused or never sent leaves its scope behind the stamps,
+ * and a scope behind its stamps is pushed again: when the connection comes
+ * back, on the retry timer, and on the next load. Kept in storage, so a
+ * change made on a train survives the tab being closed before it got home.
+ */
+const ACKED_KEY = "keylearn.sync.acked";
+
+/**
+ * Keys last written while nobody was signed in on this device.
+ *
+ * A guest's choices are theirs and the device's, not any account's. Without
+ * this, signing in on a device a guest had been using sent everything they
+ * had written — a child's whole kids world, a theme, a test history — up into
+ * the account that happened to sign in, with no way to tell it apart from the
+ * account's own. Guest data moves across only on purpose, by export and
+ * import. A key written again while signed in is the account's from then on.
+ */
+const GUEST_KEY = "keylearn.sync.guest";
+
+function readGuest(): Set<string> {
+  try {
+    const raw = localStorage.getItem(GUEST_KEY);
+    const parsed = raw == null ? null : JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeGuest(keys: Set<string>): void {
+  try {
+    localStorage.setItem(GUEST_KEY, JSON.stringify([...keys]));
+  } catch {
+    // Storage full or denied: the worst case is today's behaviour.
+  }
+}
+
+/**
  * How long a tombstone is kept.
  *
  * Long enough that a device left in a drawer for a month does not resurrect a
@@ -114,11 +155,16 @@ export function isPortable(key: string): boolean {
   // of practice that really happened on both devices, and last-write-wins would
   // silently discard a session. Letting the mirror also carry these would mean
   // two syncs racing over one key, with the cruder one winning half the time.
+  //
+  // Only the practice RECORDS, though. The braille settings (mode, voice,
+  // speed, hints, goal) have no route of their own, and excluding the whole
+  // `keylearn.braille.` prefix left them on the device: a blind learner who
+  // signed in somewhere new had to set their voice up again by ear.
   if (
     base === "settings" ||
     base === "settings.migrated" ||
     base === "keylearn.a11y" ||
-    base.startsWith("keylearn.braille.")
+    /^keylearn\.braille\.(progress|days|daily)(\.|$)/.test(base)
   ) {
     return false;
   }
@@ -132,13 +178,11 @@ export function isPortable(key: string): boolean {
   if (base === "keylearn.loginPromptLastShown") {
     return false;
   }
-  // Derived typing statistics, rebuilt from practice: large, hot, and written
-  // during a lesson. It is an output of the results that already sync, so
-  // carrying it would spend the budget re-sending a conclusion rather than the
-  // evidence, and would push on every keystroke's worth of change.
-  if (base === "keylearn.ngrams") {
-    return false;
-  }
+  // The typing statistics (`keylearn.ngrams`) DO travel. They were kept back
+  // as "rebuilt from practice", but nothing rebuilds them, so a new device
+  // started the weak-pair drill and the profile chart from nothing. Writes
+  // are coalesced like every other key, and a store over MAX_VALUE still
+  // stays put rather than crowding everything else out of the budget.
   return true;
 }
 
@@ -182,6 +226,9 @@ function stampOf(stamps: Record<string, number>, key: string): number {
 
 let installed = false;
 let scheduled: ReturnType<typeof setTimeout> | null = null;
+/** The next retry of a push that did not land, and how long it waits. */
+let retry: ReturnType<typeof setTimeout> | null = null;
+let retryDelay = 30_000;
 /** Set while this module is writing, so its own writes do not restamp. */
 let adopting = false;
 /**
@@ -273,18 +320,35 @@ export function installLocalSync(): void {
   // default forever.
   setTimeout(bootDone, 10_000);
 
-  window.addEventListener("pagehide", flushNow);
+  window.addEventListener("pagehide", () => flushNow(true));
   window.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
-      flushNow();
+      flushNow(true);
     }
   });
+  // Back online: whatever did not land while the connection was down goes now,
+  // rather than waiting for the learner to change something else.
+  window.addEventListener("online", () => flushNow());
 }
 
 /** Records that a key changed, and schedules the push. */
 function touch(key: string): void {
   if (released || !isPortable(key)) {
     return;
+  }
+  if (signedOut()) {
+    const guest = readGuest();
+    if (!guest.has(key)) {
+      guest.add(key);
+      writeGuest(guest);
+    }
+    return; // Nothing to carry it to, and it is not any account's.
+  }
+  {
+    const guest = readGuest();
+    if (guest.delete(key)) {
+      writeGuest(guest);
+    }
   }
   const stamps = readStamps();
   stamps[key] = Date.now();
@@ -304,27 +368,70 @@ function touch(key: string): void {
   scheduled = setTimeout(flushNow, 1500);
 }
 
-function flushNow(): void {
+function flushNow(leaving = false): void {
   if (scheduled != null) {
     clearTimeout(scheduled);
     scheduled = null;
   }
-  void pushLocal();
+  void pushLocal(leaving);
+}
+
+function readAcked(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(ACKED_KEY);
+    const parsed = raw == null ? null : JSON.parse(raw);
+    return parsed != null && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeAcked(acked: Record<string, number>): void {
+  try {
+    localStorage.setItem(ACKED_KEY, JSON.stringify(acked));
+  } catch {
+    // Without the record every scope is simply pushed again. Wasteful, safe.
+  }
+}
+
+const scopeName = (profileId: string | null): string => profileId ?? "";
+
+/** Tries again later, backing off, until a push lands. */
+function scheduleRetry(): void {
+  if (retry != null || released) {
+    return;
+  }
+  retry = setTimeout(() => {
+    retry = null;
+    retryDelay = Math.min(retryDelay * 2, 5 * 60_000);
+    void pushLocal();
+  }, retryDelay);
+  // A pending retry is not a reason to keep a process alive (tests, workers);
+  // in a page this is a no-op.
+  (retry as { unref?: () => void }).unref?.();
 }
 
 /** Collects this device's copy of one scope, newest-first within the budget. */
-function collect(profileId: string | null): Mirror {
+function collect(
+  profileId: string | null,
+): Mirror & { readonly newest: number } {
   const stamps = readStamps();
   const entries: { key: string; stamped: Stamped; size: number }[] = [];
   let storage: Storage;
   try {
     storage = window.localStorage;
   } catch {
-    return { keys: {} };
+    return { keys: {}, newest: 0 };
   }
   const seen = new Set<string>();
+  const guest = readGuest();
   const consider = (key: string): void => {
-    if (seen.has(key) || !isPortable(key) || profileOf(key) !== profileId) {
+    if (
+      seen.has(key) ||
+      guest.has(key) ||
+      !isPortable(key) ||
+      profileOf(key) !== profileId
+    ) {
       return;
     }
     seen.add(key);
@@ -368,14 +475,16 @@ function collect(profileId: string | null): Mirror {
   entries.sort((a, b) => b.stamped.t - a.stamped.t);
   const keys: Record<string, Stamped> = {};
   let spent = 0;
+  let newest = 0;
   for (const entry of entries) {
     if (spent + entry.size > BUDGET) {
       continue;
     }
     spent += entry.size;
     keys[entry.key] = entry.stamped;
+    newest = Math.max(newest, entry.stamped.t);
   }
-  return { keys };
+  return { keys, newest };
 }
 
 const url = (profileId: string | null): string =>
@@ -409,36 +518,91 @@ function syncable(profileId: string | null): boolean {
 }
 
 /**
+ * EVERY LEARNER IN THE HOUSEHOLD, not only the one using the device now.
+ *
+ * Carrying only the active learner left two holes. A parent who changed a
+ * child's accent from their own profile wrote it under the child's key, and it
+ * stayed on the laptop until that child next practised there. And a fresh
+ * device knew nothing about any learner but the first one opened: the course
+ * pane read the other children's worlds from an empty store and reported them
+ * as never started. So the account, the household's learners from page data,
+ * and any learner this device holds keys for are all scopes.
+ */
+function scopesToSync(): (string | null)[] {
+  const ids = new Set<string>();
+  try {
+    for (const p of getPageData()?.profiles ?? []) {
+      ids.add(String(p.id));
+    }
+  } catch {
+    // No page data: fall back to what this device itself holds.
+  }
+  const active = activeProfileId();
+  if (active != null) {
+    ids.add(active);
+  }
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const id = profileOf(localStorage.key(i) ?? "");
+      if (id != null) {
+        ids.add(id);
+      }
+    }
+  } catch {
+    // Enumeration denied; the household list is still there.
+  }
+  return [null, ...[...ids].filter((id) => syncable(id))];
+}
+
+/**
  * Sends this device's copy up. Never throws.
  *
  * Both scopes: an account-level change and a profile-level one arrive through
  * the same `setItem`, and asking the caller which it was would be asking it to
  * know something it has no reason to know.
  */
-export async function pushLocal(): Promise<void> {
+export async function pushLocal(leaving = false): Promise<void> {
   if (released || signedOut()) {
     return;
   }
-  const profileId = activeProfileId();
-  const scopes: (string | null)[] = [null];
-  if (profileId != null && syncable(profileId)) {
-    scopes.push(profileId);
-  }
-  for (const scope of scopes) {
-    const mirror = collect(scope);
-    if (Object.keys(mirror.keys).length === 0) {
+  const acked = readAcked();
+  let failed = false;
+  for (const scope of scopesToSync()) {
+    const { keys, newest } = collect(scope);
+    if (Object.keys(keys).length === 0) {
       continue; // Nothing to say. Notably, this never writes an empty document.
     }
+    const name = scopeName(scope);
+    if (name in acked && newest <= acked[name]!) {
+      continue; // The account already holds everything this scope has.
+    }
+    const body = JSON.stringify({ keys });
     try {
-      await fetch(url(scope), {
+      const response = await fetch(url(scope), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(mirror),
+        body,
+        // A tab being closed cancels ordinary requests, and that is exactly
+        // when someone has just finished changing things. `keepalive` lets
+        // this one outlive the page, within the browser's 64K allowance.
+        keepalive: leaving && body.length < 60_000,
       });
+      if (response.ok) {
+        acked[name] = newest;
+      } else {
+        failed = true;
+      }
     } catch {
-      // Offline, or signed out. The device's copy is already written and
-      // correct; it goes up on the next change or the next load.
+      // Offline. The device's copy is written and correct, and the scope stays
+      // behind its stamps until a push lands.
+      failed = true;
     }
+  }
+  writeAcked(acked);
+  if (failed) {
+    scheduleRetry();
+  } else {
+    retryDelay = 30_000;
   }
 }
 
@@ -459,15 +623,13 @@ export async function pullLocal(): Promise<boolean> {
   if (signedOut()) {
     return false;
   }
-  const profileId = activeProfileId();
-  const scopes: (string | null)[] = [null];
-  if (profileId != null && syncable(profileId)) {
-    scopes.push(profileId);
-  }
+  const active = activeProfileId();
   let changed = false;
   try {
-    for (const scope of scopes) {
-      if (await pullScope(scope)) {
+    for (const scope of scopesToSync()) {
+      // Another learner's keys change nothing on the screen in front of this
+      // one, so only the account and the active learner can ask for a reload.
+      if ((await pullScope(scope)) && (scope == null || scope === active)) {
         changed = true;
       }
     }
@@ -504,6 +666,8 @@ async function pullScope(profileId: string | null): Promise<boolean> {
     return false;
   }
   const stamps = readStamps();
+  const guest = readGuest();
+  let guestChanged = false;
   let changed = false;
   let storage: Storage;
   try {
@@ -555,10 +719,16 @@ async function pullScope(profileId: string | null): Promise<boolean> {
       // this change, and claiming it did would have it push the value straight
       // back and win against a device that really is newer.
       stamps[key] = stamped.t;
+      if (guest.delete(key)) {
+        guestChanged = true;
+      }
       changed = true;
     }
   } finally {
     adopting = false;
+  }
+  if (guestChanged) {
+    writeGuest(guest);
   }
   if (changed) {
     writeStamps(stamps);
@@ -647,16 +817,21 @@ export async function pushScopeNow(profileId: string | null): Promise<boolean> {
   if (!syncable(profileId)) {
     return false;
   }
-  const mirror = collect(profileId);
-  if (Object.keys(mirror.keys).length === 0) {
+  const { keys, newest } = collect(profileId);
+  if (Object.keys(keys).length === 0) {
     return true;
   }
   try {
     const response = await fetch(url(profileId), {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(mirror),
+      body: JSON.stringify({ keys }),
     });
+    if (response.ok) {
+      const acked = readAcked();
+      acked[scopeName(profileId)] = newest;
+      writeAcked(acked);
+    }
     return response.ok;
   } catch {
     return false;
@@ -693,4 +868,11 @@ export function forgetLocally(keys: readonly string[]): void {
     adopting = false;
   }
   writeStamps(stamps);
+  // And what the account was known to hold: the next sign-in on this device
+  // may be somebody else's, whose account holds none of it.
+  try {
+    window.localStorage.removeItem(ACKED_KEY);
+  } catch {
+    // Nothing more to do.
+  }
 }

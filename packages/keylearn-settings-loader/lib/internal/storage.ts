@@ -18,9 +18,36 @@ export function openSettingsStorage(
   if (profileId != null) {
     const key = `profile-${profileId}.${STORAGE_KEY}`;
     const migratedKey = `${key}.migrated`;
+    // A change saved while the server could not be reached. Until it lands,
+    // this device's copy is the newest there is, and a load must send it up
+    // rather than let the server's older copy overwrite it — which is what
+    // happened before: settings changed offline were quietly undone the next
+    // time the page opened with a connection.
+    const pendingKey = `${key}.pending`;
     const url = `/_/sync/profile-settings/${profileId}`;
+    const put = async (json: unknown): Promise<void> => {
+      const response = await request.PUT(url).send(json as any);
+      await response.blob(); // Ignore.
+      storage.set(migratedKey, true);
+      storage.set(pendingKey, null);
+    };
+    globalThis.addEventListener?.("online", () => {
+      const value = storage.get(key);
+      if (storage.get(pendingKey) != null && value != null) {
+        put(value).catch(() => {});
+      }
+    });
     return new (class implements SettingsStorage {
       async load(): Promise<Settings> {
+        const pending = storage.get(key);
+        if (storage.get(pendingKey) != null && pending != null) {
+          try {
+            await put(pending);
+          } catch {
+            // Still offline: this device's copy is the one to use.
+          }
+          return new Settings(pending as any);
+        }
         try {
           const response = await request
             .use(expectType("application/json"))
@@ -60,13 +87,13 @@ export function openSettingsStorage(
         // Written locally first — the write-through cache — so a caller
         // never waits on the network, and so it survives being offline.
         storage.set(key, settings.toJSON());
+        storage.set(pendingKey, true);
         try {
-          const response = await request.PUT(url).send(settings.toJSON());
-          await response.blob(); // Ignore.
-          storage.set(migratedKey, true);
+          await put(settings.toJSON());
         } catch {
-          // Offline — the local write already succeeded. No retry queue in
-          // this phase; the next successful load() or store() reconciles it.
+          // Offline — the local write already succeeded and is marked
+          // pending; it goes up when the connection returns or on the next
+          // load, whichever comes first.
         }
         return settings;
       }
@@ -75,19 +102,11 @@ export function openSettingsStorage(
   if (userId != null) {
     return new (class implements SettingsStorage {
       async load(): Promise<Settings> {
-        if (json != null) {
-          return new Settings(json as any);
-        } else {
-          const value = storage.get(STORAGE_KEY);
-          if (value != null) {
-            storage.set(STORAGE_KEY, null);
-            const settings = new Settings(value as any);
-            await this.send(settings);
-            return settings;
-          } else {
-            return new Settings();
-          }
-        }
+        // The device's own `settings` belong to whoever used it signed out.
+        // They are not carried into the account: a guest's choices landing on
+        // somebody's account is exactly the wrong data in the wrong place.
+        // Progress moves across deliberately, by export and import.
+        return json != null ? new Settings(json as any) : new Settings();
       }
 
       async store(settings: Settings): Promise<Settings> {

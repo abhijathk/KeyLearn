@@ -144,16 +144,17 @@ test("the mirror still refuses to carry the things that have their own route", (
   );
   // Each of these syncs by a mechanism that does more than copy bytes, and
   // letting the mirror also carry one would put two syncs in a race.
-  for (const key of [
-    "settings",
-    "keylearn.a11y",
-    "keylearn.braille.",
-    "keylearn.support.outbox",
-    "keylearn.ngrams",
-  ]) {
+  for (const key of ["settings", "keylearn.a11y", "keylearn.support.outbox"]) {
     isTrue(
       source.includes(`"${key}"`),
       `${key} left the mirror's exclusion list without a replacement`,
     );
   }
+  // Braille practice RECORDS merge through their own route; braille SETTINGS
+  // have none, and travel with the mirror. The typing statistics travel too:
+  // nothing rebuilds them on a new device.
+  isTrue(
+    source.includes("braille\\.(progress|days|daily)"),
+    "the braille practice records left the mirror's exclusion list",
+  );
 });
