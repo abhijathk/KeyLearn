@@ -49,27 +49,31 @@ Findings live on the owner's machine in the session scratchpad (`e2e/findings/*.
 
 ## Release end-to-end pass (26 Sep, cloud)
 
-Browser tests of every KeyLearn area on a fresh test stack; 164 of 169 feature checks pass, and the other five are by design or blocked (below). The full report is a private artifact, "KeyLearn release pass".
+Browser tests of every KeyLearn area, plus QDesk and the link between them, on a fresh test stack. 238 of 248 feature checks pass; the ten that fail are the open bugs below. The unit suite has 0 failures. The full report is a private artifact, "KeyLearn release pass".
 
-**Fixed:**
-- A kid could switch to the grown-up profile from the menu with no PIN, even with a grown-up PIN set (`MenuDrawer.tsx`, now asks for it).
-- Multiplayer rails showed characters per minute labelled "wpm", about 5× the real speed (`Rails.tsx`).
-- The learner editor's name and year fields were unnamed to screen readers; the typing area and account switches too. Zero critical axe findings remain; colour contrast in the default theme is the only finding left.
-- Six new labels translated into all 54 languages; two typography slips.
-- The release checklist now names the virus scanner: with no `CLAMAV_HOST`, every support attachment is refused (fails closed, by design).
+**Tested since the first report:** organisations (with ADMIN_EMAILS as staff), a certificate actually earned (three weeks of imported history, three sittings; AWKE 4RWS verifies), portability across two browsers, guest isolation with manual export and import, Code craft, and Kuttichathan walking and sitting. QDesk main was tested with a second KeyLearn on :4220, sharing an ops key.
+
+**Open bugs (logged, not fixed; fixes wait on the owner):**
+- High, QDesk: between the password and code steps, the staff password is stored in plain text in the file session store (`pendingStaff`).
+- Medium: `/_/internal/*` is proxied to the internet by the shipped nginx config; the ops key is the only guard.
+- Medium: `staff-auth/verify` answers an unknown email in about 3 ms and a wrong password in about 374 ms, so timing reveals whether an account exists (needs the key).
+- Medium: `staff-auth/verify`'s 10-per-email limit does not hold for back-to-back attempts: 13 of 13, and 40 of 60 in a 20-way burst. The per-worker counts sync every 100 ms. The public login held.
+- Medium, QDesk: when KeyLearn is down or the key is wrong, sign-in gets a bare 500 with no readable message. It recovers by itself.
+- Low, QDesk: no Origin check on POSTs (SameSite=Lax limits this to login CSRF and forced sign-out).
+- Low: the Course pane still says "Ready to sit" and offers the sitting after the certificate is earned.
+- Medium: colour contrast in the default theme (serious, 0 critical).
+- Low: guest kid results have no export button. The braille "LINE n / m" label misleads.
 
 **Blocked:**
-- **Organisations:** creating one needs a platform-staff account (the `staff` roster table, plus a passkey or 2FA). The agent was not permitted to grant that in the test DB.
-- **A certificate pass:** needs about 200 lessons over three weeks, with no dev shortcut. Everything short of a pass is tested: the Course pane, /assessment turning learners away, 409/403 refusals and /verify.
-- **QDesk:** waits on `@platform/bridge`.
-- **The sound library:** not pushed yet.
+- **The full QDesk:** its branch links `@platform/bridge` from `../../../platform`, which is in no reachable repo. Note that QDesk main's newest commit (e44a609) deletes about 141k lines and leaves only sign-in; check that this was intended.
+- **Time Keepers sounds from the owner's library:** `KeyLearn_World_Audio` has not been pushed yet. The owner has asked for this after testing.
 
 **By design, don't chase:**
 - Time Keepers uploads results at the milestone, not per passage.
-- The braille "LINE n / m" figure is the cell within the line.
 - KeyLearn sends no email when a ticket is logged.
 - Requests with no Origin or Sec-Fetch-Site pass the CSRF guard.
 - `/for-schools` is 404 until switched on in the control centre.
+- Kuttichathan appears only in deep night (22:00–04:00 in the world clock).
 
 ## Outstanding: owner actions
 
