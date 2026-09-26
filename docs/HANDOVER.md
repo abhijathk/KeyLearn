@@ -62,3 +62,35 @@ Findings live on the owner's machine in the session scratchpad (`e2e/findings/*.
   - PII reveal needs a reason;
   - push carries no PII;
   - individuals are free and organisations are licensed per seat.
+
+## Testing still to do (for agents)
+
+None of these were covered in this pass. Run them on an isolated test stack, never on live.
+
+**Test stack recipe.** The script isn't in the repo, so recreate it:
+- **KeyLearn:** copy the DB with `sqlite3 .backup`, then run with env overrides. Values set in the environment win over `.env`. Set `SERVER_PORT=4200 SERVER_PORT_WS=4201 APP_URL=http://localhost:4200/`, point `DATA_DIR` and `DATABASE_FILENAME` at the copy, and set `MAIL_TRANSPORT=log` (sign-in links land in the log), `QDESK_URL=http://localhost:4300` and the Cloudflare always-pass Turnstile test keys.
+- **QDesk:** set `PORT=4300`, `DATA_DIR` to a copy of `.data`, `KEYLEARN_API_URL=http://localhost:4200`, an empty `QDESK_HANDOFF_WEBHOOK_URL` and `ATTACHMENT_SCAN=off`, and empty the `push_subscription` table in the copy.
+- **Ports:** kill by port, never with `pkill -f "keylearn master process"`.
+
+**Untested so far:**
+1. **Staff composer reply, live:** send a reply from QDesk's composer on a real thread. The delivery code is covered by the worker path only.
+2. **QDesk signed-in performance:** measure inbox, search and dashboard latency with a staff session.
+3. **Site-config publish:** needs a passkey step-up, which headless Chrome can't do. Use a virtual authenticator (WebAuthn in CDP) or test it by hand.
+4. **Tab's humanlike eval:** `eval:humanlike` uses live Groq and defaults to the live desk. Point it at the test desk and cap the calls.
+5. **KeyLearn mail with `requireTLS`:** send one real sign-in email through Brevo (port 587) after deploy, and confirm it arrives.
+6. **Tab transport guard on live:** after restarting the launchd services, confirm triage and worker start and pass.
+7. **QDesk Answers:**
+   - the icon-only buttons once built;
+   - the full modal sweep: every dialog opens, and Esc and focus behave;
+   - the Import CSV/JSON round trip on the live build.
+8. **Account window at 390px:** check every section in light and dark, English and Arabic. The Security buttons and learner-row wrap fixes landed last and are only lightly checked.
+9. **Kids:**
+   - lesson 38 Kuttichathan at night;
+   - chapter 3–4 night areas (lessons 24, 28, 32, 35);
+   - Time Keepers lesson length for the 11+ band (seed prefs `{classic:false}`).
+10. **Certificates, pending the owner's decision:** a kid who finishes the passage before the bell gets nothing more to type. Mock it first; the fix goes in the `KidsPage.tsx` finished-line assessment branch (bump `setPassageNonce`).
+11. **Regression before release:**
+    - every package's tests, one package at a time;
+    - QDesk typecheck (must be 0) and `scripts/*.mjs` with `DATA_DIR` on a copy;
+    - agent evals, including `eval:standalone` and `eval:release`;
+    - a headless crawl of both apps at 1400 and 390px, light and dark, and in `/ar`.
