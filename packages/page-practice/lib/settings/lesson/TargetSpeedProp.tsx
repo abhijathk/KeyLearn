@@ -13,10 +13,11 @@ import {
 } from "@keylearn/widget";
 import { mdiSkipNext, mdiSkipPrevious } from "@mdi/js";
 import { type ReactNode } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 
 export function TargetSpeedProp(): ReactNode {
   const { formatSpeed } = useFormatter();
+  const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
   const targetSpeed = settings.get(lessonProps.targetSpeed);
   return (
@@ -49,6 +50,11 @@ export function TargetSpeedProp(): ReactNode {
         <Dir swap="icon">
           <IconButton
             icon={<Icon shape={mdiSkipPrevious} />}
+            // Icon-only: without a title a screen reader announced "button".
+            title={formatMessage({
+              id: "settings.targetSpeed.lower",
+              defaultMessage: "Lower the target speed",
+            })}
             disabled={targetSpeed === lessonProps.targetSpeed.min}
             onClick={() => {
               updateSettings(
@@ -61,6 +67,10 @@ export function TargetSpeedProp(): ReactNode {
           />
           <IconButton
             icon={<Icon shape={mdiSkipNext} />}
+            title={formatMessage({
+              id: "settings.targetSpeed.raise",
+              defaultMessage: "Raise the target speed",
+            })}
             disabled={targetSpeed === lessonProps.targetSpeed.max}
             onClick={() => {
               updateSettings(

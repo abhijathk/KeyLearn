@@ -1,6 +1,6 @@
 import { useFormatter } from "@keylearn/lesson-ui";
 import { type Result } from "@keylearn/result";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useId, useRef } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useKidsPractice } from "./kids-flavour.ts";
 import {
@@ -42,6 +42,32 @@ export function UnlockCeremony({
 }): ReactNode {
   const kids = useKidsPractice();
   const { formatSpeed } = useFormatter();
+  const titleId = useId();
+  const onward = useRef<HTMLButtonElement>(null);
+  // A modal a typist can leave without the mouse: focus lands on "Onward",
+  // so Enter carries on, and Esc is "Pause for now". It was a bare overlay —
+  // no dialog role, focus left behind it on the page, no key did anything —
+  // so a keyboard or screen-reader user met a card they could not see or
+  // leave. The kids window already did this (KidsWindow).
+  // Focused once, on open: the parent passes a fresh onClose every render,
+  // and re-running this on each one would pull focus back to "Onward" from
+  // wherever the user had tabbed to.
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    if (kids) {
+      return;
+    }
+    onward.current?.focus();
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        ev.preventDefault();
+        close.current();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [kids]);
   if (kids) {
     return (
       <KidsUnlock
@@ -58,7 +84,12 @@ export function UnlockCeremony({
   const accuracy = (v: Result) => v.accuracy * 100;
   return (
     <div className={styles.overlay}>
-      <div className={styles.card}>
+      <div
+        className={styles.card}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
         <div className={styles.eyebrow}>
           <FormattedMessage
             id="ceremony.lessonComplete"
@@ -66,7 +97,7 @@ export function UnlockCeremony({
           />
         </div>
         <div className={styles.keyTile}>{label}</div>
-        <div className={styles.title}>
+        <div className={styles.title} id={titleId}>
           <FormattedMessage
             id="ceremony.title"
             defaultMessage="You’ve unlocked a new key!"
@@ -101,7 +132,7 @@ export function UnlockCeremony({
             format={(v) => String(Math.round(Math.abs(v)))}
           />
         </div>
-        <button className={styles.cta} onClick={onContinue}>
+        <button ref={onward} className={styles.cta} onClick={onContinue}>
           <FormattedMessage
             id="ceremony.keepGoing"
             defaultMessage="Onward — {label} is up next"

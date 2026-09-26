@@ -2,6 +2,7 @@ import { Dir } from "@keylearn/intl";
 import { Field, FieldList, Icon, IconButton, Range } from "@keylearn/widget";
 import { mdiSkipNext, mdiSkipPrevious } from "@mdi/js";
 import { type ReactNode } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import { ParagraphIndex } from "./ParagraphPreview.tsx";
 
 export function ParagraphSelector({
@@ -13,9 +14,12 @@ export function ParagraphSelector({
   readonly paragraphIndex: number;
   readonly onChange: (paragraphIndex: number) => void;
 }): ReactNode {
+  const { formatMessage } = useIntl();
   return (
     <FieldList>
-      <Field>Paragraph:</Field>
+      <Field>
+        <FormattedMessage id="books.paragraph" defaultMessage="Paragraph:" />
+      </Field>
       <Field>
         <ParagraphIndex paragraphIndex={paragraphIndex} />
       </Field>
@@ -33,6 +37,10 @@ export function ParagraphSelector({
         <Dir swap="icon">
           <IconButton
             icon={<Icon shape={mdiSkipPrevious} />}
+            title={formatMessage({
+              id: "books.paragraph.previous",
+              defaultMessage: "Previous paragraph",
+            })}
             disabled={paragraphIndex === 0}
             onClick={() => {
               if (paragraphIndex > 0) {
@@ -42,6 +50,10 @@ export function ParagraphSelector({
           />
           <IconButton
             icon={<Icon shape={mdiSkipNext} />}
+            title={formatMessage({
+              id: "books.paragraph.next",
+              defaultMessage: "Next paragraph",
+            })}
             disabled={paragraphIndex === paragraphs.length - 1}
             onClick={() => {
               if (paragraphIndex < paragraphs.length - 1) {
