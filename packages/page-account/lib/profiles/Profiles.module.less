@@ -43,7 +43,8 @@
     flex-wrap: wrap;
   }
 
-  .rowMain {
+  // Through .row, so it outranks the plain `.rowMain { flex: 1 }` below.
+  .row > .rowMain {
     flex-basis: calc(100% - 3rem);
   }
 
