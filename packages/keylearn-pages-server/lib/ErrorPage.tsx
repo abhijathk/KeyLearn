@@ -56,7 +56,7 @@ export function ErrorPage({
   const title = intl.formatMessage(
     {
       id: "errorPage.title",
-      defaultMessage: "{status} - {message}",
+      defaultMessage: "{status} – {message}",
     },
     // The code as the server sent it, not a localised number.
     { status: String(error.status), message: statusMessage(intl, error) },

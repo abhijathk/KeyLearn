@@ -31,8 +31,8 @@ test("render", () => {
     "data-color": "auto",
     "data-font": "roboto",
   });
-  equal($("title").text(), "400 - Bad Request");
-  isTrue($("body").text().includes("400 - Bad Request"));
+  equal($("title").text(), "400 – Bad Request");
+  isTrue($("body").text().includes("400 – Bad Request"));
   isTrue(
     $("body").text().includes("Request contained invalid data or parameters."),
   );

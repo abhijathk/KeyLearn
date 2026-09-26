@@ -776,7 +776,7 @@
   "errorPage.status.500": "Internal Server Error",
   "errorPage.status.503": "Service Unavailable",
   "errorPage.technicalDetails": "Technical details",
-  "errorPage.title": "{status} - {message}",
+  "errorPage.title": "{status} – {message}",
   "footer.githubLink.description": "Browse KeyLearn’s source code on GitHub.",
   "footer.supportLink": "Support",
   "footer.supportLink.description": "Ask a question or tell us what went wrong",

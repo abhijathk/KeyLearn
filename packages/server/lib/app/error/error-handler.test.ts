@@ -30,7 +30,7 @@ test("throw http error", async () => {
 
   equal(status, 403);
   equal(headers.get("Content-Type"), "text/html; charset=UTF-8");
-  includes(await body.text(), "403 - My message");
+  includes(await body.text(), "403 – My message");
   deepEqual(messages, ["DEBUG: Client error - My message"]);
 });
 
@@ -69,7 +69,7 @@ test("set status code", async () => {
 
   equal(status, 400);
   equal(headers.get("Content-Type"), "text/html; charset=UTF-8");
-  includes(await body.text(), "400 - Bad Request");
+  includes(await body.text(), "400 – Bad Request");
   deepEqual(messages, []);
 });
 
@@ -143,7 +143,7 @@ test("throw runtime error", async () => {
 
   equal(status, 500);
   equal(headers.get("Content-Type"), "text/html; charset=UTF-8");
-  includes(await body.text(), "500 - Internal Server Error");
+  includes(await body.text(), "500 – Internal Server Error");
   deepEqual(messages, ["ERROR: Server error - Internal bug"]);
 });
 
@@ -167,7 +167,7 @@ test("handle invalid client request", async () => {
 
   equal(status, 500);
   equal(headers.get("Content-Type"), "text/html; charset=UTF-8");
-  includes(await body.text(), "500 - Internal Server Error");
+  includes(await body.text(), "500 – Internal Server Error");
   deepEqual(messages, ["ERROR: Server error - Internal bug"]);
 });
 
