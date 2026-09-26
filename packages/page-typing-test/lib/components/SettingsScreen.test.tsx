@@ -30,11 +30,15 @@ test("render", async () => {
   // heading was renamed when settings were rebuilt and this test went red
   // against a screen that was working, which is how a suite stops meaning
   // anything.
-  await r.findByText("Common words");
-
-  fireEvent.click(r.getByText("Common words"));
-  fireEvent.click(r.getByText("Pseudo words"));
-  fireEvent.click(r.getByText("Book paragraphs"));
+  //
+  // By role, not by text: the generator picked below also names itself in
+  // its own panel's caption, and once that panel has loaded "Common words"
+  // is on screen twice. Whether it had loaded by the next line depended on
+  // timing, so the test failed only when the machine was busy.
+  const tile = (name: string) => r.findByRole("radio", { name: new RegExp(name) });
+  fireEvent.click(await tile("Common words"));
+  fireEvent.click(await tile("Pseudo words"));
+  fireEvent.click(await tile("Book paragraphs"));
 
   r.unmount();
 });

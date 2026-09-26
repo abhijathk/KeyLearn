@@ -1,0 +1,16 @@
+diff --git a/node_modules/@fastr/fetch/lib/adapter/xhr.js b/node_modules/@fastr/fetch/lib/adapter/xhr.js
+index 0680980..6e9fb5d 100644
+--- a/node_modules/@fastr/fetch/lib/adapter/xhr.js
++++ b/node_modules/@fastr/fetch/lib/adapter/xhr.js
+@@ -63,6 +63,11 @@ export async function xhrAdapter(request) {
+                         resolve(xhr.response);
+                     };
+                 });
++                // KeyLearn: a response whose body is never read (a status-only
++                // check, or a request abandoned on unmount) must not turn an
++                // abort or network error into an unhandled rejection. Readers
++                // chain on `body` itself and still see the error.
++                body.catch(() => { });
+                 resolve(makeResponse(xhr, body));
+             }
+         };
