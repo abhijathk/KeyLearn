@@ -22540,7 +22540,7 @@ export function createKidsWorld(
             .filter((x) => x.corridor || x.trace != null)
             .map((x) => x.n),
         );
-        const spots = thinAnchors(
+        const fixedSpots: KuttiSpot[] = thinAnchors(
           anchorsFrom(chapterPlacements()).filter((a) =>
             corridorLessons.has(lessonAt(a.x, CHAPTER).n),
           ),
@@ -22605,6 +22605,35 @@ export function createKidsWorld(
                 : undefined,
           };
         });
+        // A CORRIDOR LESSON WITH NOTHING TO HAUNT STILL HAS A ROAD.
+        //
+        // His fixed haunts are the walls, wells, great trees, lamps and houses
+        // above, and Chapter 2's Farm Clearing and River Crossing have none of
+        // them: a haystack, a cart, tamarinds and bamboo. Both are corridor
+        // lessons, and both were empty — every haunt the chapter built stood
+        // by Milestone 7, and the road spots invented in frame are held to
+        // the span the fixed ones cover, so nothing ever reached back there.
+        // A lesson that has no fixed haunt of its own gets the road instead,
+        // across its length, on the far verge and only where the ground is
+        // clear. Lessons that do have one are left exactly as they were.
+        const haunted = new Set(
+          fixedSpots.map((sp) => lessonAt(sp.x, CHAPTER).n),
+        );
+        const roadFill: KuttiSpot[] = [];
+        for (const n of corridorLessons) {
+          const lesson = (CHAPTERS[CHAPTER_N - 1]?.lessons ?? LESSONS).find(
+            (x) => x.n === n,
+          );
+          if (lesson?.corridor !== true || haunted.has(n)) continue;
+          const from = CHAPTER[n - 1]!;
+          const to = CHAPTER[n]!;
+          for (const f of [0.2, 0.5, 0.8]) {
+            const x = from + f * (to - from);
+            const z = meander(x) - 4;
+            if (isClear(x, z, 1.2)) roadFill.push({ x, z, haunt: "road" });
+          }
+        }
+        const spots = [...fixedSpots, ...roadFill];
         if (spots.length > 0) {
           // Queued, not awaited. He is the last thing that should hold up a
           // first frame, and a child who never reaches Lesson 4 never needs
