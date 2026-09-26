@@ -1,12 +1,12 @@
 # English
 
-Translated: 2477 messages, 23047 words
+Translated: 2483 messages, 23064 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 2443 messages, 23006 words
+Translated: 2449 messages, 23023 words
 
 Untranslated: 26 messages, 27 words
 
@@ -34,7 +34,7 @@ Untranslated: 26 messages, 27 words
 
 # Arabic
 
-Translated: 2467 messages, 23035 words
+Translated: 2473 messages, 23052 words
 
 Untranslated: 8 messages, 9 words
 
@@ -49,7 +49,7 @@ Untranslated: 8 messages, 9 words
 
 # Assamese
 
-Translated: 2461 messages, 23026 words
+Translated: 2467 messages, 23043 words
 
 Untranslated: 12 messages, 13 words
 
@@ -68,7 +68,7 @@ Untranslated: 12 messages, 13 words
 
 # Bulgarian
 
-Translated: 2466 messages, 23034 words
+Translated: 2472 messages, 23051 words
 
 Untranslated: 9 messages, 10 words
 
@@ -84,7 +84,7 @@ Untranslated: 9 messages, 10 words
 
 # Bangla
 
-Translated: 2465 messages, 23032 words
+Translated: 2471 messages, 23049 words
 
 Untranslated: 10 messages, 11 words
 
@@ -101,7 +101,7 @@ Untranslated: 10 messages, 11 words
 
 # Catalan
 
-Translated: 2446 messages, 23011 words
+Translated: 2452 messages, 23028 words
 
 Untranslated: 23 messages, 23 words
 
@@ -129,7 +129,7 @@ Untranslated: 23 messages, 23 words
 
 # Czech
 
-Translated: 2453 messages, 23017 words
+Translated: 2459 messages, 23034 words
 
 Untranslated: 18 messages, 19 words
 
@@ -154,7 +154,7 @@ Untranslated: 18 messages, 19 words
 
 # Danish
 
-Translated: 2432 messages, 22995 words
+Translated: 2438 messages, 23012 words
 
 Untranslated: 39 messages, 41 words
 
@@ -182,7 +182,7 @@ Untranslated: 39 messages, 41 words
 
 # German
 
-Translated: 2434 messages, 23001 words
+Translated: 2440 messages, 23018 words
 
 Untranslated: 39 messages, 39 words
 
@@ -210,7 +210,7 @@ Untranslated: 39 messages, 39 words
 
 # Greek
 
-Translated: 2461 messages, 23028 words
+Translated: 2467 messages, 23045 words
 
 Untranslated: 13 messages, 14 words
 
@@ -230,7 +230,7 @@ Untranslated: 13 messages, 14 words
 
 # Spanish
 
-Translated: 2451 messages, 23016 words
+Translated: 2457 messages, 23033 words
 
 Untranslated: 19 messages, 19 words
 
@@ -256,7 +256,7 @@ Untranslated: 19 messages, 19 words
 
 # Estonian
 
-Translated: 2450 messages, 23014 words
+Translated: 2456 messages, 23031 words
 
 Untranslated: 21 messages, 22 words
 
@@ -284,7 +284,7 @@ Untranslated: 21 messages, 22 words
 
 # Persian
 
-Translated: 2468 messages, 23036 words
+Translated: 2474 messages, 23053 words
 
 Untranslated: 8 messages, 9 words
 
@@ -299,7 +299,7 @@ Untranslated: 8 messages, 9 words
 
 # Finnish
 
-Translated: 2455 messages, 23020 words
+Translated: 2461 messages, 23037 words
 
 Untranslated: 16 messages, 16 words
 
@@ -322,7 +322,7 @@ Untranslated: 16 messages, 16 words
 
 # French
 
-Translated: 2433 messages, 22998 words
+Translated: 2439 messages, 23015 words
 
 Untranslated: 38 messages, 38 words
 
@@ -350,7 +350,7 @@ Untranslated: 38 messages, 38 words
 
 # Gujarati
 
-Translated: 2465 messages, 23032 words
+Translated: 2471 messages, 23049 words
 
 Untranslated: 10 messages, 11 words
 
@@ -367,7 +367,7 @@ Untranslated: 10 messages, 11 words
 
 # Hebrew
 
-Translated: 2466 messages, 23034 words
+Translated: 2472 messages, 23051 words
 
 Untranslated: 9 messages, 10 words
 
@@ -383,7 +383,7 @@ Untranslated: 9 messages, 10 words
 
 # Hindi
 
-Translated: 2465 messages, 23032 words
+Translated: 2471 messages, 23049 words
 
 Untranslated: 10 messages, 11 words
 
@@ -400,7 +400,7 @@ Untranslated: 10 messages, 11 words
 
 # Croatian
 
-Translated: 2453 messages, 23017 words
+Translated: 2459 messages, 23034 words
 
 Untranslated: 18 messages, 19 words
 
@@ -425,7 +425,7 @@ Untranslated: 18 messages, 19 words
 
 # Hungarian
 
-Translated: 2461 messages, 23027 words
+Translated: 2467 messages, 23044 words
 
 Untranslated: 12 messages, 13 words
 
@@ -444,7 +444,7 @@ Untranslated: 12 messages, 13 words
 
 # Indonesian
 
-Translated: 2447 messages, 23014 words
+Translated: 2453 messages, 23031 words
 
 Untranslated: 26 messages, 27 words
 
@@ -472,7 +472,7 @@ Untranslated: 26 messages, 27 words
 
 # Icelandic
 
-Translated: 2457 messages, 23023 words
+Translated: 2463 messages, 23040 words
 
 Untranslated: 16 messages, 17 words
 
@@ -495,7 +495,7 @@ Untranslated: 16 messages, 17 words
 
 # Italian
 
-Translated: 2453 messages, 23018 words
+Translated: 2459 messages, 23035 words
 
 Untranslated: 18 messages, 18 words
 
@@ -520,7 +520,7 @@ Untranslated: 18 messages, 18 words
 
 # Japanese
 
-Translated: 2460 messages, 23025 words
+Translated: 2466 messages, 23042 words
 
 Untranslated: 13 messages, 14 words
 
@@ -540,7 +540,7 @@ Untranslated: 13 messages, 14 words
 
 # Kannada
 
-Translated: 2464 messages, 23030 words
+Translated: 2470 messages, 23047 words
 
 Untranslated: 10 messages, 11 words
 
@@ -557,7 +557,7 @@ Untranslated: 10 messages, 11 words
 
 # Korean
 
-Translated: 2464 messages, 23031 words
+Translated: 2470 messages, 23048 words
 
 Untranslated: 11 messages, 12 words
 
@@ -575,7 +575,7 @@ Untranslated: 11 messages, 12 words
 
 # Lithuanian
 
-Translated: 2459 messages, 23025 words
+Translated: 2465 messages, 23042 words
 
 Untranslated: 14 messages, 15 words
 
@@ -596,7 +596,7 @@ Untranslated: 14 messages, 15 words
 
 # Latvian
 
-Translated: 2457 messages, 23021 words
+Translated: 2463 messages, 23038 words
 
 Untranslated: 14 messages, 15 words
 
@@ -617,7 +617,7 @@ Untranslated: 14 messages, 15 words
 
 # Malayalam
 
-Translated: 2463 messages, 23028 words
+Translated: 2469 messages, 23045 words
 
 Untranslated: 10 messages, 11 words
 
@@ -634,7 +634,7 @@ Untranslated: 10 messages, 11 words
 
 # Mongolian
 
-Translated: 2466 messages, 23033 words
+Translated: 2472 messages, 23050 words
 
 Untranslated: 9 messages, 10 words
 
@@ -650,7 +650,7 @@ Untranslated: 9 messages, 10 words
 
 # Marathi
 
-Translated: 2466 messages, 23033 words
+Translated: 2472 messages, 23050 words
 
 Untranslated: 9 messages, 10 words
 
@@ -666,7 +666,7 @@ Untranslated: 9 messages, 10 words
 
 # Norwegian Bokmål
 
-Translated: 2444 messages, 23008 words
+Translated: 2450 messages, 23025 words
 
 Untranslated: 27 messages, 28 words
 
@@ -694,7 +694,7 @@ Untranslated: 27 messages, 28 words
 
 # Nepali
 
-Translated: 2463 messages, 23028 words
+Translated: 2469 messages, 23045 words
 
 Untranslated: 10 messages, 11 words
 
@@ -711,7 +711,7 @@ Untranslated: 10 messages, 11 words
 
 # Dutch
 
-Translated: 2427 messages, 22990 words
+Translated: 2433 messages, 23007 words
 
 Untranslated: 43 messages, 44 words
 
@@ -739,7 +739,7 @@ Untranslated: 43 messages, 44 words
 
 # Odia
 
-Translated: 2463 messages, 23028 words
+Translated: 2469 messages, 23045 words
 
 Untranslated: 10 messages, 11 words
 
@@ -756,7 +756,7 @@ Untranslated: 10 messages, 11 words
 
 # Punjabi
 
-Translated: 2463 messages, 23028 words
+Translated: 2469 messages, 23045 words
 
 Untranslated: 10 messages, 11 words
 
@@ -773,7 +773,7 @@ Untranslated: 10 messages, 11 words
 
 # Polish
 
-Translated: 2454 messages, 23018 words
+Translated: 2460 messages, 23035 words
 
 Untranslated: 17 messages, 18 words
 
@@ -797,7 +797,7 @@ Untranslated: 17 messages, 18 words
 
 # Brazilian Portuguese
 
-Translated: 2450 messages, 23014 words
+Translated: 2456 messages, 23031 words
 
 Untranslated: 21 messages, 22 words
 
@@ -825,7 +825,7 @@ Untranslated: 21 messages, 22 words
 
 # European Portuguese
 
-Translated: 2452 messages, 23016 words
+Translated: 2458 messages, 23033 words
 
 Untranslated: 19 messages, 20 words
 
@@ -851,7 +851,7 @@ Untranslated: 19 messages, 20 words
 
 # Romanian
 
-Translated: 2444 messages, 23008 words
+Translated: 2450 messages, 23025 words
 
 Untranslated: 27 messages, 28 words
 
@@ -879,7 +879,7 @@ Untranslated: 27 messages, 28 words
 
 # Russian
 
-Translated: 2466 messages, 23034 words
+Translated: 2472 messages, 23051 words
 
 Untranslated: 9 messages, 10 words
 
@@ -895,7 +895,7 @@ Untranslated: 9 messages, 10 words
 
 # Slovak
 
-Translated: 2452 messages, 23016 words
+Translated: 2458 messages, 23033 words
 
 Untranslated: 19 messages, 20 words
 
@@ -921,7 +921,7 @@ Untranslated: 19 messages, 20 words
 
 # Slovenian
 
-Translated: 2453 messages, 23017 words
+Translated: 2459 messages, 23034 words
 
 Untranslated: 18 messages, 19 words
 
@@ -946,7 +946,7 @@ Untranslated: 18 messages, 19 words
 
 # Albanian
 
-Translated: 2452 messages, 23016 words
+Translated: 2458 messages, 23033 words
 
 Untranslated: 19 messages, 20 words
 
@@ -972,7 +972,7 @@ Untranslated: 19 messages, 20 words
 
 # Swedish
 
-Translated: 2438 messages, 23003 words
+Translated: 2444 messages, 23020 words
 
 Untranslated: 33 messages, 33 words
 
@@ -1000,7 +1000,7 @@ Untranslated: 33 messages, 33 words
 
 # Tamil
 
-Translated: 2464 messages, 23030 words
+Translated: 2470 messages, 23047 words
 
 Untranslated: 10 messages, 11 words
 
@@ -1017,7 +1017,7 @@ Untranslated: 10 messages, 11 words
 
 # Telugu
 
-Translated: 2464 messages, 23030 words
+Translated: 2470 messages, 23047 words
 
 Untranslated: 10 messages, 11 words
 
@@ -1034,7 +1034,7 @@ Untranslated: 10 messages, 11 words
 
 # Thai
 
-Translated: 2466 messages, 23033 words
+Translated: 2472 messages, 23050 words
 
 Untranslated: 9 messages, 10 words
 
@@ -1050,7 +1050,7 @@ Untranslated: 9 messages, 10 words
 
 # Turkish
 
-Translated: 2461 messages, 23028 words
+Translated: 2467 messages, 23045 words
 
 Untranslated: 14 messages, 15 words
 
@@ -1071,7 +1071,7 @@ Untranslated: 14 messages, 15 words
 
 # Ukrainian
 
-Translated: 2466 messages, 23034 words
+Translated: 2472 messages, 23051 words
 
 Untranslated: 9 messages, 10 words
 
@@ -1087,7 +1087,7 @@ Untranslated: 9 messages, 10 words
 
 # Urdu
 
-Translated: 2467 messages, 23035 words
+Translated: 2473 messages, 23052 words
 
 Untranslated: 9 messages, 10 words
 
@@ -1103,7 +1103,7 @@ Untranslated: 9 messages, 10 words
 
 # Vietnamese
 
-Translated: 2461 messages, 23027 words
+Translated: 2467 messages, 23044 words
 
 Untranslated: 12 messages, 13 words
 
@@ -1122,7 +1122,7 @@ Untranslated: 12 messages, 13 words
 
 # Simplified Chinese
 
-Translated: 2467 messages, 23034 words
+Translated: 2473 messages, 23051 words
 
 Untranslated: 8 messages, 9 words
 
@@ -1137,7 +1137,7 @@ Untranslated: 8 messages, 9 words
 
 # Traditional Chinese
 
-Translated: 2464 messages, 23031 words
+Translated: 2470 messages, 23048 words
 
 Untranslated: 11 messages, 12 words
 
