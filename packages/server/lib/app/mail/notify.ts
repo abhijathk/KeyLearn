@@ -1,5 +1,5 @@
 import { inject, injectable } from "@fastr/invert";
-import { maskEmail, User } from "@keylearn/database";
+import { maskEmail, Profile, User } from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
 import { SettingsDatabase } from "@keylearn/settings-database";
 import {
@@ -93,15 +93,38 @@ export class Notifier {
     return String(new URL(path, this.canonicalUrl));
   }
 
-  /** The account's saved preferences, or nothing if they cannot be read. */
+  /**
+   * The account's saved preferences, or nothing if they cannot be read.
+   *
+   * Every signed-in account has a grown-up learner profile, and the
+   * Preferences pane saves the email and time-zone choices THERE, on that
+   * profile's settings — not in the account-level file. Reading only the
+   * account file meant reminders followed whatever was set at sign-up: a
+   * reminder switched off stayed on, and one sent "tomorrow morning" went
+   * by the wrong clock. So the account's first grown-up profile is read
+   * too, and wins wherever both say something.
+   */
   async #prefs(userId: number): Promise<Record<string, unknown>> {
+    let prefs: Record<string, unknown> = {};
     try {
       const settings = await this.settings.get(userId);
-      return (settings?.toJSON() ?? {}) as Record<string, unknown>;
+      prefs = (settings?.toJSON() ?? {}) as Record<string, unknown>;
     } catch (err: any) {
       Logger.warn(err, "Could not read notification preferences");
-      return {};
     }
+    try {
+      const adult = await Profile.query()
+        .where({ userId, kind: "adult" })
+        .orderBy("id")
+        .first();
+      if (adult != null) {
+        const own = await this.settings.getProfile(userId, adult.id!);
+        prefs = { ...prefs, ...((own?.toJSON() ?? {}) as object) };
+      }
+    } catch (err: any) {
+      Logger.warn(err, "Could not read the grown-up profile's preferences");
+    }
+    return prefs;
   }
 
   /**
