@@ -51,10 +51,10 @@ Findings live on the owner's machine in the session scratchpad (`e2e/findings/*.
 
 - **Drop the QDesk stash:** `git -C quakka-support-desk stash drop stash@{0}`. It's fully superseded; a patch backup exists on the owner's machine.
 - **StudyBuddy:** if `seedSupportAdmin` ever ran on a deployed DB, rotate the password of `admin@studybuddy.support`.
-- **HSTS** at the reverse proxy.
+- ~~**HSTS** at the reverse proxy.~~ **Done in the repo config** (`root/etc/nginx`): one header on HTTPS, none on HTTP. Copy it to the live proxy and reload.
 - **QDesk in production:** `npm ci && npm run compile && npm run build`, then `NODE_ENV=production node --enable-source-maps ./dist/index.js`. Build and restart together.
 - **Live Tab services:** restart the Tab launchd services so they pick up the transport guard (`launchctl kickstart -k gui/$(id -u)/com.keylearn.support-triage` and `…support-worker`).
-- **Release walkthrough checklist:** not yet written.
+- ~~**Release walkthrough checklist:** not yet written.~~ **Written:** [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md).
 
 ## Rules that matter (learned the hard way)
 
@@ -95,7 +95,7 @@ None of these were covered in this pass. Run them on an isolated test stack, nev
    - lesson 38 Kuttichathan at night;
    - chapter 3–4 night areas (lessons 24, 28, 32, 35);
    - Time Keepers lesson length for the 11+ band (seed prefs `{classic:false}`).
-10. **Certificates, pending the owner's decision:** a kid who finishes the passage before the bell gets nothing more to type. Mock it first; the fix goes in the `KidsPage.tsx` finished-line assessment branch (bump `setPassageNonce`).
+10. ~~**Certificates, pending the owner's decision:**~~ **Decided and done (26 Sep):** the next passage comes straight away (not browser-checked: needs an eligible learner). a kid who finishes the passage before the bell gets nothing more to type. Mock it first; the fix goes in the `KidsPage.tsx` finished-line assessment branch (bump `setPassageNonce`).
 11. **Regression before release:** *KeyLearn's side is green (26 Sep, cloud):* all 72 test packages pass with `DATABASE_CLIENT=sqlite`, after breaking a widget ↔ pages-shared dependency cycle that stopped `lage` running anything, and fixing two tests (a real network call at teardown, and a text query racing its own panel). `@fastr/fetch` is patched (`patches/`) so an unread, aborted response body is no longer an uncaught "Request aborted" in the page. Still to do:
     - every package's tests, one package at a time;
     - QDesk typecheck (must be 0) and `scripts/*.mjs` with `DATA_DIR` on a copy;
