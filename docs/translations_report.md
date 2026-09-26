@@ -6,210 +6,161 @@ Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 2400 messages, 22620 words
+Translated: 2443 messages, 23006 words
 
-Untranslated: 69 messages, 413 words
+Untranslated: 26 messages, 27 words
 
 * *s*
 * *as*
 * *PIN*
 * *wpm*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Stop*
 * *Theo*
-* *Close*
 * *Enter*
 * *Later*
 * *Sepia*
 * *Shift*
-* *Space*
 * *Avatar*
 * *indigo*
 * *Medium*
 * *Letters*
 * *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Arabic
 
-Translated: 2423 messages, 22648 words
+Translated: 2467 messages, 23035 words
 
-Untranslated: 52 messages, 396 words
+Untranslated: 8 messages, 9 words
 
-* *Kids*
-* *Close*
-* *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* *Where it goes*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Assamese
 
-Translated: 2418 messages, 22640 words
+Translated: 2461 messages, 23026 words
 
-Untranslated: 55 messages, 399 words
+Untranslated: 12 messages, 13 words
 
 * *PIN*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Bulgarian
 
-Translated: 2423 messages, 22648 words
+Translated: 2466 messages, 23034 words
 
-Untranslated: 52 messages, 396 words
+Untranslated: 9 messages, 10 words
 
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* *Where it goes*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Bangla
 
-Translated: 2422 messages, 22646 words
+Translated: 2465 messages, 23032 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Catalan
 
-Translated: 2402 messages, 22624 words
+Translated: 2446 messages, 23011 words
 
-Untranslated: 67 messages, 410 words
+Untranslated: 23 messages, 23 words
 
 * *s*
 * *Arc*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Mode*
 * *Mode*
 * *Text*
 * *Text*
 * *Theo*
-* *Close*
-* *Enter*
 * *Paper*
-* *Space*
 * *Avatar*
 * *Errors*
 * *Recent*
 * *Classes*
 * *Premium*
+* *KeyLearn*
+* *KeyLearn*
+* *KeyLearn*
+* *Key<em>Learn</em>*
 * ...
 
 # Czech
 
-Translated: 2410 messages, 22631 words
+Translated: 2453 messages, 23017 words
 
-Untranslated: 61 messages, 405 words
+Untranslated: 18 messages, 19 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Text*
 * *Text*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *Trend*
 * *Avatar*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Danish
 
-Translated: 2389 messages, 22609 words
+Translated: 2432 messages, 22995 words
 
-Untranslated: 82 messages, 427 words
+Untranslated: 39 messages, 41 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Mine*
 * *Send*
@@ -220,24 +171,24 @@ Untranslated: 82 messages, 427 words
 * *Send*
 * *Stop*
 * *Theo*
-* *Close*
 * *Enter*
 * *Sepia*
 * *Shift*
-* *Space*
 * *Avatar*
+* *citron*
+* *indigo*
+* *Layout*
 * ...
 
 # German
 
-Translated: 2390 messages, 22614 words
+Translated: 2434 messages, 23001 words
 
-Untranslated: 83 messages, 426 words
+Untranslated: 39 messages, 39 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Name*
 * *Name*
@@ -246,60 +197,50 @@ Untranslated: 83 messages, 426 words
 * *Theo*
 * *Admin*
 * *Admin*
-* *Close*
 * *Coach*
-* *Enter*
 * *Sepia*
-* *Space*
 * *Arcade*
 * *Avatar*
 * *Cookies*
+* *Heatmap*
+* *Premium*
+* *Support*
+* *Support*
 * ...
 
 # Greek
 
-Translated: 2418 messages, 22642 words
+Translated: 2461 messages, 23028 words
 
-Untranslated: 56 messages, 400 words
+Untranslated: 13 messages, 14 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Email*
 * *Enter*
 * *Shift*
-* *Space*
 * *Cookies*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Spanish
 
-Translated: 2408 messages, 22630 words
+Translated: 2451 messages, 23016 words
 
-Untranslated: 62 messages, 405 words
+Untranslated: 19 messages, 19 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Sepia*
-* *Space*
 * *Arcade*
 * *Avatar*
 * *Zigzag*
@@ -308,27 +249,25 @@ Untranslated: 62 messages, 405 words
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
 * *Chocolate*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Estonian
 
-Translated: 2407 messages, 22628 words
+Translated: 2450 messages, 23014 words
 
-Untranslated: 64 messages, 408 words
+Untranslated: 21 messages, 22 words
 
 * *s*
 * *PIN*
 * *Zen*
 * *Font*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *Trend*
 * *Avatar*
 * *Number*
@@ -336,84 +275,65 @@ Untranslated: 64 messages, 408 words
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
+* *Pip (5–8)*
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
 * ...
 
 # Persian
 
-Translated: 2424 messages, 22649 words
+Translated: 2468 messages, 23036 words
 
-Untranslated: 52 messages, 396 words
+Untranslated: 8 messages, 9 words
 
-* *Kids*
-* *Close*
-* *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* *Where it goes*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Finnish
 
-Translated: 2412 messages, 22634 words
+Translated: 2455 messages, 23020 words
 
-Untranslated: 59 messages, 402 words
+Untranslated: 16 messages, 16 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
-* *Space*
 * *Avatar*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
 * *Pip (5–8)*
-* *Start over*
-* *Bad Request*
-* ...
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # French
 
-Translated: 2389 messages, 22611 words
+Translated: 2433 messages, 22998 words
 
-Untranslated: 82 messages, 425 words
+Untranslated: 38 messages, 38 words
 
 * *s*
 * *Arc*
 * *Zen*
 * *Auto*
-* *Kids*
 * *Maya*
 * *Mode*
 * *Mode*
-* *Close*
 * *Coach*
-* *Enter*
-* *Space*
 * *Style*
 * *Arcade*
 * *Avatar*
@@ -422,108 +342,75 @@ Untranslated: 82 messages, 425 words
 * *indigo*
 * *orange*
 * *Zigzag*
+* *Classes*
+* *Cookies*
+* *Premium*
+* *Version*
 * ...
 
 # Gujarati
 
-Translated: 2422 messages, 22646 words
+Translated: 2465 messages, 23032 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Hebrew
 
-Translated: 2423 messages, 22648 words
+Translated: 2466 messages, 23034 words
 
-Untranslated: 52 messages, 396 words
+Untranslated: 9 messages, 10 words
 
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* *Where it goes*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Hindi
 
-Translated: 2422 messages, 22646 words
+Translated: 2465 messages, 23032 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Croatian
 
-Translated: 2410 messages, 22631 words
+Translated: 2453 messages, 23017 words
 
-Untranslated: 61 messages, 405 words
+Untranslated: 18 messages, 19 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *Trend*
 * *Avatar*
 * *indigo*
@@ -531,50 +418,40 @@ Untranslated: 61 messages, 405 words
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Hungarian
 
-Translated: 2418 messages, 22641 words
+Translated: 2461 messages, 23027 words
 
-Untranslated: 55 messages, 399 words
+Untranslated: 12 messages, 13 words
 
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Indonesian
 
-Translated: 2404 messages, 22628 words
+Translated: 2447 messages, 23014 words
 
-Untranslated: 69 messages, 413 words
+Untranslated: 26 messages, 27 words
 
 * *PIN*
 * *Zen*
 * *Edit*
 * *Font*
-* *Kids*
 * *Maya*
 * *mint*
 * *Mode*
@@ -583,58 +460,50 @@ Untranslated: 69 messages, 413 words
 * *admin*
 * *Admin*
 * *Admin*
-* *Close*
 * *Email*
 * *Enter*
 * *Sepia*
 * *Shift*
-* *Space*
 * *Avatar*
+* *Zigzag*
+* *Premium*
+* *KeyLearn*
 * ...
 
 # Icelandic
 
-Translated: 2414 messages, 22637 words
+Translated: 2457 messages, 23023 words
 
-Untranslated: 59 messages, 403 words
+Untranslated: 16 messages, 17 words
 
 * *Sun*
-* *Kids*
 * *Maya*
 * *Sent*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
 * *Pip (5–8)*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* ...
+* *Shift AltGr*
+* *Robin (9–13)*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Italian
 
-Translated: 2409 messages, 22631 words
+Translated: 2453 messages, 23018 words
 
-Untranslated: 62 messages, 405 words
+Untranslated: 18 messages, 18 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
-* *Enter*
-* *Space*
 * *Arcade*
 * *Avatar*
 * *Zigzag*
@@ -645,243 +514,165 @@ Untranslated: 62 messages, 405 words
 * *KeyLearn*
 * *Password*
 * *Password*
-* *Shown to*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Japanese
 
-Translated: 2417 messages, 22639 words
+Translated: 2460 messages, 23025 words
 
-Untranslated: 56 messages, 400 words
+Untranslated: 13 messages, 14 words
 
 * *PIN*
 * *wpm*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Kannada
 
-Translated: 2421 messages, 22644 words
+Translated: 2464 messages, 23030 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Korean
 
-Translated: 2420 messages, 22644 words
+Translated: 2464 messages, 23031 words
 
-Untranslated: 55 messages, 399 words
+Untranslated: 11 messages, 12 words
 
 * *PIN*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
-* *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Lithuanian
 
-Translated: 2416 messages, 22639 words
+Translated: 2459 messages, 23025 words
 
-Untranslated: 57 messages, 401 words
+Untranslated: 14 messages, 15 words
 
 * *s*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *indigo*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Latvian
 
-Translated: 2414 messages, 22635 words
+Translated: 2457 messages, 23021 words
 
-Untranslated: 57 messages, 401 words
+Untranslated: 14 messages, 15 words
 
 * *s*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *indigo*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Malayalam
 
-Translated: 2420 messages, 22642 words
+Translated: 2463 messages, 23028 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Mongolian
 
-Translated: 2423 messages, 22647 words
+Translated: 2466 messages, 23033 words
 
-Untranslated: 52 messages, 396 words
+Untranslated: 9 messages, 10 words
 
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* *Where it goes*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Marathi
 
-Translated: 2422 messages, 22646 words
+Translated: 2466 messages, 23033 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 9 messages, 10 words
 
 * *PIN*
-* *Kids*
-* *Close*
-* *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Norwegian Bokmål
 
-Translated: 2401 messages, 22622 words
+Translated: 2444 messages, 23008 words
 
-Untranslated: 70 messages, 414 words
+Untranslated: 27 messages, 28 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Mine*
 * *Send*
@@ -891,58 +682,46 @@ Untranslated: 70 messages, 414 words
 * *Send*
 * *Send*
 * *Theo*
-* *Close*
 * *Enter*
 * *Sepia*
-* *Space*
 * *Trend*
 * *Avatar*
 * *indigo*
+* *Premium*
+* *KeyLearn*
+* *KeyLearn*
 * ...
 
 # Nepali
 
-Translated: 2420 messages, 22642 words
+Translated: 2463 messages, 23028 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Dutch
 
-Translated: 2384 messages, 22604 words
+Translated: 2427 messages, 22990 words
 
-Untranslated: 86 messages, 430 words
+Untranslated: 43 messages, 44 words
 
 * *s*
 * *wpm*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Open*
 * *Stop*
 * *Theo*
-* *Close*
 * *Coach*
 * *Enter*
 * *Hints*
@@ -950,112 +729,85 @@ Untranslated: 86 messages, 430 words
 * *Score*
 * *Sepia*
 * *Shift*
-* *Space*
 * *Arcade*
 * *Avatar*
 * *Detail*
+* *indigo*
+* *Recent*
+* *Zigzag*
 * ...
 
 # Odia
 
-Translated: 2420 messages, 22642 words
+Translated: 2463 messages, 23028 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Punjabi
 
-Translated: 2420 messages, 22642 words
+Translated: 2463 messages, 23028 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Polish
 
-Translated: 2411 messages, 22632 words
+Translated: 2454 messages, 23018 words
 
-Untranslated: 60 messages, 404 words
+Untranslated: 17 messages, 18 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Sepia*
 * *Shift*
-* *Space*
 * *Trend*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Brazilian Portuguese
 
-Translated: 2407 messages, 22628 words
+Translated: 2450 messages, 23014 words
 
-Untranslated: 64 messages, 408 words
+Untranslated: 21 messages, 22 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *Arcade*
 * *Avatar*
 * *Layout*
@@ -1065,25 +817,25 @@ Untranslated: 64 messages, 408 words
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
+* *Chocolate*
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
 * ...
 
 # European Portuguese
 
-Translated: 2409 messages, 22630 words
+Translated: 2452 messages, 23016 words
 
-Untranslated: 62 messages, 406 words
+Untranslated: 19 messages, 20 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *Arcade*
 * *Avatar*
 * *Cookies*
@@ -1091,16 +843,17 @@ Untranslated: 62 messages, 406 words
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
 * *Chocolate*
-* *Forbidden*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Romanian
 
-Translated: 2401 messages, 22622 words
+Translated: 2444 messages, 23008 words
 
-Untranslated: 70 messages, 414 words
+Untranslated: 27 messages, 28 words
 
 * *s*
 * *Arc*
@@ -1108,94 +861,77 @@ Untranslated: 70 messages, 414 words
 * *Zen*
 * *Calm*
 * *Font*
-* *Kids*
 * *Maya*
 * *Text*
 * *Text*
 * *Theo*
-* *Close*
 * *Enter*
 * *Sepia*
 * *Shift*
-* *Space*
 * *Arcade*
 * *Avatar*
 * *indigo*
 * *Zigzag*
+* *Premium*
+* *Incident*
+* *KeyLearn*
 * ...
 
 # Russian
 
-Translated: 2423 messages, 22648 words
+Translated: 2466 messages, 23034 words
 
-Untranslated: 52 messages, 396 words
+Untranslated: 9 messages, 10 words
 
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* *Where it goes*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Slovak
 
-Translated: 2409 messages, 22630 words
+Translated: 2452 messages, 23016 words
 
-Untranslated: 62 messages, 406 words
+Untranslated: 19 messages, 20 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Text*
 * *Text*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *Trend*
 * *Avatar*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Slovenian
 
-Translated: 2410 messages, 22631 words
+Translated: 2453 messages, 23017 words
 
-Untranslated: 61 messages, 405 words
+Untranslated: 18 messages, 19 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *Trend*
 * *Avatar*
 * *indigo*
@@ -1203,315 +939,216 @@ Untranslated: 61 messages, 405 words
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Albanian
 
-Translated: 2409 messages, 22630 words
+Translated: 2452 messages, 23016 words
 
-Untranslated: 62 messages, 406 words
+Untranslated: 19 messages, 20 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Email*
 * *Enter*
 * *Sepia*
 * *Shift*
-* *Space*
 * *indigo*
 * *Premium*
 * *Incident*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Swedish
 
-Translated: 2395 messages, 22617 words
+Translated: 2438 messages, 23003 words
 
-Untranslated: 76 messages, 419 words
+Untranslated: 33 messages, 33 words
 
 * *s*
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *mint*
 * *Text*
 * *Text*
 * *Theo*
-* *Close*
 * *Coach*
 * *Enter*
 * *Sepia*
-* *Space*
 * *Trend*
 * *Avatar*
 * *citron*
 * *indigo*
 * *Layout*
 * *orange*
+* *Period*
+* *Premium*
+* *Support*
 * ...
 
 # Tamil
 
-Translated: 2421 messages, 22644 words
+Translated: 2464 messages, 23030 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Telugu
 
-Translated: 2421 messages, 22644 words
+Translated: 2464 messages, 23030 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 10 messages, 11 words
 
 * *PIN*
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Thai
 
-Translated: 2423 messages, 22647 words
+Translated: 2466 messages, 23033 words
 
-Untranslated: 52 messages, 396 words
+Untranslated: 9 messages, 10 words
 
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* *Where it goes*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Turkish
 
-Translated: 2418 messages, 22642 words
+Translated: 2461 messages, 23028 words
 
-Untranslated: 57 messages, 401 words
+Untranslated: 14 messages, 15 words
 
 * *PIN*
 * *Zen*
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *Avatar*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Ukrainian
 
-Translated: 2423 messages, 22648 words
+Translated: 2466 messages, 23034 words
 
-Untranslated: 52 messages, 396 words
+Untranslated: 9 messages, 10 words
 
-* *Kids*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* *Where it goes*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Urdu
 
-Translated: 2423 messages, 22648 words
+Translated: 2467 messages, 23035 words
 
-Untranslated: 53 messages, 397 words
+Untranslated: 9 messages, 10 words
 
 * *PIN*
-* *Kids*
-* *Close*
-* *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Vietnamese
 
-Translated: 2418 messages, 22641 words
+Translated: 2461 messages, 23027 words
 
-Untranslated: 55 messages, 399 words
+Untranslated: 12 messages, 13 words
 
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Email*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
-* ...
+* *Shift AltGr*
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Simplified Chinese
 
-Translated: 2423 messages, 22647 words
+Translated: 2467 messages, 23034 words
 
-Untranslated: 52 messages, 396 words
+Untranslated: 8 messages, 9 words
 
-* *Kids*
-* *Close*
-* *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* *Why this ad?*
-* *Where it goes*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
 
 # Traditional Chinese
 
-Translated: 2421 messages, 22645 words
+Translated: 2464 messages, 23031 words
 
-Untranslated: 54 messages, 398 words
+Untranslated: 11 messages, 12 words
 
-* *Kids*
 * *Maya*
 * *Theo*
-* *Close*
 * *Enter*
 * *Shift*
-* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Shown to*
-* *Forbidden*
-* *Not Found*
-* *Start over*
-* *Bad Request*
-* *Coming soon*
-* *Paid for by*
-* *See premium*
-* *Selected by*
 * *Shift AltGr*
-* ...
+* *Key<em>Learn</em>*
+* *Key<em>Learn</em>*
+* *<key>Key</key><learn>Learn</learn>*
