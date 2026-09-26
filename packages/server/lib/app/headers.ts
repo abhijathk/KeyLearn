@@ -20,6 +20,12 @@ const CONNECT_HOSTS = [
   "https://cloudflareinsights.com",
   "https://challenges.cloudflare.com",
   "https://api.paddle.com",
+  // The breach warning under a new password (page-account PasswordStrength):
+  // the k-anonymity range API, so only the first five characters of the
+  // password's SHA-1 leave the browser. Missing from this list, the check
+  // was refused by the page's own policy and never ran; the server's check
+  // (auth/breached.ts) still refused the password, but only on submit.
+  "https://api.pwnedpasswords.com",
 ];
 
 /**

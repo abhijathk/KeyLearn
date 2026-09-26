@@ -73,18 +73,22 @@ export function DobEntry({
     onResult({ dateOfBirth, tooYoung });
   }, [dateOfBirth, tooYoung, onResult]);
 
+  // The heading above the field is also its accessible name: it is a <div>,
+  // so on its own a screen reader announced an unnamed date field.
+  const label =
+    mode === "dob"
+      ? formatMessage({
+          id: "auth.dob.label",
+          defaultMessage: "Your date of birth",
+        })
+      : formatMessage({ id: "auth.age.label", defaultMessage: "Your age" });
+
   return (
     <div className={styles.dobField}>
-      <div className={styles.fieldLab}>
-        {mode === "dob"
-          ? formatMessage({
-              id: "auth.dob.label",
-              defaultMessage: "Your date of birth",
-            })
-          : formatMessage({ id: "auth.age.label", defaultMessage: "Your age" })}
-      </div>
+      <div className={styles.fieldLab}>{label}</div>
       {mode === "dob" ? (
         <TextField
+          aria-label={label}
           size="full"
           type="date"
           autoComplete="bday"
@@ -93,6 +97,7 @@ export function DobEntry({
         />
       ) : (
         <TextField
+          aria-label={label}
           size="full"
           type="number"
           placeholder={formatMessage({
