@@ -392,6 +392,8 @@
   "assess.out.show": "認定証を開く",
   "assess.out.show.kid": "みてみる!",
   "assess.out.title": "受験を記録しました",
+  "assess.out.title.empty": "採点できるものがありません",
+  "assess.out.title.empty.kid": "もう一度やってみよう",
   "assess.out.title.kid": "よくがんばったね",
   "assess.out.title.sending": "これで受験は終わりです",
   "assess.out.title.won": "認定証を獲得しました",

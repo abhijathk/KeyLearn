@@ -392,6 +392,8 @@
   "assess.out.show": "সার্টিফিকেট খুলুন",
   "assess.out.show.kid": "দেখি!",
   "assess.out.title": "চেষ্টা নথিভুক্ত হয়েছে",
+  "assess.out.title.empty": "গণনা করার কিছু নেই",
+  "assess.out.title.empty.kid": "চলো আবার চেষ্টা করি",
   "assess.out.title.kid": "বেশ হয়েছে",
   "assess.out.title.sending": "এটিই ছিল সেই চেষ্টা",
   "assess.out.title.won": "সার্টিফিকেট পাওয়া গেছে",

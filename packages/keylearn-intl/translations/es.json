@@ -390,6 +390,8 @@
   "assess.out.show": "Abrir el certificado",
   "assess.out.show.kid": "¡Verlo!",
   "assess.out.title": "Sesión registrada",
+  "assess.out.title.empty": "Nada que puntuar",
+  "assess.out.title.empty.kid": "Probemos otra vez",
   "assess.out.title.kid": "¡Muy bien!",
   "assess.out.title.sending": "Sesión terminada",
   "assess.out.title.won": "Certificado obtenido",

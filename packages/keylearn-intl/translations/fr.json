@@ -385,6 +385,8 @@
   "assess.out.show": "Ouvrir le certificat",
   "assess.out.show.kid": "Montre-le!",
   "assess.out.title": "Session enregistrée",
+  "assess.out.title.empty": "Rien à noter",
+  "assess.out.title.empty.kid": "On réessaie",
   "assess.out.title.kid": "Bien joué",
   "assess.out.title.sending": "Voilà pour cette session",
   "assess.out.title.won": "Certificat obtenu",

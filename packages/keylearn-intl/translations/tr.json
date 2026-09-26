@@ -392,6 +392,8 @@
   "assess.out.show": "Sertifikayı aç",
   "assess.out.show.kid": "Bak bakalım!",
   "assess.out.title": "Oturum kaydedildi",
+  "assess.out.title.empty": "Puanlanacak bir şey yok",
+  "assess.out.title.empty.kid": "Hadi yeniden deneyelim",
   "assess.out.title.kid": "Aferin sana",
   "assess.out.title.sending": "Oturum tamam",
   "assess.out.title.won": "Sertifika kazanıldı",

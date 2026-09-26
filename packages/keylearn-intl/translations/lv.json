@@ -391,6 +391,8 @@
   "assess.out.show": "Atvērt sertifikātu",
   "assess.out.show.kid": "Apskaties!",
   "assess.out.title": "Kārtošanas reize reģistrēta",
+  "assess.out.title.empty": "Nav ko vērtēt",
+  "assess.out.title.empty.kid": "Mēģināsim vēlreiz",
   "assess.out.title.kid": "Malacis",
   "assess.out.title.sending": "Kārtošanas reize galā",
   "assess.out.title.won": "Sertifikāts iegūts",

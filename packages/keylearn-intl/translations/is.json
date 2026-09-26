@@ -390,6 +390,8 @@
   "assess.out.show": "Opna skírteinið",
   "assess.out.show.kid": "Sjáðu!",
   "assess.out.title": "Próftaka skráð",
+  "assess.out.title.empty": "Ekkert til að meta",
+  "assess.out.title.empty.kid": "Reynum aftur",
   "assess.out.title.kid": "Vel gert",
   "assess.out.title.sending": "Þar með er próftökunni lokið",
   "assess.out.title.won": "Skírteini áunnið",

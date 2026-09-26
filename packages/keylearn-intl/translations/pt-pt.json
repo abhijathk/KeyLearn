@@ -391,6 +391,8 @@
   "assess.out.show": "Abrir o certificado",
   "assess.out.show.kid": "Ver!",
   "assess.out.title": "Prova registada",
+  "assess.out.title.empty": "Nada para avaliar",
+  "assess.out.title.empty.kid": "Vamos tentar outra vez",
   "assess.out.title.kid": "Muito bem",
   "assess.out.title.sending": "A prova está feita",
   "assess.out.title.won": "Certificado obtido",

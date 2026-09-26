@@ -392,6 +392,8 @@
   "assess.out.show": "เปิดใบรับรอง",
   "assess.out.show.kid": "ดูเลย!",
   "assess.out.title": "บันทึกผลการสอบแล้ว",
+  "assess.out.title.empty": "ไม่มีอะไรให้ให้คะแนน",
+  "assess.out.title.empty.kid": "ลองใหม่อีกครั้งนะ",
   "assess.out.title.kid": "เก่งมาก",
   "assess.out.title.sending": "จบการสอบครั้งนี้แล้ว",
   "assess.out.title.won": "ได้รับใบรับรองแล้ว",

@@ -392,6 +392,8 @@
   "assess.out.show": "Oklevél megnyitása",
   "assess.out.show.kid": "Nézd meg!",
   "assess.out.title": "Vizsgaalkalom rögzítve",
+  "assess.out.title.empty": "Nincs mit értékelni",
+  "assess.out.title.empty.kid": "Próbáljuk újra",
   "assess.out.title.kid": "Szép munka",
   "assess.out.title.sending": "Ennyi volt a vizsga",
   "assess.out.title.won": "Oklevél megszerezve",

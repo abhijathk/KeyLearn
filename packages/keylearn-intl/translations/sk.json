@@ -391,6 +391,8 @@
   "assess.out.show": "Otvoriť certifikát",
   "assess.out.show.kid": "Ukáž mi ho!",
   "assess.out.title": "Pokus zaznamenaný",
+  "assess.out.title.empty": "Nie je čo hodnotiť",
+  "assess.out.title.empty.kid": "Skúsme to znova",
   "assess.out.title.kid": "Dobrá práca",
   "assess.out.title.sending": "A je to za vami",
   "assess.out.title.won": "Certifikát získaný",

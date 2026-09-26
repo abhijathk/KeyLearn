@@ -389,6 +389,8 @@
   "assess.out.show": "Öppna diplomet",
   "assess.out.show.kid": "Visa det!",
   "assess.out.title": "Provtillfället registrerat",
+  "assess.out.title.empty": "Inget att bedöma",
+  "assess.out.title.empty.kid": "Vi försöker igen",
   "assess.out.title.kid": "Bra jobbat",
   "assess.out.title.sending": "Så var provet gjort",
   "assess.out.title.won": "Diplom uppnått",

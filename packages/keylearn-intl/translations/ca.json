@@ -389,6 +389,8 @@
   "assess.out.show": "Obre el certificat",
   "assess.out.show.kid": "Ensenya-ho!",
   "assess.out.title": "Sessió registrada",
+  "assess.out.title.empty": "No hi ha res a puntuar",
+  "assess.out.title.empty.kid": "Tornem-ho a provar",
   "assess.out.title.kid": "Ben fet",
   "assess.out.title.sending": "Sessió acabada",
   "assess.out.title.won": "Certificat obtingut",

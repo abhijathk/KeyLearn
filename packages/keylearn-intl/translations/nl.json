@@ -387,6 +387,8 @@
   "assess.out.show": "Certificaat openen",
   "assess.out.show.kid": "Laat zien!",
   "assess.out.title": "Zitting vastgelegd",
+  "assess.out.title.empty": "Niets om te beoordelen",
+  "assess.out.title.empty.kid": "We proberen het nog eens",
   "assess.out.title.kid": "Goed gedaan",
   "assess.out.title.sending": "Dat was de zitting",
   "assess.out.title.won": "Certificaat behaald",

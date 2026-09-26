@@ -36,6 +36,7 @@ export const Controller = memo(function Controller({
   readonly onResult: (result: Result) => void;
 }): ReactNode {
   const kids = useKidsPractice();
+  const sitting = useAssessment() != null;
   const {
     state,
     handleResetLesson,
@@ -47,7 +48,7 @@ export const Controller = memo(function Controller({
     progress,
     onResult,
     kids ? KIDS_IDLE_MS : IDLE_MS,
-    useAssessment() != null,
+    sitting,
   );
   const { settings, updateSettings } = useSettings();
   // A timed run rarely ends on a line break. What is already typed when the
@@ -97,7 +98,10 @@ export const Controller = memo(function Controller({
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       onInput={handleInput}
-      startWithTourOpen={!settings.get(uiProps.tourSeen)}
+      // Never over an assessment. A learner who brought their history across
+      // from another app arrives at their first sitting on a new account,
+      // and the welcome tour opened on top of the timed run.
+      startWithTourOpen={!sitting && !settings.get(uiProps.tourSeen)}
       kids={kids}
       onTourClose={() => updateSettings(settings.set(uiProps.tourSeen, true))}
     />

@@ -391,6 +391,8 @@
   "assess.out.show": "Otvori certifikat",
   "assess.out.show.kid": "Pogledaj!",
   "assess.out.title": "Pristup zabilježen",
+  "assess.out.title.empty": "Nema se što ocijeniti",
+  "assess.out.title.empty.kid": "Pokušajmo ponovno",
   "assess.out.title.kid": "Bravo",
   "assess.out.title.sending": "To je bio pristup",
   "assess.out.title.won": "Certifikat osvojen",

@@ -392,6 +392,8 @@
   "assess.out.show": "افتح الشهادة",
   "assess.out.show.kid": "شاهدها!",
   "assess.out.title": "تم تسجيل الجلسة",
+  "assess.out.title.empty": "لا شيء لاحتسابه",
+  "assess.out.title.empty.kid": "لنحاول مرة أخرى",
   "assess.out.title.kid": "أحسنت",
   "assess.out.title.sending": "انتهت الجلسة",
   "assess.out.title.won": "تم نيل الشهادة",

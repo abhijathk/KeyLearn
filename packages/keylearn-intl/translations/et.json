@@ -390,6 +390,8 @@
   "assess.out.show": "Ava tunnistus",
   "assess.out.show.kid": "Vaata seda!",
   "assess.out.title": "Sooritus salvestatud",
+  "assess.out.title.empty": "Pole midagi hinnata",
+  "assess.out.title.empty.kid": "Proovime uuesti",
   "assess.out.title.kid": "Tubli töö",
   "assess.out.title.sending": "Sooritus on tehtud",
   "assess.out.title.won": "Tunnistus välja teenitud",

@@ -212,6 +212,21 @@ function title(outcome: Outcome, kid: boolean, name: string): ReactNode {
           defaultMessage="Certificate earned"
         />
       );
+    case "empty":
+      // Not "Sitting recorded": the text beneath says it was not, and a
+      // heading that contradicts its own paragraph leaves the learner unsure
+      // which to believe.
+      return kid ? (
+        <FormattedMessage
+          id="assess.out.title.empty.kid"
+          defaultMessage="Let’s try that again"
+        />
+      ) : (
+        <FormattedMessage
+          id="assess.out.title.empty"
+          defaultMessage="Nothing to score"
+        />
+      );
     case "sending":
       return (
         <FormattedMessage

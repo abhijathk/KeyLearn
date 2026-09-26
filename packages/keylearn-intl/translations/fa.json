@@ -392,6 +392,8 @@
   "assess.out.show": "باز کردن گواهی‌نامه",
   "assess.out.show.kid": "ببینش!",
   "assess.out.title": "جلسه ثبت شد",
+  "assess.out.title.empty": "چیزی برای امتیازدهی نیست",
+  "assess.out.title.empty.kid": "بیا دوباره امتحان کنیم",
   "assess.out.title.kid": "آفرین",
   "assess.out.title.sending": "جلسه تمام شد",
   "assess.out.title.won": "گواهی‌نامه کسب شد",

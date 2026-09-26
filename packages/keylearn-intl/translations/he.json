@@ -392,6 +392,8 @@
   "assess.out.show": "פתח את התעודה",
   "assess.out.show.kid": "לראות!",
   "assess.out.title": "ההיבחנות נרשמה",
+  "assess.out.title.empty": "אין מה לדרג",
+  "assess.out.title.empty.kid": "בואו ננסה שוב",
   "assess.out.title.kid": "כל הכבוד",
   "assess.out.title.sending": "זו הייתה ההיבחנות",
   "assess.out.title.won": "התעודה הושגה",

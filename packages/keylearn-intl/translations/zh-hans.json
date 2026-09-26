@@ -392,6 +392,8 @@
   "assess.out.show": "打开证书",
   "assess.out.show.kid": "看看！",
   "assess.out.title": "测评已记录",
+  "assess.out.title.empty": "没有可评分的内容",
+  "assess.out.title.empty.kid": "我们再试一次吧",
   "assess.out.title.kid": "干得好",
   "assess.out.title.sending": "这次测评结束了",
   "assess.out.title.won": "已获得证书",

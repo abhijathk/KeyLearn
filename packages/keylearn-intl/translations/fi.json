@@ -391,6 +391,8 @@
   "assess.out.show": "Avaa todistus",
   "assess.out.show.kid": "Katso se!",
   "assess.out.title": "Suorituskerta kirjattu",
+  "assess.out.title.empty": "Ei arvioitavaa",
+  "assess.out.title.empty.kid": "Yritetään uudelleen",
   "assess.out.title.kid": "Hyvin meni",
   "assess.out.title.sending": "Siinä oli suorituskerta",
   "assess.out.title.won": "Todistus ansaittu",

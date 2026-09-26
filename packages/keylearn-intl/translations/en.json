@@ -392,6 +392,8 @@
   "assess.out.show": "Open the certificate",
   "assess.out.show.kid": "See it!",
   "assess.out.title": "Sitting recorded",
+  "assess.out.title.empty": "Nothing to score",
+  "assess.out.title.empty.kid": "Let’s try that again",
   "assess.out.title.kid": "Good going",
   "assess.out.title.sending": "That’s the sitting",
   "assess.out.title.won": "Certificate earned",

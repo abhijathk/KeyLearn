@@ -387,6 +387,8 @@
   "assess.out.show": "Deschide certificatul",
   "assess.out.show.kid": "Arată!",
   "assess.out.title": "Susținere înregistrată",
+  "assess.out.title.empty": "Nimic de punctat",
+  "assess.out.title.empty.kid": "Hai să încercăm din nou",
   "assess.out.title.kid": "Bravo",
   "assess.out.title.sending": "Asta a fost susținerea",
   "assess.out.title.won": "Certificat obținut",

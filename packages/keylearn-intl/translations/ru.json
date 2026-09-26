@@ -392,6 +392,8 @@
   "assess.out.show": "Открыть сертификат",
   "assess.out.show.kid": "Покажи!",
   "assess.out.title": "Сдача записана",
+  "assess.out.title.empty": "Нечего оценивать",
+  "assess.out.title.empty.kid": "Давай попробуем ещё раз",
   "assess.out.title.kid": "Молодец",
   "assess.out.title.sending": "Вот и всё",
   "assess.out.title.won": "Сертификат получен",

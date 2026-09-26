@@ -391,6 +391,8 @@
   "assess.out.show": "Otwórz certyfikat",
   "assess.out.show.kid": "Zobacz!",
   "assess.out.title": "Podejście zapisane",
+  "assess.out.title.empty": "Nie ma czego ocenić",
+  "assess.out.title.empty.kid": "Spróbujmy jeszcze raz",
   "assess.out.title.kid": "Dobra robota",
   "assess.out.title.sending": "To koniec podejścia",
   "assess.out.title.won": "Certyfikat zdobyty",

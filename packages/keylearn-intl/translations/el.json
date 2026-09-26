@@ -391,6 +391,8 @@
   "assess.out.show": "Άνοιγμα του πιστοποιητικού",
   "assess.out.show.kid": "Δες το!",
   "assess.out.title": "Η εξέταση καταγράφηκε",
+  "assess.out.title.empty": "Τίποτα για βαθμολόγηση",
+  "assess.out.title.empty.kid": "Ας το ξαναδοκιμάσουμε",
   "assess.out.title.kid": "Μπράβο σου",
   "assess.out.title.sending": "Αυτή ήταν η εξέταση",
   "assess.out.title.won": "Το πιστοποιητικό κατακτήθηκε",

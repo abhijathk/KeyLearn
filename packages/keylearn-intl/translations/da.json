@@ -388,6 +388,8 @@
   "assess.out.show": "Åbn certifikatet",
   "assess.out.show.kid": "Vis det!",
   "assess.out.title": "Forsøget er registreret",
+  "assess.out.title.empty": "Intet at bedømme",
+  "assess.out.title.empty.kid": "Lad os prøve igen",
   "assess.out.title.kid": "Godt klaret",
   "assess.out.title.sending": "Så er forsøget slut",
   "assess.out.title.won": "Certifikat opnået",

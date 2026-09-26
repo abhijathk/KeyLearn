@@ -389,6 +389,8 @@
   "assess.out.show": "Zertifikat öffnen",
   "assess.out.show.kid": "Zeig es mir!",
   "assess.out.title": "Prüfung aufgezeichnet",
+  "assess.out.title.empty": "Nichts zu bewerten",
+  "assess.out.title.empty.kid": "Versuchen wir es noch einmal",
   "assess.out.title.kid": "Gut gemacht",
   "assess.out.title.sending": "Das war die Prüfung",
   "assess.out.title.won": "Zertifikat erworben",

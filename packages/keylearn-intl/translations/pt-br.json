@@ -391,6 +391,8 @@
   "assess.out.show": "Abrir o certificado",
   "assess.out.show.kid": "Mostra!",
   "assess.out.title": "Prova registrada",
+  "assess.out.title.empty": "Nada para pontuar",
+  "assess.out.title.empty.kid": "Vamos tentar de novo",
   "assess.out.title.kid": "Muito bem",
   "assess.out.title.sending": "Prova feita",
   "assess.out.title.won": "Certificado conquistado",

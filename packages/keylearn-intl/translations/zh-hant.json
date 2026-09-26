@@ -392,6 +392,8 @@
   "assess.out.show": "開啟證書",
   "assess.out.show.kid": "看看！",
   "assess.out.title": "已記錄這一場",
+  "assess.out.title.empty": "沒有可評分的內容",
+  "assess.out.title.empty.kid": "我們再試一次吧",
   "assess.out.title.kid": "做得好",
   "assess.out.title.sending": "這一場結束了",
   "assess.out.title.won": "取得證書",

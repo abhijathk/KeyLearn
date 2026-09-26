@@ -392,6 +392,8 @@
   "assess.out.show": "Відкрити сертифікат",
   "assess.out.show.kid": "Покажи!",
   "assess.out.title": "Сесію записано",
+  "assess.out.title.empty": "Нічого оцінювати",
+  "assess.out.title.empty.kid": "Спробуймо ще раз",
   "assess.out.title.kid": "Молодець",
   "assess.out.title.sending": "Сесію завершено",
   "assess.out.title.won": "Сертифікат здобуто",

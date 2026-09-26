@@ -392,6 +392,8 @@
   "assess.out.show": "Отваряне на сертификата",
   "assess.out.show.kid": "Покажи!",
   "assess.out.title": "Явяването е записано",
+  "assess.out.title.empty": "Няма какво да се оцени",
+  "assess.out.title.empty.kid": "Хайде да опитаме пак",
   "assess.out.title.kid": "Браво",
   "assess.out.title.sending": "Това беше явяването",
   "assess.out.title.won": "Сертификатът е спечелен",
