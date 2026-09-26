@@ -5405,6 +5405,12 @@ export function createKidsWorld(
       walker: () => player?.wrap.position.toArray(),
       passage: () => ({ text: wordText, index: wordIdx }),
       night: () => ({ blend: nightBlend, look: nightLook, now: nightNow }),
+      // Skips his wait between appearances — up to a minute of game time,
+      // which on a slow or headless renderer is ten minutes of watching.
+      hurry: () => {
+        if (kutti != null) kutti.wait = 0;
+        stay.armIn = stay.armIn == null ? null : 0;
+      },
       kutti: () =>
         kutti == null
           ? null
@@ -5417,6 +5423,12 @@ export function createKidsWorld(
               armIn: stay.armIn,
               gone: stay.gone,
               spots: staySpots?.map((s) => s.kind) ?? null,
+              // And off the crossing: his own countdown, how many haunts
+              // this road built him, and whether the hour lets him out.
+              wait: kutti.wait,
+              haunts: kutti.spots.length,
+              routine: kutti.routine?.id ?? null,
+              deep: activityAt(stagedNow().night) === "deep",
               rest: restStage,
             },
       // The ground read two ways — the grid and the raycast it replaced —
