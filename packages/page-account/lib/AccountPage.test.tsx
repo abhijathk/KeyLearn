@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { fakeAdapter } from "@fastr/fetch";
 import { FakeIntlProvider } from "@keylearn/intl";
 import { PageDataContext } from "@keylearn/pages-shared";
 import { FakeSettingsContext } from "@keylearn/settings";
@@ -7,6 +8,24 @@ import { MemoryRouter } from "react-router";
 import { isNotNull } from "rich-assert";
 import { AccountPage } from "./AccountPage.tsx";
 import { ProfilesProvider } from "./profiles/context.tsx";
+
+// The signed-in page asks for the Support badge on mount. Answered here, it
+// never reaches the network: left to the real XHR adapter it went out, and
+// jsdom aborting it at teardown rejected a body promise nobody was holding,
+// which failed the file after every test in it had passed.
+test.beforeEach(() => {
+  fakeAdapter.reset();
+  fakeAdapter.on
+    .GET("/_/support/my/tickets")
+    .replyWith(
+      JSON.stringify({ tickets: [], unreadTotal: 0, deletedCount: 0 }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+});
+
+test.afterEach(() => {
+  fakeAdapter.reset();
+});
 
 test("render signed-out account page", () => {
   const r = render(

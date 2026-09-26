@@ -1,4 +1,5 @@
 export * from "./collator.ts";
+export * from "./datemark.ts";
 export * from "./dates.ts";
 export * from "./Dir.tsx";
 export * from "./displaynames.ts";

@@ -4923,8 +4923,10 @@
  */
 .pickerIn {
   /* Everything waits `--after` for the card's own contents to have left —
-     see `.loadingOut`. */
-  --after: 220ms;
+     see `.loadingOut`. 300ms is `loadContentOut`'s duration: at 220ms the
+     stage began rising 80ms before the card's figure had gone, and for that
+     moment both were on screen. If one changes the other must. */
+  --after: 300ms;
 
   .pickTop {
     animation: pickUp 460ms calc(var(--after) + 60ms) both

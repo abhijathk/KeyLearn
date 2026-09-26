@@ -8,8 +8,8 @@
   "sideEffects": false,
   "dependencies": {
     "@keylearn/color": "*",
-    "@keylearn/lang": "*",
-    "@keylearn/pages-shared": "*"
+    "@keylearn/intl": "*",
+    "@keylearn/lang": "*"
   },
   "devDependencies": {},
   "scripts": {
