@@ -255,6 +255,9 @@ test("all together", async () => {
   });
 
   includes(r.container.textContent!, "You finished 3rd!");
+  // The server's speed is characters per minute; the rail says words.
+  includes(r.container.textContent!, "20wpm");
+  doesNotInclude(r.container.textContent!, "100wpm");
 
   act(() => {
     transport.transmit({

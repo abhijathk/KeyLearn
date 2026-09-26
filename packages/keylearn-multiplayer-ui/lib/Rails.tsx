@@ -64,7 +64,11 @@ function Rail({
         <span className={styles.dot} style={{ insetInlineStart: `${at}%` }} />
       </span>
       <span className={styles.speed}>
-        {speed > 0 ? Math.round(speed) : "—"}
+        {/* The server sends characters per minute — what computeSpeed
+            returns — and the label says words, so it is divided here by the
+            same five characters to a word that SpeedUnit.WPM uses. Shown
+            raw, every rail read five times the typist's real speed. */}
+        {speed > 0 ? Math.round(speed / 5) : "—"}
         <em>
           <FormattedMessage id="multiplayer.rail.wpm" defaultMessage="wpm" />
         </em>
