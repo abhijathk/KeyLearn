@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AdBar.module.less";
 import { WhyThisAd } from "./WhyThisAd.tsx";
 
@@ -243,6 +244,7 @@ export function AdBar({
   const slides = ads.flatMap((ad) =>
     ad.screens.map((screen, index) => ({ ad, screen, index })),
   );
+  const { formatMessage } = useIntl();
   const [at, setAt] = useState(0);
   // "out" while the old screen leaves, "in" for the single frame the new one
   // is placed before it settles — that frame is what gives it something to
@@ -447,7 +449,7 @@ export function AdBar({
         className={styles.why}
         onClick={() => setWhyOpen(true)}
       >
-        Why this ad?
+        <FormattedMessage id="adBar.why" defaultMessage="Why this ad?" />
       </button>
       {whyOpen && (
         <WhyThisAd
@@ -463,7 +465,10 @@ export function AdBar({
           onClick={onDismiss}
           aria-hidden={!canClose}
           tabIndex={canClose ? undefined : -1}
-          aria-label="Hide this advertisement for now"
+          aria-label={formatMessage({
+            id: "adBar.hide",
+            defaultMessage: "Hide this advertisement for now",
+          })}
         >
           &times;
         </button>

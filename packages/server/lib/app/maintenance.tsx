@@ -3,7 +3,9 @@ import { injectable } from "@fastr/invert";
 import { isAdminEmail } from "@keylearn/config";
 import { ErrorPage, View } from "@keylearn/pages-server";
 import { Pages } from "@keylearn/pages-shared";
+import { RawIntlProvider } from "react-intl";
 import { type AuthState } from "./auth/types.ts";
+import { pathIntl } from "./page/intl.ts";
 import {
   maintenanceEnabled,
   maintenanceMessage,
@@ -88,15 +90,23 @@ export class MaintenanceGate implements HandlerObject {
     ctx.response.headers.set("Retry-After", "600");
     ctx.response.headers.set("Cache-Control", "no-store");
     ctx.response.type = "text/html";
+    // The admin's message is shown as they wrote it; the page around it
+    // speaks the language of the URL.
+    const intl = await pathIntl(path);
     ctx.response.body = this.view.renderPage(
-      <ErrorPage
-        error={{
-          status: 503,
-          message: "Down for maintenance",
-          expose: true,
-          description: maintenanceMessage(),
-        }}
-      />,
+      <RawIntlProvider value={intl}>
+        <ErrorPage
+          error={{
+            status: 503,
+            message: intl.formatMessage({
+              id: "maintenance.title",
+              defaultMessage: "Down for maintenance",
+            }),
+            expose: true,
+            description: maintenanceMessage(),
+          }}
+        />
+      </RawIntlProvider>,
     );
   }
 }

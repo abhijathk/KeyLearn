@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { useIntl } from "react-intl";
 
 const URL_RE = /https?:\/\/[^\s]+/gi;
 
@@ -37,13 +38,7 @@ export function linkify(body: string, className?: string): ReactNode[] {
       parts.push(body.slice(lastIndex, start));
     }
     parts.push(
-      <span
-        key={`link-${key++}`}
-        className={className}
-        title="Not a link — host shown in full"
-      >
-        {hostOf(raw)}
-      </span>,
+      <InertLink key={`link-${key++}`} className={className} raw={raw} />,
     );
     lastIndex = start + raw.length;
   }
@@ -51,4 +46,26 @@ export function linkify(body: string, className?: string): ReactNode[] {
     parts.push(body.slice(lastIndex));
   }
   return parts;
+}
+
+/** One URL, shown as its host and nothing more. */
+function InertLink({
+  raw,
+  className,
+}: {
+  readonly raw: string;
+  readonly className?: string | undefined;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  return (
+    <span
+      className={className}
+      title={formatMessage({
+        id: "support.linkify.inert",
+        defaultMessage: "Not a link — host shown in full",
+      })}
+    >
+      {hostOf(raw)}
+    </span>
+  );
 }

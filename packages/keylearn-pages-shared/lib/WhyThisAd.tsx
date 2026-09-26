@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef } from "react";
+import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./WhyThisAd.module.less";
 
 /**
@@ -24,6 +25,7 @@ export function WhyThisAd({
   readonly destination?: string | null;
   readonly onClose: () => void;
 }): ReactNode {
+  const { formatMessage } = useIntl();
   const closeRef = useRef<HTMLButtonElement>(null);
 
   // Focus lands on the way out, and Escape takes it — a window that traps
@@ -54,15 +56,26 @@ export function WhyThisAd({
         className={styles.window}
         role="dialog"
         aria-modal={true}
-        aria-label="Why am I seeing this advertisement?"
+        aria-label={formatMessage({
+          id: "whyThisAd.label",
+          defaultMessage: "Why am I seeing this advertisement?",
+        })}
       >
         <div className={styles.head}>
-          <h2 className={styles.title}>Why am I seeing this?</h2>
+          <h2 className={styles.title}>
+            <FormattedMessage
+              id="whyThisAd.title"
+              defaultMessage="Why am I seeing this?"
+            />
+          </h2>
           <button
             ref={closeRef}
             type="button"
             className={styles.close}
-            aria-label="Close"
+            aria-label={formatMessage({
+              id: "whyThisAd.close",
+              defaultMessage: "Close",
+            })}
             onClick={onClose}
           >
             &times;
@@ -70,73 +83,134 @@ export function WhyThisAd({
         </div>
 
         <p className={styles.lede}>
-          Because somebody paid for that line at the top of the page, and for no
-          other reason. Nothing about you decided it.
+          <FormattedMessage
+            id="whyThisAd.lede"
+            defaultMessage="Because somebody paid for that line at the top of the page, and for no other reason. Nothing about you decided it."
+          />
         </p>
 
         <dl className={styles.facts}>
           <div>
-            <dt>Paid for by</dt>
+            <dt>
+              <FormattedMessage
+                id="whyThisAd.paidBy"
+                defaultMessage="Paid for by"
+              />
+            </dt>
             <dd>{advertiser}</dd>
           </div>
           <div>
-            <dt>Shown to</dt>
-            <dd>All adult readers for the duration of the booking</dd>
+            <dt>
+              <FormattedMessage
+                id="whyThisAd.shownTo"
+                defaultMessage="Shown to"
+              />
+            </dt>
+            <dd>
+              <FormattedMessage
+                id="whyThisAd.shownTo.value"
+                defaultMessage="All adult readers for the duration of the booking"
+              />
+            </dd>
           </div>
           <div>
-            <dt>Selected by</dt>
-            <dd>Their booking for this period, and no other criterion.</dd>
+            <dt>
+              <FormattedMessage
+                id="whyThisAd.selectedBy"
+                defaultMessage="Selected by"
+              />
+            </dt>
+            <dd>
+              <FormattedMessage
+                id="whyThisAd.selectedBy.value"
+                defaultMessage="Their booking for this period, and no other criterion."
+              />
+            </dd>
           </div>
           {destination != null && destination !== "" && (
             <div>
-              <dt>Where it goes</dt>
+              <dt>
+                <FormattedMessage
+                  id="whyThisAd.destination"
+                  defaultMessage="Where it goes"
+                />
+              </dt>
               <dd>{destination}</dd>
             </div>
           )}
         </dl>
 
-        <p className={styles.section}>What we did not do</p>
+        <p className={styles.section}>
+          <FormattedMessage
+            id="whyThisAd.didNot"
+            defaultMessage="What we did not do"
+          />
+        </p>
         <ul className={styles.list}>
           <li>
-            <b>We did not target you.</b> Every adult reader sees the same line
-            this week. There is no audience, no segment and no interest
-            category.
+            <FormattedMessage
+              id="whyThisAd.didNot.target"
+              defaultMessage="<b>We did not target you.</b> Every adult reader sees the same line this week. There is no audience, no segment and no interest category."
+              values={{ b: (c) => <b>{c}</b> }}
+            />
           </li>
           <li>
-            <b>We did not use your practice data.</b> Your speed, your lessons,
-            your mistakes and your certificates play no part in what appears.
+            <FormattedMessage
+              id="whyThisAd.didNot.data"
+              defaultMessage="<b>We did not use your practice data.</b> Your speed, your lessons, your mistakes and your certificates play no part in what appears."
+              values={{ b: (c) => <b>{c}</b> }}
+            />
           </li>
           <li>
-            <b>The advertiser learns nothing about you.</b> They receive a
-            weekly count of views and clicks. Not who, not where, not when you
-            practise.
+            <FormattedMessage
+              id="whyThisAd.didNot.learns"
+              defaultMessage="<b>The advertiser learns nothing about you.</b> They receive a weekly count of views and clicks. Not who, not where, not when you practise."
+              values={{ b: (c) => <b>{c}</b> }}
+            />
           </li>
           <li>
-            <b>Nothing of theirs runs on this page.</b> No script, no tracking
-            pixel, no embedded frame. We build the line ourselves from words and
-            colours they send us.
+            <FormattedMessage
+              id="whyThisAd.didNot.scripts"
+              defaultMessage="<b>Nothing of theirs runs on this page.</b> No script, no tracking pixel, no embedded frame. We build the line ourselves from words and colours they send us."
+              values={{ b: (c) => <b>{c}</b> }}
+            />
           </li>
           <li>
-            <b>Clicking is counted, not followed.</b> A click adds one to a
-            number on our own server. It carries nothing about you to them.
+            <FormattedMessage
+              id="whyThisAd.didNot.clicks"
+              defaultMessage="<b>Clicking is counted, not followed.</b> A click adds one to a number on our own server. It carries nothing about you to them."
+              values={{ b: (c) => <b>{c}</b> }}
+            />
           </li>
           <li>
-            <b>Children never see advertising here.</b> Not on a child&rsquo;s
-            profile, not in the kids world, not on a school account. That has no
-            exception.
+            <FormattedMessage
+              id="whyThisAd.didNot.children"
+              defaultMessage="<b>Children never see advertising here.</b> Not on a child’s profile, not in the kids world, not on a school account. That has no exception."
+              values={{ b: (c) => <b>{c}</b> }}
+            />
           </li>
         </ul>
 
-        <p className={styles.section}>If you would rather not see it</p>
+        <p className={styles.section}>
+          <FormattedMessage
+            id="whyThisAd.ratherNot"
+            defaultMessage="If you would rather not see it"
+          />
+        </p>
         <ul className={styles.list}>
           <li>
-            <b>Close it.</b> The cross on the right hides it until you next load
-            a page.
+            <FormattedMessage
+              id="whyThisAd.ratherNot.close"
+              defaultMessage="<b>Close it.</b> The cross on the right hides it until you next load a page."
+              values={{ b: (c) => <b>{c}</b> }}
+            />
           </li>
           <li>
-            <b>Go premium.</b> A subscription will remove advertising
-            completely, along with more learner places and printable
-            certificates. It is not on sale yet.
+            <FormattedMessage
+              id="whyThisAd.ratherNot.premium"
+              defaultMessage="<b>Go premium.</b> A subscription will remove advertising completely, along with more learner places and printable certificates. It is not on sale yet."
+              values={{ b: (c) => <b>{c}</b> }}
+            />
           </li>
         </ul>
 
@@ -146,15 +220,26 @@ export function WhyThisAd({
               goes nowhere is worse than one that says it is not ready.
               When subscriptions ship, this becomes a link to /account. */}
           <button type="button" className={styles.btn} disabled={true}>
-            See premium
-            <span className={styles.soon}>Coming soon</span>
+            <FormattedMessage
+              id="whyThisAd.seePremium"
+              defaultMessage="See premium"
+            />
+            <span className={styles.soon}>
+              <FormattedMessage
+                id="whyThisAd.comingSoon"
+                defaultMessage="Coming soon"
+              />
+            </span>
           </button>
           <button
             type="button"
             className={`${styles.btn} ${styles.btnQuiet}`}
             onClick={onClose}
           >
-            Back to practice
+            <FormattedMessage
+              id="whyThisAd.back"
+              defaultMessage="Back to practice"
+            />
           </button>
           <a
             className={`${styles.btn} ${styles.btnQuiet}`}
@@ -162,15 +247,18 @@ export function WhyThisAd({
             target="_blank"
             rel="noreferrer"
           >
-            The full policy
+            <FormattedMessage
+              id="whyThisAd.policy"
+              defaultMessage="The full policy"
+            />
           </a>
         </div>
 
         <p className={styles.foot}>
-          Every line is approved by a person here before it runs. Nothing
-          discriminatory, nothing abusive, nothing with a second meaning, no
-          gambling, alcohol, vaping or weight loss, nothing aimed at children,
-          and nothing dressed up to look like a message from us.
+          <FormattedMessage
+            id="whyThisAd.foot"
+            defaultMessage="Every line is approved by a person here before it runs. Nothing discriminatory, nothing abusive, nothing with a second meaning, no gambling, alcohol, vaping or weight loss, nothing aimed at children, and nothing dressed up to look like a message from us."
+          />
         </p>
       </div>
     </div>

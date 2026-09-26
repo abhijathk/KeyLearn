@@ -57,13 +57,14 @@ function looksHuman(text) {
  * translated. Half-translating it would be worse than leaving it alone, so it
  * is excluded here rather than reported for ever as 75 faults.
  *
- * The crash screen and the server error page are the other two. Both are the
- * fallback that renders when something else has already gone wrong —
- * ErrorScreen is a React error boundary that can be reached by a failure
- * anywhere in the tree, including the locale loader itself, and ErrorPage is
- * the server's last-resort handler for the same reason (hence its hard-coded
- * `lang="en"`). Making either depend on react-intl risks the one screen that
- * exists to survive a crash failing to render at all. Confirmed, not assumed:
+ * The crash screen is another. It is the fallback that renders when
+ * something else has already gone wrong — ErrorScreen is a React error
+ * boundary that can be reached by a failure anywhere in the tree, including
+ * the locale loader itself — so making it depend on react-intl risks the one
+ * screen that exists to survive a crash failing to render at all. (The
+ * server's error page is not on this list: it is rendered in the URL's
+ * language from messages the server has already loaded, and falls back to
+ * English, so it is checked like any other page.) Confirmed, not assumed:
  * ErrorScreen.tsx says so in its own doc comment, and REPORT_ERRORS (the only
  * env var gating the debug.tsx toast) does not appear in webpack.config.js,
  * so that branch never fires in the browser bundle either.
@@ -71,7 +72,6 @@ function looksHuman(text) {
 const ENGLISH_BY_DESIGN = [
   "packages/page-kids/",
   "packages/keylearn-debug/lib/ErrorScreen.tsx",
-  "packages/keylearn-pages-server/lib/ErrorPage.tsx",
   "packages/keylearn-result-loader/lib/internal/debug.tsx",
 ];
 

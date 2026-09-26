@@ -675,16 +675,25 @@ export class Controller {
         ctx.response.type = "text/html";
         ctx.response.headers.set("Cache-Control", "no-store");
         ctx.response.headers.set("X-Robots-Tag", "noindex, nofollow");
+        const soonIntl = intl ?? (await loadIntl(defaultLocale));
         return this.view.renderPage(
-          <ErrorPage
-            error={{
-              status: 200,
-              message: "Coming soon",
-              expose: true,
-              description:
-                "This page is not open yet. It is on its way — try again before long.",
-            }}
-          />,
+          <RawIntlProvider value={soonIntl}>
+            <ErrorPage
+              error={{
+                status: 200,
+                message: soonIntl.formatMessage({
+                  id: "page.comingSoon.title",
+                  defaultMessage: "Coming soon",
+                }),
+                expose: true,
+                description: soonIntl.formatMessage({
+                  id: "page.comingSoon.description",
+                  defaultMessage:
+                    "This page is not open yet. It is on its way — try again before long.",
+                }),
+              }}
+            />
+          </RawIntlProvider>,
         );
       }
     }

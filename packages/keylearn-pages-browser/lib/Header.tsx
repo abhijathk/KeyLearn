@@ -313,7 +313,11 @@ export function Header({
               what a screen reader actually reads, and what a search engine
               indexes. The mark itself is aria-hidden. */}
             <span className={styles.srOnly}>KeyLearn</span>
-            {kids && <span className={styles.kidsMark}>Kids</span>}
+            {kids && (
+              <span className={styles.kidsMark}>
+                <FormattedMessage id="header.kidsMark" defaultMessage="Kids" />
+              </span>
+            )}
           </NavLink>
           {practice && <PracticeStamp />}
         </div>

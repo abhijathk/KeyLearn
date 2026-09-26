@@ -34,6 +34,22 @@ test("throw http error", async () => {
   deepEqual(messages, ["DEBUG: Client error - My message"]);
 });
 
+test("the error page speaks the language of the URL", async () => {
+  const { app } = init();
+  app.use(() => {
+    throw new ForbiddenError("My message");
+  });
+
+  const client = request.use(start(createTestServer(app.callback())));
+  const ar = await (await client.GET("/ar/nowhere").send()).body.text();
+  const en = await (await client.GET("/nowhere").send()).body.text();
+  const off = await (await client.GET("/xx/nowhere").send()).body.text();
+
+  includes(ar, '<html lang="ar" dir="rtl"');
+  includes(en, '<html lang="en" dir="ltr"');
+  includes(off, '<html lang="en" dir="ltr"');
+});
+
 test("set status code", async () => {
   // Arrange.
 

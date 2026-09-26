@@ -368,7 +368,24 @@ export function ReportScreen({ result }: { result: TestResult }) {
           <FormattedMessage
             id="typingTest.report.pressEnter"
             defaultMessage="press {space} or {enter} to go again"
-            values={{ space: <Kbd>Space</Kbd>, enter: <Kbd>Enter</Kbd> }}
+            values={{
+              space: (
+                <Kbd>
+                  <FormattedMessage
+                    id="typingTest.report.key.space"
+                    defaultMessage="Space"
+                  />
+                </Kbd>
+              ),
+              enter: (
+                <Kbd>
+                  <FormattedMessage
+                    id="typingTest.report.key.enter"
+                    defaultMessage="Enter"
+                  />
+                </Kbd>
+              ),
+            }}
           />
         </div>
       </div>

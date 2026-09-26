@@ -28,6 +28,34 @@ export async function pIntl(ctx: Context, value: LocaleId): Promise<IntlShape> {
   }
 }
 
+/**
+ * The language of a page the router never reached — an error page, or the
+ * maintenance page — read from the URL the same way the page routes read it:
+ * `/ar/...` is Arabic, anything without a locale segment is English, and a
+ * locale the control centre has switched off falls back to English, as it
+ * does for the pages themselves.
+ */
+export async function pathIntl(path: string): Promise<IntlShape> {
+  const [, first = ""] = path.split("/");
+  let locale = defaultLocale;
+  try {
+    if (
+      first !== defaultLocale &&
+      allLocales.includes(first) &&
+      siteLocaleAllowed(first)
+    ) {
+      locale = first;
+    }
+  } catch {
+    // An error page must render whatever else is broken: English it is.
+  }
+  try {
+    return await loadIntl(locale);
+  } catch {
+    return await loadIntl(defaultLocale);
+  }
+}
+
 export function preferredLocale(ctx: Context): LocaleId {
   // Negotiate only among the locales the control centre has switched on;
   // with everything on (the shipped state) the list is untouched. Candidate

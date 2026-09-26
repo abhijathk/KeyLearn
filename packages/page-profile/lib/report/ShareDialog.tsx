@@ -482,7 +482,13 @@ export function ShareDialog({
             <StrokeIcon name="keyboard" title="KeyLearn" />
           </span>
           <span className={styles.mark} style={{ color: L.fg }}>
-            Key<em style={{ color: L.dim }}>Learn</em>
+            <FormattedMessage
+              id="share.brand"
+              defaultMessage="Key<em>Learn</em>"
+              values={{
+                em: (chunks) => <em style={{ color: L.dim }}>{chunks}</em>,
+              }}
+            />
           </span>
           {shownName != null && <span className={styles.who}>{shownName}</span>}
         </div>

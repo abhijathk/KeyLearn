@@ -1,5 +1,7 @@
 import { test } from "node:test";
-import { render } from "@testing-library/react";
+import { FakeIntlProvider } from "@keylearn/intl";
+import { render as renderBare } from "@testing-library/react";
+import { type ReactElement } from "react";
 import { equal, isFalse, isNotNull, isNull, isTrue } from "rich-assert";
 import { AdBar, type AdView } from "./AdBar.tsx";
 
@@ -13,6 +15,9 @@ import { AdBar, type AdView } from "./AdBar.tsx";
  */
 
 const CLOSE_DELAY_MS = 5000;
+
+const render = (ui: ReactElement) =>
+  renderBare(ui, { wrapper: FakeIntlProvider });
 
 function campaign(over: Partial<AdView> = {}): AdView {
   return {

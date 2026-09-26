@@ -13,6 +13,8 @@ import {
   inspectError,
   View,
 } from "@keylearn/pages-server";
+import { RawIntlProvider } from "react-intl";
+import { pathIntl } from "../page/intl.ts";
 
 // Headers that must never reach the log. `cookie` carries the session id, so
 // logging it turns any 500 into a stash of live credentials for whoever can read
@@ -80,7 +82,7 @@ export class ErrorHandler implements HandlerObject {
         ctx.request.req.destroy();
         ctx.response.res.destroy();
       } else {
-        this.handleError(ctx, err);
+        await this.handleError(ctx, err);
       }
       return;
     }
@@ -90,7 +92,7 @@ export class ErrorHandler implements HandlerObject {
       // framework core stamps a bare text/plain "Not found" after all the
       // middleware has run, and the branded error page never renders.
       if (!ctx.response.hasStatus) {
-        this.report(ctx, {
+        await this.report(ctx, {
           expose: true,
           status: 404,
           message: "Not Found",
@@ -100,7 +102,7 @@ export class ErrorHandler implements HandlerObject {
       const { statusCode, statusMessage = statusMessageOf(statusCode) } =
         ctx.response.res;
       if (isClientError(statusCode) || isServerError(statusCode)) {
-        this.report(ctx, {
+        await this.report(ctx, {
           expose: true,
           status: statusCode,
           message: statusMessage,
@@ -109,7 +111,7 @@ export class ErrorHandler implements HandlerObject {
     }
   }
 
-  handleError(ctx: Context, err: Error) {
+  async handleError(ctx: Context, err: Error): Promise<void> {
     const req = describeRequest(ctx);
     if (clientWentAway(ctx, err)) {
       // The browser closed the connection before its body could be read —
@@ -137,9 +139,9 @@ export class ErrorHandler implements HandlerObject {
           Logger.debug(err, "Client error", req);
         }
         if (details.expose) {
-          this.report(ctx, details);
+          await this.report(ctx, details);
         } else {
-          this.report(ctx, {
+          await this.report(ctx, {
             expose: true,
             status: 500,
             message: "Internal Server Error",
@@ -149,13 +151,18 @@ export class ErrorHandler implements HandlerObject {
     }
   }
 
-  report(ctx: Context, details: ErrorDetails) {
+  async report(ctx: Context, details: ErrorDetails): Promise<void> {
     const { status, message } = details;
     ctx.response.status = status;
     ctx.response.statusText = message;
     switch (ctx.request.negotiateType("text/html", "application/json")) {
       case "text/html":
-        ctx.response.body = this.view.renderPage(<ErrorPage error={details} />);
+        // In the language of the URL, like the page that was asked for.
+        ctx.response.body = this.view.renderPage(
+          <RawIntlProvider value={await pathIntl(ctx.request.path)}>
+            <ErrorPage error={details} />
+          </RawIntlProvider>,
+        );
         ctx.response.type = "text/html";
         break;
       case "application/json":
