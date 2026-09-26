@@ -5362,6 +5362,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 time: result.time,
                 log: logFromSteps(textInput.steps),
               });
+              // AND STRAIGHT ON TO THE NEXT (owner, 26 Sep 2026). A sitting
+              // saves nothing, and saving is what brings the next passage in
+              // practice, so a child who finished before the bell sat looking
+              // at a done line with the clock still running. Scoring is
+              // weighted by time typed, so the wait cost them nothing on
+              // paper — but it cost the fastest children their sample, and
+              // every child the sense of what to do. The next words come from
+              // the sitting's own list (`nextPassage`), the text the server
+              // checks the keystrokes against.
+              setPassageNonce((n) => n + 1);
             } else {
               // The same record the grown-up mode saves — the algorithm learns
               // from every kids run too.

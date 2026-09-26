@@ -2,7 +2,6 @@ import { useIntlDates } from "@keylearn/intl";
 import { Pages, type UserDetails } from "@keylearn/pages-shared";
 import { TextField } from "@keylearn/widget";
 import { confirmStyles as dlg } from "@keylearn/widget";
-import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
@@ -155,7 +154,7 @@ export function SecurityCard({
           passkeys.length === 0 && (
             <button
               type="button"
-              className={clsx(styles.subtleBtn, styles.rightAction)}
+              className={styles.secBtn}
               disabled={pkBusy}
               onClick={addPasskey}
             >
@@ -199,7 +198,7 @@ export function SecurityCard({
           </p>
           <button
             type="button"
-            className={styles.subtleBtn}
+            className={styles.secBtn}
             onClick={() => {
               setPwDone(false);
               setPwOpen(true);
@@ -240,7 +239,7 @@ export function SecurityCard({
           <span>{user.email}</span>
           <button
             type="button"
-            className={styles.subtleBtn}
+            className={styles.secBtn}
             onClick={() => {
               setEmDone(false);
               setEmOpen(true);
@@ -352,7 +351,7 @@ export function SecurityCard({
         </p>
         <button
           type="button"
-          className={styles.subtleBtn}
+          className={styles.secBtn}
           onClick={() => {
             void AccountService.exportData(user.name, formatStamp(Date.now()));
           }}
