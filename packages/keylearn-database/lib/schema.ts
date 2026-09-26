@@ -372,6 +372,15 @@ export async function createSchema(knex: Knex): Promise<void> {
     table.string("locale", 10).nullable();
   });
 
+  // The app language this person CHOSE, from the language menu, so it follows
+  // them to every device they sign in on. Separate from `locale` above, which
+  // is the browser's guess at sign-up and must stay what it was: trusting that
+  // guess would move everyone with a German browser who reads the site in
+  // English onto German pages. Null until they pick one.
+  await addColumn("user", "ui_locale", (table) => {
+    table.string("ui_locale", 16).nullable();
+  });
+
   // Support-ticket columns below are also present in SupportTicket.createTable
   // itself, so a fresh database gets the full schema in one shot — these
   // addColumn calls exist purely to bring an already-created support_ticket

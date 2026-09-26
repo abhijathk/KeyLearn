@@ -80,6 +80,11 @@ fixed or consciously waived (write down which, and why).
 - [ ] **QDesk:** `npm ci && npm run compile && npm run build`, then
       `NODE_ENV=production node --enable-source-maps ./dist/index.js`.
       Build and restart together.
+- [ ] **KeyLearn schema:** `NODE_ENV=production packages/devenv/lib/initdb.ts`
+      against the live database before the restart. A plain start does not
+      add columns, and this release adds `user.ui_locale` (the app language a
+      person chose, carried to their other devices). In production the script
+      applies the schema only; it seeds no login.
 - [ ] **KeyLearn:** build, then restart. Watch the boot log for migrations
       and for any `Configuration error:` line; production refuses to start
       with one.

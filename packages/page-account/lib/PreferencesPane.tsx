@@ -24,6 +24,7 @@ import {
   ManagedSetting,
   myCertificates,
   Pages,
+  rememberUiLocale,
   saveA11y,
   saveContrast,
   saveSafeZones,
@@ -1095,6 +1096,7 @@ function LanguageRegionCard(): ReactNode {
   const zones = timeZonesIn(country, timeZone);
 
   const switchLocale = (next: string) => {
+    rememberUiLocale(next);
     const base = Pages.intlBase(locale);
     const path = window.location.pathname.startsWith(base)
       ? window.location.pathname.slice(base.length) || "/"

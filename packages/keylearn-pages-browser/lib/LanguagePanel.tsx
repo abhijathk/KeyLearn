@@ -5,7 +5,12 @@ import {
   useIntlDisplayNames,
   usePreferredLocale,
 } from "@keylearn/intl";
-import { Pages, usePageData, useSiteLocales } from "@keylearn/pages-shared";
+import {
+  Pages,
+  rememberUiLocale,
+  usePageData,
+  useSiteLocales,
+} from "@keylearn/pages-shared";
 import { Link as StaticLink } from "@keylearn/widget";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -85,6 +90,7 @@ export function LanguagePanel({
                 key={base}
                 className={styles.row}
                 href={Pages.intlPath(currentPath, locales[0])}
+                onClick={() => rememberUiLocale(locales[0]!)}
               >
                 {row}
               </StaticLink>
@@ -112,6 +118,7 @@ export function LanguagePanel({
                 locale === activeLocale ? styles.variantOn : styles.variant
               }
               href={Pages.intlPath(currentPath, locale)}
+              onClick={() => rememberUiLocale(locale)}
             >
               {locale}
             </StaticLink>
@@ -123,6 +130,7 @@ export function LanguagePanel({
           <StaticLink
             className={styles.suggest}
             href={Pages.intlPath(currentPath, preferredLocale)}
+            onClick={() => rememberUiLocale(preferredLocale)}
           >
             {formatLocalLanguageName(preferredLocale)}
           </StaticLink>

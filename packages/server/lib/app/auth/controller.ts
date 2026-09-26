@@ -45,7 +45,7 @@ import {
   type VerificationPurpose,
   verifyTotp,
 } from "@keylearn/database";
-import { dateProps, zonesForRegion } from "@keylearn/intl";
+import { allLocales, dateProps, zonesForRegion } from "@keylearn/intl";
 import { Logger } from "@keylearn/logger";
 import { type AbstractAdapter } from "@keylearn/oauth";
 import {
@@ -77,6 +77,7 @@ import {
   minPasswordLength,
   profileCaps,
   registrationMode,
+  siteLocaleAllowed,
 } from "../site-config/readers.ts";
 import { SiteConfigService } from "../site-config/service.ts";
 import { reference } from "../support/my-controller.ts";
@@ -535,6 +536,12 @@ type TVerifyPin = z.infer<typeof TVerifyPin>;
 const PVerifyPin = zod(TVerifyPin, () => {
   throw new ApplicationError("Enter the grown-up PIN");
 });
+
+const TUiLocale = z.object({
+  locale: z.string().max(16),
+});
+type TUiLocale = z.infer<typeof TUiLocale>;
+const PUiLocale = zod(TUiLocale);
 
 /**
  * Which of the four to reset. Every field optional and defaulting to
@@ -1919,6 +1926,29 @@ export class Controller {
     }
     clearFailures(ctx);
     ctx.state.session.set("parentPinAt", Date.now());
+    ctx.response.body = { ok: true };
+  }
+
+  /**
+   * The app language this person just chose from the language menu.
+   *
+   * Saved on the account so it follows them: on every other device they sign
+   * in on, a page opened without a language in its address is sent to this
+   * one (see `renderPage`). Choosing English saves English, which is how
+   * somebody gets back to it.
+   */
+  @http.POST({ name: "ui-locale", path: "/_/account/ui-locale" })
+  async saveUiLocale(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PUiLocale, jsonOpts) { locale }: TUiLocale,
+  ) {
+    const user = ctx.state.requireUser();
+    if (!allLocales.includes(locale as never) || !siteLocaleAllowed(locale)) {
+      throw new ApplicationError("That language is not offered.");
+    }
+    if (user.uiLocale !== locale) {
+      await user.$query().patch({ uiLocale: locale });
+    }
     ctx.response.body = { ok: true };
   }
 

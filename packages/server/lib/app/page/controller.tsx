@@ -8,6 +8,7 @@ import { Env, isAdminEmail } from "@keylearn/config";
 import { Profile } from "@keylearn/database";
 import { HighScoresFactory } from "@keylearn/highscores";
 import {
+  allLocales,
   defaultLocale,
   loadIntl,
   PreferredLocaleContext,
@@ -46,6 +47,7 @@ import {
   profileCaps,
   registrationMode,
   replyAccent,
+  siteLocaleAllowed,
   siteLocalesAllowed,
   smartPractice,
   typingLanguagesAllowed,
@@ -652,6 +654,27 @@ export class Controller {
     intl: IntlShape | null = null,
     gate: PageName | null = pageNameOf(page),
   ): Promise<string> {
+    // THE LANGUAGE THIS PERSON CHOSE, on whichever device they are using.
+    //
+    // A page opened without a language in its address is English by default,
+    // which on a new device used to mean English whatever the person had
+    // picked elsewhere. When they have chosen one (saved from the language
+    // menu, `/_/account/ui-locale`), they are sent to that language's address
+    // instead. Only for a page read, only for a language still offered, and
+    // never for English, which has no prefix to send them to.
+    const chosen = ctx.state.user?.uiLocale ?? null;
+    if (
+      intl == null &&
+      ctx.request.method === "GET" &&
+      chosen != null &&
+      chosen !== defaultLocale &&
+      allLocales.includes(chosen as never) &&
+      siteLocaleAllowed(chosen)
+    ) {
+      const { pathname, search } = new URL(ctx.request.href);
+      ctx.response.redirect(Pages.intlPath(pathname, chosen) + search);
+      return "";
+    }
     // The control centre's page state (spec phase 1.3). Off refuses the URL
     // at the router, not just the link: 404 for everyone but an admin, who
     // can still open the page to check it; "coming soon" is a branded page

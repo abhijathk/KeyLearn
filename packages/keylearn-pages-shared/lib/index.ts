@@ -23,5 +23,6 @@ export * from "./Root.tsx";
 export * from "./Screen.tsx";
 export * from "./site-config.ts";
 export * from "./types.ts";
+export * from "./ui-locale.ts";
 export * from "./UserName.tsx";
 export * from "./WhyThisAd.tsx";

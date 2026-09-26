@@ -173,6 +173,12 @@ export class User extends TimestampMixin(Model) {
    * `signupCountry`: `addColumn` migration only, not in `jsonSchema`.
    */
   locale?: string | null;
+  /**
+   * The app language this person chose in the language menu, carried to
+   * every device they sign in on. Null until they choose. Bolt-on, like
+   * `locale`: `addColumn` migration only.
+   */
+  uiLocale?: string | null;
   createdAt?: Date;
   externalIds?: UserExternalId[];
   order?: Order;
