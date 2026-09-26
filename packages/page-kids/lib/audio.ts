@@ -28,47 +28,35 @@ export type SoundBus = "clicks" | "world";
 
 /** One short clip, or a set of variants picked from at random. */
 const CLIPS = {
-  // Twelve of them, because this is the sound a child hears most in the whole
-  // app — several a second, for minutes at a time. Two or three variants
-  // become a pattern the ear picks out, and a pattern is what turns a key
-  // click into a nag.
+  // The sound a child hears most in the whole app — several a second, for
+  // minutes at a time — so the variants must be ONE sound, not a lucky dip.
+  //
+  // Measured 26 Sep 2026 (owner: "not random sounds"): the twelve recorded
+  // "key_soft" variants were twelve different sounds — tone from a 700 Hz
+  // thud to 9 kHz hiss, level from -48 to +0.3 dBFS, onset from 0 to 89 ms.
+  // Levelling cannot fix a dull thud next to a hiss. These four match each
+  // other (mid-range wooden tone, 1.0–2.0 kHz, usable level); the rest are
+  // near-silent (01, 07) or hissy/bright (02, 03, 05) and are dropped until
+  // the mastered set from the sound library replaces them.
   key: [
-    "typing/key_soft_01",
-    "typing/key_soft_02",
-    "typing/key_soft_03",
-    "typing/key_soft_04",
-    "typing/key_soft_05",
     "typing/key_soft_06",
-    "typing/key_soft_07",
-    "typing/key_soft_08",
     "typing/key_soft_09",
-    "typing/key_soft_10",
     "typing/key_soft_11",
     "typing/key_soft_12",
   ],
   // The big keys have their own shape, which is how a touch-typist's hand
   // knows which one it hit without looking.
-  space: [
-    "typing/space_01",
-    "typing/space_02",
-    "typing/space_03",
-    "typing/space_04",
-  ],
-  backspace: [
-    "typing/backspace_01",
-    "typing/backspace_02",
-    "typing/backspace_03",
-  ],
+  // Same measurement: space_01 is 11 kHz hiss and space_03 near-silent;
+  // backspace_02 is hiss. The rest match their set.
+  space: ["typing/space_02", "typing/space_04"],
+  backspace: ["typing/backspace_01", "typing/backspace_03"],
   enter: ["typing/enter_01", "typing/enter_02", "typing/enter_03"],
   // "Low dry friendly wooden tok, clearly different from a correct key, never
   // punitive or buzzy" — the recording brief's own words, and the reason a
   // wrong letter gets a sound at all rather than a buzz or silence.
-  wrong: [
-    "typing/wrong_01",
-    "typing/wrong_02",
-    "typing/wrong_03",
-    "typing/wrong_04",
-  ],
+  // The two closest to that brief: wrong_02 is the low one, wrong_03 its
+  // nearest match; 01 starts 47 ms late and 04 is near-silent and bright.
+  wrong: ["typing/wrong_02", "typing/wrong_03"],
   button: ["ui/ui_button_01", "ui/ui_button_02"],
   back: ["ui/ui_back_01"],
   toggleOn: ["ui/ui_toggle_on_01"],
@@ -124,7 +112,7 @@ type ClipName = keyof typeof CLIPS;
  * brief for the recording says the same in its own words — "barely
  * perceptible, no tonal whistle".
  */
-const BED_PEAK = 0.085;
+const BED_PEAK = 0.04;
 /**
  * How loud a key is, and every UI tap relative to it.
  *
@@ -152,9 +140,21 @@ const BED_PEAK = 0.085;
 const TYPING_PEAK = 0.25;
 const UI_PEAK = 0.2;
 const REWARD_PEAK = 0.35;
-const MOVE_PEAK = 0.25;
-/** Night insects, quieter again, and never a continuous loop. See `#cricket`. */
-const CRICKET_PEAK = 0.06;
+/**
+ * The child's own body — a hop, a landing, a shift of weight while waiting.
+ * Background, not feedback (owner, 26 Sep 2026: "the bg sounds should be
+ * subtle and low volume"), so it sits well under the keys.
+ */
+const MOVE_PEAK = 0.07;
+/**
+ * Night insects: never a continuous loop (see `#scheduleCricket`), and placed
+ * deliberately BETWEEN the two layers (owner, 26 Sep 2026) — a little above
+ * the rest of the background, so the night is heard, and below the keys, so
+ * it never competes with the typing.
+ *
+ *   TYPING_PEAK 0.25  >  CRICKET_PEAK 0.1  >  MOVE_PEAK 0.07  >  BED_PEAK 0.04
+ */
+const CRICKET_PEAK = 0.1;
 
 /** The loudest sample in a clip, across every channel. */
 function peakOf(buf: AudioBuffer): number {
@@ -169,6 +169,29 @@ function peakOf(buf: AudioBuffer): number {
     }
   }
   return peak;
+}
+
+/**
+ * Where a clip's sound begins: the first sample above a tenth of its peak,
+ * less two milliseconds so the attack itself is kept whole.
+ */
+function onsetOf(buf: AudioBuffer): number {
+  const peak = peakOf(buf);
+  if (peak <= 0) {
+    return 0;
+  }
+  const floor = peak * 0.1;
+  let first = buf.length;
+  for (let c = 0; c < buf.numberOfChannels; c++) {
+    const data = buf.getChannelData(c);
+    for (let i = 0; i < Math.min(first, data.length); i++) {
+      if (Math.abs(data[i]!) >= floor) {
+        first = i;
+        break;
+      }
+    }
+  }
+  return Math.max(0, first / buf.sampleRate - 0.002);
 }
 
 /**
@@ -195,6 +218,8 @@ class KidsAudio {
   #buffers = new Map<string, AudioBuffer>();
   /** The loudest sample in each decoded clip, so it can be levelled. */
   #peaks = new Map<string, number>();
+  /** Where each clip's sound actually starts, in seconds — see `onsetOf`. */
+  #onsets = new Map<string, number>();
   #loading = new Map<string, Promise<AudioBuffer | null>>();
   #bed: { src: AudioBufferSourceNode; gain: GainNode } | null = null;
   #crickets: ReturnType<typeof setTimeout> | null = null;
@@ -371,6 +396,7 @@ class KidsAudio {
         const decoded = await ctx.decodeAudioData(await res.arrayBuffer());
         this.#buffers.set(clip, decoded);
         this.#peaks.set(clip, peakOf(decoded));
+        this.#onsets.set(clip, onsetOf(decoded));
         return decoded;
       } catch {
         // A sound that will not load is not a reason for anything to break;
@@ -417,7 +443,10 @@ class KidsAudio {
       level.gain.value = levelFor(this.#peaks.get(clip), target);
       src.connect(level);
       level.connect(out);
-      src.start();
+      // From where the sound starts, not where the file starts: some clips
+      // carry up to 89 ms of silence first, and a key that sounds that late
+      // after the finger reads as lag.
+      src.start(0, this.#onsets.get(clip) ?? 0);
     });
   }
 
