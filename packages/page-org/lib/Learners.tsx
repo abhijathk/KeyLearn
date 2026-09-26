@@ -390,6 +390,13 @@ function AddLearner({
             />
             <select
               className={styles.select}
+              // Which class the learner joins. It sits beside the name with no
+              // caption of its own, so it is named here, or a screen reader
+              // announces an unnamed list.
+              aria-label={formatMessage({
+                id: "learners.add.class",
+                defaultMessage: "Class",
+              })}
               value={batchId ?? ""}
               onChange={(event) => {
                 setBatchId(Number(event.target.value));

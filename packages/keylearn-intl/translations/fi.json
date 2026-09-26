@@ -1047,6 +1047,7 @@
   "layouts.stats.topRowKeys.name": "Ylärivin näppäimet:",
   "learners.add.cancel": "Peruuta",
   "learners.add.caption": "Lisää oppija",
+  "learners.add.class": "Luokka",
   "learners.add.name": "Etunimi",
   "learners.add.note": "Keskukselle, joka omistaa omat oppijapaikkansa. Jos tilit omistavat perheet — viikonloppukoulu — kutsu mieluummin vanhemmat, ja heidän lapsensa tulevat heidän mukanaan.",
   "learners.add.open": "Lisää tämän keskuksen omistama oppija",

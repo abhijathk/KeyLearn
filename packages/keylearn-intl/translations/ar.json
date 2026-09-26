@@ -1050,6 +1050,7 @@
   "layouts.stats.topRowKeys.name": "مفاتيح السطر العلوي:",
   "learners.add.cancel": "إلغاء",
   "learners.add.caption": "إضافة متعلم",
+  "learners.add.class": "الصف",
   "learners.add.name": "الاسم الأول",
   "learners.add.note": "لمركز يملك أماكن متعلميه. إذا كانت العائلات تملك الحسابات — كمدرسة نهاية أسبوع — فادعُ أولياء الأمور بدلًا من ذلك وسيأتي أطفالهم معهم.",
   "learners.add.open": "إضافة متعلم يملكه هذا المركز",

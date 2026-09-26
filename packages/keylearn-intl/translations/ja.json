@@ -1050,6 +1050,7 @@
   "layouts.stats.topRowKeys.name": "上段のキー:",
   "learners.add.cancel": "キャンセル",
   "learners.add.caption": "学習者を追加",
+  "learners.add.class": "クラス",
   "learners.add.name": "名",
   "learners.add.note": "学習者の枠をセンターが所有している場合向けです。ご家庭がアカウントを所有している週末校などの場合は、代わりに保護者を招待してください。お子さんも一緒に参加します。",
   "learners.add.open": "このセンターが所有する学習者を追加",

@@ -418,8 +418,14 @@ export class OrgController {
         id,
         rows.map((r) => r.email),
       );
+      // Seats are learner places: an accepted GUARDIAN invite enrols a child
+      // and takes one, which `seatStatus` counts. A teacher or an admin
+      // takes none, so holding their invite back when the learner places
+      // were full meant a full school could not appoint the teacher it
+      // needed — refused for a seat it would never have used.
       const seats = await org.seatStatus();
       if (
+        data.role === "guardian" &&
         seats.seats != null &&
         seats.used + checked.invite.length > seats.seats
       ) {

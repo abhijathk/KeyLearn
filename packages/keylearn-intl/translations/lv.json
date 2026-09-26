@@ -1047,6 +1047,7 @@
   "layouts.stats.topRowKeys.name": "Augšējās rindas taustiņu īpatsvars:",
   "learners.add.cancel": "Atcelt",
   "learners.add.caption": "Pievienot audzēkni",
+  "learners.add.class": "Klase",
   "learners.add.name": "Vārds",
   "learners.add.note": "Centram, kuram pieder savas audzēkņu vietas. Ja ģimenēm pieder konti — nedēļas nogales skola — tā vietā uzaiciniet vecākus, un viņu bērni nāks kopā ar tiem.",
   "learners.add.open": "Pievienot audzēkni, kas pieder šim centram",

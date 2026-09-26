@@ -1050,6 +1050,7 @@
   "layouts.stats.topRowKeys.name": "위쪽 줄에 있는 키의 비율:",
   "learners.add.cancel": "취소",
   "learners.add.caption": "학습자 추가",
+  "learners.add.class": "반",
   "learners.add.name": "이름",
   "learners.add.note": "학습자 자리를 센터가 소유하는 경우를 위한 기능입니다. 가정이 계정을 소유하는 주말 학교라면, 대신 학부모를 초대하세요. 자녀는 함께 따라옵니다.",
   "learners.add.open": "이 센터 소속 학습자 추가",

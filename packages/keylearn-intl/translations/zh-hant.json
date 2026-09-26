@@ -1050,6 +1050,7 @@
   "layouts.stats.topRowKeys.name": "在頂部的鍵位：",
   "learners.add.cancel": "取消",
   "learners.add.caption": "新增學習者",
+  "learners.add.class": "班級",
   "learners.add.name": "名字",
   "learners.add.note": "適用於自行持有學習者名額的機構。如果帳戶由家庭持有——例如週末班——請改為邀請家長，孩子會一併加入。",
   "learners.add.open": "新增此中心自有的學習者",

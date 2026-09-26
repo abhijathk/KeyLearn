@@ -1050,6 +1050,7 @@
   "layouts.stats.topRowKeys.name": "Billentyűk a felső sorban:",
   "learners.add.cancel": "Mégse",
   "learners.add.caption": "Tanuló hozzáadása",
+  "learners.add.class": "Osztály",
   "learners.add.name": "Keresztnév",
   "learners.add.note": "Egy olyan központnak, amely birtokolja saját tanulói helyeit. Ha a fiókok a családoké — hétvégi iskola —, inkább a szülőket hívd meg, és a gyerekeik velük érkeznek.",
   "learners.add.open": "Ehhez a központhoz tartozó tanuló hozzáadása",

@@ -1041,6 +1041,7 @@
   "layouts.stats.topRowKeys.name": "Tangenter på översta raden:",
   "learners.add.cancel": "Avbryt",
   "learners.add.caption": "Lägg till en elev",
+  "learners.add.class": "Klass",
   "learners.add.name": "Förnamn",
   "learners.add.note": "För ett center som äger sina egna elevplatser. Om kontona ägs av familjerna — en helgskola — bjud in föräldrarna istället, deras barn kommer med dem.",
   "learners.add.open": "Lägg till en elev som ägs av det här centret",

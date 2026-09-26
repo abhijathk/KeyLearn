@@ -1050,6 +1050,7 @@
   "layouts.stats.topRowKeys.name": "מקשים בשורה העליונה:",
   "learners.add.cancel": "ביטול",
   "learners.add.caption": "הוספת לומד",
+  "learners.add.class": "כיתה",
   "learners.add.name": "שם פרטי",
   "learners.add.note": "עבור מרכז שמחזיק במקומות הלומדים שלו. אם המשפחות מחזיקות בחשבונות — בית ספר של סוף שבוע — הזמינו את ההורים במקום וילדיהם יגיעו איתם.",
   "learners.add.open": "הוספת לומד שבבעלות המרכז הזה",

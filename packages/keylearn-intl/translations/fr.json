@@ -1033,6 +1033,7 @@
   "layouts.stats.topRowKeys.name": "Touches de la rangée du haut:",
   "learners.add.cancel": "Annuler",
   "learners.add.caption": "Ajouter un apprenant",
+  "learners.add.class": "Classe",
   "learners.add.name": "Prénom",
   "learners.add.note": "Pour un centre qui détient ses places. Si les comptes appartiennent aux familles — une école du week-end — invitez plutôt les parents, et leurs enfants viennent avec eux.",
   "learners.add.open": "Ajouter un apprenant appartenant à ce centre",

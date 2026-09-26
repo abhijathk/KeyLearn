@@ -1040,6 +1040,7 @@
   "layouts.stats.topRowKeys.name": "Tasten in der obersten Zeile:",
   "learners.add.cancel": "Abbrechen",
   "learners.add.caption": "Lernende Person hinzufügen",
+  "learners.add.class": "Klasse",
   "learners.add.name": "Vorname",
   "learners.add.note": "Für ein Zentrum, dem die Lernplätze gehören. Wenn die Konten den Familien gehören — eine Wochenendschule —, lade stattdessen die Eltern ein, und ihre Kinder kommen mit.",
   "learners.add.open": "Lernende Person dieses Zentrums hinzufügen",

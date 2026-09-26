@@ -1049,6 +1049,7 @@
   "layouts.stats.topRowKeys.name": "Klavišai viršutinėje eilutėje:",
   "learners.add.cancel": "Atšaukti",
   "learners.add.caption": "Pridėti besimokantįjį",
+  "learners.add.class": "Klasė",
   "learners.add.name": "Vardas",
   "learners.add.note": "Centrui, kuris valdo savo besimokančiųjų vietas. Jei šeimos valdo paskyras — savaitgalio mokykla — vietoj to pakvieskite tėvus, ir jų vaikai ateis kartu su jais.",
   "learners.add.open": "Pridėti besimokantįjį, kurį valdo šis centras",

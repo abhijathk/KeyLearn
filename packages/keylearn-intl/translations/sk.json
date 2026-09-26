@@ -1045,6 +1045,7 @@
   "layouts.stats.topRowKeys.name": "Klávesy na hornom riadku:",
   "learners.add.cancel": "Zrušiť",
   "learners.add.caption": "Pridať žiaka",
+  "learners.add.class": "Trieda",
   "learners.add.name": "Krstné meno",
   "learners.add.note": "Pre centrum, ktoré vlastní svoje vlastné miesta. Ak účty patria rodinám — víkendová škola — pozvite radšej rodičov, a ich deti prídu s nimi.",
   "learners.add.open": "Pridať žiaka vlastneného týmto centrom",

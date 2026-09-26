@@ -1046,6 +1046,7 @@
   "layouts.stats.topRowKeys.name": "Klawisze w górnym szeregu:",
   "learners.add.cancel": "Anuluj",
   "learners.add.caption": "Dodaj ucznia",
+  "learners.add.class": "Klasa",
   "learners.add.name": "Imię",
   "learners.add.note": "Dla ośrodka, do którego należą miejsca uczniów. Jeśli konta należą do rodzin — szkoła weekendowa — zaproś raczej rodziców, a ich dzieci przyjdą razem z nimi.",
   "learners.add.open": "Dodaj ucznia należącego do tego ośrodka",

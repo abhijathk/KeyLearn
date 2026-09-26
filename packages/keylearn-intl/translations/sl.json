@@ -1046,6 +1046,7 @@
   "layouts.stats.topRowKeys.name": "Tipke v zgornji vrstici:",
   "learners.add.cancel": "Prekliči",
   "learners.add.caption": "Dodaj učenca",
+  "learners.add.class": "Razred",
   "learners.add.name": "Ime",
   "learners.add.note": "Za center, ki ima v lasti svoja mesta. Če računi pripadajo družinam — vikend šola — raje povabite starše, njihovi otroci pa pridejo z njimi.",
   "learners.add.open": "Dodaj učenca v lasti tega centra",

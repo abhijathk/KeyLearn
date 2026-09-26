@@ -1049,6 +1049,7 @@
   "layouts.stats.topRowKeys.name": "Hàng phím trên:",
   "learners.add.cancel": "Hủy",
   "learners.add.caption": "Thêm người học",
+  "learners.add.class": "Lớp",
   "learners.add.name": "Tên",
   "learners.add.note": "Dành cho một trung tâm sở hữu các vị trí người học của mình. Nếu các gia đình sở hữu tài khoản — một trường cuối tuần — thay vào đó hãy mời phụ huynh và con của họ sẽ đi cùng.",
   "learners.add.open": "Thêm một người học do trung tâm này sở hữu",

@@ -3,6 +3,7 @@ import { Application } from "@fastr/core";
 import {
   Batch,
   Organization,
+  OrganizationPlan,
   OrgInvite,
   OrgMember,
   Profile,
@@ -859,4 +860,46 @@ test("a teacher has no business with the staff list", async () => {
   // else works here is not theirs to read.
   await request.become(guardian.id!);
   equal((await request.GET(`/_/org/${org.id!}/members`).send()).status, 403);
+});
+
+test("a full school can still invite a teacher; only a guardian needs a seat", async () => {
+  const { owner, org, batchA } = await seed();
+  await OrganizationPlan.query().insert({ organizationId: org.id!, seats: 1 });
+  await Profile.query().insert({
+    userId: null,
+    organizationId: org.id!,
+    batchId: batchA.id!,
+    kind: "kid",
+    firstName: "Dhruv",
+    parentalConsent: true,
+  });
+  const request = startApp(context.get(Application, kMain));
+  await request.become(owner.id!);
+
+  // Staff take no seat, so a school whose learner places are all used can
+  // still appoint the teacher it needs.
+  const teacher = await request.POST(`/_/org/${org.id}/invites`).send({
+    role: "teacher",
+    batchId: batchA.id!,
+    emails: [{ email: "newteacher@keylearn.org", reference: null }],
+  });
+  isTrue(
+    !(teacher.headers.get("Content-Type") ?? "").startsWith(
+      "application/error+json",
+    ),
+  );
+  equal((await OrgInvite.listFor(org.id!)).length, 1);
+
+  // A guardian brings a child, and there is no place left for one.
+  const guardian = await request.POST(`/_/org/${org.id}/invites`).send({
+    role: "guardian",
+    batchId: batchA.id!,
+    emails: [{ email: "parent@keylearn.org", reference: null }],
+  });
+  isTrue(
+    (guardian.headers.get("Content-Type") ?? "").startsWith(
+      "application/error+json",
+    ),
+  );
+  equal((await OrgInvite.listFor(org.id!)).length, 1);
 });

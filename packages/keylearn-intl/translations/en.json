@@ -1052,6 +1052,7 @@
   "layouts.stats.topRowKeys.name": "Share of keys on the top row:",
   "learners.add.cancel": "Cancel",
   "learners.add.caption": "Add a learner",
+  "learners.add.class": "Class",
   "learners.add.name": "First name",
   "learners.add.note": "For a centre that owns its learner places. If the families own the accounts — a weekend school — invite the parents instead and their children come with them.",
   "learners.add.open": "Add a learner this centre owns",

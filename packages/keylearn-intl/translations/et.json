@@ -1045,6 +1045,7 @@
   "layouts.stats.topRowKeys.name": "Ülemise rea klahvid:",
   "learners.add.cancel": "Tühista",
   "learners.add.caption": "Lisa õppija",
+  "learners.add.class": "Klass",
   "learners.add.name": "Eesnimi",
   "learners.add.note": "Keskusele, mis omab oma õppijakohti. Kui pered omavad kontosid — nädalavahetuse kool — kutsu selle asemel vanemad ja nende lapsed tulevad koos nendega.",
   "learners.add.open": "Lisa õppija, keda see keskus omab",

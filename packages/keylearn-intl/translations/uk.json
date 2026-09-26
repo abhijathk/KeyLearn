@@ -1050,6 +1050,7 @@
   "layouts.stats.topRowKeys.name": "Клавіш у верхньому ряду:",
   "learners.add.cancel": "Скасувати",
   "learners.add.caption": "Додати учня",
+  "learners.add.class": "Клас",
   "learners.add.name": "Ім’я",
   "learners.add.note": "Для центру, якому належать власні місця. Якщо облікові записи належать родинам — вихідна школа — краще запросіть батьків, а їхні діти прийдуть з ними.",
   "learners.add.open": "Додати учня, що належить цьому центру",

@@ -1040,6 +1040,7 @@
   "layouts.stats.topRowKeys.name": "Tecles en la fila superior:",
   "learners.add.cancel": "Cancel·la",
   "learners.add.caption": "Afegeix un aprenent",
+  "learners.add.class": "Classe",
   "learners.add.name": "Nom",
   "learners.add.note": "Per a un centre que és propietari de les seves places d’aprenent. Si les famílies són propietàries dels comptes — una escola de cap de setmana — convida els pares en el seu lloc i els seus fills vindran amb ells.",
   "learners.add.open": "Afegeix un aprenent propietat d’aquest centre",

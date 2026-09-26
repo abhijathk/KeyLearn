@@ -1045,6 +1045,7 @@
   "layouts.stats.topRowKeys.name": "Tastet në rreshtin e sipërm:",
   "learners.add.cancel": "Anulo",
   "learners.add.caption": "Shto një nxënës",
+  "learners.add.class": "Klasa",
   "learners.add.name": "Emri",
   "learners.add.note": "Për një qendër që zotëron vendet e saj të nxënësve. Nëse familjet zotërojnë llogaritë — një shkollë fundjave — ftoni prindërit në vend të kësaj dhe fëmijët e tyre vijnë me ta.",
   "learners.add.open": "Shto një nxënës që zotëron kjo qendër",

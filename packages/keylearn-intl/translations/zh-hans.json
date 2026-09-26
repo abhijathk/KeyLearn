@@ -1050,6 +1050,7 @@
   "layouts.stats.topRowKeys.name": "在顶部的键位：",
   "learners.add.cancel": "取消",
   "learners.add.caption": "添加学习者",
+  "learners.add.class": "班级",
   "learners.add.name": "名字",
   "learners.add.note": "适用于拥有学习者席位所有权的中心。如果账户归家庭所有——例如周末学校——请改为邀请家长，孩子会随之加入。",
   "learners.add.open": "添加本中心拥有的学习者",

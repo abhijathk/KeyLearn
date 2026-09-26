@@ -1042,6 +1042,7 @@
   "layouts.stats.topRowKeys.name": "Taster på øverste række:",
   "learners.add.cancel": "Annuller",
   "learners.add.caption": "Tilføj en elev",
+  "learners.add.class": "Klasse",
   "learners.add.name": "Fornavn",
   "learners.add.note": "Til et center, der ejer sine egne elevpladser. Hvis kontiene ejes af familierne — en weekendskole — så inviter forældrene i stedet, deres børn kommer med dem.",
   "learners.add.open": "Tilføj en elev, der ejes af dette center",

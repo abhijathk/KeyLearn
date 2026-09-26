@@ -1046,6 +1046,7 @@
   "layouts.stats.topRowKeys.name": "Teclas na linha superior:",
   "learners.add.cancel": "Cancelar",
   "learners.add.caption": "Adicionar um aluno",
+  "learners.add.class": "Turma",
   "learners.add.name": "Primeiro nome",
   "learners.add.note": "Para um centro que é dono das próprias vagas. Se as contas são das famílias — uma escola de fim de semana — convide os responsáveis, e os filhos vêm com eles.",
   "learners.add.open": "Adicionar um aluno deste centro",

@@ -1048,6 +1048,7 @@
   "layouts.stats.topRowKeys.name": "Takkar í efstu röð:",
   "learners.add.cancel": "Hætta við",
   "learners.add.caption": "Bæta við notanda",
+  "learners.add.class": "Bekkur",
   "learners.add.name": "Fornafn",
   "learners.add.note": "Fyrir miðstöð sem á sína notendastaði. Ef fjölskyldurnar eiga aðgangana — helgarskóli — bjóddu foreldrunum í staðinn og börn þeirra fylgja með.",
   "learners.add.open": "Bæta við notanda sem þessi miðstöð á",

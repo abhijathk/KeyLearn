@@ -357,6 +357,7 @@ function ByEmail({
       ) : (
         <ReadBack
           screened={screened}
+          countsSeats={role === "guardian"}
           rows={entries}
           busy={busy}
           onSend={send}
@@ -372,12 +373,20 @@ function ByEmail({
 /** The list read back, by row, before anybody is written to. */
 function ReadBack({
   screened,
+  countsSeats,
   rows,
   busy,
   onSend,
   onBack,
 }: {
   readonly screened: ScreenResult;
+  /**
+   * Whether these invites use seats. Only a guardian's does — it brings a
+   * child into the school. Staff never take a seat, and holding their invite
+   * back when the learner seats were full meant a full school could not
+   * appoint the teacher it needed.
+   */
+  readonly countsSeats: boolean;
   /** The parsed rows, positionally aligned with the verdicts. */
   readonly rows: readonly CsvRow[];
   readonly busy: boolean;
@@ -425,7 +434,9 @@ function ReadBack({
   };
 
   const short =
-    screened.seatsLeft != null && screened.willInvite > screened.seatsLeft;
+    countsSeats &&
+    screened.seatsLeft != null &&
+    screened.willInvite > screened.seatsLeft;
 
   return (
     <>

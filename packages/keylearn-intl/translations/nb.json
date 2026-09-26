@@ -1045,6 +1045,7 @@
   "layouts.stats.topRowKeys.name": "Taster på topprekken:",
   "learners.add.cancel": "Avbryt",
   "learners.add.caption": "Legg til en elev",
+  "learners.add.class": "Klasse",
   "learners.add.name": "Fornavn",
   "learners.add.note": "For et senter som eier sine egne elevplasser. Hvis kontoene eies av familiene — en helgeskole — inviter foreldrene i stedet, barna deres kommer med dem.",
   "learners.add.open": "Legg til en elev som eies av dette senteret",
