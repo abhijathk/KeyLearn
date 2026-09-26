@@ -1,217 +1,215 @@
 # English
 
-Translated: 2430 messages, 22656 words
+Translated: 2477 messages, 23047 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 2348 messages, 22308 words
+Translated: 2400 messages, 22620 words
 
-Untranslated: 62 messages, 294 words
+Untranslated: 69 messages, 413 words
 
 * *s*
 * *as*
-* *On*
-* *Off*
 * *PIN*
 * *wpm*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Stop*
 * *Theo*
+* *Close*
+* *Enter*
 * *Later*
 * *Sepia*
 * *Shift*
-* *Arcade*
+* *Space*
 * *Avatar*
 * *indigo*
 * *Medium*
-* *Update*
-* *Beat it*
+* *Letters*
+* *Premium*
 * ...
 
 # Arabic
 
-Translated: 2371 messages, 22337 words
+Translated: 2423 messages, 22648 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 52 messages, 396 words
 
-* *On*
-* *Off*
-* *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
+* *Where it goes*
 * ...
 
 # Assamese
 
-Translated: 2366 messages, 22329 words
+Translated: 2418 messages, 22640 words
 
-Untranslated: 47 messages, 279 words
+Untranslated: 55 messages, 399 words
 
-* *On*
-* *Off*
 * *PIN*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
-* *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * ...
 
 # Bulgarian
 
-Translated: 2371 messages, 22336 words
+Translated: 2423 messages, 22648 words
 
-Untranslated: 44 messages, 276 words
+Untranslated: 52 messages, 396 words
 
-* *On*
-* *Off*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
-* *One more try?*
+* *Why this ad?*
+* *Where it goes*
 * ...
 
 # Bangla
 
-Translated: 2370 messages, 22335 words
+Translated: 2422 messages, 22646 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
 * ...
 
 # Catalan
 
-Translated: 2348 messages, 22310 words
+Translated: 2402 messages, 22624 words
 
-Untranslated: 62 messages, 293 words
+Untranslated: 67 messages, 410 words
 
 * *s*
-* *On*
 * *Arc*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
 * *Mode*
 * *Mode*
-* *Send*
 * *Text*
 * *Text*
 * *Theo*
+* *Close*
+* *Enter*
 * *Paper*
+* *Space*
 * *Avatar*
 * *Errors*
 * *Recent*
-* *Update*
-* *Beat it*
 * *Classes*
+* *Premium*
 * ...
 
 # Czech
 
-Translated: 2354 messages, 22316 words
+Translated: 2410 messages, 22631 words
 
-Untranslated: 59 messages, 292 words
+Untranslated: 61 messages, 405 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
-* *Stop*
 * *Text*
 * *Text*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *Trend*
 * *Avatar*
-* *Update*
-* *Beat it*
-* *Cookies*
-* *Incident*
 * *KeyLearn*
 * *KeyLearn*
+* *KeyLearn*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
 * ...
 
 # Danish
 
-Translated: 2335 messages, 22295 words
+Translated: 2389 messages, 22609 words
 
-Untranslated: 78 messages, 313 words
+Untranslated: 82 messages, 427 words
 
 * *s*
-* *On*
-* *for*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
 * *Mine*
 * *Send*
@@ -222,198 +220,200 @@ Untranslated: 78 messages, 313 words
 * *Send*
 * *Stop*
 * *Theo*
+* *Close*
+* *Enter*
 * *Sepia*
 * *Shift*
+* *Space*
 * *Avatar*
-* *citron*
 * ...
 
 # German
 
-Translated: 2338 messages, 22302 words
+Translated: 2390 messages, 22614 words
 
-Untranslated: 75 messages, 306 words
+Untranslated: 83 messages, 426 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
 * *Name*
 * *Name*
-* *Send*
 * *Text*
 * *Text*
 * *Theo*
 * *Admin*
 * *Admin*
+* *Close*
 * *Coach*
+* *Enter*
 * *Sepia*
+* *Space*
 * *Arcade*
 * *Avatar*
-* *Update*
-* *Beat it*
+* *Cookies*
 * ...
 
 # Greek
 
-Translated: 2362 messages, 22326 words
+Translated: 2418 messages, 22642 words
 
-Untranslated: 52 messages, 284 words
+Untranslated: 56 messages, 400 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Maya*
-* *Send*
-* *Theo*
+* *Kids*
+* *Close*
 * *Email*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *Cookies*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *Pip (5–8)*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
 * ...
 
 # Spanish
 
-Translated: 2354 messages, 22317 words
+Translated: 2408 messages, 22630 words
 
-Untranslated: 58 messages, 290 words
+Untranslated: 62 messages, 405 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Sepia*
-* *Shift*
+* *Space*
 * *Arcade*
 * *Avatar*
-* *Update*
 * *Zigzag*
-* *Beat it*
 * *Cookies*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Shown to*
+* *Chocolate*
 * ...
 
 # Estonian
 
-Translated: 2357 messages, 22320 words
+Translated: 2407 messages, 22628 words
 
-Untranslated: 56 messages, 288 words
+Untranslated: 64 messages, 408 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
 * *Font*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *Trend*
 * *Avatar*
 * *Number*
-* *Update*
-* *Beat it*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
+* *Shown to*
+* *Forbidden*
 * ...
 
 # Persian
 
-Translated: 2372 messages, 22338 words
+Translated: 2424 messages, 22649 words
 
-Untranslated: 44 messages, 276 words
+Untranslated: 52 messages, 396 words
 
-* *On*
-* *Off*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
-* *One more try?*
+* *Why this ad?*
+* *Where it goes*
 * ...
 
 # Finnish
 
-Translated: 2361 messages, 22325 words
+Translated: 2412 messages, 22634 words
 
-Untranslated: 52 messages, 283 words
+Untranslated: 59 messages, 402 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
+* *Space*
 * *Avatar*
-* *indigo*
-* *Update*
-* *Beat it*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
 * *Pip (5–8)*
-* *New record*
+* *Start over*
+* *Bad Request*
 * ...
 
 # French
 
-Translated: 2335 messages, 22299 words
+Translated: 2389 messages, 22611 words
 
-Untranslated: 78 messages, 309 words
+Untranslated: 82 messages, 425 words
 
 * *s*
-* *On*
 * *Arc*
-* *Off*
 * *Zen*
 * *Auto*
+* *Kids*
 * *Maya*
 * *Mode*
 * *Mode*
-* *Send*
-* *Theo*
+* *Close*
 * *Coach*
+* *Enter*
+* *Space*
 * *Style*
 * *Arcade*
 * *Avatar*
@@ -421,469 +421,467 @@ Untranslated: 78 messages, 309 words
 * *Effort*
 * *indigo*
 * *orange*
-* *Update*
+* *Zigzag*
 * ...
 
 # Gujarati
 
-Translated: 2370 messages, 22335 words
+Translated: 2422 messages, 22646 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
 * ...
 
 # Hebrew
 
-Translated: 2371 messages, 22337 words
+Translated: 2423 messages, 22648 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 52 messages, 396 words
 
-* *On*
-* *Off*
-* *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
+* *Where it goes*
 * ...
 
 # Hindi
 
-Translated: 2370 messages, 22335 words
+Translated: 2422 messages, 22646 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
 * ...
 
 # Croatian
 
-Translated: 2356 messages, 22319 words
+Translated: 2410 messages, 22631 words
 
-Untranslated: 57 messages, 289 words
+Untranslated: 61 messages, 405 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
-* *Font*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *Trend*
 * *Avatar*
 * *indigo*
-* *Update*
-* *Beat it*
 * *Premium*
-* *Incident*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
 * ...
 
 # Hungarian
 
-Translated: 2364 messages, 22328 words
+Translated: 2418 messages, 22641 words
 
-Untranslated: 50 messages, 282 words
+Untranslated: 55 messages, 399 words
 
-* *On*
-* *Off*
-* *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *Pip (5–8)*
-* *New record*
-* *per lesson*
-* *Shift AltGr*
-* *Key unlocked*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * ...
 
 # Indonesian
 
-Translated: 2350 messages, 22315 words
+Translated: 2404 messages, 22628 words
 
-Untranslated: 64 messages, 296 words
+Untranslated: 69 messages, 413 words
 
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
 * *Edit*
 * *Font*
+* *Kids*
 * *Maya*
 * *mint*
 * *Mode*
 * *Mode*
-* *Send*
 * *Theo*
 * *admin*
 * *Admin*
 * *Admin*
+* *Close*
 * *Email*
+* *Enter*
 * *Sepia*
 * *Shift*
+* *Space*
 * *Avatar*
-* *Update*
 * ...
 
 # Icelandic
 
-Translated: 2363 messages, 22327 words
+Translated: 2414 messages, 22637 words
 
-Untranslated: 51 messages, 283 words
+Untranslated: 59 messages, 403 words
 
-* *On*
-* *Off*
 * *Sun*
+* *Kids*
 * *Maya*
-* *Send*
 * *Sent*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
 * *Pip (5–8)*
-* *New record*
-* *per lesson*
-* *Shift AltGr*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
 * ...
 
 # Italian
 
-Translated: 2355 messages, 22318 words
+Translated: 2409 messages, 22631 words
 
-Untranslated: 58 messages, 290 words
+Untranslated: 62 messages, 405 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
-* *Shift*
+* *Close*
+* *Enter*
+* *Space*
 * *Arcade*
 * *Avatar*
-* *Update*
 * *Zigzag*
 * *Account*
 * *Account*
-* *Beat it*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
 * *Password*
+* *Password*
+* *Shown to*
 * ...
 
 # Japanese
 
-Translated: 2366 messages, 22329 words
+Translated: 2417 messages, 22639 words
 
-Untranslated: 48 messages, 280 words
+Untranslated: 56 messages, 400 words
 
-* *On*
-* *Off*
 * *PIN*
 * *wpm*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
-* *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
 * ...
 
 # Kannada
 
-Translated: 2369 messages, 22333 words
+Translated: 2421 messages, 22644 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
 * ...
 
 # Korean
 
-Translated: 2369 messages, 22334 words
+Translated: 2420 messages, 22644 words
 
-Untranslated: 47 messages, 279 words
+Untranslated: 55 messages, 399 words
 
-* *On*
-* *Off*
 * *PIN*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
-* *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * ...
 
 # Lithuanian
 
-Translated: 2362 messages, 22325 words
+Translated: 2416 messages, 22639 words
 
-Untranslated: 51 messages, 283 words
+Untranslated: 57 messages, 401 words
 
 * *s*
-* *On*
-* *Off*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *indigo*
-* *Update*
-* *Beat it*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *Pip (5–8)*
-* *New record*
-* *per lesson*
-* *Shift AltGr*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
 * ...
 
 # Latvian
 
-Translated: 2361 messages, 22324 words
+Translated: 2414 messages, 22635 words
 
-Untranslated: 52 messages, 284 words
+Untranslated: 57 messages, 401 words
 
 * *s*
-* *On*
-* *Off*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *indigo*
-* *Update*
-* *Beat it*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Progress*
-* *So close*
-* *Key stats*
-* *Pip (5–8)*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
 * ...
 
 # Malayalam
 
-Translated: 2364 messages, 22327 words
+Translated: 2420 messages, 22642 words
 
-Untranslated: 49 messages, 281 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Maya*
-* *Send*
-* *Theo*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *Pip (5–8)*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Robin (9–13)*
+* *Why this ad?*
 * ...
 
 # Mongolian
 
-Translated: 2370 messages, 22335 words
+Translated: 2423 messages, 22647 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 52 messages, 396 words
 
-* *On*
-* *Off*
-* *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
+* *Where it goes*
 * ...
 
 # Marathi
 
-Translated: 2370 messages, 22335 words
+Translated: 2422 messages, 22646 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
 * ...
 
 # Norwegian Bokmål
 
-Translated: 2351 messages, 22314 words
+Translated: 2401 messages, 22622 words
 
-Untranslated: 62 messages, 294 words
+Untranslated: 70 messages, 414 words
 
 * *s*
-* *On*
-* *for*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
 * *Mine*
 * *Send*
@@ -893,369 +891,371 @@ Untranslated: 62 messages, 294 words
 * *Send*
 * *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Sepia*
+* *Space*
 * *Trend*
 * *Avatar*
 * *indigo*
-* *Update*
 * ...
 
 # Nepali
 
-Translated: 2367 messages, 22330 words
+Translated: 2420 messages, 22642 words
 
-Untranslated: 46 messages, 278 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *wpm*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
+* *Why this ad?*
 * ...
 
 # Dutch
 
-Translated: 2333 messages, 22294 words
+Translated: 2384 messages, 22604 words
 
-Untranslated: 79 messages, 312 words
+Untranslated: 86 messages, 430 words
 
 * *s*
-* *On*
-* *Off*
 * *wpm*
 * *Zen*
+* *Kids*
 * *Maya*
 * *Open*
-* *Send*
 * *Stop*
 * *Theo*
+* *Close*
 * *Coach*
+* *Enter*
 * *Hints*
 * *Later*
 * *Score*
 * *Sepia*
 * *Shift*
+* *Space*
 * *Arcade*
 * *Avatar*
 * *Detail*
-* *indigo*
 * ...
 
 # Odia
 
-Translated: 2368 messages, 22331 words
+Translated: 2420 messages, 22642 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
 * ...
 
 # Punjabi
 
-Translated: 2368 messages, 22331 words
+Translated: 2420 messages, 22642 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
 * ...
 
 # Polish
 
-Translated: 2359 messages, 22322 words
+Translated: 2411 messages, 22632 words
 
-Untranslated: 54 messages, 286 words
+Untranslated: 60 messages, 404 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Sepia*
 * *Shift*
+* *Space*
 * *Trend*
-* *Update*
-* *Beat it*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *Pip (5–8)*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
 * ...
 
 # Brazilian Portuguese
 
-Translated: 2355 messages, 22318 words
+Translated: 2407 messages, 22628 words
 
-Untranslated: 58 messages, 290 words
+Untranslated: 64 messages, 408 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *Arcade*
 * *Avatar*
 * *Layout*
-* *Update*
-* *Beat it*
 * *Cookies*
 * *Layouts*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Shown to*
 * ...
 
 # European Portuguese
 
-Translated: 2357 messages, 22320 words
+Translated: 2409 messages, 22630 words
 
-Untranslated: 56 messages, 288 words
+Untranslated: 62 messages, 406 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *Arcade*
 * *Avatar*
-* *Update*
-* *Beat it*
 * *Cookies*
 * *Premium*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
+* *Shown to*
 * *Chocolate*
+* *Forbidden*
 * ...
 
 # Romanian
 
-Translated: 2348 messages, 22309 words
+Translated: 2401 messages, 22622 words
 
-Untranslated: 64 messages, 296 words
+Untranslated: 70 messages, 414 words
 
 * *s*
-* *On*
 * *Arc*
-* *Off*
 * *PIN*
 * *Zen*
 * *Calm*
 * *Font*
+* *Kids*
 * *Maya*
-* *Send*
 * *Text*
 * *Text*
 * *Theo*
+* *Close*
+* *Enter*
 * *Sepia*
 * *Shift*
+* *Space*
 * *Arcade*
 * *Avatar*
 * *indigo*
-* *Update*
 * *Zigzag*
 * ...
 
 # Russian
 
-Translated: 2370 messages, 22335 words
+Translated: 2423 messages, 22648 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 52 messages, 396 words
 
-* *On*
-* *Off*
-* *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
+* *Where it goes*
 * ...
 
 # Slovak
 
-Translated: 2354 messages, 22316 words
+Translated: 2409 messages, 22630 words
 
-Untranslated: 59 messages, 292 words
+Untranslated: 62 messages, 406 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
-* *Stop*
 * *Text*
 * *Text*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *Trend*
 * *Avatar*
-* *Update*
-* *Beat it*
 * *Premium*
-* *Incident*
 * *KeyLearn*
 * *KeyLearn*
+* *KeyLearn*
+* *Shown to*
+* *Forbidden*
 * ...
 
 # Slovenian
 
-Translated: 2357 messages, 22320 words
+Translated: 2410 messages, 22631 words
 
-Untranslated: 56 messages, 288 words
+Untranslated: 61 messages, 405 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *Trend*
 * *Avatar*
 * *indigo*
-* *Update*
-* *Beat it*
 * *Premium*
-* *Incident*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
 * ...
 
 # Albanian
 
-Translated: 2355 messages, 22318 words
+Translated: 2409 messages, 22630 words
 
-Untranslated: 57 messages, 289 words
+Untranslated: 62 messages, 406 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
-* *Draft*
+* *Close*
 * *Email*
+* *Enter*
 * *Sepia*
 * *Shift*
+* *Space*
 * *indigo*
-* *Update*
-* *Beat it*
 * *Premium*
 * *Incident*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Shown to*
+* *Forbidden*
 * ...
 
 # Swedish
 
-Translated: 2343 messages, 22306 words
+Translated: 2395 messages, 22617 words
 
-Untranslated: 70 messages, 302 words
+Untranslated: 76 messages, 419 words
 
 * *s*
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
 * *mint*
-* *Send*
 * *Text*
 * *Text*
 * *Theo*
+* *Close*
 * *Coach*
+* *Enter*
 * *Sepia*
-* *Shift*
+* *Space*
 * *Trend*
 * *Avatar*
 * *citron*
@@ -1266,252 +1266,252 @@ Untranslated: 70 messages, 302 words
 
 # Tamil
 
-Translated: 2365 messages, 22329 words
+Translated: 2421 messages, 22644 words
 
-Untranslated: 49 messages, 281 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Maya*
-* *Send*
-* *Theo*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *Pip (5–8)*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Robin (9–13)*
+* *Why this ad?*
 * ...
 
 # Telugu
 
-Translated: 2369 messages, 22333 words
+Translated: 2421 messages, 22644 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
 * ...
 
 # Thai
 
-Translated: 2370 messages, 22335 words
+Translated: 2423 messages, 22647 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 52 messages, 396 words
 
-* *On*
-* *Off*
-* *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
+* *Where it goes*
 * ...
 
 # Turkish
 
-Translated: 2363 messages, 22327 words
+Translated: 2418 messages, 22642 words
 
-Untranslated: 51 messages, 283 words
+Untranslated: 57 messages, 401 words
 
-* *On*
-* *Off*
 * *PIN*
 * *Zen*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
+* *Space*
 * *Avatar*
-* *Update*
-* *Beat it*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *Pip (5–8)*
-* *New record*
-* *per lesson*
-* *Shift AltGr*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
 * ...
 
 # Ukrainian
 
-Translated: 2371 messages, 22336 words
+Translated: 2423 messages, 22648 words
 
-Untranslated: 44 messages, 276 words
+Untranslated: 52 messages, 396 words
 
-* *On*
-* *Off*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
-* *One more try?*
+* *Why this ad?*
+* *Where it goes*
 * ...
 
 # Urdu
 
-Translated: 2369 messages, 22333 words
+Translated: 2423 messages, 22648 words
 
-Untranslated: 45 messages, 277 words
+Untranslated: 53 messages, 397 words
 
-* *On*
-* *Off*
 * *PIN*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
+* *Why this ad?*
 * ...
 
 # Vietnamese
 
-Translated: 2365 messages, 22329 words
+Translated: 2418 messages, 22641 words
 
-Untranslated: 49 messages, 281 words
+Untranslated: 55 messages, 399 words
 
-* *On*
-* *Off*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
 * *Email*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *Pip (5–8)*
-* *New record*
-* *per lesson*
-* *Shift AltGr*
-* *Key unlocked*
-* *Robin (9–13)*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * ...
 
 # Simplified Chinese
 
-Translated: 2372 messages, 22337 words
+Translated: 2423 messages, 22647 words
 
-Untranslated: 44 messages, 276 words
+Untranslated: 52 messages, 396 words
 
-* *On*
-* *Off*
-* *Send*
+* *Kids*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
-* *Keep it going*
-* *One more try?*
+* *Why this ad?*
+* *Where it goes*
 * ...
 
 # Traditional Chinese
 
-Translated: 2369 messages, 22334 words
+Translated: 2421 messages, 22645 words
 
-Untranslated: 46 messages, 278 words
+Untranslated: 54 messages, 398 words
 
-* *On*
-* *Off*
+* *Kids*
 * *Maya*
-* *Send*
 * *Theo*
+* *Close*
+* *Enter*
 * *Shift*
-* *Update*
-* *Beat it*
+* *Space*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *So close*
-* *Key stats*
-* *New record*
-* *per lesson*
+* *Shown to*
+* *Forbidden*
+* *Not Found*
+* *Start over*
+* *Bad Request*
+* *Coming soon*
+* *Paid for by*
+* *See premium*
+* *Selected by*
 * *Shift AltGr*
-* *Key unlocked*
-* *Take a break*
-* *Who can help*
-* *Goal complete*
 * ...
