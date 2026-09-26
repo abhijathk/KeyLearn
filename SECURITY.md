@@ -61,8 +61,10 @@ Some of the protections in this codebase depend on how you deploy it:
   Set it only to the address of a proxy that overwrites `X-Forwarded-For`.
   Rate limiting and the adaptive CAPTCHA are keyed on the client address, and
   trusting a forwarded header from an untrusted peer defeats both.
-- **`COOKIE_SECURE=true`** and serve over HTTPS in production. HSTS is only sent
-  when this is on.
+- **`COOKIE_SECURE=true`** and serve over HTTPS in production. The app sends HSTS
+  only when this is on. Behind the bundled nginx config, nginx sends it instead,
+  on every HTTPS response (its own error pages included) and never over HTTP, and
+  hides the app's copy so there is one header.
 - **`AUTH_MICROSOFT_TENANT`** — the default (`common`) lets any Microsoft tenant
   present any email address. That is safe here because such an address can never
   claim an existing account, but pin it to your own tenant if you want Microsoft
