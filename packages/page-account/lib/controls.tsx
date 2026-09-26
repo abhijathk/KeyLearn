@@ -74,6 +74,9 @@ export function Segmented<T extends string>({
           key={o.id}
           type="button"
           className={clsx(styles.segBtn, value === o.id && styles.segOn)}
+          // The highlight alone told a screen reader nothing: every option
+          // read as a plain button, with no way to hear which one was chosen.
+          aria-pressed={value === o.id}
           onClick={() => onChange(o.id)}
         >
           {o.label}

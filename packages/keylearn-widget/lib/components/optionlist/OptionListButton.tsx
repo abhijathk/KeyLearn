@@ -49,6 +49,15 @@ export function OptionListButton({
       )}
       tabIndex={disabled ? undefined : (tabIndex ?? 0)}
       title={title}
+      // A focusable span with no role reads to a screen reader as plain text:
+      // the language, time zone and font pickers could be tabbed to but not
+      // recognised as something that opens. It is a button that opens the
+      // menu below it, and its name says what it sets and what it is set to.
+      role="button"
+      aria-haspopup="menu"
+      aria-expanded={open}
+      aria-disabled={disabled || undefined}
+      aria-label={title != null ? `${title}: ${option.name}` : undefined}
     >
       <span className={styles.placeholder} onClick={onClick}>
         <span className={styles.placeholderName}>{option.name}</span>
