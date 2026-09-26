@@ -653,6 +653,12 @@ function ProfileEditor({
   // reader announces an unnamed "checkbox, not checked".
   const visionLabelId = useId();
   const consentLabelId = useId();
+  // The field captions are <p>s for the same reason, so each input is
+  // named by reference to the caption above it.
+  const firstNameLabelId = useId();
+  const yearLabelId = useId();
+  const lastNameLabelId = useId();
+  const lastNameHintId = useId();
   // Kept against the learner's id rather than on the profile record, so on a
   // new learner it is held here until the id exists and written straight after.
   const [appVoice, setAppVoice] = useState<string | null>(
@@ -1033,7 +1039,7 @@ function ProfileEditor({
 
               <div className={styles.two}>
                 <div className={styles.field2}>
-                  <p className={styles.editorLbl}>
+                  <p className={styles.editorLbl} id={firstNameLabelId}>
                     <FormattedMessage
                       id="profiles.firstName"
                       defaultMessage="First name"
@@ -1043,12 +1049,13 @@ function ProfileEditor({
                     className={styles.field}
                     type="text"
                     maxLength={PROFILE_NAME_MAX}
+                    aria-labelledby={firstNameLabelId}
                     value={firstName}
                     onChange={(ev) => setFirstName(ev.target.value)}
                   />
                 </div>
                 <div className={styles.field2}>
-                  <p className={styles.editorLbl}>
+                  <p className={styles.editorLbl} id={yearLabelId}>
                     <FormattedMessage
                       id="profiles.yearBorn"
                       defaultMessage="Year born"
@@ -1058,6 +1065,7 @@ function ProfileEditor({
                     className={styles.field}
                     type="text"
                     inputMode="numeric"
+                    aria-labelledby={yearLabelId}
                     placeholder={formatMessage({
                       id: "profiles.yearBorn.hint",
                       defaultMessage: "e.g. 2016",
@@ -1069,7 +1077,7 @@ function ProfileEditor({
               </div>
 
               <div className={styles.field2}>
-                <p className={styles.editorLbl}>
+                <p className={styles.editorLbl} id={lastNameLabelId}>
                   <FormattedMessage
                     id="profiles.lastName"
                     defaultMessage="Last name"
@@ -1087,6 +1095,12 @@ function ProfileEditor({
                   className={styles.field}
                   type="text"
                   maxLength={PROFILE_NAME_MAX}
+                  aria-labelledby={lastNameLabelId}
+                  aria-describedby={
+                    kind === "kid" && lastName.trim() === ""
+                      ? lastNameHintId
+                      : undefined
+                  }
                   value={lastName}
                   onChange={(ev) => setLastName(ev.target.value)}
                 />
@@ -1094,7 +1108,7 @@ function ProfileEditor({
                 has done its job, and a hint that stays put after it has been
                 acted on reads as a warning about something still wrong. */}
                 {kind === "kid" && lastName.trim() === "" && (
-                  <p className={styles.editorHint}>
+                  <p className={styles.editorHint} id={lastNameHintId}>
                     <FormattedMessage
                       id="profiles.lastName.hint"
                       defaultMessage="Leave it blank if you prefer. A last name here is the one their certificate would carry."

@@ -2,6 +2,7 @@ import { artKindOf, ArtMotif } from "@keylearn/identicon";
 import {
   BrailleAvatar,
   ConfirmDialog,
+  PinPrompt,
   useProfiles,
 } from "@keylearn/page-account";
 import {
@@ -47,8 +48,8 @@ export function MenuDrawer({
   // A kid profile gets a locked-down drawer: navigation, settings, language
   // and the utility links are grown-ups only.
   const navigate = useNavigate();
-  const { publicUser } = usePageData();
-  const { household, active, select } = useProfiles();
+  const { publicUser, user } = usePageData();
+  const { household, active, select, provePin } = useProfiles();
   const signedIn = publicUser.id != null;
   const kidLock = active?.kind === "kid";
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -56,11 +57,7 @@ export function MenuDrawer({
 
   // Switching learners keeps the drawer open — parents often flip between
   // profiles to compare, and the panel survives the app remount underneath.
-  const switchTo = (
-    id: string,
-    kind: "adult" | "kid",
-    visionSupport = false,
-  ) => {
+  const go = (id: string, kind: "adult" | "kid", visionSupport: boolean) => {
     select(id);
     navigate(
       visionSupport
@@ -72,6 +69,25 @@ export function MenuDrawer({
     if (visionSupport) {
       onClose();
     }
+  };
+  // From a kid's profile to a grown-up's is the one switch that crosses the
+  // lock this drawer is built around, so on a household that has set a
+  // grown-up PIN it asks for it first. Kid to kid stays free: nothing a
+  // grown-up keeps is on the other side of it.
+  const [pinFor, setPinFor] = useState<{
+    readonly id: string;
+    readonly visionSupport: boolean;
+  } | null>(null);
+  const switchTo = (
+    id: string,
+    kind: "adult" | "kid",
+    visionSupport = false,
+  ) => {
+    if (kidLock && kind === "adult" && user?.parentPinSet === true) {
+      setPinFor({ id, visionSupport });
+      return;
+    }
+    go(id, kind, visionSupport);
   };
 
   // The Grown-ups / Kids switch is only relevant when signed out or when the
@@ -520,6 +536,20 @@ export function MenuDrawer({
           </>
         )}
       </aside>
+      {pinFor != null && (
+        <PinPrompt
+          onProve={async (pin) => {
+            if (!(await provePin(pin))) {
+              return false;
+            }
+            const { id, visionSupport } = pinFor;
+            setPinFor(null);
+            go(id, "adult", visionSupport);
+            return true;
+          }}
+          onCancel={() => setPinFor(null)}
+        />
+      )}
       {confirmLogout && (
         <ConfirmDialog
           title={formatMessage(

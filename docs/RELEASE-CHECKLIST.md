@@ -87,6 +87,9 @@ fixed or consciously waived (write down which, and why).
       `launchctl kickstart -k gui/$(id -u)/com.keylearn.support-triage` and
       `…support-worker` — so they pick up new code.
 - [ ] **nginx:** `nginx -t`, then reload.
+- [ ] **Virus scanner:** clamd is running and `CLAMAV_HOST` points at it.
+      Support attachments fail closed without it: every upload is refused
+      with a 503 ("Files can't be checked for viruses right now").
 
 ## 5. After deploy (live)
 
@@ -98,7 +101,7 @@ fixed or consciously waived (write down which, and why).
 - [ ] **Tab:** triage and worker are running and pass their transport guard
       (the logs show them polling, no guard refusal).
 - [ ] **Smoke:** sign in, one practice run, one kids lesson, one support
-      ticket, one QDesk reply.
+      ticket with a PNG attached (proves the scanner), one QDesk reply.
 - [ ] **Watch the logs for 15 minutes** for errors that were not there
       before.
 

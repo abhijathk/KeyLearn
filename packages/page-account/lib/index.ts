@@ -21,6 +21,7 @@ export * from "./Overlay.tsx";
 export { accountProps } from "./prefs.ts";
 export * from "./profiles/BrailleBadge.tsx";
 export * from "./profiles/context.tsx";
+export * from "./profiles/PinPrompt.tsx";
 export * from "./profiles/ProfileAvatar.tsx";
 export * from "./profiles/ProfilePicker.tsx";
 export * from "./profiles/ProfilesManager.tsx";
