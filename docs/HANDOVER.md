@@ -29,16 +29,23 @@ Findings live on the owner's machine in the session scratchpad (`e2e/findings/*.
 
 ## Outstanding: engineering
 
-1. **QDesk Answers page: icon-only buttons.** New article, New rule and Import a file become icon-only, following the thread-toolbar style (`ToolButton`/`Icon*` in `ThreadPage.tsx`). Each keeps an aria-label and a tooltip with the old text, and New rule keeps its disabled state. File: `packages/app/lib/AnswersPage.tsx`. May be partly started; check the diff.
-2. **QDesk modal sweep.** Click every button that opens a dialog and confirm each opens (one had `display:none` from a dead class; see the qdesk-dead-class-audit memory). Also check Esc and focus.
+1. ~~**QDesk Answers page: icon-only buttons.**~~ **Done** (was already in the checkpoint): each keeps its words as aria-label and tooltip, and New rule keeps its disabled state. New article, New rule and Import a file become icon-only, following the thread-toolbar style (`ToolButton`/`Icon*` in `ThreadPage.tsx`). Each keeps an aria-label and a tooltip with the old text, and New rule keeps its disabled state. File: `packages/app/lib/AnswersPage.tsx`. May be partly started; check the diff.
+2. **QDesk modal sweep.** *Static pass done (26 Sep, cloud):* no class in `desk.css` hides outright, and the one Tailwind `hidden` near a dialog is the phone drawer's scrim. Export tickets, Send later and the composer's insert windows ignored Esc; fixed (`useModalKeys` in `ui/primitives.tsx`), on QDesk branch `claude/cool-albattani-4odtli`. *Still to do in a browser:* click every opener; QDesk will not build without `@platform/bridge`, which exists only on the owner's machine. Click every button that opens a dialog and confirm each opens (one had `display:none` from a dead class; see the qdesk-dead-class-audit memory). Also check Esc and focus.
 3. ~~KeyLearn verify keys/keystroke~~ **Done:** there's no mismatch. The DB stores `keys`, the API maps it to `keystroke`, and the page checks `keystroke`; verified in a browser for adult, kids and braille.
 4. ~~Kids/braille sittings~~ **Done:** both pass end to end in a browser, and 8 of 8 forgeries are refused. **Open UI decision:** a kid who finishes the passage before the bell has nothing more to type.
-5. **Account window at phone width:** a final visual check of every section at 390px (Security buttons and learner rows were just fixed).
-6. **Kids, not yet browser-checked** (all committed; last commit `b6270677`, file `packages/page-kids/lib/world.ts` unless noted):
+5. ~~**Account window at phone width:**~~ **Done:** all 9 sections plus the list view at 390px, light and dark, English and Arabic: no horizontal scroll, nothing off screen, no page errors. One open design question: on Security, "Add a passkey" is right-aligned (`.rightAction`) and smaller (`.subtleBtn`), while Two-step and Grown-up PIN use the larger left-aligned `.secBtn`. Both are deliberate in the CSS; unify if wanted. a final visual check of every section at 390px (Security buttons and learner rows were just fixed).
+6. ~~**Kids, not yet browser-checked**~~ **All done (26 Sep, cloud):** lesson 38 (he arms after dark and stands on the island; 55 spots, all rail, deck or island); lessons 24, 28, 32 and 35 at *deep* night (`?hour=11` then the moon: he only comes out 22:00–04:00, so an evening night is one he never appears in); 11+ lesson 1 walks as two 36–37 character passages, 0→33→64, landing on the milestone; the 80 ms loader overlap is gone (`--after: 300ms`). The `?perf` hook now reports his wait, haunts, routine and deep-night flag, and `__world.hurry()` skips his wait. On a software renderer one game second is about 15 real ones. (all committed; last commit `b6270677`, file `packages/page-kids/lib/world.ts` unless noted):
    - Kuttichathan in **lesson 38** at night (`tickStay`). Lesson 37 is checked. Run the night probe on 38 and confirm he appears after dark, on the rail, deck or island only.
    - Time Keepers lesson length for the **11+ band** (`KidsPage.tsx`, `fitPassageToRoad` in `run-length.ts`). 5–6, 7–8 and 9–10 are checked; 11+ opens Classic by default, so seed prefs `{classic:false}`.
    - Loader-to-picker handover: about 80 ms of overlap remains (`kids.module.less`, `.loadingOut` and `.pickerIn`); optional polish.
    - Check the rest of the chapter 3–4 Kuttichathan areas at night (lessons 24, 28, 32, 35); 27 and 36 are checked.
+
+## Found in the cloud pass (26 Sep)
+
+- **Tab answered a follow-up with the opening answer**, and treated questions about itself as chit-chat. Fixed on Tab branch `claude/cool-albattani-4odtli`: follow-ups are marked as the question for the classifier and drafter, grounding searches the latest message first, and questions about the assistant are answered from `ABOUT_ASSISTANT` (policy.mjs).
+- **The crisis script gave generic numbers on any message after the first.** QDesk's append path ignored the ticket's resolved country. Fixed on QDesk branch `claude/cool-albattani-4odtli`.
+- **A short opener plus one long paragraph arrived as two bubbles**, the second a wall. The chunker now cuts long plain paragraphs at sentences (same QDesk branch).
+- **Not a live bug, but worth knowing:** if the server's learner session (`/_/profiles/{id}/enter`) and the browser's saved learner disagree, every sync call is refused and the kids page crashes. Nothing in the app calls `/enter` today; handle it if a learner-PIN screen is ever added.
 
 ## Outstanding: owner actions
 
@@ -89,7 +96,7 @@ None of these were covered in this pass. Run them on an isolated test stack, nev
    - chapter 3–4 night areas (lessons 24, 28, 32, 35);
    - Time Keepers lesson length for the 11+ band (seed prefs `{classic:false}`).
 10. **Certificates, pending the owner's decision:** a kid who finishes the passage before the bell gets nothing more to type. Mock it first; the fix goes in the `KidsPage.tsx` finished-line assessment branch (bump `setPassageNonce`).
-11. **Regression before release:**
+11. **Regression before release:** *KeyLearn's side is green (26 Sep, cloud):* all 72 test packages pass with `DATABASE_CLIENT=sqlite`, after breaking a widget ↔ pages-shared dependency cycle that stopped `lage` running anything, and fixing two tests (a real network call at teardown, and a text query racing its own panel). `@fastr/fetch` is patched (`patches/`) so an unread, aborted response body is no longer an uncaught "Request aborted" in the page. Still to do:
     - every package's tests, one package at a time;
     - QDesk typecheck (must be 0) and `scripts/*.mjs` with `DATA_DIR` on a copy;
     - agent evals, including `eval:standalone` and `eval:release`;
