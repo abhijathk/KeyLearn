@@ -13,6 +13,10 @@ for (const path of [
   "/",
   "/account",
   "/assessment",
+  // Reached under the router's locale basename, so a reload lands here.
+  "/ar/assessment",
+  "/join",
+  "/ar/join",
   "/design",
   "/verify",
   "/help",

@@ -180,6 +180,16 @@ export class Controller {
     return this.renderPage(ctx, Pages.join);
   }
 
+  // The bare path in a locale too: the client router's basename is the
+  // locale, so anything that lands on /ar/join reloads as /ar/join.
+  @http.GET(`/{locale:${localePattern}}${Pages.join.path}`)
+  async ["join-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.join, intl);
+  }
+
   @http.GET(`${Pages.join.path}/{token:[A-Za-z0-9_-]+}`)
   async ["join-page-token"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.join);
@@ -198,6 +208,17 @@ export class Controller {
   @http.GET(`${Pages.assessment.path}`)
   async ["assessment-page"](ctx: Context<RouterState & AuthState>) {
     return this.renderPage(ctx, Pages.assessment);
+  }
+
+  // The Course pane sends a learner here with navigate(), under the
+  // router's locale basename — so an Arabic learner is on /ar/assessment,
+  // and without this a reload in the middle of a sitting was a 404.
+  @http.GET(`/{locale:${localePattern}}${Pages.assessment.path}`)
+  async ["assessment-page-i18n"](
+    ctx: Context<RouterState & AuthState>,
+    @pathParam("locale", pIntl) intl: IntlShape,
+  ) {
+    return this.renderPage(ctx, Pages.assessment, intl);
   }
 
   @http.GET(`${Pages.design.path}`)
