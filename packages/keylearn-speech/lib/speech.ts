@@ -308,6 +308,12 @@ export function registerClipVoice(voice: ClipVoice | null): void {
 const clips = new Map<string, AudioBuffer>();
 const CLIPS_MAX = 200;
 let playing: AudioBufferSourceNode | null = null;
+/**
+ * Bumped by every `hush`. A phrase still being fetched when somebody hushes
+ * must not start when its audio arrives — that was sound coming back after
+ * a page's sound switch had been turned off.
+ */
+let hushes = 0;
 
 /**
  * Fetches already in the air, by the same key the cache uses.
@@ -458,11 +464,18 @@ async function serverSay(
   voice: VoiceSettings,
   onDone?: () => void,
 ): Promise<boolean> {
+  const asked = hushes;
   let buffer: AudioBuffer | null;
   try {
     buffer = await clipFor(text, voice.rate, voice.clip ?? null);
   } catch {
     buffer = null;
+  }
+  // Hushed while it was on its way: handled, and silent — not handed on to
+  // the device voice either, which would be the same line in a worse voice.
+  if (asked !== hushes) {
+    onDone?.();
+    return true;
   }
   const ctx = audio();
   if (buffer == null || ctx == null) {
@@ -694,6 +707,7 @@ function sayWithEngine(
 
 /** Stops any speech in progress, e.g. when the learner starts typing. */
 export function hush(): void {
+  hushes += 1;
   pending = null;
   stopPlaying();
   clipVoice?.stop();

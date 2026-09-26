@@ -47,6 +47,7 @@ import {
   ISLAND_BANYAN,
   ISLAND_MANGROVE,
   islandBanyanAt,
+  islandBanyanTrunkR,
   islandMangroveAt,
   islandRadius,
   islandShore,
@@ -5404,6 +5405,15 @@ export function createKidsWorld(
       walker: () => player?.wrap.position.toArray(),
       passage: () => ({ text: wordText, index: wordIdx }),
       night: () => ({ blend: nightBlend, look: nightLook, now: nightNow }),
+      kutti: () =>
+        kutti == null
+          ? null
+          : {
+              visible: kutti.wrap.visible,
+              at: kutti.wrap.position.toArray(),
+              stay: stay.spot?.kind ?? null,
+              rest: restStage,
+            },
       // The ground read two ways — the grid and the raycast it replaced —
       // so the two can be checked against each other on a live road.
       surfaceBoth: (x: number, z: number) => {
@@ -13585,6 +13595,369 @@ export function createKidsWorld(
           { lesson: 9, at: 0.08, z: -13, kind: "path" },
         ];
   const mysteryNodes = CHAPTER_N === 4 ? wildNodes : WHISPER_NODES;
+
+  /**
+   * HIS AREAS, BY CHAPTER — where the full repertoire runs (owner, 26 Sep
+   * 2026: "all tricks like in Chapter 1, in all chapters, in Kuttichathan
+   * areas"). Chapters 1 and 2 mark theirs in the lesson tables (`trace`,
+   * `corridor`). Chapters 3 and 4 used to have only glimpses; their areas are
+   * the lessons those glimpses were allowed in — never Temple Street — and
+   * the crossing (Chapter 4's 7 and 8) is `tickStay`'s, not the routines'.
+   */
+  const kuttiArea = (n: number): boolean => {
+    if (CHAPTER_N === 3) return n === 4 || n === 7 || n === 8;
+    if (CHAPTER_N === 4) return n === 2 || n === 5 || n === 6;
+    const l = LESSONS.find((x) => x.n === n);
+    return l != null && (l.corridor === true || l.trace != null);
+  };
+  /**
+   * Where he stands for a haunt: out of the thing and toward the road, and
+   * for a house or a well where its roof or rim is. The same numbers as the
+   * Chapter 1 corridor build, whose comments give the reason for each.
+   */
+  const kuttiSpotOf = (a: {
+    readonly haunt: string;
+    readonly x: number;
+    readonly z: number;
+    readonly h?: number;
+    readonly depth?: number;
+  }) => {
+    const toward = a.z < 0 ? 1 : -1;
+    const rimR = a.h != null ? a.h * WELL_RIM_R : 2.2;
+    const step =
+      a.haunt === "house"
+        ? 5.4
+        : a.haunt === "tree"
+          ? 2.2
+          : a.haunt === "well"
+            ? rimR + 0.6
+            : 1.5;
+    const front = a.depth != null ? a.z + toward * a.depth * 0.42 : undefined;
+    const well = a.haunt === "well";
+    return {
+      x: a.x,
+      z: a.z + toward * step,
+      haunt: a.haunt,
+      roofZ: well ? a.z + toward * rimR * 0.78 : front,
+      roofY: well
+        ? a.h != null
+          ? a.h * 0.5
+          : undefined
+        : a.h != null
+          ? a.h * 0.66
+          : undefined,
+    };
+  };
+
+  /**
+   * ── LESSONS 37–38: HE STAYS (owner, 26 Sep 2026) ──────────────────────
+   *
+   * Everywhere else in Chapter 4 he is a glimpse — a second or two, deep in
+   * the night, every minute or so. On the crossing the owner wants him THERE,
+   * all the time and at any hour: perched on a bridge handrail, walking the
+   * far side of the deck, or standing on the island — and never in the
+   * water. Most of all when the child sits down, which is when somebody
+   * would look round and see who else is about.
+   *
+   * He keeps to the camera: every spot is only used while it is in shot,
+   * and he moves between them the way he moves anywhere — gone in a puff of
+   * dust, back in another. The handrail is measured off the bridge itself
+   * (a ray down at each spot), not assumed, so a gap in the rail at a module
+   * seam is a spot he simply does not use.
+   */
+  type StaySpot = {
+    readonly kind: "rail" | "deck" | "island" | "verge";
+    x: number;
+    readonly y: number;
+    readonly z: number;
+    /** The deck's far end, for walking it. */
+    readonly x1?: number;
+  };
+  let staySpots: StaySpot[] | null = null;
+  const stay = {
+    spot: null as StaySpot | null,
+    /** Seconds at this spot, and how long it is held. */
+    t: 0,
+    hold: 0,
+    /** Seconds still unseen between two spots. */
+    gone: 0,
+    /** Walking direction on the deck. */
+    dir: 1,
+    /** When the one-shot at a standing spot ends. */
+    shotUntil: 0,
+    wasSitting: false,
+    /**
+     * Seconds until he first turns up once it is dark. Null until the dark
+     * comes — he is never there on the frame the night is switched on.
+     */
+    armIn: null as number | null,
+  };
+  const _stayRay = new THREE.Raycaster();
+  const _stayDown = new THREE.Vector3(0, -1, 0);
+  const _stayFrom = new THREE.Vector3();
+  const buildStaySpots = (): StaySpot[] => {
+    const out: StaySpot[] = [];
+    if (WILD == null) return out;
+    const c = WILD;
+    const bridges: THREE.Object3D[] = [];
+    scene.traverse((o) => {
+      if (/^chapter4-bridge-/.test(o.name)) bridges.push(o);
+    });
+    const topAt = (x: number, z: number): number | null => {
+      _stayFrom.set(x, 60, z);
+      _stayRay.set(_stayFrom, _stayDown);
+      const hit = _stayRay.intersectObjects(bridges, true)[0];
+      return hit == null ? null : hit.point.y;
+    };
+    for (const d of BRIDGES) {
+      const from = d.x - d.halfLen + 1.5;
+      const to = d.x + d.halfLen - 1.5;
+      // The far rail — behind the road, where he never stands between the
+      // camera and the children. Its top is the highest thing within a
+      // hand's width of the deck's back edge.
+      for (let x = from; x <= to; x += 2.4) {
+        const mz = meander(x);
+        let best: { y: number; z: number } | null = null;
+        for (let z = mz - d.halfWid - 1; z <= mz - d.halfWid + 0.6; z += 0.05) {
+          const y = topAt(x, z);
+          if (y != null && y > d.y + 1.2 && (best == null || y > best.y)) {
+            best = { y, z };
+          }
+        }
+        if (best != null) out.push({ kind: "rail", x, y: best.y, z: best.z });
+      }
+      out.push({
+        kind: "deck",
+        x: from,
+        x1: to,
+        y: d.y,
+        z: meander(d.x) - d.halfWid * 0.62,
+      });
+    }
+    // The island: dry ground behind the road, clear of the banyan's trunk
+    // and the mangrove's roots.
+    const banyan = islandBanyanAt(c);
+    const mangrove = islandMangroveAt(c);
+    for (let a = 0; a < 20; a++) {
+      const ang = (a / 20) * Math.PI * 2;
+      for (const r of [0.3, 0.5, 0.68]) {
+        const x = c.islandX + Math.cos(ang) * c.islandRX * r;
+        const z = c.islandZ + Math.sin(ang) * c.islandRZ * r;
+        if (z > meander(x) - 7.5) continue;
+        if (!wildDryAround(c, x, z, 1)) continue;
+        if (deckY(x, z) != null) continue;
+        if (Math.hypot(x - banyan.x, z - banyan.z) < islandBanyanTrunkR() + 1.4)
+          continue;
+        if (Math.hypot(x - mangrove.x, z - mangrove.z) < 2.2) continue;
+        out.push({ kind: "island", x, y: terrainY(x, z), z });
+      }
+    }
+    return out;
+  };
+  /** A spot is usable while it is in shot — the middle of the frame, not its edge. */
+  const stayInShot = (x: number, z: number) => Math.abs(shotX(x, z)) < 0.62;
+  const stayVerge = (): StaySpot | null => {
+    if (WILD == null) return null;
+    for (let i = 0; i < 12; i++) {
+      const x = playerX + 6 + Math.random() * 7;
+      const z = meander(x) - 7 - Math.random() * 3;
+      if (
+        deckY(x, z) == null &&
+        wildDryAround(WILD, x, z, 1) &&
+        stayInShot(x, z)
+      ) {
+        return { kind: "verge", x, y: terrainY(x, z), z };
+      }
+    }
+    return null;
+  };
+  const pickStaySpot = (sitting: boolean): StaySpot | null => {
+    const spots = (staySpots ??= buildStaySpots());
+    const seen = spots.flatMap((s): StaySpot[] => {
+      if (s.kind !== "deck") return stayInShot(s.x, s.z) ? [s] : [];
+      // The part of the deck in shot, as a walk of its own.
+      let a: number | null = null;
+      let b = s.x;
+      for (let x = s.x; x <= s.x1!; x += 0.5) {
+        if (stayInShot(x, s.z)) {
+          a ??= x;
+          b = x;
+        }
+      }
+      return a != null && b - a > 4 ? [{ ...s, x: a, x1: b }] : [];
+    });
+    const others = seen.filter((s) => s !== stay.spot);
+    if (sitting) {
+      // Close by, but not on top of them: the nearest in-shot spot at least
+      // three units off.
+      const near = others
+        .filter((s) => Math.abs(s.x - playerX) > 3)
+        .sort((u, v) => Math.abs(u.x - playerX) - Math.abs(v.x - playerX));
+      if (near[0] != null) return near[0];
+    }
+    const roll = Math.random();
+    const want = roll < 0.45 ? "rail" : roll < 0.75 ? "island" : "deck";
+    const kind = others.filter((s) => s.kind === want);
+    const pool = kind.length > 0 ? kind : others;
+    return pool[Math.floor(Math.random() * pool.length)] ?? stayVerge();
+  };
+  const STAY_THROW = "kutti_17_pick_up_and_throw_stone";
+  const placeStay = (k: KuttiRig, s: StaySpot, still: boolean) => {
+    stay.spot = s;
+    // Whatever routine he was in belongs to somewhere else on the road.
+    k.routine = null;
+    k.beat = -1;
+    stay.t = 0;
+    stay.hold = 8 + Math.random() * 8;
+    const x = s.kind === "deck" ? s.x + Math.random() * (s.x1! - s.x) : s.x;
+    s.x = s.kind === "deck" ? s.x : x;
+    k.wrap.position.set(x, s.y, s.z);
+    k.wrap.scale.setScalar(perspective(s.z) / perspective(k.spots[0]!.z));
+    k.mixer.stopAllAction();
+    let clip = "kutti_01_mischievous_idle";
+    if (s.kind === "rail") {
+      clip = "kutti_22_perched_crouch";
+      k.wrap.rotation.y = Math.PI * (0.12 + Math.random() * 0.16);
+    } else if (s.kind === "deck") {
+      stay.dir = Math.random() < 0.5 ? -1 : 1;
+      clip = still ? "kutti_01_mischievous_idle" : "kutti_04_sneaky_walk";
+      k.wrap.rotation.y = still ? Math.PI * 0.2 : (stay.dir * Math.PI) / 2;
+    } else {
+      k.wrap.rotation.y = Math.PI * (0.1 + Math.random() * 0.25);
+      // A stone at the children, now and then — aimed at them and landing
+      // short, the way his stones always do (see `stoneAim`).
+      if (!still && Math.random() < 0.3 && k.act.has(STAY_THROW)) {
+        k.routine = null;
+        k.beat = -1;
+        k.mixer.stopAllAction();
+        k.act.get(STAY_THROW)!.reset().play();
+        stay.shotUntil = (KUTTI_CLIPS.get(STAY_THROW)?.seconds ?? 4.25) + 0.2;
+        faceChild(k);
+        const y0 = s.y + 1.3;
+        k.stoneFrom.set(x, y0, s.z);
+        k.stoneTo.set(0, 0, player?.wrap.position.z ?? s.z);
+        k.stoneArc = 1.25;
+        k.stoneAim = "short";
+        k.stoneLeft = 1;
+        k.stoneGap = THROW_RELEASE;
+        k.wrap.visible = true;
+        k.hidden = false;
+        kuttiBurst(k, x, s.y, s.z);
+        return;
+      }
+      if (!still) {
+        const shots = [
+          "kutti_13_trickster_laugh",
+          "kutti_15_peek_left",
+          "kutti_16_peek_right",
+          "kutti_21_mischief_hop",
+          "kutti_24_hear_something",
+        ];
+        const shot = shots[Math.floor(Math.random() * shots.length)]!;
+        if (k.act.has(shot)) {
+          clip = shot;
+          stay.shotUntil = (KUTTI_CLIPS.get(shot)?.seconds ?? 2) + 0.2;
+        }
+      }
+    }
+    k.act.get(clip)?.reset().play();
+    k.wrap.visible = true;
+    k.hidden = false;
+    if (!still) kuttiBurst(k, x, s.y, s.z);
+  };
+  /** Hide him, and the stay with him — leaving the crossing, or calm mode. */
+  const endStay = (k: KuttiRig | null, burst: boolean) => {
+    if (stay.spot == null) return;
+    if (k != null) {
+      if (burst && k.wrap.visible) {
+        kuttiBurst(k, k.wrap.position.x, k.wrap.position.y, k.wrap.position.z);
+      }
+      k.wrap.visible = false;
+      k.hidden = true;
+    }
+    stay.spot = null;
+    stay.gone = 0;
+    stay.armIn = null;
+  };
+  const tickStay = (k: KuttiRig, dt: number) => {
+    const still = motionStilled();
+    const sitting =
+      restStage === "sitIdle" ||
+      restStage === "sitDown" ||
+      restStage === "crouchIdle";
+    tickKuttiVfx(k, dt);
+    // A NIGHT THING HERE TOO, AND NOT ON CUE (owner, 26 Sep 2026). The
+    // crossing is his only after dark — the moon button — and not the moment
+    // it is pressed: the dark settles, and a few seconds later he is there.
+    // Day again and he goes.
+    if (!nightNow || nightBlend < 0.95) {
+      if (stay.spot != null) endStay(k, !still);
+      else if (k.wrap.visible) {
+        k.wrap.visible = false;
+        k.hidden = true;
+      }
+      stay.armIn = null;
+      return;
+    }
+    if (stay.armIn == null) stay.armIn = 7 + Math.random() * 7;
+    if (stay.armIn > 0) {
+      stay.armIn -= dt;
+      return;
+    }
+    if (stay.gone > 0) {
+      stay.gone -= dt;
+      if (stay.gone > 0) return;
+      const next = pickStaySpot(sitting);
+      if (next != null) placeStay(k, next, still);
+      return;
+    }
+    const s = stay.spot;
+    if (k.wrap.visible) k.mixer.update(dt);
+    if (s == null) {
+      const next = pickStaySpot(sitting);
+      if (next != null) placeStay(k, next, still);
+      stay.wasSitting = sitting;
+      return;
+    }
+    stay.t += dt;
+    // Walking the deck, turning at the ends of the stretch in shot.
+    if (s.kind === "deck" && !still) {
+      const speed = 0.9 * k.wrap.scale.x;
+      let x = k.wrap.position.x + stay.dir * speed * dt;
+      if (x > s.x1! || x < s.x) {
+        stay.dir = -stay.dir;
+        x = Math.max(s.x, Math.min(s.x1!, x));
+        k.wrap.rotation.y = (stay.dir * Math.PI) / 2;
+      }
+      k.wrap.position.x = x;
+    }
+    // Back to idling once a one-shot has played through.
+    if (stay.shotUntil > 0 && stay.t >= stay.shotUntil) {
+      stay.shotUntil = 0;
+      k.mixer.stopAllAction();
+      k.act.get("kutti_01_mischievous_idle")?.reset().play();
+    }
+    const sat = sitting && !stay.wasSitting;
+    stay.wasSitting = sitting;
+    const offShot = !stayInShot(k.wrap.position.x, k.wrap.position.z);
+    // Sitting holds him where he is once he has come over; standing up again
+    // lets the rotation carry on a few seconds later.
+    if (sitting && !sat && !offShot) {
+      stay.t = Math.min(stay.t, stay.hold - 4);
+      return;
+    }
+    if (sat || offShot || stay.t > stay.hold) {
+      if (still) {
+        const next = pickStaySpot(sitting);
+        if (next != null) placeStay(k, next, true);
+        return;
+      }
+      kuttiBurst(k, k.wrap.position.x, k.wrap.position.y, k.wrap.position.z);
+      k.wrap.visible = false;
+      k.hidden = true;
+      stay.gone = 0.45;
+    }
+  };
   const tickWhispers = (dt: number) => {
     if ((CHAPTER_N !== 3 && CHAPTER_N !== 4) || CHAPTER == null) return;
     whisperTime += Math.min(dt, 0.1);
@@ -13602,11 +13975,12 @@ export function createKidsWorld(
       whisperNext = whisperTime + 12;
       whisperUntil = 0;
     }
-    if (k != null) {
-      k.wrap.visible =
-        state.figure && whisperTime < whisperUntil && !motionStilled();
-      k.hidden = !k.wrap.visible;
-      if (k.wrap.visible) k.mixer.update(dt);
+    // The crossing is his to stay on — see `tickStay`.
+    const staying = CHAPTER_N === 4 && (lesson === 7 || lesson === 8);
+    if (staying && k != null) {
+      tickStay(k, dt);
+    } else if (stay.spot != null) {
+      endStay(k, !motionStilled());
     }
     if (whisperMoving != null) {
       const p = whisperMoving;
@@ -13641,54 +14015,8 @@ export function createKidsWorld(
       if (!p.roll) opts.onWhisper?.();
       if (lesson >= 8) whisperFarewells.add(lesson);
     }
-    const nodes = mysteryNodes.filter((n) => n.lesson === lesson);
-    const node = nodes[whisperSequence++ % Math.max(1, nodes.length)];
-    if (!state.figure || k == null || node == null) return;
-    let x = begin + node.at * (CHAPTER[lesson]! - begin);
-    let z: number = node.z;
-    let y = terrainY(x, z);
-    if (node.kind === "bridge" && WILD != null) y = WILD_BANK_Y + 1.4;
-    const pattern =
-      node.kind === "wall"
-        ? /Laterite_Wall/
-        : node.kind === "well"
-          ? /Village_Well/
-          : node.kind === "root"
-            ? /Banyan/
-            : null;
-    if (pattern != null) {
-      const candidates = whisperStructures
-        .filter((s) => s.lesson === lesson && pattern.test(s.model))
-        .sort(
-          (a, b) =>
-            Math.abs((a.box.min.x + a.box.max.x) / 2 - x) -
-            Math.abs((b.box.min.x + b.box.max.x) / 2 - x),
-        );
-      const box = candidates[0]?.box;
-      if (box == null) return;
-      x = (box.min.x + box.max.x) / 2;
-      z = node.kind === "wall" ? (box.min.z + box.max.z) / 2 : box.max.z + 0.8;
-      y = node.kind === "wall" ? box.max.y : terrainY(x, z);
-    }
-    if (
-      z > -8 ||
-      Math.abs(shotX(x, z)) >= 0.8 ||
-      (WILD != null && node.kind !== "bridge" && !wildDry(WILD, x, z))
-    )
-      return;
-    k.wrap.position.set(x, y, z);
-    // Each glimpse can use a different depth; undo the original fitted scale.
-    k.wrap.scale.setScalar(perspective(z) / perspective(k.spots[0]!.z));
-    k.wrap.rotation.y = Math.PI * 0.2;
-    k.mixer.stopAllAction();
-    const clip =
-      node.kind === "wall" || node.kind === "bridge"
-        ? "kutti_22_perched_crouch"
-        : "kutti_15_peek_left";
-    k.act.get(clip)?.reset().play();
-    whisperUntil = whisperTime + state.seconds;
-    k.wrap.visible = true;
-    k.hidden = false;
+    // The figure is the routines' now — see `tickKutti` and `kuttiArea`.
+    // What is left here is the props that move by themselves.
   };
 
   /**
@@ -14204,8 +14532,17 @@ export function createKidsWorld(
 
   const tickKutti = (dt: number) => {
     if (CHAPTER_N === 3 || CHAPTER_N === 4) {
+      // The props still move on their own schedule, and the crossing is
+      // `tickStay`'s. Everywhere else in these chapters he runs the same
+      // routines as Chapter 1 (owner, 26 Sep 2026).
       tickWhispers(dt);
-      return;
+      if (
+        CHAPTER_N === 4 &&
+        CHAPTER != null &&
+        [7, 8].includes(lessonAt(playerX, CHAPTER).n)
+      ) {
+        return;
+      }
     }
     const k = kutti;
     if (k == null || k.spots.length === 0) {
@@ -14362,7 +14699,8 @@ export function createKidsWorld(
       // A slightly wider band than the strict middle: sitting is something a
       // child does where they happen to stop, and 22-78 refused a lot of road
       // that is nowhere near a milestone.
-      const midLesson = here?.trace != null && frac > 0.15 && frac < 0.85;
+      const midLesson =
+        here != null && kuttiArea(here.n) && frac > 0.15 && frac < 0.85;
       if (nightNow && sitting && midLesson && k.roadCool <= 0) {
         const r2 = KUTTI_ROUTINES.find((x) => x.id === "road-behind");
         if (r2 != null) {
@@ -22070,15 +22408,50 @@ export function createKidsWorld(
         }
         // Load regardless of the opening hour: a daytime visit may reach
         // 22:00 without a scene rebuild. The tick alone owns visibility.
+        //
+        // THE SAME ROUTINES AS CHAPTER 1 (owner, 26 Sep 2026), so the same
+        // kind of spots: the walls, wells, great trees and houses of his
+        // areas, plus the chapter's own paths as road. Nothing within reach
+        // of a temple — the sacred-places rule is absolute.
         later(() => {
-          void spawnKutti(
-            mysteryNodes.map((n) => ({
+          if (CHAPTER == null) return;
+          const bounds = CHAPTER;
+          const temples = [
+            ...chapterPlacements()
+              .filter((pl) => /Temple|Shrine/i.test(pl.model))
+              .map((pl) => pl.x),
+            ...whisperStructures
+              .filter((st) => /Temple|Shrine/i.test(st.model))
+              .map((st) => (st.box.min.x + st.box.max.x) / 2),
+          ];
+          const clearOfTemples = (x: number) =>
+            temples.every((tx) => Math.abs(tx - x) > 25);
+          const anchorSpots = thinAnchors(
+            anchorsFrom(chapterPlacements()).filter(
+              (a) =>
+                kuttiArea(lessonAt(a.x, bounds).n) &&
+                a.haunt !== "lamp" &&
+                clearOfTemples(a.x),
+            ),
+          ).map(kuttiSpotOf);
+          const nodeSpots = mysteryNodes
+            .filter((n) => kuttiArea(n.lesson) && n.kind !== "bridge")
+            .map((n) => ({
               x:
-                CHAPTER[n.lesson - 1]! +
-                n.at * (CHAPTER[n.lesson]! - CHAPTER[n.lesson - 1]!),
+                bounds[n.lesson - 1]! +
+                n.at * (bounds[n.lesson]! - bounds[n.lesson - 1]!),
               z: n.z,
-              haunt: n.kind,
-            })),
+              haunt: "road",
+            }))
+            .filter((sp) => clearOfTemples(sp.x))
+            .filter((sp) => WILD == null || wildDry(WILD, sp.x, sp.z, 1));
+          const spots = [...anchorSpots, ...nodeSpots];
+          // Always spawned in these chapters: the crossing needs him even
+          // where no routine spot is left, so a harmless one stands in.
+          void spawnKutti(
+            spots.length > 0
+              ? spots
+              : [{ x: bounds[6] ?? 0, z: -12, haunt: "road" }],
           );
         });
       }

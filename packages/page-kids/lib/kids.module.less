@@ -4861,39 +4861,55 @@
  */
 .loadingOut {
   pointer-events: none;
-  /* 560ms — the same number as `HANDOVER_MS` in KidsPage, which is how long
+  /* 640ms — the same number as `HANDOVER_MS` in KidsPage, which is how long
      the card is kept mounted for. If one changes the other must: too short
      and the card is torn away mid-move, too long and it sits there done. */
-  animation: loadHandover 560ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: loadHandover 640ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* The sign goes first: gone inside the stretch where the card is still
-   holding, so the name has left before the screen does. */
+/*
+ * IN SEQUENCE, NOT SUPERIMPOSED (owner, 26 Sep 2026).
+ *
+ * This was one dissolve of the whole card over the picker, and two busy
+ * layouts at half strength each — two signs, two figures, the braille line
+ * over the name — read as a double exposure rather than a movement. Now
+ * the card's CONTENTS leave first while its plain ground holds; the ground
+ * then dissolves, and the picker's pieces only start rising once the old
+ * ones are gone (see `.pickerIn`). What is on screen at any moment is one
+ * layout, or a calm ground between two.
+ */
+.loadingOut > * {
+  animation: loadContentOut 300ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* The sign goes first and goes UP, toward where the picker keeps it. */
 .loadingOut .loadSign {
-  animation: loadSignOut 220ms ease-out forwards;
+  animation: loadSignOut 260ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes loadContentOut {
+  to {
+    opacity: 0;
+    transform: translateY(-2%) scale(0.98);
+  }
 }
 
 @keyframes loadSignOut {
   to {
     opacity: 0;
+    transform: translateY(-0.9rem) scale(0.9);
   }
 }
 
+/* The ground holds while the contents leave, then goes. */
 @keyframes loadHandover {
-  0% {
+  0%,
+  30% {
     opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
-  /* Holds almost all of its opacity through the first third: a fade that
-     starts immediately reads as the screen failing rather than leaving. */
-  35% {
-    opacity: 0.92;
   }
 
   100% {
     opacity: 0;
-    transform: translateY(-3.5%) scale(1.045);
   }
 }
 
@@ -4906,20 +4922,27 @@
  * read is one movement rather than four things arriving.
  */
 .pickerIn {
+  /* Everything waits `--after` for the card's own contents to have left —
+     see `.loadingOut`. */
+  --after: 220ms;
+
   .pickTop {
-    animation: pickUp 460ms 60ms both cubic-bezier(0.2, 0.7, 0.3, 1);
+    animation: pickUp 460ms calc(var(--after) + 60ms) both
+      cubic-bezier(0.2, 0.7, 0.3, 1);
   }
 
   .pickStage {
-    animation: pickStand 620ms both cubic-bezier(0.2, 0.7, 0.3, 1);
+    animation: pickStand 620ms var(--after) both cubic-bezier(0.2, 0.7, 0.3, 1);
   }
 
   .pickIdent {
-    animation: pickUp 460ms 220ms both cubic-bezier(0.2, 0.7, 0.3, 1);
+    animation: pickUp 460ms calc(var(--after) + 220ms) both
+      cubic-bezier(0.2, 0.7, 0.3, 1);
   }
 
   .pickRows {
-    animation: pickUp 500ms 300ms both cubic-bezier(0.2, 0.7, 0.3, 1);
+    animation: pickUp 500ms calc(var(--after) + 300ms) both
+      cubic-bezier(0.2, 0.7, 0.3, 1);
   }
 
   /* The faces land one after another, left to right across both rows. A row
@@ -4931,19 +4954,19 @@
   }
 
   .pickOne:nth-child(1) {
-    animation-delay: 360ms;
+    animation-delay: calc(var(--after) + 360ms);
   }
 
   .pickOne:nth-child(2) {
-    animation-delay: 420ms;
+    animation-delay: calc(var(--after) + 420ms);
   }
 
   .pickOne:nth-child(3) {
-    animation-delay: 480ms;
+    animation-delay: calc(var(--after) + 480ms);
   }
 
   .pickOne:nth-child(4) {
-    animation-delay: 540ms;
+    animation-delay: calc(var(--after) + 540ms);
   }
 }
 
@@ -4992,6 +5015,8 @@
  */
 @media (prefers-reduced-motion: reduce) {
   .loadingOut,
+  .loadingOut > *,
+  .loadingOut .loadSign,
   .pickerIn .pickTop,
   .pickerIn .pickStage,
   .pickerIn .pickIdent,

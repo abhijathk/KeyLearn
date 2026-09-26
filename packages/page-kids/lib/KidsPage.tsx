@@ -1916,7 +1916,7 @@ const NAME_MAX = 12;
  * made to watch it: measured at 400ms it still cut, and past about 700ms it
  * starts to feel like another wait.
  */
-const HANDOVER_MS = 560;
+const HANDOVER_MS = 640;
 
 /** The least time a loading card stays up, however fast the world arrives. */
 const MIN_LOADER_MS = 2500;
@@ -3759,6 +3759,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       world: prefs.sounds && prefs.worldSounds,
     });
   }, [prefs.sounds, prefs.clickSounds, prefs.worldSounds]);
+  // The coach's voice is not on either bus — it plays through the speech
+  // package — so the master switch silences it here: the sentence being
+  // spoken, and the one waiting for a pause in the typing.
+  useEffect(() => {
+    if (!prefs.sounds || !prefs.readAloud) {
+      pendingSpeechRef.current = null;
+      stopSpeaking();
+    }
+  }, [prefs.sounds, prefs.readAloud]);
   /**
    * The background of the village: moving air, and insects after dark.
    *
@@ -4324,6 +4333,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         return;
       }
       pendingSpeechRef.current = null;
+      // Asked again at release, not only at queueing: the sound may have been
+      // switched off in the pause the line was waiting for.
+      if (!prefsRef.current.sounds || !prefsRef.current.readAloud) {
+        return;
+      }
       speakLine(pending.line, cfg.speechRate);
     }, 200);
     return () => clearInterval(id);
@@ -5814,16 +5828,24 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * over it, which is the nearest a pair of separate canvases gets to him
    * running up and stopping. `handing` is that beat. The picker underneath
    * is already live, so nothing is waiting on this.
+   *
+   * DERIVED IN THE SAME RENDER THAT OPENS THE PICKER, not switched on by an
+   * effect after it. As an effect it arrived a render late: for one frame
+   * the picker was open and `handing` still false, so the card unmounted —
+   * the picker flashed up whole — and then mounted again to play its exit,
+   * on a fresh canvas with no runner on it (owner, 26 Sep 2026: "a bit
+   * rough"). Now the card is only ever let go once the beat is over.
    */
-  const [handing, setHanding] = useState(false);
+  const [handedOver, setHandedOver] = useState(false);
   useEffect(() => {
     if (!pickOpen) {
+      setHandedOver(false);
       return;
     }
-    setHanding(true);
-    const t = setTimeout(() => setHanding(false), HANDOVER_MS);
+    const t = setTimeout(() => setHandedOver(true), HANDOVER_MS);
     return () => clearTimeout(t);
   }, [pickOpen]);
+  const handing = pickOpen && !handedOver;
 
   /**
    * The loading screen, built once and placed in one of two spots.
@@ -7754,6 +7776,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             // The same voice the coach uses, and the same rule: typing stops
             // it. `speakLine` already replaces whatever is playing, so a
             // second tap on another part swaps rather than overlaps.
+            // Sound off is off, a read-aloud tap included.
+            if (!prefsRef.current.sounds) {
+              return;
+            }
             unlockVoice();
             speakLine(text, cfg.speechRate);
           }}
