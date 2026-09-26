@@ -47,6 +47,30 @@ Findings live on the owner's machine in the session scratchpad (`e2e/findings/*.
 - **A short opener plus one long paragraph arrived as two bubbles**, the second a wall. The chunker now cuts long plain paragraphs at sentences (same QDesk branch).
 - **Not a live bug, but worth knowing:** if the server's learner session (`/_/profiles/{id}/enter`) and the browser's saved learner disagree, every sync call is refused and the kids page crashes. Nothing in the app calls `/enter` today; handle it if a learner-PIN screen is ever added.
 
+## Release end-to-end pass (26 Sep, cloud)
+
+Browser tests of every KeyLearn area on a fresh test stack; 164 of 169 feature checks pass, and the other five are by design or blocked (below). The full report is a private artifact, "KeyLearn release pass".
+
+**Fixed:**
+- A kid could switch to the grown-up profile from the menu with no PIN, even with a grown-up PIN set (`MenuDrawer.tsx`, now asks for it).
+- Multiplayer rails showed characters per minute labelled "wpm", about 5× the real speed (`Rails.tsx`).
+- The learner editor's name and year fields were unnamed to screen readers; the typing area and account switches too. Zero critical axe findings remain; colour contrast in the default theme is the only finding left.
+- Six new labels translated into all 54 languages; two typography slips.
+- The release checklist now names the virus scanner: with no `CLAMAV_HOST`, every support attachment is refused (fails closed, by design).
+
+**Blocked:**
+- **Organisations:** creating one needs a platform-staff account (the `staff` roster table, plus a passkey or 2FA). The agent was not permitted to grant that in the test DB.
+- **A certificate pass:** needs about 200 lessons over three weeks, with no dev shortcut. Everything short of a pass is tested: the Course pane, /assessment turning learners away, 409/403 refusals and /verify.
+- **QDesk:** waits on `@platform/bridge`.
+- **The sound library:** not pushed yet.
+
+**By design, don't chase:**
+- Time Keepers uploads results at the milestone, not per passage.
+- The braille "LINE n / m" figure is the cell within the line.
+- KeyLearn sends no email when a ticket is logged.
+- Requests with no Origin or Sec-Fetch-Site pass the CSRF guard.
+- `/for-schools` is 404 until switched on in the control centre.
+
 ## Outstanding: owner actions
 
 - **Drop the QDesk stash:** `git -C quakka-support-desk stash drop stash@{0}`. It's fully superseded; a patch backup exists on the owner's machine.
@@ -78,6 +102,8 @@ None of these were covered in this pass. Run them on an isolated test stack, nev
 - **KeyLearn:** copy the DB with `sqlite3 .backup`, then run with env overrides. Values set in the environment win over `.env`. Set `SERVER_PORT=4200 SERVER_PORT_WS=4201 APP_URL=http://localhost:4200/`, point `DATA_DIR` and `DATABASE_FILENAME` at the copy, and set `MAIL_TRANSPORT=log` (sign-in links land in the log), `QDESK_URL=http://localhost:4300` and the Cloudflare always-pass Turnstile test keys.
 - **QDesk:** set `PORT=4300`, `DATA_DIR` to a copy of `.data`, `KEYLEARN_API_URL=http://localhost:4200`, an empty `QDESK_HANDOFF_WEBHOOK_URL` and `ATTACHMENT_SCAN=off`, and empty the `push_subscription` table in the copy.
 - **Ports:** kill by port, never with `pkill -f "keylearn master process"`.
+- **Multiplayer needs a proxy in front.** Game rooms live only on the `SERVER_PORT_WS` worker; production nginx sends `/_/game/` there. Without the same split, a socket opened on the main port reaches a worker with no rooms and sits on "Finding you a room" for ever. Run the app on 4210/4211 with `APP_URL=http://localhost:4200/`, and a small nginx on 4200 that proxies `/_/game/` (with `Upgrade`) to 4211 and everything else to 4210, passing `Host $http_host`. Set `MULTIPLAYER_ENABLED=true`.
+- **Don't call `/_/profiles/{id}/enter` from a test** on a shared session: it narrows that session to one learner, and every other test using it then gets 403s. `POST /_/profiles/exit` undoes it.
 
 **Untested so far:**
 1. **Staff composer reply, live:** send a reply from QDesk's composer on a real thread. The delivery code is covered by the worker path only.
@@ -94,10 +120,10 @@ None of these were covered in this pass. Run them on an isolated test stack, nev
 9. **Kids:**
    - lesson 38 Kuttichathan at night;
    - chapter 3–4 night areas (lessons 24, 28, 32, 35);
-   - Time Keepers lesson length for the 11+ band (seed prefs `{classic:false}`).
+   - ~~Time Keepers for the 11+ band (seed prefs `{classic:false}`)~~ **done 26 Sep**: Ravi (12) plays it through and gets the next passage.
 10. ~~**Certificates, pending the owner's decision:**~~ **Decided and done (26 Sep):** the next passage comes straight away (not browser-checked: needs an eligible learner). a kid who finishes the passage before the bell gets nothing more to type. Mock it first; the fix goes in the `KidsPage.tsx` finished-line assessment branch (bump `setPassageNonce`).
 11. **Regression before release:** *KeyLearn's side is green (26 Sep, cloud):* all 72 test packages pass with `DATABASE_CLIENT=sqlite`, after breaking a widget ↔ pages-shared dependency cycle that stopped `lage` running anything, and fixing two tests (a real network call at teardown, and a text query racing its own panel). `@fastr/fetch` is patched (`patches/`) so an unread, aborted response body is no longer an uncaught "Request aborted" in the page. Still to do:
     - every package's tests, one package at a time;
     - QDesk typecheck (must be 0) and `scripts/*.mjs` with `DATA_DIR` on a copy;
     - agent evals, including `eval:standalone` and `eval:release`;
-    - a headless crawl of both apps at 1400 and 390px, light and dark, and in `/ar`.
+    - ~~a headless crawl of KeyLearn at 1400 and 390px, light and dark, and in `/ar`~~ **done 26 Sep** (248 loads; every non-clean one explained in the report). QDesk's crawl still waits on `@platform/bridge`.
