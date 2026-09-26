@@ -34,6 +34,9 @@ import {
 } from "./report-charts.tsx";
 import * as styles from "./road.module.less";
 
+/** How long the report ignores Space and Enter after it appears. */
+const HOTKEY_GRACE_MS = 1000;
+
 export function ReportScreen({ result }: { result: TestResult }) {
   const { setView } = useView(views);
   const { formatNumber, formatPercents } = useIntlNumbers();
@@ -42,9 +45,22 @@ export function ReportScreen({ result }: { result: TestResult }) {
 
   const handleNext = () => setView("test");
 
+  // A GRACE PERIOD for the keyboard (release E2E, 26 Sep 2026). The clock
+  // runs out mid-word, so the next thing a typist does is press Space — and
+  // Space is "go again". The report was replaced by a fresh test on the very
+  // keystroke that ended the old one, before anybody had seen a number.
+  // Keys count from a second after the report appears; the button is
+  // immediate.
+  const shownAt = useRef(performance.now());
+  const handleKey = () => {
+    if (performance.now() - shownAt.current >= HOTKEY_GRACE_MS) {
+      handleNext();
+    }
+  };
+
   useHotkeys({
-    ["Enter"]: handleNext,
-    ["Space"]: handleNext,
+    ["Enter"]: handleKey,
+    ["Space"]: handleKey,
   });
 
   // Treat the report as a sub-step of the test: pressing Back (browser or the
