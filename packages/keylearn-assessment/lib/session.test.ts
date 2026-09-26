@@ -55,6 +55,17 @@ test("the part-line joins the finished ones, weighted by its own time", () => {
   equal(Math.round(combine(merged, 60)!.speed * 100) / 100, 55);
 });
 
+test("a finished line still on screen at the bell is not counted twice", () => {
+  // The kids page leaves a completed passage up until the clock runs out; its
+  // part-line provider handed the same line back, and the run doubled.
+  const log = { text: "ab", steps: [[0, 0], [300, 0]] as const };
+  const finished = [{ ...segment(40, 10_000), log }];
+  equal(withRemainder(finished, { ...segment(40, 10_000), log: { ...log } }), finished);
+  // A different line with the same text is still a line of its own.
+  const other = { text: "ab", steps: [[900, 0], [1300, 0]] as const };
+  equal(withRemainder(finished, { ...segment(40, 10_000), log: other }).length, 2);
+});
+
 test("nothing half-typed is nothing to add", () => {
   const finished = [segment(40, 10_000)];
   equal(withRemainder(finished, null), finished);

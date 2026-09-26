@@ -3,6 +3,7 @@ import {
   AssessmentSettings,
   BetweenRuns,
   CertificateDialog,
+  type LoggedSegment,
   Hud,
   type Outcome,
   OutcomeDialog,
@@ -15,8 +16,10 @@ import {
   type Run,
 } from "@keylearn/certificate";
 import { Layout, loadKeyboard } from "@keylearn/keyboard";
+import { LessonType, lessonProps } from "@keylearn/lesson";
 import {
   brailleEvidence,
+  pullBrailleProgress,
   languageLineOf,
   typingEvidence,
   useProfiles,
@@ -35,8 +38,15 @@ import {
 import { Letter } from "@keylearn/phonetic-model";
 import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import { type Result } from "@keylearn/result";
+import { SettingsContext, useSettings } from "@keylearn/settings";
 import { openResultStorage, ResultLoader } from "@keylearn/result-loader";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { FormattedMessage } from "react-intl";
 import { useNavigate } from "react-router";
 import { WithAdaptations } from "../adaptations.tsx";
@@ -94,9 +104,31 @@ export default function Page(): ReactNode {
   );
 }
 
-/** A braille learner's evidence is read straight from the braille store. */
+/**
+ * A braille learner's evidence is read from the braille store — after the
+ * account's synced copy has been folded in. Read before that, a learner on a
+ * device they have not practised on was told "Not yet" however much they had
+ * done, while the server (which judges the synced copy) would have agreed.
+ */
 function BrailleSitting(): ReactNode {
   const { active } = useProfiles();
+  const profileId = active?.id ?? null;
+  const [pulled, setPulled] = useState(false);
+  useEffect(() => {
+    let live = true;
+    setPulled(false);
+    void pullBrailleProgress(profileId).finally(() => {
+      if (live) {
+        setPulled(true);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [profileId]);
+  if (!pulled) {
+    return null;
+  }
   return (
     <Sitting
       evidence={brailleEvidence(active!)}
@@ -216,14 +248,29 @@ function Sitting({
     void navigate(Pages.account.path);
   }, [navigate]);
 
-  // Each attempt starts its clock on the server as it begins, so the
-  // sitting it reports can be held to the time that really passed.
+  // Each attempt starts on the server: its clock, and the text it is typed
+  // on. The keystrokes that come back are checked against both. Undefined
+  // while that is on its way; null if it could not be had, in which case the
+  // sitting still runs on the page's own text and the server refuses it.
+  const [served, setServed] = useState<string | null | undefined>(undefined);
   useEffect(() => {
-    void startSitting(String(profile.id));
+    let live = true;
+    setServed(undefined);
+    void startSitting(String(profile.id)).then((started) => {
+      if (live) {
+        setServed(started?.text ?? null);
+      }
+    });
+    return () => {
+      live = false;
+    };
   }, [attempt, profile.id]);
 
   const onSitting = useCallback(
-    async (runs: readonly Run[]) => {
+    async (
+      runs: readonly Run[],
+      logs: readonly (readonly LoggedSegment[])[],
+    ) => {
       setOutcome({ state: "sending" });
       if (runs.length === 0) {
         // Nothing measurable happened — the clock ran out before a line was
@@ -246,6 +293,7 @@ function Sitting({
         accuracy: median(runs.map((r) => r.accuracy)),
         runs: runs.length,
         seconds: Math.round(runs.reduce((sum, r) => sum + r.seconds, 0)),
+        log: { runs: logs },
       });
       if (!ok) {
         setOutcome({ state: "error" });
@@ -297,18 +345,31 @@ function Sitting({
     );
   }
 
+  // The surface waits for the server's text: mounted before it, the page
+  // would build its first lines from its own lesson and keep them.
+  if (served === undefined) {
+    return null;
+  }
+
   return (
     <AssessmentProvider
       key={attempt}
       kind={evidence.kind}
       audience={evidence.audience}
       age={evidence.age}
-      onSitting={(runs) => {
-        void onSitting(runs);
+      served={served}
+      onSitting={(runs, logs) => {
+        void onSitting(runs, logs);
       }}
       onQuit={leave}
     >
-      <AssessmentSettings>{children}</AssessmentSettings>
+      <AssessmentSettings>
+        {evidence.kind === "typing" && evidence.audience === "adult" ? (
+          <ServedText text={served ?? null}>{children}</ServedText>
+        ) : (
+          children
+        )}
+      </AssessmentSettings>
       <Hud />
       <BetweenRuns />
       {outcome != null && !showing && (
@@ -371,5 +432,42 @@ function Notice({
         />
       </button>
     </div>
+  );
+}
+
+/**
+ * The practice page, typing the server's text for the sitting.
+ *
+ * Re-provided rather than stored, like `AssessmentSettings`: nothing here
+ * outlives the sitting. A custom-text lesson walks its words in order, so the
+ * lines the page shows are consecutive stretches of exactly what was served.
+ */
+function ServedText({
+  text,
+  children,
+}: {
+  readonly text: string | null;
+  readonly children: ReactNode;
+}): ReactNode {
+  const { settings, updateSettings } = useSettings();
+  const value = useMemo(
+    () => ({
+      settings:
+        text == null || text === ""
+          ? settings
+          : settings
+              .set(lessonProps.type, LessonType.CUSTOM)
+              .set(lessonProps.customText.content, text)
+              .set(lessonProps.customText.randomize, false)
+              .set(lessonProps.customText.lettersOnly, false)
+              .set(lessonProps.customText.lowercase, false),
+      updateSettings,
+    }),
+    [settings, updateSettings, text],
+  );
+  return (
+    <SettingsContext.Provider value={value}>
+      {children}
+    </SettingsContext.Provider>
   );
 }

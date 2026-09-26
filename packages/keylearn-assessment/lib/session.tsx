@@ -2,6 +2,7 @@ import {
   type AssessmentPlan,
   type CertificateAudience,
   type CertificateKind,
+  type LoggedSegment,
   planFor,
   type Run,
 } from "@keylearn/certificate";
@@ -31,7 +32,30 @@ export type Segment = {
   readonly accuracy: number;
   /** Milliseconds of typing this covers. Also the weight when combining. */
   readonly time: number;
+  /**
+   * What was typed and when, key by key. The server rebuilds the sitting's
+   * figures from these against the text it served (see `proctor` in
+   * @keylearn/certificate); a segment without one cannot be counted there.
+   */
+  readonly log?: LoggedSegment;
 };
+
+/**
+ * One segment's log from a typing surface's steps: each character's
+ * completion time, and whether it took a wrong key first.
+ */
+export function logFromSteps(
+  steps: readonly {
+    readonly codePoint: number;
+    readonly timeStamp: number;
+    readonly typo: boolean;
+  }[],
+): LoggedSegment {
+  return {
+    text: String.fromCodePoint(...steps.map((step) => step.codePoint)),
+    steps: steps.map((step) => [step.timeStamp, step.typo ? 1 : 0] as const),
+  };
+}
 
 export type Phase =
   /** Waiting for the first keystroke of the next run. */
@@ -43,8 +67,34 @@ export type Phase =
   /** Every run is done; the sitting is being sent, or has been. */
   | "finished";
 
+export type { LoggedSegment };
+
+/**
+ * A finished line's log, kept beside the result it produced.
+ *
+ * The typing page's result is built where the keystrokes are and reported
+ * somewhere else; this is how the report finds the keystrokes without the
+ * result type having to carry them into storage, where they do not belong.
+ */
+const logs = new WeakMap<object, LoggedSegment>();
+
+export function attachLog(result: object, log: LoggedSegment): void {
+  logs.set(result, log);
+}
+
+export function logOf(result: object): LoggedSegment | undefined {
+  return logs.get(result);
+}
+
 export type AssessmentSession = {
   readonly plan: AssessmentPlan;
+  /**
+   * The next stretch of the text the server chose for this sitting, a whole
+   * number of words, or null when there is none (the page then keeps its own
+   * text, and the sitting will be refused). Consecutive calls walk the text
+   * in order, cycling.
+   */
+  readonly nextPassage: (words: number) => string | null;
   readonly kind: CertificateKind;
   readonly audience: CertificateAudience;
   readonly phase: Phase;
@@ -167,6 +217,7 @@ export function AssessmentProvider({
   kind,
   audience,
   age,
+  served = null,
   onSitting,
   onQuit,
   children,
@@ -174,6 +225,8 @@ export function AssessmentProvider({
   readonly kind: CertificateKind;
   readonly audience: CertificateAudience;
   readonly age: number | null;
+  /** The text the server chose when this sitting started. */
+  readonly served?: string | null;
   /**
    * One complete sitting. Called once, with every run in it.
    *
@@ -182,13 +235,37 @@ export function AssessmentProvider({
    * three sittings, abandoning a bad one is not a free reroll — the next three
    * still have to agree.
    */
-  readonly onSitting: (runs: readonly Run[]) => void;
+  readonly onSitting: (
+    runs: readonly Run[],
+    logs: readonly (readonly LoggedSegment[])[],
+  ) => void;
   readonly onQuit: () => void;
   readonly children: ReactNode;
 }): ReactNode {
   const plan = useMemo(() => planFor(audience, age), [audience, age]);
   const [phase, setPhase] = useState<Phase>("armed");
   const [runs, setRuns] = useState<readonly Run[]>([]);
+  const logs = useRef<LoggedSegment[][]>([]);
+  // Where the next passage starts in the served text, in words.
+  const cursor = useRef(0);
+  const words = useMemo(
+    () => (served == null ? [] : served.split(" ").filter((w) => w !== "")),
+    [served],
+  );
+  const nextPassage = useCallback(
+    (count: number) => {
+      if (words.length === 0) {
+        return null;
+      }
+      const out: string[] = [];
+      for (let i = 0; i < Math.max(1, count); i++) {
+        out.push(words[cursor.current % words.length]);
+        cursor.current += 1;
+      }
+      return out.join(" ");
+    },
+    [words],
+  );
   /**
    * Runs *taken*, which is not the same as runs scored.
    *
@@ -215,12 +292,15 @@ export function AssessmentProvider({
   const finishRun = useCallback(() => {
     const collected = segments.current;
     segments.current = [];
-    const run = combine(
-      withRemainder(collected, inFlight.current?.() ?? null),
-      plan.seconds,
-    );
+    const counted = withRemainder(collected, inFlight.current?.() ?? null);
+    const run = combine(counted, plan.seconds);
     if (run != null) {
       setRuns((before) => [...before, run]);
+      logs.current.push(
+        counted.flatMap((segment) =>
+          segment.log == null ? [] : [segment.log],
+        ),
+      );
     }
     takenRef.current += 1;
     setTaken(takenRef.current);
@@ -257,6 +337,11 @@ export function AssessmentProvider({
 
   const next = useCallback(() => {
     setPhase("armed");
+    // The dialog's button had the focus; the typing surface must have it
+    // back, or the next run's keystrokes land nowhere while its clock runs.
+    window.requestAnimationFrame(() => {
+      window.dispatchEvent(new window.CustomEvent("keylearn:typing-focus"));
+    });
   }, []);
 
   // The first keystroke starts the run. Watched here, on the document, rather
@@ -293,13 +378,14 @@ export function AssessmentProvider({
   useEffect(() => {
     if (phase === "finished" && !sent.current) {
       sent.current = true;
-      onSitting(runs);
+      onSitting(runs, logs.current);
     }
   }, [phase, runs, onSitting]);
 
   const session = useMemo<AssessmentSession>(
     () => ({
       plan,
+      nextPassage,
       kind,
       audience,
       phase,
@@ -313,6 +399,7 @@ export function AssessmentProvider({
     }),
     [
       plan,
+      nextPassage,
       kind,
       audience,
       phase,
@@ -355,13 +442,30 @@ export function measurable(segment: Segment): boolean {
  * The run's finished lines, plus whatever was still being typed at the bell.
  *
  * A part-line that fails the bar is simply left out — never counted as a zero,
- * which would be worse than not counting it at all.
+ * which would be worse than not counting it at all. So is a "part-line" that
+ * is really the last finished one still on screen: a surface that leaves a
+ * completed passage up until the bell would otherwise count it twice.
  */
 export function withRemainder(
   collected: readonly Segment[],
   rest: Segment | null,
 ): readonly Segment[] {
-  return rest != null && measurable(rest) ? [...collected, rest] : collected;
+  if (rest == null || !measurable(rest)) {
+    return collected;
+  }
+  const last = collected.at(-1);
+  if (last?.log != null && rest.log != null && sameLog(last.log, rest.log)) {
+    return collected;
+  }
+  return [...collected, rest];
+}
+
+function sameLog(a: LoggedSegment, b: LoggedSegment): boolean {
+  return (
+    a.text === b.text &&
+    a.steps.length === b.steps.length &&
+    a.steps.every((step, i) => step[0] === b.steps[i][0])
+  );
 }
 
 export function combine(

@@ -29,21 +29,33 @@ export class SmtpConfig {
   }
 }
 
+/**
+ * On 587 nodemailer upgrades with STARTTLS only if the server offers it, so
+ * a relay (or anything in the path) that leaves the offer out gets the
+ * login in the clear. `requireTLS` makes a missing upgrade a failed send
+ * instead. Loopback is exempt: a local relay never crosses a network.
+ */
+export function smtpOptions(config: Pick<SmtpConfig, "host" | "port" | "secure" | "user" | "password">) {
+  const loopback = ["localhost", "127.0.0.1", "::1"].includes(config.host.toLowerCase());
+  return {
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    requireTLS: !config.secure && !loopback,
+    auth: {
+      user: config.user,
+      pass: config.password,
+    },
+  };
+}
+
 @injectable()
 export class SmtpMailer extends Mailer {
   readonly #transporter: Transporter;
 
   constructor(readonly config: SmtpConfig) {
     super();
-    this.#transporter = createTransport({
-      host: config.host,
-      port: config.port,
-      secure: config.secure,
-      auth: {
-        user: config.user,
-        pass: config.password,
-      },
-    });
+    this.#transporter = createTransport(smtpOptions(config));
   }
 
   async sendMail({

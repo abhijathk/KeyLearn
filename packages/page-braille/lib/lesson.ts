@@ -32,7 +32,11 @@ export type Lesson = {
 };
 
 export function makeLesson(progress: Progress, count = 8): Lesson {
-  const text = generateLine(progress, { words: count });
+  return lessonOfText(generateLine(progress, { words: count }));
+}
+
+/** A line of practice made from given text — a certificate sitting's, say. */
+export function lessonOfText(text: string): Lesson {
   const steps = cellsForText(text);
   const words: Word[] = [];
   let from = 0;

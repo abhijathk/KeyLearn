@@ -1,4 +1,10 @@
-import { useAssessmentPartial, useAssessmentReset } from "@keylearn/assessment";
+import {
+  attachLog,
+  logFromSteps,
+  useAssessment,
+  useAssessmentPartial,
+  useAssessmentReset,
+} from "@keylearn/assessment";
 import { type KeyId, useKeyboard } from "@keylearn/keyboard";
 import { type Result, uiProps } from "@keylearn/result";
 import { useSettings } from "@keylearn/settings";
@@ -37,7 +43,12 @@ export const Controller = memo(function Controller({
     handleKeyDown,
     handleKeyUp,
     handleInput,
-  } = useLessonState(progress, onResult, kids ? KIDS_IDLE_MS : IDLE_MS);
+  } = useLessonState(
+    progress,
+    onResult,
+    kids ? KIDS_IDLE_MS : IDLE_MS,
+    useAssessment() != null,
+  );
   const { settings, updateSettings } = useSettings();
   // A timed run rarely ends on a line break. What is already typed when the
   // clock stops is measured the same way a finished line is.
@@ -49,6 +60,7 @@ export const Controller = memo(function Controller({
           speed: result.speed / 5,
           accuracy: result.accuracy,
           time: result.time,
+          log: logFromSteps(state.textInput.steps),
         }
       : null;
   });
@@ -106,6 +118,8 @@ function useLessonState(
   progress: Progress,
   onResult: (result: Result) => void,
   idleMs: number,
+  /** In a certificate sitting: keep each line's keystrokes with its result. */
+  assessing = false,
 ) {
   const keyboard = useKeyboard();
   const timeout = useTimeout();
@@ -124,6 +138,9 @@ function useLessonState(
       lastLessonRef.current = makeLastLesson(result, textInput.steps);
       progress.observeSteps(textInput.steps);
       progress.observeRun(textInput.steps);
+      if (assessing) {
+        attachLog(result, logFromSteps(textInput.steps));
+      }
       onResultRef.current(result);
     });
     state.lastLesson = lastLessonRef.current;
@@ -236,5 +253,5 @@ function useLessonState(
       handleKeyUp: onKeyUp,
       handleInput: onInput,
     };
-  }, [progress, keyboard, timeout, key, idleMs]);
+  }, [progress, keyboard, timeout, key, idleMs, assessing]);
 }

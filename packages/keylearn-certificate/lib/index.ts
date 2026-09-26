@@ -4,4 +4,5 @@ export * from "./criteria.ts";
 export * from "./layout.ts";
 export * from "./number.ts";
 export * from "./printed.ts";
+export * from "./proctor.ts";
 export * from "./types.ts";

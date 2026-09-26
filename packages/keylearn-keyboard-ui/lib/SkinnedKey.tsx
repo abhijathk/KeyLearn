@@ -253,6 +253,11 @@ export function makeSkinnedKeyComponent(
           width={w}
           height={h}
           overflow="visible"
+          // A keyboard is left-to-right hardware on every page. Inherited
+          // "rtl" swapped what text-anchor start and end mean, so an Arabic
+          // page drew "tab" and "back" half off their caps. Key.tsx pins the
+          // same on its legends.
+          direction="ltr"
           data-key={id}
         >
           {/* Two shadows, not one. A single offset blur reads as a sticker;
@@ -470,6 +475,7 @@ export function makeSkinnedKeyComponent(
         width={w}
         height={h}
         overflow="visible"
+        direction="ltr"
         data-key={id}
       >
         {/* The kids boards' next key pulses — grows a little and glows, once

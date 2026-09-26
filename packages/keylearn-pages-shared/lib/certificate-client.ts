@@ -36,7 +36,7 @@ export type VerifyResult =
        * sitting the server timed. "self-reported": issued before that, on
        * figures the learner's browser sent.
        */
-      readonly evidence?: "server" | "self-reported";
+      readonly evidence?: "keystroke" | "server" | "self-reported";
       /** Null unless the holder asked to be named, and never for a child. */
       readonly name: string | null;
     };
@@ -45,15 +45,23 @@ export type VerifyResult =
  * Start a sitting's clock on the server. The sitting reported afterwards is
  * held to the time that really passed, so this has to happen first.
  */
-export async function startSitting(profileId: string): Promise<boolean> {
+export async function startSitting(
+  profileId: string,
+): Promise<{ readonly text: string } | null> {
   try {
     const response = await fetch(`/_/certificate/sitting/${profileId}/start`, {
       method: "POST",
       headers: { "content-type": "application/json" },
     });
-    return response.ok;
+    if (!response.ok) {
+      return null;
+    }
+    // The text the sitting is typed on: the server chose it, and checks the
+    // keystrokes against it.
+    const body = (await response.json()) as { text?: unknown };
+    return typeof body.text === "string" ? { text: body.text } : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -73,6 +81,8 @@ export async function postSitting(
     readonly accuracy: number;
     readonly runs: number;
     readonly seconds: number;
+    /** Every run's keystrokes; the server rebuilds the figures from these. */
+    readonly log: unknown;
   },
 ): Promise<boolean> {
   try {

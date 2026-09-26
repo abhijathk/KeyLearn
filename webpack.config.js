@@ -199,6 +199,17 @@ export default [
           test: /\/assets\//,
           type: "asset/resource",
         },
+        {
+          // three's KTX2Loader points a `new URL()` at its own Basis
+          // transcoder as a default. The kids world always sets its own path
+          // (world.ts: setTranscoderPath, serveTranscoderFromUrl), so that
+          // default is never fetched — yet webpack emitted the 527 KB wasm
+          // and bundled the transcoder's JS into the kids chunk. Keep the
+          // URL, emit and bundle nothing.
+          test: /three[\\/]examples[\\/]jsm[\\/]libs[\\/]basis[\\/]basis_transcoder\.(wasm|js)$/,
+          type: "asset/resource",
+          generator: { emit: false },
+        },
       ],
     },
     optimization: {

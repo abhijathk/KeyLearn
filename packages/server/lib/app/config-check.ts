@@ -194,7 +194,10 @@ export function checkProductionConfig(
   if (qdeskUrl !== "") {
     try {
       const url = new URL(qdeskUrl);
-      if (url.protocol !== "https:" && url.hostname !== "127.0.0.1") {
+      // Loopback never leaves the machine — the same set every transport
+      // guard uses (QDesk's config-check, the agent's desk URL).
+      const loopback = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname.toLowerCase());
+      if (url.protocol !== "https:" && !loopback) {
         fatal.push(
           `QDESK_URL is ${url.protocol} not https; the app key would travel ` +
             "in the clear on every forwarded ticket.",

@@ -17,6 +17,7 @@ import {
   isNull,
   isTrue,
 } from "rich-assert";
+import { measure } from "@keylearn/certificate";
 import { EvidenceSource } from "../certificate/evidence.ts";
 import { kMain } from "../module.ts";
 import { TestContext } from "../test/context.ts";
@@ -193,14 +194,38 @@ test("2.2 certificates: gates, attempts per day, and a version the certificate k
   // Sittings are now held to the server's own view of the learner's practice
   // and to a clock it starts (certificate/controller.ts). Give this learner
   // eligible practice, and move the clock the length of a sitting.
+  const served = "stone river maple quiet lantern orbit velvet harbor candle";
   context.bind(EvidenceSource).toValue({
     derive: async () => ({ evidence: READY_EVIDENCE, language: "en" }),
+    serve: async () => served,
+    unitsOf: () => (text: string) => [...text].length,
   } as unknown as EvidenceSource);
   t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
+  // Each sitting is typed afresh — the same keystrokes twice are a replay —
+  // at a person's uneven pace, and posts the figures they add up to.
+  let seed = 1;
   const sit = async (pid: number, body: object) => {
     await request.POST(`/_/certificate/sitting/${pid}/start`).send({});
     t.mock.timers.tick(185_000);
-    return await request.POST(`/_/certificate/sitting/${pid}`).send(body);
+    let x = (seed += 1000);
+    const steps = [...served].map((_, i) => {
+      x = (x * 16807) % 2147483647;
+      return [10_000 + i * 300 + (x % 120), 0] as [number, number];
+    });
+    const log = { runs: [[{ text: served, steps }]] };
+    const figures = measure(log, {
+      kind: "typing",
+      served,
+      unitsOf: (text) => [...text].length,
+      plan: { runs: 3, seconds: 60 },
+      elapsedMs: Number.MAX_SAFE_INTEGER,
+    });
+    return await request.POST(`/_/certificate/sitting/${pid}`).send({
+      ...body,
+      speed: figures.ok ? figures.speed : 0,
+      accuracy: figures.ok ? figures.accuracy : 0,
+      log,
+    });
   };
   equal(await criteriaVersion(), 1, "shipped criteria are version 1");
   await service.set("certificates.adultTyping.wpm", 40, { userId: admin });

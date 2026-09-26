@@ -238,6 +238,14 @@ export default function Page(): ReactNode {
                     </>
                   )}
                 </dl>
+                {result.evidence === "keystroke" && (
+                  <p className={styles.hint}>
+                    <FormattedMessage
+                      id="verify.keystroke"
+                      defaultMessage="Keystroke-checked: KeyLearn measured the speed and accuracy itself, from every key typed in the assessment, on text it chose."
+                    />
+                  </p>
+                )}
                 {result.evidence === "self-reported" && (
                   <p className={styles.hint}>
                     <FormattedMessage

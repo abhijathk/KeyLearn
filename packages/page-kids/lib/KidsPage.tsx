@@ -1,4 +1,5 @@
 import {
+  logFromSteps,
   useAssessment,
   useAssessmentPartial,
   useAssessmentReset,
@@ -4400,6 +4401,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     if (road != null) {
       flat = fitPassageToRoad(flat, road.left, road.started);
     }
+    // In a certificate sitting the words are the server's, the same number
+    // of them: the keystrokes are checked against the text it chose.
+    const served = assessmentRef.current?.nextPassage(flat.split(" ").length);
+    if (served != null) {
+      flat = served;
+    }
     passageRef.current = flat;
     textInputRef.current = new TextInput(flat, toTextInputSettings(settings));
     lastStampRef.current = 0;
@@ -4416,7 +4423,13 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // the passage. Whatever they did type counts.
   useAssessmentPartial(() => {
     const textInput = textInputRef.current;
-    if (textInput == null || textInput.steps.length === 0) {
+    // A finished passage was reported when it finished; it stays on screen
+    // until the bell, but it is not a part-line.
+    if (
+      textInput == null ||
+      textInput.completed ||
+      textInput.steps.length === 0
+    ) {
       return null;
     }
     const result = Result.fromStats(
@@ -4431,6 +4444,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           speed: result.speed / 5,
           accuracy: result.accuracy,
           time: result.time,
+          log: logFromSteps(textInput.steps),
         }
       : null;
   });
@@ -5346,6 +5360,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 speed: result.speed / 5,
                 accuracy: result.accuracy,
                 time: result.time,
+                log: logFromSteps(textInput.steps),
               });
             } else {
               // The same record the grown-up mode saves — the algorithm learns
@@ -6757,6 +6772,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     <div
       className={clsx(styles.root, prefs.night && styles.rootDark)}
       style={{ fontFamily: cfg.font }}
+      // Written in English whatever the site language, and said so: a screen
+      // reader pronounces it as English, and an Arabic page's rule against
+      // letter-spacing and capitals (fonts/index.less) leaves it alone.
+      lang="en"
     >
       <div className={clsx(styles.oneWindow, onVillage && styles.joined)}>
         {/*

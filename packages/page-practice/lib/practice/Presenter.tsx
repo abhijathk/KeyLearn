@@ -267,6 +267,7 @@ export class Presenter extends PureComponent<Props, State> {
   override componentDidMount() {
     window.addEventListener("keylearn:focus-mode", this.handleToggleFocusMode);
     window.addEventListener("keylearn:pulse-pinned", this.handlePinned);
+    window.addEventListener("keylearn:typing-focus", this.handleTypingFocus);
     window.addEventListener(A11Y_CHANGED_EVENT, this.handlePlainChanged);
     this.#broadcastFocusMode(this.state.focusMode);
     if (this.props.startWithTourOpen) {
@@ -284,6 +285,7 @@ export class Presenter extends PureComponent<Props, State> {
     );
     window.removeEventListener(A11Y_CHANGED_EVENT, this.handlePlainChanged);
     window.removeEventListener("keylearn:pulse-pinned", this.handlePinned);
+    window.removeEventListener("keylearn:typing-focus", this.handleTypingFocus);
     this.#stopTyping();
     this.#showHeader();
     this.#broadcastFocusMode(false);
@@ -422,6 +424,11 @@ export class Presenter extends PureComponent<Props, State> {
         );
     }
   }
+
+  /** Asked for by a dialog that took the focus, e.g. between assessment runs. */
+  handleTypingFocus = () => {
+    this.focusRef.current?.focus();
+  };
 
   handleResetLesson = () => {
     this.props.onResetLesson();

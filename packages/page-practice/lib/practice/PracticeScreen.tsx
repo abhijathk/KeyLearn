@@ -1,4 +1,4 @@
-import { useAssessment } from "@keylearn/assessment";
+import { logOf, useAssessment } from "@keylearn/assessment";
 import { type CertificateCriteria } from "@keylearn/certificate";
 import { catchError } from "@keylearn/debug";
 import { KeyboardProvider } from "@keylearn/keyboard";
@@ -224,6 +224,7 @@ function ProgressUpdater({ lesson }: { readonly lesson: Lesson }) {
                   speed: result.speed / 5,
                   accuracy: result.accuracy,
                   time: result.time,
+                  log: logOf(result),
                 });
               }
               return;

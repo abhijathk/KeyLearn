@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import { Application } from "@fastr/core";
-import { type CertificateEvidence } from "@keylearn/certificate";
+import {
+  type CertificateEvidence,
+  measure,
+  type SittingLog,
+} from "@keylearn/certificate";
 import {
   Certificate,
   CertificateSitting,
@@ -39,9 +43,16 @@ const READY: CertificateEvidence = {
   accuracy: 0.97,
 };
 
+/** The text the fake source serves every sitting. */
+const SERVED =
+  "stone river maple quiet lantern orbit velvet harbor candle meadow " +
+  "pebble thunder willow crimson falcon garden silver morning shadow ember " +
+  "copper island winter harvest beacon cedar glacier summit";
+
 /**
  * The server's own view of the learner's practice, for these tests: a fixed
- * evidence record, or — when null — the real source reading synced files.
+ * evidence record and served text, or — when null — the real source reading
+ * synced files.
  */
 let real: EvidenceSource | null = null;
 const practice = {
@@ -51,6 +62,15 @@ const practice = {
     return practice.evidence == null
       ? real.derive(profile, kind)
       : Promise.resolve({ evidence: practice.evidence, language: "en-us" });
+  },
+  serve(profile: Profile, kind: "typing" | "braille") {
+    real ??= context.get(EvidenceSource);
+    return practice.evidence == null
+      ? real.serve(profile, kind)
+      : Promise.resolve(SERVED);
+  },
+  unitsOf() {
+    return (text: string) => [...text].length;
   },
 };
 
@@ -73,14 +93,52 @@ async function setUp(evidence: CertificateEvidence | null) {
   return { user, pid: profile.id!, request };
 }
 
-const SITTING = {
-  kind: "typing",
-  language: "en-us",
-  speed: 41,
-  accuracy: 0.97,
-  runs: 3,
-  seconds: 180,
-};
+/** A person's rhythm: about 300 ms a key, varying — roughly 40 wpm. */
+function rhythm(n: number, seed: number, scale = 1): [number, number][] {
+  let x = seed;
+  const rnd = () => (x = (x * 16807) % 2147483647) / 2147483647;
+  const steps: [number, number][] = [];
+  let t = 10_000;
+  for (let i = 0; i < n; i++) {
+    steps.push([Math.round(t * scale), rnd() < 0.03 ? 1 : 0]);
+    t += 180 + Math.round(rnd() * 240);
+  }
+  return steps;
+}
+
+/** Three runs typed on the served text, each a stretch of five words. */
+function typed(seed: number, scale = 1): SittingLog {
+  const words = SERVED.split(" ");
+  return {
+    runs: [0, 1, 2].map((r) => {
+      const text = words.slice(r * 5, r * 5 + 5).join(" ");
+      return [{ text, steps: rhythm([...text].length, seed + r, scale) }];
+    }),
+  };
+}
+
+/** What an honest page posts for a log: its own figures, and the log. */
+function sittingOf(log: SittingLog, override: object = {}) {
+  const figures = measure(log, {
+    kind: "typing",
+    served: SERVED,
+    unitsOf: (t) => [...t].length,
+    plan: { runs: 3, seconds: 60 },
+    elapsedMs: Number.MAX_SAFE_INTEGER,
+  });
+  return {
+    kind: "typing",
+    language: "en-us",
+    speed: figures.ok ? figures.speed : 0,
+    accuracy: figures.ok ? figures.accuracy : 0,
+    runs: 3,
+    seconds: 180,
+    log,
+    ...override,
+  };
+}
+
+const SITTING = sittingOf(typed(1));
 
 test("the three-request forgery gets nothing", async () => {
   // No practice synced at all: the server derives the evidence itself.
@@ -122,11 +180,14 @@ test("the three-request forgery gets nothing", async () => {
   equal(await Certificate.query().resultSize(), 0);
 });
 
-test("a sitting is held to the time that passed and to the learner's own pace", async (t) => {
+test("a sitting is checked key by key against the text the server served", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
   const { pid, request } = await setUp(READY);
   const sit = async (seconds: number, body: object) => {
-    await request.POST(`/_/certificate/sitting/${pid}/start`).send({});
+    const started = await request
+      .POST(`/_/certificate/sitting/${pid}/start`)
+      .send({});
+    equal((await started.body.json<{ text: string }>()).text, SERVED);
     t.mock.timers.tick(seconds * 1000);
     const r = await request.POST(`/_/certificate/sitting/${pid}`).send(body);
     return {
@@ -138,27 +199,98 @@ test("a sitting is held to the time that passed and to the learner's own pace", 
     };
   };
 
-  equal((await sit(20, SITTING)).reason, "too-fast");
-  equal(
-    (await sit(185, { ...SITTING, speed: 120 })).reason,
-    "faster-than-practice",
+  // More typing than the server-timed sitting had room for.
+  equal((await sit(10, SITTING)).reason, "more-typing-than-time");
+  // Sped up: a real rhythm replayed six times faster reads as a hand no
+  // person has, or — if it stays above that floor — as far beyond this
+  // learner's own practice pace. Either way it is refused.
+  isTrue(
+    ["faster-than-a-hand", "faster-than-practice"].includes(
+      (await sit(185, sittingOf(typed(2, 1 / 6)))).reason ?? "",
+    ),
   );
   equal(
-    (await sit(185, { ...SITTING, seconds: 600 })).reason,
-    "more-time-than-passed",
+    (await sit(185, sittingOf(typed(3, 1 / 12)))).reason,
+    "faster-than-a-hand",
   );
-  equal((await sit(185, { ...SITTING, runs: 5 })).reason, "too-many-runs");
-  // A start is spent by the sitting that used it.
-  const again = await request
-    .POST(`/_/certificate/sitting/${pid}`)
-    .send(SITTING);
-  equal(again.status, 409);
+  // Pasted: the whole stretch at once.
+  const stretch = SERVED.split(" ").slice(0, 6).join(" ");
+  equal(
+    (
+      await sit(
+        185,
+        sittingOf({
+          runs: [
+            [
+              {
+                text: stretch,
+                steps: [...stretch].map((_, i) => [9000 + (i >> 4), 0]),
+              },
+            ],
+          ],
+        }),
+      )
+    ).reason,
+    "faster-than-a-hand",
+  );
+  // A bot at a fixed 150 ms.
+  equal(
+    (
+      await sit(
+        185,
+        sittingOf({
+          runs: [
+            [
+              {
+                text: stretch,
+                steps: [...stretch].map((_, i) => [9000 + i * 150, 0]),
+              },
+            ],
+          ],
+        }),
+      )
+    ).reason,
+    "machine-regular",
+  );
+  // Text the server never served.
+  equal(
+    (
+      await sit(
+        185,
+        sittingOf({
+          runs: [
+            [
+              {
+                text: "the quick brown fox jumps",
+                steps: rhythm(25, 5),
+              },
+            ],
+          ],
+        }),
+      )
+    ).reason,
+    "not-the-served-text",
+  );
+  // Honest keystrokes, flattering figures.
+  equal(
+    (await sit(185, { ...SITTING, speed: 50 })).reason,
+    "figures-do-not-match-keystrokes",
+  );
+  // No keystrokes at all.
+  equal((await sit(185, { ...SITTING, log: undefined })).reason, "no-log");
 
-  for (let i = 0; i < 3; i++) {
-    equal((await sit(185, SITTING)).status, 204);
+  // A genuine sitting counts; the same keystrokes sent again do not.
+  equal((await sit(185, SITTING)).status, 204);
+  equal((await sit(185, SITTING)).reason, "replayed");
+  for (const seed of [11, 21]) {
+    equal((await sit(185, sittingOf(typed(seed)))).status, 204);
   }
+  // Only a hash of each log is kept, never the keystrokes.
+  const rows = await CertificateSitting.query().where({ profileId: pid });
+  equal(rows.length, 3);
+  isTrue(rows.every((row) => /^[0-9a-f]{64}$/.test(row.logHash ?? "")));
 
-  // Issued on the server's figures, whatever the request claims.
+  // Issued on the keystrokes' figures, whatever the request claims.
   const issued = await request.POST(`/_/certificate/${pid}`).send({
     kind: "typing",
     speed: 400,
@@ -166,24 +298,23 @@ test("a sitting is held to the time that passed and to the learner's own pace", 
     nameVisible: true,
   });
   equal(issued.status, 200);
-  const cert = await issued.body.json<{
-    number: string;
-    speed: number;
-    evidence: string;
-  }>();
-  equal(cert.speed, 41);
-  equal(cert.evidence, "server");
-  const row = await Certificate.query().findOne({ profileId: pid });
-  equal(row?.evidence, "server");
+  const cert = await issued.body.json<{ speed: number; evidence: string }>();
+  const speeds = [1, 11, 21]
+    .map((seed) => sittingOf(typed(seed)).speed)
+    .sort((a, b) => a - b);
+  isTrue(Math.abs(cert.speed - speeds[1]) < 1e-6, String(cert.speed));
+  equal(cert.evidence, "keystroke");
 });
 
 test("a certificate stays verifiable after its account is erased, and nothing else stays", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
   const { user, pid, request } = await setUp(READY);
-  for (let i = 0; i < 3; i++) {
+  for (const seed of [1, 11, 21]) {
     await request.POST(`/_/certificate/sitting/${pid}/start`).send({});
     t.mock.timers.tick(185_000);
-    await request.POST(`/_/certificate/sitting/${pid}`).send(SITTING);
+    await request
+      .POST(`/_/certificate/sitting/${pid}`)
+      .send(sittingOf(typed(seed)));
   }
   const issued = await request.POST(`/_/certificate/${pid}`).send({
     kind: "typing",
@@ -217,8 +348,8 @@ test("a certificate stays verifiable after its account is erased, and nothing el
   }>();
   equal(verdict.valid, true);
   equal(verdict.name, "Asha Menon");
-  equal(verdict.speed, 41);
-  equal(verdict.evidence, "server");
+  isTrue(verdict.speed > 20 && verdict.speed < 60, String(verdict.speed));
+  equal(verdict.evidence, "keystroke");
   isTrue(Number.isFinite(Date.parse(verdict.issued)));
 });
 

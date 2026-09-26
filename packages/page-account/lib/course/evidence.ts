@@ -7,6 +7,8 @@
 // the curriculum, so it cannot evidence coverage of an alphabet.
 
 import {
+  cellsForText,
+  generateLine,
   loadProgress,
   practiceDays,
   Progress,
@@ -15,7 +17,12 @@ import {
 import { type CertificateEvidence } from "@keylearn/certificate";
 import { type Layout, loadKeyboard } from "@keylearn/keyboard";
 import { type ProfileDetails } from "@keylearn/pages-shared";
-import { censor, Letter, makePhoneticModel } from "@keylearn/phonetic-model";
+import {
+  censor,
+  Filter,
+  Letter,
+  makePhoneticModel,
+} from "@keylearn/phonetic-model";
 import { makeKeyStatsMap, type Result } from "@keylearn/result";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -162,3 +169,67 @@ export function brailleEvidenceFromSnapshot(
 
 const meanOf = (xs: readonly number[]) =>
   xs.reduce((a, b) => a + b, 0) / xs.length;
+
+/**
+ * The text a typing sitting is typed on, chosen by the server when the
+ * sitting starts and kept there, so the keystrokes it gets back can be
+ * checked against exactly this. Words the learner's own language model makes
+ * from their layout's alphabet — the same kind of text the practice page
+ * gives them, never text they have seen before.
+ */
+export function servedTypingText(
+  layout: Layout,
+  model: Uint8Array,
+  chars: number,
+  random: () => number = Math.random,
+): string {
+  const letters = typingAlphabet(layout, model);
+  const phonetic = censor(makePhoneticModel(layout.language, model));
+  const filter = new Filter(letters.length > 0 ? letters : null, null);
+  const words: string[] = [];
+  let length = 0;
+  while (length < chars) {
+    const word = phonetic.nextWord(filter, random);
+    if (word === "") {
+      break;
+    }
+    words.push(word);
+    length += word.length + 1;
+  }
+  return words.join(" ");
+}
+
+/** The same for braille: lines of the cells this learner has, from the server's copy. */
+export function servedBrailleText(
+  snapshot: unknown,
+  words: number,
+  random: () => number = Math.random,
+): string {
+  const snap = (snapshot ?? {}) as { progress?: unknown };
+  const progress = Progress.fromJSON(snap.progress);
+  const lines: string[] = [];
+  let count = 0;
+  while (count < words) {
+    const line = generateLine(progress, { words: 8, rnd: random });
+    lines.push(line);
+    count += line.split(" ").length;
+  }
+  return lines.join(" ");
+}
+
+/** How many keystroke units a stretch of text is: code points when typing. */
+export function typingUnits(text: string): number {
+  return [...text].length;
+}
+
+/** In braille, cells — a capital or a number sign is a cell of its own. */
+export function brailleUnits(text: string): number {
+  return cellsForText(text).length;
+}
+
+/**
+ * Folds the account's synced braille record into this device's, so the
+ * evidence read next is the one the server judges. Re-exported for the
+ * assessment page, which has no braille dependency of its own.
+ */
+export { pullProgress as pullBrailleProgress } from "@keylearn/braille";

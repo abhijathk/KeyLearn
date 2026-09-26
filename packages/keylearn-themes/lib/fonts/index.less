@@ -222,3 +222,52 @@ html {
 // queries, so a Retina laptop (device-width 1440+) was pinned to an 11px root
 // whenever the window was narrower than 1280px, shrinking the whole rem-sized
 // UI underneath the newer ladder.
+
+// Right-to-left scripts in the interface.
+//
+// None of the Latin faces above carries Arabic or Hebrew, so those letters
+// came from whatever the system had, and anything set in the value face got
+// Roboto Mono's full-width spaces between its words. The labels set in capitals
+// with wide tracking were worse: letter-spacing pulls joined Arabic letters
+// apart, so a word read as a row of loose pieces.
+//
+// So on an Arabic-script page (ar, fa, ur) every face leads with Noto Sans
+// Arabic, and the value face stops being monospace. Its unicode-range covers
+// Arabic only, so Latin words, digits and spaces still come from Roboto. Rubik
+// is left alone, because it ships Arabic itself. Code keeps its own face
+// (--monospace-font-family), and the lesson text is untouched either way: it is
+// set from the lesson's own font, not from these.
+//
+// Hebrew gets its letters from Open Sans, which ships them, and the same
+// proportional value face. Hebrew letters do not join, so its tracking stays.
+:root:is([lang="ar"], [lang="fa"], [lang="ur"]):not([data-font="rubik"]) {
+  --default-font-family: "Noto Sans Arabic", "Roboto", sans-serif;
+  --header-font-family: "Noto Sans Arabic", "Roboto", sans-serif;
+  --value-font-family: "Noto Sans Arabic", "Roboto", sans-serif;
+}
+
+:root[lang="he"]:not([data-font="rubik"], [data-font="open-sans"]) {
+  --default-font-family: "Roboto", "Open Sans", sans-serif;
+  --header-font-family: "Roboto", "Open Sans", sans-serif;
+  --value-font-family: "Roboto", "Open Sans", sans-serif;
+}
+
+// Arabic script joins letter to letter, and any letter-spacing breaks that
+// joint; capitals do not exist in it. The labels that set both do it in
+// seventy-odd places across the packages, so this is said once, here. Left
+// alone: the lesson text (data-lesson-text; its spacing is the reading-support
+// setting, on purpose), anything marked as another language (the kids game is
+// English, lang="en"), and SVG, where the keyboard's caps legends flip case
+// with text-transform to show Shift and Caps Lock.
+:root:is([lang="ar"], [lang="fa"], [lang="ur"])
+  :not(
+    [data-lesson-text],
+    [data-lesson-text] *,
+    [lang="en"],
+    [lang="en"] *,
+    svg,
+    svg *
+  ) {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}

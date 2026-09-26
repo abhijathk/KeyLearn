@@ -181,6 +181,9 @@ const TextLine = memo(
         className={className}
         style={style}
         dir={settings.language.direction}
+        // Keeps its reading-support letter-spacing on right-to-left pages,
+        // where the interface's own tracking is switched off (fonts/index.less).
+        data-lesson-text=""
       >
         {items.map((chars, index) => (
           <TextItem

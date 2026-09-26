@@ -170,3 +170,15 @@ test("warn about sqlite and about trusting no proxy", () => {
     isTrue(warnings.some((m) => m.includes("TRUSTED_PROXIES")));
   });
 });
+
+test("a plain-HTTP desk URL on loopback is allowed, a lookalike is not", () => {
+  for (const host of ["127.0.0.1", "localhost", "[::1]"]) {
+    withEnv({ ...sane, QDESK_URL: `http://${host}:4100/` }, () => {
+      const { fatal } = checkProductionConfig();
+      isTrue(!fatal.some((m) => m.includes("QDESK_URL")), host);
+    });
+  }
+  withEnv({ ...sane, QDESK_URL: "http://localhost.evil.example/" }, () => {
+    isTrue(checkProductionConfig().fatal.some((m) => m.includes("QDESK_URL")));
+  });
+});

@@ -856,6 +856,11 @@ export async function ensureCertificateSchema(
       table.string("evidence", 8).nullable();
     });
   }
+  if (!(await knex.schema.hasColumn("certificate_sitting", "log_hash"))) {
+    await knex.schema.alterTable("certificate_sitting", (table) => {
+      table.string("log_hash", 64).nullable();
+    });
+  }
   await migrateCertificateRetention(knex);
 }
 

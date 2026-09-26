@@ -33,8 +33,10 @@
 // Not applied to the value font: those are figures in columns, where a
 // monospace grid is doing work that letterforms cannot replace.
 :root[data-typeface="dyslexic"] {
-  --default-font-family: "Open Dyslexic", sans-serif;
-  --header-font-family: "Open Dyslexic", sans-serif;
+  // Open Dyslexic has no Arabic; its letters fall to Noto Sans Arabic, which
+  // only covers that range, rather than to whatever the system has.
+  --default-font-family: "Open Dyslexic", "Noto Sans Arabic", sans-serif;
+  --header-font-family: "Open Dyslexic", "Noto Sans Arabic", sans-serif;
 }
 
 // Bigger targets for everything you press.

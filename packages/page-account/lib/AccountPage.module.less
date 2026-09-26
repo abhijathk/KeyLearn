@@ -593,6 +593,14 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.9rem;
+
+  // A phone: the note and its button side by side left each a sliver, and
+  // "Turn it on" broke over two lines. The button goes under its note.
+  @media (max-width: 40rem) {
+    flex-direction: column;
+    gap: 0.6rem;
+    align-items: flex-start;
+  }
 }
 
 .link {
@@ -901,6 +909,13 @@
     align-items: stretch;
   }
 
+  // Same for a note with a button after it (Accessibility's "Turn
+  // everything off"): the button goes under the note.
+  .row:has(> .presetBtn) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .prefStack {
     inline-size: 100%;
   }
@@ -1137,7 +1152,8 @@
   align-items: baseline;
   justify-content: space-between;
   padding-block: 0.4rem;
-  border-block-end: 1px solid var(--separator-border);
+  // A whole border in one token; "1px solid" in front made it invalid.
+  border-block-end: var(--separator-border);
 }
 
 /* Events worth a second look get a marker rather than only colour, so the
@@ -1181,13 +1197,16 @@
 .secBtn {
   align-self: flex-start;
   padding: 0.5rem 0.9rem;
-  border: 1px solid var(--separator-border);
+  // The token is a whole border ("1px solid <colour>"); wrapped in another
+  // "1px solid" it was invalid and these buttons drew no border at all.
+  border: var(--separator-border);
   border-radius: 0.6rem;
   color: var(--text-color);
   background: transparent;
   font: inherit;
   font-size: 0.85rem;
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
 
   &:disabled {
@@ -1719,4 +1738,244 @@
   color: var(--secondary-text-color);
   opacity: 0.7;
   font-size: 0.75rem;
+}
+
+// ============================================================ Phone (Option A)
+// At 40rem and under the window fills the screen (FloatingShell phoneFull)
+// and shows either the list of sections or one section with a way back.
+// Drawn after the owner-approved mock (e2e mocks/keylearn-account-mobile).
+
+.phone {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  min-block-size: 0;
+  color: var(--text-color);
+  font-family: var(--value-font-family);
+}
+
+// The shell's floating close button sits in this bar's far corner, so the bar
+// leaves it the room (--float-close-room, set by the flush shell).
+.phoneBar {
+  display: grid;
+  flex: none;
+  grid-template-columns: 2.75rem 1fr 2.75rem;
+  align-items: center;
+  min-block-size: 3.3rem;
+  padding-inline: 0.4rem var(--float-close-room, 0);
+  padding-block: 0.4rem;
+  border-block-end: 1px solid var(--primary-d1);
+  background-color: var(--primary-l1);
+}
+
+.phoneTitle {
+  grid-column: 2;
+  overflow: hidden;
+  font-family: var(--value-font-family);
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  // Focus is put here so a screen reader announces the section; it is not
+  // a control, and a ring round the title read as something to press.
+  &:focus {
+    outline: none;
+  }
+}
+
+// Inside the bar, so it outranks the shell's own heading margins.
+.phoneBar .phoneTitle {
+  margin: 0;
+}
+
+.phoneBack {
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.75rem;
+  color: var(--text-color-f1);
+  background: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--primary-d1);
+  }
+}
+
+.chevron {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+// Back points against the reading direction, whichever way that runs.
+.chevronBack {
+  transform: scaleX(-1);
+}
+
+:global([dir="rtl"]) .chevron {
+  transform: scaleX(-1);
+}
+
+:global([dir="rtl"]) .chevronBack {
+  transform: none;
+}
+
+.phoneScroll {
+  flex: 1;
+  min-block-size: 0;
+  padding: 0.9rem 1rem 1.6rem;
+  background-color: var(--primary-l1);
+  overflow-y: auto;
+}
+
+.phoneWho {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid var(--primary-d1);
+  border-radius: 1.1rem;
+  background-color: var(--primary);
+}
+
+.phoneWhoText {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.phoneWhoName {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.phoneWhoEmail {
+  overflow: hidden;
+  color: var(--text-color-f2);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+}
+
+.phoneGroup {
+  margin: 1.2rem 0.75rem 0.4rem;
+  color: var(--accent);
+  font-family: var(--value-font-family);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.phoneList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--primary-d1);
+  border-radius: 1.1rem;
+  overflow: hidden;
+  background-color: var(--primary);
+
+  > li + li {
+    border-block-start: 1px solid var(--primary-d1);
+  }
+}
+
+.phoneRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  inline-size: 100%;
+  min-block-size: 3.5rem;
+  padding: 0.6rem 0.9rem;
+  border: none;
+  color: var(--text-color);
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--primary-l2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
+
+.phoneBadge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.1rem;
+  block-size: 2.1rem;
+  border-radius: 0.65rem;
+  color: var(--accent);
+  background-color: color-mix(in oklab, var(--accent) 16%, transparent);
+
+  svg {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+  }
+}
+
+.phoneRowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.phoneRowName {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.phoneRowSub {
+  overflow: hidden;
+  color: var(--text-color-f2);
+  font-family: var(--default-font-family);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phoneChevron {
+  flex: none;
+  color: var(--text-color-f2);
+}
+
+.phoneBody {
+  flex: 1;
+  min-block-size: 0;
+  overflow: hidden;
+
+  // The bar already names the section.
+  .paneTitle {
+    display: none;
+  }
+}
+
+.phoneLogout {
+  margin-block-start: 1rem;
+
+  .phoneRowName {
+    color: var(--error);
+  }
+
+  .phoneBadge {
+    color: var(--error);
+    background-color: color-mix(in oklab, var(--error) 14%, transparent);
+  }
 }

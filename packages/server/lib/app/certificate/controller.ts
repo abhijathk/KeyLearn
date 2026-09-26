@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { body, controller, http, pathParam } from "@fastr/controller";
 import { Context } from "@fastr/core";
 import { ApplicationError, ForbiddenError, NotFoundError } from "@fastr/errors";
@@ -14,6 +15,9 @@ import {
   nameCapacity,
   type NumberingKey,
   planFor,
+  proctor,
+  canonicalLog,
+  readLog,
   sequenceOf,
   type Sitting,
 } from "@keylearn/certificate";
@@ -84,15 +88,25 @@ export class Controller {
     rateLimit(ctx, "certificate-sitting-start", 30, 60_000);
     const profile = await this.owned(ctx, pid);
     requireCertificatesFor(profile);
-    ctx.state.session.set(SITTING_KEY, { pid: profile.id!, at: Date.now() });
-    ctx.response.body = { ok: true, plan: planOf(profile) };
+    // The text is chosen here, not by the page, and kept with the start: the
+    // keystrokes that come back are checked against exactly this.
+    const kind = profile.visionSupport ? "braille" : "typing";
+    const text = await this.source.serve(profile, kind);
+    ctx.state.session.set(SITTING_KEY, {
+      pid: profile.id!,
+      at: Date.now(),
+      kind,
+      text,
+    });
+    ctx.response.body = { ok: true, plan: planOf(profile), kind, text };
   }
 
   @http.POST("/_/certificate/sitting/{pid:[0-9]+}")
   async postSitting(
     ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("pid") pid: string,
-    @body.json(null, { maxLength: 4096 }) value: unknown,
+    // Room for the keystroke log (see LOG_LIMITS), and no more.
+    @body.json(null, { maxLength: 131072 }) value: unknown,
   ) {
     // A sitting is a minute of typing at least, so anything near this is a
     // script rather than a learner, and each row is a row in the table the
@@ -104,26 +118,69 @@ export class Controller {
     // Held to what the server can see. The start is spent either way, so a
     // refused sitting cannot be replayed against the same clock.
     const started = ctx.state.session.get(SITTING_KEY) as
-      | { pid?: number; at?: number }
+      | { pid?: number; at?: number; kind?: string; text?: string }
       | undefined;
     ctx.state.session.delete(SITTING_KEY);
+    const refuse = (reason: string) => {
+      ctx.response.status = 409;
+      ctx.response.body = { error: "sitting-refused", reason };
+    };
+    const mine = started?.pid === profile.id ? started : undefined;
+    if (mine?.at == null || typeof mine.text !== "string" || mine.text === "") {
+      refuse("not-started");
+      return;
+    }
+    // The figures are rebuilt from the keystrokes, against the text served
+    // for this sitting, and the page's own figures only have to agree.
+    const plan = planOf(profile);
+    const logValue = (value as { log?: unknown } | null)?.log;
+    const checked = proctor(logValue, {
+      kind: claimed.kind,
+      served: mine.text,
+      unitsOf: this.source.unitsOf(claimed.kind),
+      plan,
+      elapsedMs: Date.now() - mine.at,
+      claimed: { speed: claimed.speed, accuracy: claimed.accuracy },
+    });
+    if (!checked.ok) {
+      refuse(checked.reason);
+      return;
+    }
+    const measured = {
+      ...claimed,
+      speed: checked.speed,
+      accuracy: checked.accuracy,
+      runs: checked.runs.length,
+    };
     const { evidence, language } = await this.source.derive(
       profile,
       claimed.kind,
     );
     const refusal = checkSitting(
-      claimed,
-      started?.pid === profile.id ? (started?.at ?? null) : null,
-      planOf(profile),
+      measured,
+      mine.at,
+      plan,
       evidence,
       (await criteriaSnapshot()).criteria,
     );
     if (refusal != null) {
-      ctx.response.status = 409;
-      ctx.response.body = { error: "sitting-refused", reason: refusal };
+      refuse(refusal);
       return;
     }
-    const sitting = { ...claimed, language };
+    // Only a hash of the log is kept (privacy: nothing about how anybody
+    // types), which is still enough to refuse the same log sent again.
+    const log = readLog(logValue);
+    const logHash = createHash("sha256")
+      .update(typeof log === "string" ? "" : canonicalLog(log))
+      .digest("hex");
+    const replayed = await CertificateSitting.query()
+      .where({ profileId: profile.id!, logHash })
+      .resultSize();
+    if (replayed > 0) {
+      refuse("replayed");
+      return;
+    }
+    const sitting = { ...measured, language, logHash };
     // Control centre, certificates.attemptsPerDay (0 = unlimited).
     const perDay = certificateAttemptsPerDay();
     if (perDay > 0) {
@@ -149,6 +206,7 @@ export class Controller {
       runs: sitting.runs,
       seconds: sitting.seconds,
       criteriaVersion: version,
+      logHash: sitting.logHash,
     });
     ctx.response.status = 204;
   }
@@ -342,7 +400,12 @@ export class Controller {
       nameVisible,
       criteriaVersion: snapshot.version,
       criteriaJson: JSON.stringify(snapshot.criteria),
-      evidence: "server",
+      // "keys" when every sitting the verdict was taken over was rebuilt from
+      // its keystrokes; plain "server" for a window that still reaches back
+      // to a sitting from before that.
+      evidence: rows.slice(-3).every((row) => row.logHash != null)
+        ? "keys"
+        : "server",
     });
     const saved = await Certificate.query()
       .patchAndFetchById(inserted.id!, { sequence: inserted.id! })
@@ -466,7 +529,7 @@ export class Controller {
       // "server": judged on practice and a sitting the server itself saw.
       // "self-reported": issued before that, on figures the browser sent —
       // still a certificate we issued, but said plainly for what it is.
-      evidence: found.evidence === "server" ? "server" : "self-reported",
+      evidence: evidenceLabel(found.evidence),
       // The criteria it was issued under, which a later change never re-judges.
       criteriaVersion: found.criteriaVersion ?? 1,
       criteria:
@@ -510,6 +573,22 @@ function requireCertificatesFor(profile: Profile): void {
       { status: 403 },
     );
   }
+}
+
+/**
+ * What checked a certificate's figures, as the verify page names it:
+ * "keystroke" (rebuilt on the server from every key of the sittings, against
+ * text the server chose), "server" (practice and timing checked here, speeds
+ * reported by the page), or "self-reported" (issued before either).
+ */
+function evidenceLabel(
+  stored: string | null | undefined,
+): "keystroke" | "server" | "self-reported" {
+  return stored === "keys"
+    ? "keystroke"
+    : stored === "server"
+      ? "server"
+      : "self-reported";
 }
 
 /** The session key holding a sitting's server-side start. */
@@ -590,7 +669,7 @@ function toDetails(row: Certificate, key: NumberingKey) {
     name: row.name,
     nameVisible: flag(row.nameVisible),
     criteriaVersion: row.criteriaVersion ?? 1,
-    evidence: row.evidence === "server" ? "server" : "self-reported",
+    evidence: evidenceLabel(row.evidence),
     // Always ISO. SQLite hands back "2026-08-07 02:00:09", which is not a
     // format `new Date()` is required to parse and which browsers disagree
     // about — so the wire format is pinned here rather than left to whichever

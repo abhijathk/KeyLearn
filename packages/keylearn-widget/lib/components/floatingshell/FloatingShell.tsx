@@ -23,6 +23,7 @@ export function FloatingShell({
   width,
   dismissible = true,
   closeOnBackdrop = true,
+  phoneFull = false,
 }: {
   /** Optional: the auth window carries no heading of its own. */
   readonly title?: ReactNode;
@@ -71,6 +72,13 @@ export function FloatingShell({
    * writing a message — should not be closable by a missed click.
    */
   readonly closeOnBackdrop?: boolean;
+  /**
+   * On a phone (40rem and under), fill the screen instead of floating: no
+   * dim margins, no rounded card. For a window that is a whole place to
+   * work in — the account — where a floating card left a third of a phone
+   * as margin.
+   */
+  readonly phoneFull?: boolean;
 }): ReactNode {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
@@ -96,7 +104,7 @@ export function FloatingShell({
   }, [dismissible]);
   return (
     <div
-      className={styles.overlay}
+      className={clsx(styles.overlay, phoneFull && styles.phoneFullOverlay)}
       role="presentation"
       onClick={(ev) => {
         if (dismissible && closeOnBackdrop && ev.target === ev.currentTarget) {
@@ -109,6 +117,7 @@ export function FloatingShell({
           styles.window,
           compact && styles.compact,
           flush && styles.flushWindow,
+          phoneFull && styles.phoneFull,
         )}
         style={width != null ? { inlineSize: width } : undefined}
         role="dialog"

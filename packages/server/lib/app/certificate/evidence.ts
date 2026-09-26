@@ -13,8 +13,12 @@ import { Layout } from "@keylearn/keyboard";
 import { Logger } from "@keylearn/logger";
 import {
   brailleEvidenceFromSnapshot,
+  brailleUnits,
+  servedBrailleText,
+  servedTypingText,
   typingAlphabet,
   typingEvidence,
+  typingUnits,
 } from "@keylearn/page-account";
 import { type Result } from "@keylearn/result";
 import { UserDataFactory } from "@keylearn/result-userdata";
@@ -55,24 +59,45 @@ export class EvidenceSource {
       birthYear: profile.birthYear ?? null,
     };
     if (kind === "braille") {
-      let snapshot: unknown = null;
-      if (owner != null) {
-        try {
-          snapshot = JSON.parse(
-            await readFile(
-              this.dataDir.brailleProgressFile(owner, profile.id!),
-              "utf8",
-            ),
-          );
-        } catch {
-          // No braille practice synced yet: judged as nothing done.
-        }
-      }
       return {
-        evidence: brailleEvidenceFromSnapshot(who, snapshot),
+        evidence: brailleEvidenceFromSnapshot(
+          who,
+          await this.#brailleSnapshot(profile),
+        ),
         language: BRAILLE_ALPHABET,
       };
     }
+    const results = await this.#results(profile);
+    // The same layout the page takes: the one the practice was typed on.
+    const layout = results[0]?.layout ?? Layout.EN_US;
+    return {
+      evidence: typingEvidence(who, results, await this.alphabet(layout)),
+      language: String(layout),
+    };
+  }
+
+  /**
+   * The text a sitting is typed on, chosen here and kept by the caller so the
+   * keystrokes can be checked against it (see `proctor`). Long enough for
+   * every run at a pace nobody reaches; the page cycles it if they do.
+   */
+  async serve(profile: Profile, kind: CertificateKind): Promise<string> {
+    if (kind === "braille") {
+      return servedBrailleText(await this.#brailleSnapshot(profile), 120);
+    }
+    const results = await this.#results(profile);
+    const layout = results[0]?.layout ?? Layout.EN_US;
+    const model = await this.#model(layout);
+    return model == null ? "" : servedTypingText(layout, model, 1500);
+  }
+
+  /** How many keystroke units a stretch of text is, for this kind. */
+  unitsOf(kind: CertificateKind): (text: string) => number {
+    return kind === "braille" ? brailleUnits : typingUnits;
+  }
+
+  async #results(profile: Profile): Promise<Result[]> {
+    const owner = learnerOwner(profile);
     const results: Result[] = [];
     if (owner != null) {
       for await (const result of this.userData
@@ -81,12 +106,37 @@ export class EvidenceSource {
         results.push(result);
       }
     }
-    // The same layout the page takes: the one the practice was typed on.
-    const layout = results[0]?.layout ?? Layout.EN_US;
-    return {
-      evidence: typingEvidence(who, results, await this.alphabet(layout)),
-      language: String(layout),
-    };
+    return results;
+  }
+
+  async #brailleSnapshot(profile: Profile): Promise<unknown> {
+    const owner = learnerOwner(profile);
+    if (owner == null) {
+      return null;
+    }
+    try {
+      return JSON.parse(
+        await readFile(
+          this.dataDir.brailleProgressFile(owner, profile.id!),
+          "utf8",
+        ),
+      );
+    } catch {
+      return null; // No braille practice synced yet: judged as nothing done.
+    }
+  }
+
+  /** The language model's bytes, as the page downloads them. */
+  async #model(layout: Layout): Promise<Uint8Array | null> {
+    try {
+      const path = this.manifest.assetPath(
+        `/assets/model-${layout.language.id}.data`,
+      );
+      return new Uint8Array(await readFile(join(this.publicDir, path)));
+    } catch (err) {
+      Logger.warn(err as Error, "Could not load the %s model", layout.id);
+      return null;
+    }
   }
 
   /**
@@ -98,21 +148,12 @@ export class EvidenceSource {
     let letters = this.#alphabets.get(layout.id);
     if (letters == null) {
       letters = (async () => {
-        try {
-          const path = this.manifest.assetPath(
-            `/assets/model-${layout.language.id}.data`,
-          );
-          const bytes = await readFile(join(this.publicDir, path));
-          return typingAlphabet(layout, new Uint8Array(bytes));
-        } catch (err) {
-          Logger.warn(
-            err as Error,
-            "Could not load the %s alphabet",
-            layout.id,
-          );
+        const model = await this.#model(layout);
+        if (model == null) {
           this.#alphabets.delete(layout.id);
           return [];
         }
+        return typingAlphabet(layout, model);
       })();
       this.#alphabets.set(layout.id, letters);
     }

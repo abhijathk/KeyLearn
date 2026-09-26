@@ -2,6 +2,7 @@ import {
   useAssessment,
   useAssessmentPartial,
   useAssessmentReset,
+  type LoggedSegment,
 } from "@keylearn/assessment";
 import {
   BLANK,
@@ -72,6 +73,7 @@ import {
 import {
   describeCell,
   type Lesson,
+  lessonOfText,
   makeLesson,
   readCell,
   spellOut,
@@ -119,6 +121,14 @@ function Practice(): ReactNode {
   // it reads the session through a ref rather than closing over it.
   const assessmentRef = useRef(assessment);
   assessmentRef.current = assessment;
+  // In a certificate sitting the lines are the server's text, and each cell's
+  // completion time and wrong tries are kept for it to check (see `proctor`).
+  const nextLesson = useCallback((from: Progress): Lesson => {
+    const served = assessmentRef.current?.nextPassage(8);
+    return served != null ? lessonOfText(served) : makeLesson(from);
+  }, []);
+  const cellLog = useRef<[number, number][]>([]);
+  const missesSince = useRef(0);
   const [lesson, setLesson] = useState<Lesson>(() =>
     makeLesson(loadProgress(profileId)),
   );
@@ -308,6 +318,8 @@ function Practice(): ReactNode {
     line.current = { ...emptyTally };
     scored.current.clear();
     lastAt.current = 0;
+    cellLog.current = [];
+    missesSince.current = 0;
   }, []);
 
   // The clock stops where it stops, which is usually partway down a line. What
@@ -321,13 +333,18 @@ function Practice(): ReactNode {
     const now = Date.now();
     const { cpm, accuracy } = lineResult(tally, now);
     return cpm > 0
-      ? { speed: cpm, accuracy: accuracy / 100, time: now - tally.startedAt }
+      ? {
+          speed: cpm,
+          accuracy: accuracy / 100,
+          time: now - tally.startedAt,
+          log: brailleLog(state.current.lesson, cellLog.current),
+        }
       : null;
   });
 
   // A fresh line for each run, so no line is ever counted by two of them.
   useAssessmentReset(() => {
-    startLine(makeLesson(progress.current));
+    startLine(nextLesson(progress.current));
   });
 
   // Fold in whatever the account already holds, once, before the first line is
@@ -347,7 +364,7 @@ function Practice(): ReactNode {
         // into the new one and silently stop those cells being counted at all,
         // and `line` would fold the abandoned line's tally into the next
         // summary.
-        startLine(makeLesson(progress.current));
+        startLine(nextLesson(progress.current));
       }
     });
     return () => {
@@ -415,17 +432,26 @@ function Practice(): ReactNode {
 
       const letter = keyOfCell(step.cell);
       const alreadyScored = !shouldScore(scored.current, s.at);
+      // A certificate sitting is measured, not practised — the same rule the
+      // typing pages keep. Recording it would let the sitting change the
+      // very practice record it is judged against: one slow join after the
+      // pause between runs unsettled a cell, and the server then refused the
+      // sitting as "not eligible" on the practice the sitting had just made.
+      const practising = assessmentRef.current == null;
       if (cell !== step.cell) {
-        if (letter != null && !alreadyScored) {
+        if (practising && letter != null && !alreadyScored) {
           progress.current.miss(letter);
           saveProgress(progress.current, profileId);
         }
         // Against today as well as against the cell, so the profile can show
         // what was done today rather than only a lifetime total.
         if (!alreadyScored) {
-          recordCell(profileId, { correct: false });
+          if (practising) {
+            recordCell(profileId, { correct: false });
+          }
           setMisses((n) => n + 1);
           line.current.misses += 1;
+          missesSince.current += 1;
         }
         setWrong(cell);
         setShake((n) => n + 1);
@@ -474,16 +500,18 @@ function Practice(): ReactNode {
         // because that is where the difficulty lives.
         const gap = lastAt.current === 0 ? null : now - lastAt.current;
         const counted = gap != null && gap < 10_000 ? gap : null;
-        if (counted != null) {
+        if (practising && counted != null) {
           progress.current.hit(letter, counted);
           saveProgress(progress.current, profileId);
         }
         // The cell counts either way; the time only counts when the engine
         // accepted it. Recording a two-minute pause as a join would put that
         // pause into "time spent" and drag the pace down with it.
-        recordCell(profileId, { correct: true, ms: counted });
-        if (counted != null) {
-          setPractisedMs((n) => n + counted);
+        if (practising) {
+          recordCell(profileId, { correct: true, ms: counted });
+          if (counted != null) {
+            setPractisedMs((n) => n + counted);
+          }
         }
       }
       lastAt.current = now;
@@ -491,6 +519,8 @@ function Practice(): ReactNode {
         setHits((n) => n + 1);
         line.current.hits += 1;
         scored.current.add(s.at);
+        cellLog.current.push([now, missesSince.current]);
+        missesSince.current = 0;
       }
       setWrong(null);
       const next = s.at + 1;
@@ -565,6 +595,7 @@ function Practice(): ReactNode {
         speed: cpm,
         accuracy: accuracy / 100,
         time: Date.now() - line.current.startedAt,
+        log: brailleLog(s.lesson, cellLog.current),
       });
       const summary = formatMessage(
         {
@@ -576,7 +607,7 @@ function Practice(): ReactNode {
       );
       setLive(summary);
       void pushProgress(profileId);
-      const fresh = makeLesson(progress.current);
+      const fresh = nextLesson(progress.current);
       startLine(fresh);
       // The goal, only where it has just moved past something worth saying.
       // The state has not been flushed yet at this point, so the figure is
@@ -1619,4 +1650,30 @@ function DotGrid({
       })}
     </div>
   );
+}
+
+/**
+ * A line's keystroke log, trimmed to whole characters: a capital or number
+ * sign typed without the letter after it is not yet a character of the text,
+ * and the server counts cells per character.
+ */
+function brailleLog(
+  lesson: Lesson,
+  cells: readonly (readonly [number, number])[],
+): LoggedSegment | undefined {
+  let n = Math.min(cells.length, lesson.steps.length);
+  while (
+    n > 0 &&
+    n < lesson.steps.length &&
+    lesson.steps[n].at === lesson.steps[n - 1].at
+  ) {
+    n -= 1;
+  }
+  if (n === 0) {
+    return undefined;
+  }
+  return {
+    text: lesson.text.slice(0, lesson.steps[n - 1].at + 1),
+    steps: cells.slice(0, n),
+  };
 }

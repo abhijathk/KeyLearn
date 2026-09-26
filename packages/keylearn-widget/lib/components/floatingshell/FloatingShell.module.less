@@ -200,6 +200,21 @@
   block-size: min(36rem, 92vb);
 }
 
+// A window that fills a phone rather than floating on it (phoneFull).
+@media (max-width: 40rem) {
+  .overlay.phoneFullOverlay {
+    padding: 0;
+  }
+
+  .window.phoneFull {
+    inline-size: 100%;
+    block-size: 100dvb;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
 // A compact window hugs its content — auth forms and small notices.
 .window.compact {
   inline-size: min(26.5rem, 100%);

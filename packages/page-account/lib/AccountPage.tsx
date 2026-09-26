@@ -4,11 +4,13 @@ import {
   type AnyUser,
   Avatar,
   isPremiumUser,
+  loadA11y,
   Pages,
   PROFILE_NAME_MAX,
   usePageData,
   type UserDetails,
 } from "@keylearn/pages-shared";
+import { useTheme } from "@keylearn/themes";
 import { Button, Icon, PinField, TextField } from "@keylearn/widget";
 import { confirmStyles as dlg } from "@keylearn/widget";
 import { ConfirmDialog } from "@keylearn/widget";
@@ -17,8 +19,10 @@ import { mdiCreditCard } from "@mdi/js";
 import { clsx } from "clsx";
 import {
   type ReactNode,
+  type RefObject,
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
 } from "react";
@@ -97,6 +101,36 @@ function initialPane(): Pane {
   }
   const hash = window.location.hash.replace(/^#/, "");
   return PANES.includes(hash as Pane) ? (hash as Pane) : "appearance";
+}
+
+/** Whether the URL names a section (a deep link, or a section opened here). */
+function hashNamesPane(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return PANES.includes(window.location.hash.replace(/^#/, "") as Pane);
+}
+
+const PHONE_QUERY = "(max-width: 40rem)";
+
+/** The phone layout, tracking rotation and resizes. */
+function usePhoneLayout(): boolean {
+  const [phone, setPhone] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia?.(PHONE_QUERY).matches === true,
+  );
+  useEffect(() => {
+    const query = window.matchMedia?.(PHONE_QUERY);
+    if (query == null) {
+      return;
+    }
+    const onChange = () => setPhone(query.matches);
+    onChange();
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+  return phone;
 }
 
 export function AccountPage() {
@@ -336,14 +370,27 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   const setPane = (next: Pane) => {
     setPaneState(next);
     if (typeof window !== "undefined") {
-      window.history.replaceState({}, "", `${Pages.account.path}#${next}`);
+      // The page's own path, not Pages.account.path: on /ar/account the
+      // latter dropped the language, and a reload came back in English.
+      window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}#${next}`,
+      );
     }
   };
 
   // The browser's own back and forward buttons should move between panes too,
   // since that is what the URL now implies.
   useEffect(() => {
-    const onPop = () => setPaneState(initialPane());
+    const onPop = () => {
+      setPaneState(initialPane());
+      // On a phone the hash also says list or section: none is the list.
+      setPhoneList(!hashNamesPane());
+      if (!hashNamesPane()) {
+        pushedSection.current = false;
+      }
+    };
     window.addEventListener("hashchange", onPop);
     return () => window.removeEventListener("hashchange", onPop);
   }, []);
@@ -358,9 +405,166 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   const [deleteMethod, setDeleteMethod] = useState<DeleteMethod>("email");
   const [deleteOthers, setDeleteOthers] = useState<readonly DeleteMethod[]>([]);
 
+  // ── Phones: a list of sections that drills in (owner decision, Option A)
+  //
+  // At 40rem and under the rail and pane do not fit side by side, and the
+  // stopgap (the rail turned into a sideways strip) hid most sections off
+  // its end. Instead the window opens on a list of every section with a
+  // one-line summary; a section opens full-screen with a way back. A deep
+  // link (#security) opens straight into its section.
+  const phone = usePhoneLayout();
+  const [phoneList, setPhoneList] = useState(() => !hashNamesPane());
+  // Whether the open section was pushed onto the history by a tap here, so
+  // Back can pop it (and the browser's own back does the same thing); a
+  // section reached by a deep link has nothing of ours to pop.
+  const pushedSection = useRef(false);
+  const rowRefs = useRef(new Map<Pane, HTMLButtonElement>());
+  const sectionHeading = useRef<HTMLHeadingElement>(null);
+  const returnRow = useRef<Pane | null>(null);
+  // Focus follows a move between the list and a section, once per move —
+  // and on arrival by deep link, to the section's heading.
+  const focusPending = useRef(true);
+  const openSection = (next: Pane) => {
+    setPaneState(next);
+    setPhoneList(false);
+    returnRow.current = next;
+    focusPending.current = true;
+    pushedSection.current = true;
+    window.history.pushState({}, "", `${window.location.pathname}#${next}`);
+  };
+  const backToList = useCallback(() => {
+    returnRow.current = pane;
+    focusPending.current = true;
+    if (pushedSection.current) {
+      // The hashchange that follows shows the list.
+      pushedSection.current = false;
+      window.history.back();
+    } else {
+      window.history.replaceState({}, "", window.location.pathname);
+      setPhoneList(true);
+    }
+  }, [pane]);
+  useEffect(() => {
+    if (!phone || !focusPending.current) {
+      return;
+    }
+    focusPending.current = false;
+    if (phoneList) {
+      const row =
+        returnRow.current != null
+          ? rowRefs.current.get(returnRow.current)
+          : null;
+      row?.focus();
+    } else {
+      sectionHeading.current?.focus();
+    }
+  }, [phone, phoneList, pane]);
+  // Escape in a section goes back to the list; on the list it closes the
+  // window as it always has. Heard before the window's own Escape, and left
+  // alone while a dialog is open over the section — that Escape is its.
+  useEffect(() => {
+    if (!phone || phoneList) {
+      return;
+    }
+    const onKey = (ev: KeyboardEvent) => {
+      if (
+        ev.key !== "Escape" ||
+        document.querySelector('[role="alertdialog"]') != null ||
+        document.querySelectorAll('[aria-modal="true"]').length > 1
+      ) {
+        return;
+      }
+      ev.stopImmediatePropagation();
+      ev.preventDefault();
+      backToList();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [phone, phoneList, backToList]);
+
+  const paneBody = (
+    <AccountGate hasPin={user.parentPinSet} active={GATED_PANES.has(pane)}>
+      {pane === "account" && (
+        <AccountPane
+          user={user}
+          publicUser={publicUser}
+          onAnonymize={() =>
+            actions.patchAccount({ anonymized: !user.anonymized })
+          }
+          onPublicProfile={() =>
+            actions.patchAccount({ publicProfile: !user.publicProfile })
+          }
+          alsoEverywhere={alsoEverywhere}
+          onAlsoEverywhere={setAlsoEverywhere}
+          onLogout={() => setConfirm("logout")}
+          onDelete={() => setConfirm("delete")}
+          onRename={(name) => actions.patchAccount({ name })}
+        />
+      )}
+
+      {pane === "learners" && (
+        <div className={styles.paneScroll}>
+          <h2 className={styles.paneTitle}>
+            <FormattedMessage
+              id="account.section.profiles"
+              defaultMessage="Learner profiles"
+            />
+          </h2>
+          <p className={styles.cardNote}>
+            <FormattedMessage
+              id="account.profiles.note"
+              defaultMessage="Add a profile for each person in your household. Kids get a playful trail world; each profile keeps its own progress on this device."
+            />
+          </p>
+          <ProfilesManager />
+        </div>
+      )}
+
+      {pane === "security" && (
+        <div className={styles.paneScroll}>
+          <SecurityCard
+            user={user}
+            onChanged={() => {
+              // The 2FA and PIN flags live on the account record, so pull a
+              // fresh copy rather than guessing the new state client-side.
+              actions.patchAccount({});
+            }}
+          />
+        </div>
+      )}
+
+      {pane === "course" && (
+        <div className={styles.paneScroll}>
+          <CoursePane />
+        </div>
+      )}
+
+      {pane === "appearance" && <AppearancePane />}
+      {pane === "accessibility" && <AccessibilityPane />}
+
+      {pane === "prefs" && <PreferencesPane />}
+
+      {SUPPORT_VISIBLE && pane === "support" && (
+        <div className={styles.paneScroll}>
+          <MySupportSection />
+        </div>
+      )}
+
+      {premiumVisible && pane === "premium" && (
+        <div className={styles.paneScroll}>
+          <PremiumPane
+            premium={premium}
+            onCheckout={() => actions.checkout()}
+          />
+        </div>
+      )}
+    </AccountGate>
+  );
+
   return (
     <FloatingShell
       flush={true}
+      phoneFull={true}
       // Escape still closes it; a stray click on the dim does not. There
       // is a half-written support message in here often enough that
       // losing it to a missed click is not a fair trade.
@@ -378,10 +582,31 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
           />
         </div>
       )}
-      <div className={styles.b5}>
-        {/* ── Left rail ── */}
-        <nav className={styles.rail}>
-          {/* The learner this window belongs to, washed across the rail's own
+      {phone ? (
+        phoneList ? (
+          <PhoneSectionList
+            publicUser={publicUser}
+            user={user}
+            supportUnread={supportUnread}
+            premiumVisible={premiumVisible}
+            rowRefs={rowRefs.current}
+            onOpen={openSection}
+            onLogout={() => setConfirm("logout")}
+          />
+        ) : (
+          <PhoneSection
+            pane={pane}
+            headingRef={sectionHeading}
+            onBack={backToList}
+          >
+            {paneBody}
+          </PhoneSection>
+        )
+      ) : (
+        <div className={styles.b5}>
+          {/* ── Left rail ── */}
+          <nav className={styles.rail}>
+            {/* The learner this window belongs to, washed across the rail's own
               empty middle. The rail is a column of five items above a column
               of four, with a hand's breadth of nothing between them — and the
               account window is the one place where WHOSE account this is
@@ -390,260 +615,181 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
 
               Only generated art, and only ever behind: a lettered preset
               stretched down a rail is a placeholder, not an identity. */}
-          {railArt != null && (
-            <ArtMotif
-              className={styles.railArt}
-              family={railArt.family}
-              seed={railArt.seed}
-              kind={railKind}
-              opacity={0.4}
+            {railArt != null && (
+              <ArtMotif
+                className={styles.railArt}
+                family={railArt.family}
+                seed={railArt.seed}
+                kind={railKind}
+                opacity={0.4}
+              />
+            )}
+            <RailItem
+              on={pane === "appearance"}
+              onClick={() => setPane("appearance")}
+              icon={<PaletteIcon />}
+              label={
+                <FormattedMessage
+                  id="account.rail.appearance"
+                  defaultMessage="Appearance"
+                />
+              }
             />
-          )}
-          <RailItem
-            on={pane === "appearance"}
-            onClick={() => setPane("appearance")}
-            icon={<PaletteIcon />}
-            label={
-              <FormattedMessage
-                id="account.rail.appearance"
-                defaultMessage="Appearance"
-              />
-            }
-          />
 
-          <RailItem
-            on={pane === "learners"}
-            onClick={() => setPane("learners")}
-            icon={<LearnersIcon />}
-            label={
-              <FormattedMessage
-                id="account.rail.learners"
-                defaultMessage="Learners"
-              />
-            }
-          />
-          <RailItem
-            on={pane === "course"}
-            onClick={() => setPane("course")}
-            icon={<CourseIcon />}
-            label={
-              <FormattedMessage
-                id="account.rail.course"
-                defaultMessage="Course"
-              />
-            }
-          />
-          <RailItem
-            on={pane === "prefs"}
-            onClick={() => setPane("prefs")}
-            icon={<GearIcon />}
-            label={
-              <FormattedMessage
-                id="account.rail.prefs"
-                defaultMessage="Preferences"
-              />
-            }
-          />
-          <RailItem
-            on={pane === "accessibility"}
-            onClick={() => setPane("accessibility")}
-            icon={<AccessIcon />}
-            label={
-              <FormattedMessage
-                id="account.rail.accessibility"
-                defaultMessage="Accessibility"
-              />
-            }
-          />
-          {premiumVisible && (
-            <div
-              className={clsx(
-                styles.promo,
-                pane === "premium" && styles.promoOn,
-              )}
-              role="button"
-              tabIndex={0}
-              onClick={() => setPane("premium")}
-              onKeyDown={(ev) => {
-                if (ev.key === "Enter" || ev.key === " ") {
-                  setPane("premium");
-                }
-              }}
-            >
-              <span className={styles.promoTitle}>
-                {premium ? (
-                  <FormattedMessage
-                    id="account.rail.premiumOn"
-                    defaultMessage="Premium"
-                  />
-                ) : (
-                  <FormattedMessage
-                    id="account.rail.premium"
-                    defaultMessage="Go Premium"
-                  />
+            <RailItem
+              on={pane === "learners"}
+              onClick={() => setPane("learners")}
+              icon={<LearnersIcon />}
+              label={
+                <FormattedMessage
+                  id="account.rail.learners"
+                  defaultMessage="Learners"
+                />
+              }
+            />
+            <RailItem
+              on={pane === "course"}
+              onClick={() => setPane("course")}
+              icon={<CourseIcon />}
+              label={
+                <FormattedMessage
+                  id="account.rail.course"
+                  defaultMessage="Course"
+                />
+              }
+            />
+            <RailItem
+              on={pane === "prefs"}
+              onClick={() => setPane("prefs")}
+              icon={<GearIcon />}
+              label={
+                <FormattedMessage
+                  id="account.rail.prefs"
+                  defaultMessage="Preferences"
+                />
+              }
+            />
+            <RailItem
+              on={pane === "accessibility"}
+              onClick={() => setPane("accessibility")}
+              icon={<AccessIcon />}
+              label={
+                <FormattedMessage
+                  id="account.rail.accessibility"
+                  defaultMessage="Accessibility"
+                />
+              }
+            />
+            {premiumVisible && (
+              <div
+                className={clsx(
+                  styles.promo,
+                  pane === "premium" && styles.promoOn,
                 )}
-              </span>
-              {!premium && (
-                <>
-                  <span className={styles.promoSub}>
+                role="button"
+                tabIndex={0}
+                onClick={() => setPane("premium")}
+                onKeyDown={(ev) => {
+                  if (ev.key === "Enter" || ev.key === " ") {
+                    setPane("premium");
+                  }
+                }}
+              >
+                <span className={styles.promoTitle}>
+                  {premium ? (
                     <FormattedMessage
-                      id="account.rail.premiumSub"
-                      defaultMessage="No ads, no trackers. One-time, lifetime."
+                      id="account.rail.premiumOn"
+                      defaultMessage="Premium"
                     />
-                  </span>
-                  <span className={styles.promoBtn}>
+                  ) : (
                     <FormattedMessage
-                      id="account.rail.upgrade"
-                      defaultMessage="Upgrade"
+                      id="account.rail.premium"
+                      defaultMessage="Go Premium"
                     />
-                  </span>
-                </>
-              )}
-            </div>
-          )}
+                  )}
+                </span>
+                {!premium && (
+                  <>
+                    <span className={styles.promoSub}>
+                      <FormattedMessage
+                        id="account.rail.premiumSub"
+                        defaultMessage="No ads, no trackers. One-time, lifetime."
+                      />
+                    </span>
+                    <span className={styles.promoBtn}>
+                      <FormattedMessage
+                        id="account.rail.upgrade"
+                        defaultMessage="Upgrade"
+                      />
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
 
-          {/* Both pushed to the bottom together. The auto margin used to
+            {/* Both pushed to the bottom together. The auto margin used to
               sit on Log out alone, which left Account stranded up against
               Support with the gap below it. */}
-          <div className={styles.railFoot}>
-            <RailItem
-              on={pane === "account"}
-              onClick={() => setPane("account")}
-              icon={<AccountIcon />}
-              label={
-                <FormattedMessage
-                  id="account.rail.account"
-                  defaultMessage="Account"
-                />
-              }
-            />
-
-            <RailItem
-              on={pane === "security"}
-              onClick={() => setPane("security")}
-              icon={<ShieldIcon />}
-              label={
-                <FormattedMessage
-                  id="account.rail.security"
-                  defaultMessage="Security"
-                />
-              }
-            />
-
-            {SUPPORT_VISIBLE && (
+            <div className={styles.railFoot}>
               <RailItem
-                on={pane === "support"}
-                onClick={() => setPane("support")}
-                // Without this nobody knows a reply arrived: the count
-                // only exists inside the section, and nobody opens it
-                // speculatively.
-                dot={supportUnread > 0}
-                icon={<SupportIcon />}
+                on={pane === "account"}
+                onClick={() => setPane("account")}
+                icon={<AccountIcon />}
                 label={
                   <FormattedMessage
-                    id="account.rail.support"
-                    defaultMessage="Support"
+                    id="account.rail.account"
+                    defaultMessage="Account"
                   />
                 }
               />
-            )}
 
-            <button
-              className={styles.railLogout}
-              onClick={() => setConfirm("logout")}
-            >
-              <LogoutIcon />
-              <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
-            </button>
-          </div>
-        </nav>
+              <RailItem
+                on={pane === "security"}
+                onClick={() => setPane("security")}
+                icon={<ShieldIcon />}
+                label={
+                  <FormattedMessage
+                    id="account.rail.security"
+                    defaultMessage="Security"
+                  />
+                }
+              />
 
-        {/* ── Right content pane ── */}
-        {/* One gate around the pane region rather than three around three
+              {SUPPORT_VISIBLE && (
+                <RailItem
+                  on={pane === "support"}
+                  onClick={() => setPane("support")}
+                  // Without this nobody knows a reply arrived: the count
+                  // only exists inside the section, and nobody opens it
+                  // speculatively.
+                  dot={supportUnread > 0}
+                  icon={<SupportIcon />}
+                  label={
+                    <FormattedMessage
+                      id="account.rail.support"
+                      defaultMessage="Support"
+                    />
+                  }
+                />
+              )}
+
+              <button
+                className={styles.railLogout}
+                onClick={() => setConfirm("logout")}
+              >
+                <LogoutIcon />
+                <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
+              </button>
+            </div>
+          </nav>
+
+          {/* ── Right content pane ── */}
+          {/* One gate around the pane region rather than three around three
             panes: the proof is shared, so asking once covers all of them
             for the visit and switching between them must not re-ask. */}
-        <div className={styles.pane}>
-          <AccountGate
-            hasPin={user.parentPinSet}
-            active={GATED_PANES.has(pane)}
-          >
-            {pane === "account" && (
-              <AccountPane
-                user={user}
-                publicUser={publicUser}
-                onAnonymize={() =>
-                  actions.patchAccount({ anonymized: !user.anonymized })
-                }
-                onPublicProfile={() =>
-                  actions.patchAccount({ publicProfile: !user.publicProfile })
-                }
-                alsoEverywhere={alsoEverywhere}
-                onAlsoEverywhere={setAlsoEverywhere}
-                onLogout={() => setConfirm("logout")}
-                onDelete={() => setConfirm("delete")}
-                onRename={(name) => actions.patchAccount({ name })}
-              />
-            )}
-
-            {pane === "learners" && (
-              <div className={styles.paneScroll}>
-                <h2 className={styles.paneTitle}>
-                  <FormattedMessage
-                    id="account.section.profiles"
-                    defaultMessage="Learner profiles"
-                  />
-                </h2>
-                <p className={styles.cardNote}>
-                  <FormattedMessage
-                    id="account.profiles.note"
-                    defaultMessage="Add a profile for each person in your household. Kids get a playful trail world; each profile keeps its own progress on this device."
-                  />
-                </p>
-                <ProfilesManager />
-              </div>
-            )}
-
-            {pane === "security" && (
-              <div className={styles.paneScroll}>
-                <SecurityCard
-                  user={user}
-                  onChanged={() => {
-                    // The 2FA and PIN flags live on the account record, so pull a
-                    // fresh copy rather than guessing the new state client-side.
-                    actions.patchAccount({});
-                  }}
-                />
-              </div>
-            )}
-
-            {pane === "course" && (
-              <div className={styles.paneScroll}>
-                <CoursePane />
-              </div>
-            )}
-
-            {pane === "appearance" && <AppearancePane />}
-            {pane === "accessibility" && <AccessibilityPane />}
-
-            {pane === "prefs" && <PreferencesPane />}
-
-            {SUPPORT_VISIBLE && pane === "support" && (
-              <div className={styles.paneScroll}>
-                <MySupportSection />
-              </div>
-            )}
-
-            {premiumVisible && pane === "premium" && (
-              <div className={styles.paneScroll}>
-                <PremiumPane
-                  premium={premium}
-                  onCheckout={() => actions.checkout()}
-                />
-              </div>
-            )}
-          </AccountGate>
+          <div className={styles.pane}>{paneBody}</div>
         </div>
-      </div>
+      )}
 
       {confirm === "logout" && (
         <ConfirmDialog
@@ -1545,6 +1691,332 @@ export function useIdleClose(
   }, [onIdle, closeMs, warnMs, tickMs]);
 
   return remaining;
+}
+
+// ── Phones (Option A): the section list and one section at a time ──
+
+/** A section's name: the rail's own label, so the two can never disagree. */
+function paneLabel(pane: Pane): ReactNode {
+  switch (pane) {
+    case "appearance":
+      return (
+        <FormattedMessage
+          id="account.rail.appearance"
+          defaultMessage="Appearance"
+        />
+      );
+    case "learners":
+      return (
+        <FormattedMessage
+          id="account.rail.learners"
+          defaultMessage="Learners"
+        />
+      );
+    case "course":
+      return (
+        <FormattedMessage id="account.rail.course" defaultMessage="Course" />
+      );
+    case "prefs":
+      return (
+        <FormattedMessage
+          id="account.rail.prefs"
+          defaultMessage="Preferences"
+        />
+      );
+    case "accessibility":
+      return (
+        <FormattedMessage
+          id="account.rail.accessibility"
+          defaultMessage="Accessibility"
+        />
+      );
+    case "account":
+      return (
+        <FormattedMessage id="account.rail.account" defaultMessage="Account" />
+      );
+    case "security":
+      return (
+        <FormattedMessage
+          id="account.rail.security"
+          defaultMessage="Security"
+        />
+      );
+    case "support":
+      return (
+        <FormattedMessage id="account.rail.support" defaultMessage="Support" />
+      );
+    case "premium":
+      return (
+        <FormattedMessage
+          id="account.rail.premiumOn"
+          defaultMessage="Premium"
+        />
+      );
+  }
+}
+
+const PANE_ICON: Record<Pane, () => ReactNode> = {
+  appearance: PaletteIcon,
+  learners: LearnersIcon,
+  course: CourseIcon,
+  prefs: GearIcon,
+  accessibility: AccessIcon,
+  account: AccountIcon,
+  security: ShieldIcon,
+  support: SupportIcon,
+  premium: GearIcon,
+};
+
+function PhoneSectionList({
+  user,
+  publicUser,
+  supportUnread,
+  premiumVisible,
+  rowRefs,
+  onOpen,
+  onLogout,
+}: {
+  readonly user: UserDetails;
+  readonly publicUser: AnyUser;
+  readonly supportUnread: number;
+  readonly premiumVisible: boolean;
+  readonly rowRefs: Map<Pane, HTMLButtonElement>;
+  readonly onOpen: (pane: Pane) => void;
+  readonly onLogout: () => void;
+}): ReactNode {
+  const { formatMessage, locale } = useIntl();
+  const { color } = useTheme();
+  const { household } = useProfiles();
+  const learningId = useId();
+  const accountId = useId();
+  // One line under each name, from what is already on hand — nothing is
+  // fetched to fill it. A section with nothing short to say says nothing.
+  const summary = (pane: Pane): ReactNode => {
+    switch (pane) {
+      case "appearance":
+        return color === "keylearn" ? (
+          <FormattedMessage id="theme.maker.tagNight" defaultMessage="Night" />
+        ) : color === "keylearn-day" ? (
+          <FormattedMessage id="theme.maker.tagDay" defaultMessage="Day" />
+        ) : color === "auto" ? (
+          <FormattedMessage
+            id="account.prefs.theme.auto"
+            defaultMessage="Auto"
+          />
+        ) : null;
+      case "learners":
+        return household.profiles.map((p) => p.firstName).join(", ");
+      case "prefs":
+        try {
+          return new Intl.DisplayNames([locale], { type: "language" }).of(
+            locale,
+          );
+        } catch {
+          return null;
+        }
+      case "accessibility":
+        return presetNames(loadA11y().presets);
+      case "account":
+        return user.email;
+      default:
+        return null;
+    }
+  };
+  const row = (pane: Pane, dot = false): ReactNode => {
+    const Icon = PANE_ICON[pane];
+    const sub = summary(pane);
+    return (
+      <li key={pane}>
+        <button
+          ref={(el) => {
+            if (el != null) {
+              rowRefs.set(pane, el);
+            } else {
+              rowRefs.delete(pane);
+            }
+          }}
+          className={styles.phoneRow}
+          onClick={() => onOpen(pane)}
+        >
+          <span className={styles.phoneBadge} aria-hidden={true}>
+            <Icon />
+          </span>
+          <span className={styles.phoneRowText}>
+            <span className={styles.phoneRowName}>{paneLabel(pane)}</span>
+            {sub != null && sub !== "" && (
+              <span className={styles.phoneRowSub}>{sub}</span>
+            )}
+          </span>
+          {dot && (
+            <span
+              className={styles.railDot}
+              role="img"
+              aria-label={formatMessage({
+                id: "account.rail.unread",
+                defaultMessage: "Unread reply",
+              })}
+            />
+          )}
+          <span className={styles.phoneChevron} aria-hidden={true}>
+            <ChevronIcon />
+          </span>
+        </button>
+      </li>
+    );
+  };
+  return (
+    <div className={styles.phone}>
+      <div className={styles.phoneBar}>
+        <span />
+        <h2 className={styles.phoneTitle}>
+          <FormattedMessage id="t_Account" defaultMessage="Account" />
+        </h2>
+      </div>
+      <div className={styles.phoneScroll}>
+        <div className={styles.phoneWho}>
+          <Avatar user={publicUser} size="large" />
+          <div className={styles.phoneWhoText}>
+            <span className={styles.phoneWhoName}>{user.name}</span>
+            <span className={styles.phoneWhoEmail}>{user.email}</span>
+          </div>
+        </div>
+        <h3 className={styles.phoneGroup} id={learningId}>
+          <FormattedMessage
+            id="account.phone.groupLearning"
+            defaultMessage="Learning"
+          />
+        </h3>
+        <ul className={styles.phoneList} aria-labelledby={learningId}>
+          {row("appearance")}
+          {row("learners")}
+          {row("course")}
+          {row("prefs")}
+          {row("accessibility")}
+          {premiumVisible && row("premium")}
+        </ul>
+        <h3 className={styles.phoneGroup} id={accountId}>
+          <FormattedMessage id="t_Account" defaultMessage="Account" />
+        </h3>
+        <ul className={styles.phoneList} aria-labelledby={accountId}>
+          {row("account")}
+          {row("security")}
+          {SUPPORT_VISIBLE && row("support", supportUnread > 0)}
+        </ul>
+        <div className={clsx(styles.phoneList, styles.phoneLogout)}>
+          <button className={styles.phoneRow} onClick={onLogout}>
+            <span className={styles.phoneBadge} aria-hidden={true}>
+              <LogoutIcon />
+            </span>
+            <span className={styles.phoneRowText}>
+              <span className={styles.phoneRowName}>
+                <FormattedMessage id="nav.logOut" defaultMessage="Log out" />
+              </span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The accessibility presets that are on, by their own names. */
+function presetNames(ids: readonly string[]): ReactNode {
+  const names: ReactNode[] = [];
+  for (const id of ids) {
+    const name =
+      id === "calm" ? (
+        <FormattedMessage id="account.a11y.preset.calm" defaultMessage="Calm" />
+      ) : id === "focus" ? (
+        <FormattedMessage
+          id="account.a11y.preset.focus"
+          defaultMessage="Fewer things at once"
+        />
+      ) : id === "read" ? (
+        <FormattedMessage
+          id="account.a11y.preset.read"
+          defaultMessage="Easier to read"
+        />
+      ) : id === "colour" ? (
+        <FormattedMessage
+          id="account.a11y.preset.colour"
+          defaultMessage="Colours apart"
+        />
+      ) : id === "hands" ? (
+        <FormattedMessage
+          id="account.a11y.preset.hands"
+          defaultMessage="Steadier hands"
+        />
+      ) : null;
+    if (name != null) {
+      names.push(
+        names.length > 0 ? (
+          <span key={id}>, {name}</span>
+        ) : (
+          <span key={id}>{name}</span>
+        ),
+      );
+    }
+  }
+  return names.length > 0 ? names : null;
+}
+
+function PhoneSection({
+  pane,
+  headingRef,
+  onBack,
+  children,
+}: {
+  readonly pane: Pane;
+  readonly headingRef: RefObject<HTMLHeadingElement | null>;
+  readonly onBack: () => void;
+  readonly children: ReactNode;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const headingId = useId();
+  return (
+    <div className={styles.phone}>
+      <div className={styles.phoneBar}>
+        <button
+          className={styles.phoneBack}
+          onClick={onBack}
+          aria-label={formatMessage({
+            id: "support.my.back",
+            defaultMessage: "Back",
+          })}
+          title={formatMessage({
+            id: "support.my.back",
+            defaultMessage: "Back",
+          })}
+        >
+          <ChevronIcon back={true} />
+        </button>
+        <h2
+          ref={headingRef}
+          id={headingId}
+          className={styles.phoneTitle}
+          tabIndex={-1}
+        >
+          {paneLabel(pane)}
+        </h2>
+      </div>
+      <section className={styles.phoneBody} aria-labelledby={headingId}>
+        {children}
+      </section>
+    </div>
+  );
+}
+
+/** Points along the reading direction; the back one against it. */
+function ChevronIcon({ back = false }: { readonly back?: boolean }): ReactNode {
+  return (
+    <svg
+      className={clsx(styles.chevron, back && styles.chevronBack)}
+      viewBox="0 0 24 24"
+      aria-hidden={true}
+    >
+      <path d="M9 5l7 7-7 7" />
+    </svg>
+  );
 }
 
 function RailItem({

@@ -1,10 +1,14 @@
+import { Pages, usePageData } from "@keylearn/pages-shared";
 import { FormattedMessage } from "react-intl";
+import { Link } from "react-router";
 import * as styles from "./SmallScreenGate.module.less";
 
 // Pure-CSS gated: the markup is always in the DOM and a media query in
 // SmallScreenGate.module.less shows or hides it, so it tracks window resizes
 // and orientation changes with no JS state and no layout flash on load.
 export function SmallScreenGate() {
+  const { publicUser } = usePageData();
+  const signedIn = publicUser.id != null;
   return (
     <div className={styles.screen} role="alert">
       <div className={styles.card}>
@@ -26,6 +30,19 @@ export function SmallScreenGate() {
             defaultMessage="KeyLearn needs room for a full keyboard and your practice text side by side. Please switch to a laptop or desktop to continue."
           />
         </p>
+        {/* The account works on a phone; practice does not. This card
+            covers the header, so without a way through it here nobody on a
+            phone could reach their account from any practice page. */}
+        <Link
+          className={styles.action}
+          to={signedIn ? Pages.account.path : Pages.login.path}
+        >
+          {signedIn ? (
+            <FormattedMessage id="t_Account" defaultMessage="Account" />
+          ) : (
+            <FormattedMessage id="t_Log_In" defaultMessage="Log In" />
+          )}
+        </Link>
       </div>
     </div>
   );

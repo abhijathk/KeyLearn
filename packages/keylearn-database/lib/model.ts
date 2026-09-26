@@ -1590,6 +1590,10 @@ export class CertificateSitting extends TimestampMixin(Model) {
     table.integer("runs").notNullable().defaultTo(1);
     table.integer("seconds").notNullable().defaultTo(0);
     table.integer("criteria_version").unsigned().notNullable().defaultTo(1);
+    // A SHA-256 of the sitting's keystroke log, never the log itself: enough
+    // to refuse the same log sent twice, and nothing about how anyone types.
+    // Null for a sitting recorded before keystrokes were checked.
+    table.string("log_hash", 64).nullable();
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     // The verdict reads the most recent sittings for one learner in one
     // language, which is exactly this index.
@@ -1605,6 +1609,7 @@ export class CertificateSitting extends TimestampMixin(Model) {
   runs?: number;
   seconds?: number;
   criteriaVersion?: number;
+  logHash?: string | null;
   createdAt?: Date;
 }
 
