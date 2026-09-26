@@ -5412,6 +5412,11 @@ export function createKidsWorld(
               visible: kutti.wrap.visible,
               at: kutti.wrap.position.toArray(),
               stay: stay.spot?.kind ?? null,
+              // Why he is not on the crossing yet: still arming, between
+              // two spots, or with nowhere built to stand.
+              armIn: stay.armIn,
+              gone: stay.gone,
+              spots: staySpots?.map((s) => s.kind) ?? null,
               rest: restStage,
             },
       // The ground read two ways — the grid and the raycast it replaced —
