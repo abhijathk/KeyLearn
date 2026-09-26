@@ -34,6 +34,11 @@ Findings live on the owner's machine in the session scratchpad (`e2e/findings/*.
 3. **KeyLearn verify: "keys" vs "keystroke".** New certificates store evidence `"keys"`; the verify API was reported to return `"keystroke"`, and `/verify` shows the "Keystroke-checked" note only for `"keys"`. Confirm with a real proctored certificate. If they differ, share one constant (packages `keylearn-certificate`, server certificate controller, `keylearn-pages-browser/lib/pages/verify.tsx`), and add tests for the API response and the rendered note.
 4. **Kids and braille certificate sittings:** drive them end to end in a browser (they're only unit-tested). The latest fixes: braille progress pulled before eligibility, braille sitting cells not recorded as practice, kids passages not counted twice.
 5. **Account window at phone width:** a final visual check of every section at 390px (Security buttons and learner rows were just fixed).
+6. **Kids, not yet browser-checked** (all committed; last commit `b6270677`, file `packages/page-kids/lib/world.ts` unless noted):
+   - Kuttichathan in **lesson 38** at night (`tickStay`). Lesson 37 is checked. Run the night probe on 38 and confirm he appears after dark, on the rail, deck or island only.
+   - Time Keepers lesson length for the **11+ band** (`KidsPage.tsx`, `fitPassageToRoad` in `run-length.ts`). 5–6, 7–8 and 9–10 are checked; 11+ opens Classic by default, so seed prefs `{classic:false}`.
+   - Loader-to-picker handover: about 80 ms of overlap remains (`kids.module.less`, `.loadingOut` and `.pickerIn`); optional polish.
+   - Check the rest of the chapter 3–4 Kuttichathan areas at night (lessons 24, 28, 32, 35); 27 and 36 are checked.
 
 ## Outstanding: owner actions
 
