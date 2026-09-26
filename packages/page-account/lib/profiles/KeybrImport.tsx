@@ -58,7 +58,7 @@ export function KeybrImport({
   userId,
   onClose,
 }: {
-  /** See `importTargets`: grown-ups not on braille. */
+  /** See `importTargets`: every learner not on braille. */
   readonly profiles: readonly Profile[];
   readonly userId: string;
   readonly onClose: () => void;
@@ -94,9 +94,9 @@ export function KeybrImport({
         if (!Array.isArray(arr)) {
           setError(
             formatMessage({
-              id: "import.badFile",
+              id: "import.badFile.any",
               defaultMessage:
-                "That doesn’t look like a keybr data export — expected a JSON file.",
+                "That doesn’t look like a KeyLearn or keybr export — expected a JSON file.",
             }),
           );
           return;
@@ -181,8 +181,8 @@ export function KeybrImport({
           <div className={styles.editorTape} aria-hidden={true} />
           <h2 className={styles.editorTitle}>
             <FormattedMessage
-              id="import.title"
-              defaultMessage="Import your progress from <acc>keybr</acc>"
+              id="import.title.any"
+              defaultMessage="Import <acc>typing progress</acc>"
               values={{
                 acc: (chunks) => (
                   <span className={styles.titleAccent}>{chunks}</span>
@@ -192,8 +192,8 @@ export function KeybrImport({
           </h2>
           <p className={styles.hint}>
             <FormattedMessage
-              id="import.intro"
-              defaultMessage="Upload the typing-data.json you downloaded from keybr. It’s added to a grown-up profile, so your history and learned keys carry over."
+              id="import.intro.any"
+              defaultMessage="Upload a typing-data.json exported from KeyLearn or downloaded from keybr. It’s added to the learner you choose, so their history and learned keys carry over."
             />{" "}
             <button
               type="button"
@@ -208,6 +208,12 @@ export function KeybrImport({
           </p>
           {showHelp && (
             <ol className={styles.helpSteps}>
+              <li>
+                <FormattedMessage
+                  id="import.help.keylearn"
+                  defaultMessage="From KeyLearn: open the profile page and click Export your data."
+                />
+              </li>
               <li>
                 <FormattedMessage
                   id="import.help.1"
@@ -267,8 +273,8 @@ export function KeybrImport({
                   onClick={() => fileRef.current?.click()}
                 >
                   <FormattedMessage
-                    id="import.choose"
-                    defaultMessage="Choose keybr file…"
+                    id="import.choose.any"
+                    defaultMessage="Choose file…"
                   />
                 </button>
                 <input

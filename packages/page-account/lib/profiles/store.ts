@@ -47,7 +47,11 @@ export function adultProfiles(h: Household): readonly Profile[] {
  * change nothing.
  */
 export function importTargets(h: Household): readonly Profile[] {
-  return h.profiles.filter((p) => p.kind === "adult" && !p.visionSupport);
+  // Kids too: their game keeps its results in the same per-learner history
+  // (`historyNamespace`), so a child's exported progress can be brought back
+  // into their own profile. Braille learners are left out — their progress
+  // is cells, not typing results, and has its own record.
+  return h.profiles.filter((p) => !p.visionSupport);
 }
 
 /**
