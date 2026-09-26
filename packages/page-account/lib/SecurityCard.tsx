@@ -8,6 +8,7 @@ import * as styles from "./AccountPage.module.less";
 import { ActivityLog } from "./ActivityLog.tsx";
 import { PasswordField } from "./AuthPage.tsx";
 import { ParentPinCard } from "./ParentPinCard.tsx";
+import { passkeyErrorMessage } from "./passkey-errors.ts";
 import { PasswordStrength } from "./PasswordStrength.tsx";
 import { SecurityResetDialog } from "./SecurityResetDialog.tsx";
 import { AccountService, type Passkey } from "./service.ts";
@@ -75,7 +76,7 @@ export function SecurityCard({
       )
       .catch((err) =>
         setPkError(
-          err?.message ??
+          passkeyErrorMessage(err, "add", { formatMessage }) ??
             formatMessage({
               id: "security.passkey.addError",
               defaultMessage: "Could not add a passkey.",

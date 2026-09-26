@@ -34,6 +34,7 @@ import { AccountPricePreview } from "./AccountPricePreview.tsx";
 import { type AccountActions, useAccountActions } from "./actions.ts";
 import { Toggle } from "./controls.tsx";
 import { CoursePane } from "./course/CoursePane.tsx";
+import { passkeyErrorMessage } from "./passkey-errors.ts";
 import {
   AccessibilityPane,
   AppearancePane,
@@ -1357,7 +1358,9 @@ function DeleteAccountDialog({
       .then((p) => actions.deleteAccount(p, keepStats))
       .catch((e) => {
         setErr(
-          e?.message ??
+          (method === "passkey"
+            ? passkeyErrorMessage(e, "confirm", { formatMessage })
+            : e?.message) ??
             formatMessage({
               id: "account.delete.confirmError",
               defaultMessage: "That confirmation is incorrect or has expired.",
