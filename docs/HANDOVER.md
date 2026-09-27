@@ -65,7 +65,7 @@ Browser tests of every KeyLearn area, plus QDesk and the link between them, on a
 - Low: guest kid results have no export button. The braille "LINE n / m" label misleads.
 
 **Blocked:**
-- **The full QDesk:** its branch links `@platform/bridge` from `../../../platform`, which is in no reachable repo. Note that QDesk main's newest commit (e44a609) deletes about 141k lines and leaves only sign-in; check that this was intended.
+- **The full QDesk:** its branch links `@platform/bridge` from `../../../platform`, which is in no reachable repo. QDesk `main` is still at e44a609 (18 Aug, sign-in only): the full desk is 313 commits ahead on `claude/cool-albattani-4odtli` (b64fb5a) and has never been merged into main. Nothing was deleted; main needs a fast-forward to b64fb5a.
 - **Time Keepers sounds from the owner's library:** `KeyLearn_World_Audio` has not been pushed yet. The owner has asked for this after testing.
 
 **By design, don't chase:**
