@@ -4,7 +4,7 @@ End-to-end browser tests of KeyLearn, QDesk and the link between them, on a fres
 
 | | |
 |---|---|
-| Feature checks passing | **255 / 262** |
+| Feature checks passing | **257 / 265** |
 | Open bugs (below) | **1** |
 | Fixed during this pass | 31 |
 | Critical accessibility issues | 0 |
@@ -27,6 +27,7 @@ Three QDesk checks still fail, and only because main is the old sign-in skeleton
 - [ ] **qdesk**: the staff password is not kept in plain text in the session store between steps (found in qdesk-data/sessions/lL/yMooXTlNkJsn2eqY66 qdesk-data/sessions/)
 - [ ] **qdesk-stability**: with KeyLearn down, the message is readable (not an internal error dump) ("500 - Internal Server Error")
 - [ ] **qdesk**: a cross-site POST is refused (200 (SameSite=Lax cookie still keeps the session out of it))
+- [ ] **kids-settings**: age 10 finds Classic on the Play page
 
 ## Needs the owner
 
@@ -49,7 +50,7 @@ Three QDesk checks still fail, and only because main is the old sign-in skeleton
 | Results and stats | results saved, profile and stats pages | 4 | all 4 pass |
 | Typing test | timed test, report screen | 3 | all 3 pass |
 | Kids worlds | Time Keepers, Dino Run, Hero Trail, Classic; ages 5–13 | 35 | 31 pass · 4 by design |
-| Kids settings | world, character, companions persist | 10 | all 10 pass |
+| Kids settings | world, character, companions persist | 13 | **1 failing** (12 pass) |
 | Braille | six-key chords, accuracy, next line | 5 | all 5 pass |
 | Multiplayer | two players, same passage, live speeds, chat | 6 | all 6 pass |
 | Certificates | Course pane, gatekeeping, server refusals, verify page | 10 | all 10 pass |
@@ -114,8 +115,8 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 | 6 | 1 · The Village | 20 of 20 (road-behind) | 31 of 31 (road-behind) |
 | 7 | 1 · The Village | 20 of 20 (road-stones) | 40 of 40 (road-squat) |
 | 8 | 1 · The Village | 20 of 20 (wall-stones) | 40 of 40 (wall-stones, road-behind) |
-| 16 | 2 | 20 of 20 (road-squat) | child did not sit in the window |
-| 17 | 2 | 20 of 20 (road-squat) | child did not sit in the window |
+| 16 | 2 | 20 of 20 (road-squat) | 17 of 40 (road-squat) |
+| 17 | 2 | 20 of 20 (house-stones) | 40 of 40 (road-squat) |
 | 24 | 3 | 20 of 20 (road-squat) | 17 of 17 (road-squat) |
 | 27 | 3 | 20 of 20 (road-squat) | 9 of 9 (road-squat) |
 | 28 | 3 | 20 of 20 (road-behind) | 27 of 40 (road-behind) |
@@ -287,7 +288,7 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 - ⏸ the run is saved to the learner _(Leo · village)_
 - ✅ no errors _(Leo · village)_
 
-### Kids settings (10)
+### Kids settings (13)
 
 - ✅ the world choice survives a reload
 - ✅ no page errors
@@ -299,6 +300,9 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 - ✅ Dino Run unchanged, age 12 keeps the text panel
 - ✅ Dino Run unchanged, age 10 keeps the panel unless opted in
 - ✅ Hero Trail unchanged, age 6 still always gets the blocks
+- ❌ age 10 finds Classic on the Play page
+- ✅ and no longer under Session
+- ✅ age 6 is not offered Classic
 
 ### Braille (5)
 
