@@ -581,6 +581,12 @@ export function choosePracticeStyle(classic: boolean): void {
  * one learner's guided history as their Classic one.
  */
 
+const KNOWN_WORLDS: ReadonlySet<string> = new Set<WorldId>([
+  "village",
+  "dino",
+  "hero",
+]);
+
 function loadPrefs(): Prefs {
   try {
     const prefs: Prefs = {
@@ -602,6 +608,13 @@ function loadPrefs(): Prefs {
     // saved "full" (and switched the helper hands off), which then followed
     // the learner back to the trail. Classic never needed the value, so a
     // profile still carrying it is put back on its band's own board.
+    // A world the app no longer has (or never had — a hand-edited or damaged
+    // store) loads as the default world. Left as it was, the trail looked up
+    // that world's characters, asked for "undefined.glb" and threw while the
+    // child typed (release pass).
+    if (!KNOWN_WORLDS.has(prefs.world)) {
+      prefs.world = defaultPrefs().world;
+    }
     if (prefs.classic && prefs.kbMode === "full") {
       const cfg = bandConfig(currentBand());
       prefs.kbMode = cfg.kbMode;
