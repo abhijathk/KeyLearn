@@ -13819,8 +13819,29 @@ export function createKidsWorld(
     return pool[Math.floor(Math.random() * pool.length)] ?? stayVerge();
   };
   const STAY_THROW = "kutti_17_pick_up_and_throw_stone";
-  const placeStay = (k: KuttiRig, s: StaySpot, still: boolean) => {
+  const placeStay = (
+    k: KuttiRig,
+    s: StaySpot,
+    still: boolean,
+    sitting = false,
+  ) => {
     stay.spot = s;
+    // HOW HE IS SEEN, chosen per spot as it is on the road (see `lit`).
+    // The crossing never chose, so he kept whatever the road last left him
+    // — nearly always dark — and a child who sat down to look round found
+    // a shape on the rail they could not make out. Unlit is still the
+    // commonest while they walk; once they sit, he lets himself be found.
+    const look = Math.random();
+    k.lit = sitting
+      ? look < 0.5
+        ? "spot"
+        : "glow"
+      : look < 0.46
+        ? "dark"
+        : look < 0.76
+          ? "spot"
+          : "glow";
+    k.glowWant = k.lit === "dark" ? 0 : 1;
     // Whatever routine he was in belongs to somewhere else on the road.
     k.routine = null;
     k.beat = -1;
@@ -13895,6 +13916,7 @@ export function createKidsWorld(
     stay.spot = null;
     stay.gone = 0;
     stay.armIn = null;
+    if (k != null) k.glowWant = 0;
   };
   const tickStay = (k: KuttiRig, dt: number) => {
     const still = motionStilled();
@@ -13925,14 +13947,14 @@ export function createKidsWorld(
       stay.gone -= dt;
       if (stay.gone > 0) return;
       const next = pickStaySpot(sitting);
-      if (next != null) placeStay(k, next, still);
+      if (next != null) placeStay(k, next, still, sitting);
       return;
     }
     const s = stay.spot;
     if (k.wrap.visible) k.mixer.update(dt);
     if (s == null) {
       const next = pickStaySpot(sitting);
-      if (next != null) placeStay(k, next, still);
+      if (next != null) placeStay(k, next, still, sitting);
       stay.wasSitting = sitting;
       return;
     }
@@ -13966,7 +13988,7 @@ export function createKidsWorld(
     if (sat || offShot || stay.t > stay.hold) {
       if (still) {
         const next = pickStaySpot(sitting);
-        if (next != null) placeStay(k, next, true);
+        if (next != null) placeStay(k, next, true, sitting);
         return;
       }
       kuttiBurst(k, k.wrap.position.x, k.wrap.position.y, k.wrap.position.z);
