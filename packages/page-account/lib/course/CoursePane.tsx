@@ -298,7 +298,15 @@ function Row({
     (certificates?.criteria as CertificateCriteria | undefined) ??
       DEFAULT_CRITERIA,
   );
-  const state = verdict.eligible ? "ready" : "going";
+  // Holding a certificate outranks "ready to sit". A learner who had just
+  // earned one still read "Ready to sit" with the sit link above it (release
+  // pass). Sitting again only earns something for a child below gold: one
+  // certificate per level, and a grown-up's only level is completion.
+  const earned = held.length > 0;
+  const higherToEarn =
+    evidence.audience === "kid" && !held.some((c) => c.level === "gold");
+  const offerSitting = verdict.eligible && (!earned || higherToEarn);
+  const state = earned ? "held" : verdict.eligible ? "ready" : "going";
   // How far along, as one number. Every condition counts the same and none can
   // count more than once — a learner who has typed ten times the lessons needed
   // is not thereby closer to having practised on enough separate days.
@@ -352,45 +360,47 @@ function Row({
           </span>
         )}
       </div>
-      <div className={styles.next}>
-        {verdict.eligible ? (
-          <>
-            <FormattedMessage
-              id="account.course.ready"
-              defaultMessage="Everything the practice has to prove is proved. The assessment is what decides it."
-            />{" "}
-            <button
-              type="button"
-              className={styles.linkBtn}
-              onClick={() => setReady(true)}
-            >
+      {!earned && (
+        <div className={styles.next}>
+          {verdict.eligible ? (
+            <>
               <FormattedMessage
-                id="account.course.sit"
-                defaultMessage="Sit the assessment"
-              />
-            </button>
-          </>
-        ) : (
-          <>
-            <FormattedMessage
-              id="account.course.outstanding"
-              defaultMessage="Next: {what}."
-              values={{
-                what: verdict.outstanding[0]?.label.toLowerCase() ?? "",
-              }}
-            />{" "}
-            {/* Said plainly, because the absence of a link is not a message.
+                id="account.course.ready"
+                defaultMessage="Everything the practice has to prove is proved. The assessment is what decides it."
+              />{" "}
+              <button
+                type="button"
+                className={styles.linkBtn}
+                onClick={() => setReady(true)}
+              >
+                <FormattedMessage
+                  id="account.course.sit"
+                  defaultMessage="Sit the assessment"
+                />
+              </button>
+            </>
+          ) : (
+            <>
+              <FormattedMessage
+                id="account.course.outstanding"
+                defaultMessage="Next: {what}."
+                values={{
+                  what: verdict.outstanding[0]?.label.toLowerCase() ?? "",
+                }}
+              />{" "}
+              {/* Said plainly, because the absence of a link is not a message.
                 Every condition above is met by practising; none of them is met
                 by looking for a button that is not there yet. */}
-            <span className={styles.locked}>
-              <FormattedMessage
-                id="account.course.locked"
-                defaultMessage="The link to sit the assessment appears here once every condition above is met."
-              />
-            </span>
-          </>
-        )}
-      </div>
+              <span className={styles.locked}>
+                <FormattedMessage
+                  id="account.course.locked"
+                  defaultMessage="The link to sit the assessment appears here once every condition above is met."
+                />
+              </span>
+            </>
+          )}
+        </div>
+      )}
       {held.length > 0 && (
         <div className={styles.next}>
           <FormattedMessage
@@ -410,6 +420,21 @@ function Row({
               />
             </button>
           ))}
+          {offerSitting && (
+            <>
+              {" · "}
+              <button
+                type="button"
+                className={styles.linkBtn}
+                onClick={() => setReady(true)}
+              >
+                <FormattedMessage
+                  id="account.course.sitAgain"
+                  defaultMessage="Sit again for a higher band"
+                />
+              </button>
+            </>
+          )}
         </div>
       )}
       {showing != null && (
@@ -449,7 +474,7 @@ function Head({
   course,
 }: {
   readonly profile: ProfileDetails;
-  readonly state: "ready" | "going" | "loading";
+  readonly state: "held" | "ready" | "going" | "loading";
   readonly language?: string;
   readonly course?: CourseId;
 }): ReactNode {
@@ -504,7 +529,7 @@ function Head({
       <span
         className={clsx(
           styles.state,
-          state === "ready" && styles.stateReady,
+          (state === "ready" || state === "held") && styles.stateReady,
           state === "going" && styles.stateGoing,
         )}
       >
@@ -512,6 +537,11 @@ function Head({
           <FormattedMessage
             id="account.course.reading"
             defaultMessage="Reading…"
+          />
+        ) : state === "held" ? (
+          <FormattedMessage
+            id="account.course.heldTag"
+            defaultMessage="Certificate earned"
           />
         ) : state === "ready" ? (
           <FormattedMessage
