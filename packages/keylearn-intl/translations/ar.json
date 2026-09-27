@@ -1403,6 +1403,8 @@
   "profile.course.classic": "الكلاسيكي",
   "profile.course.guided": "الممارسة الموجَّهة",
   "profile.download.description": "تنزيل جميع بيانات كتابتك بتنسيق JSON.",
+  "profile.download.kids": "تصدير تمرين الأطفال",
+  "profile.download.kids.description": "تمرين الأطفال على هذا الجهاز، في ملف يمكنك استيراده إلى حساب.",
   "profile.emptyChart.description": "أكمل بعض الدروس الإضافية للحصول على المزيد من نقاط البيانات.",
   "profile.emptyChart.header": "لا توجد بيانات كافية",
   "profile.filter.codeCraft": "مقتطفات شيفرة",

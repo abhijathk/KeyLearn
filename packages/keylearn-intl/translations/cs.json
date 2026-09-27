@@ -1399,6 +1399,8 @@
   "profile.course.classic": "Klasický",
   "profile.course.guided": "Lekce s Průvodcem",
   "profile.download.description": "Stáhněte si všechna data o psaní ve formátu JSON.",
+  "profile.download.kids": "Exportovat procvičování dětí",
+  "profile.download.kids.description": "Procvičování dětí na tomto zařízení jako soubor, který můžete importovat do účtu.",
   "profile.emptyChart.description": "Dokončete několik dalších lekcí, abyste získali více datových bodů.",
   "profile.emptyChart.header": "Nedostatek dat",
   "profile.filter.codeCraft": "Úryvky kódu",

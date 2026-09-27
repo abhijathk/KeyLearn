@@ -1403,6 +1403,8 @@
   "profile.course.classic": "Klasik",
   "profile.course.guided": "Rehberli alıştırma",
   "profile.download.description": "Yazma geçmişinizin tam bir dışa aktarımını JSON dosyası olarak alın.",
+  "profile.download.kids": "Çocukların alıştırmalarını dışa aktar",
+  "profile.download.kids.description": "Bu cihazdaki çocuk alıştırmaları, bir hesaba içe aktarabileceğin bir dosya olarak.",
   "profile.emptyChart.description": "İstatistiklerinizi oluşturmak için birkaç ders daha tamamlayın.",
   "profile.emptyChart.header": "Yetersiz veri",
   "profile.filter.codeCraft": "Kod parçacıkları",

@@ -1408,6 +1408,8 @@
   "profile.course.classic": "Classic",
   "profile.course.guided": "Guided practice",
   "profile.download.description": "Get a full export of your typing history as a JSON file.",
+  "profile.download.kids": "Export the kids’ practice",
+  "profile.download.kids.description": "The kids’ practice on this device, as a file you can import into an account.",
   "profile.emptyChart.description": "Finish a few more lessons to build up your stats.",
   "profile.emptyChart.header": "Not enough data yet",
   "profile.filter.codeCraft": "Code craft",

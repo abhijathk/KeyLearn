@@ -1389,6 +1389,8 @@
   "profile.course.classic": "Klassiek",
   "profile.course.guided": "Begeleid oefenen",
   "profile.download.description": "Download al uw typgegevens in JSON formaat.",
+  "profile.download.kids": "Oefening van de kinderen exporteren",
+  "profile.download.kids.description": "De oefening van de kinderen op dit apparaat, als bestand dat je in een account kunt importeren.",
   "profile.emptyChart.description": "Rond nog enkele lessen af om meer datapunten te verkrijgen.",
   "profile.emptyChart.header": "Niet genoeg data",
   "profile.filter.codeCraft": "Codefragmenten",

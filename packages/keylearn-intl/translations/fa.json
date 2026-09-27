@@ -1403,6 +1403,8 @@
   "profile.course.classic": "کلاسیک",
   "profile.course.guided": "تمرین هدایت‌شده",
   "profile.download.description": "بارگیری همه داده تایپ شما در قالب JSON.",
+  "profile.download.kids": "برون‌بری تمرین کودکان",
+  "profile.download.kids.description": "تمرین کودکان در این دستگاه، در فایلی که می‌توانید به یک حساب وارد کنید.",
   "profile.emptyChart.description": "چند درس دیگر را برای گرفتن نقاط داده بیشتر انجام دهید.",
   "profile.emptyChart.header": "داده ناکافی",
   "profile.filter.codeCraft": "قطعه‌کدها",

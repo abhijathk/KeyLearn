@@ -1400,6 +1400,8 @@
   "profile.course.classic": "Κλασικό",
   "profile.course.guided": "Καθοδηγούμενη εξάσκηση",
   "profile.download.description": "Κατεβάστε όλα τα δεδομένα πληκτρολόγησης σε μορφή JSON.",
+  "profile.download.kids": "Εξαγωγή της εξάσκησης των παιδιών",
+  "profile.download.kids.description": "Η εξάσκηση των παιδιών σε αυτή τη συσκευή, ως αρχείο που μπορείς να εισαγάγεις σε λογαριασμό.",
   "profile.emptyChart.description": "Ολοκληρώστε μερικά ακόμη μαθήματα για να λάβετε περισσότερα σημεία δεδομένων.",
   "profile.emptyChart.header": "Δεν υπάρχουν αρκετά δεδομένα",
   "profile.filter.codeCraft": "Αποσπάσματα κώδικα",

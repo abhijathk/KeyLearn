@@ -1403,6 +1403,8 @@
   "profile.course.classic": "Сонгодог",
   "profile.course.guided": "Удирдсан дасгал",
   "profile.download.description": "Таны бичсэн түүхийг JSON файл болгон бүрэн экспортлон авна уу.",
+  "profile.download.kids": "Хүүхдийн дасгалыг экспортлох",
+  "profile.download.kids.description": "Энэ төхөөрөмж дээрх хүүхдийн дасгалыг бүртгэлд импортлох боломжтой файлаар.",
   "profile.emptyChart.description": "Статистикаа бүрдүүлэхийн тулд цөөн хэдэн хичээл дуусгана уу.",
   "profile.emptyChart.header": "Одоогоор хангалттай өгөгдөл байхгүй",
   "profile.filter.codeCraft": "Кодын хэсгүүд",

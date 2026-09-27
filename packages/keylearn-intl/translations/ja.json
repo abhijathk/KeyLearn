@@ -1402,6 +1402,8 @@
   "profile.course.classic": "クラシック",
   "profile.course.guided": "ガイド付き練習",
   "profile.download.description": "タイピングデータをJSON形式でダウンロード。",
+  "profile.download.kids": "子どもの練習を書き出す",
+  "profile.download.kids.description": "この端末での子どもの練習を、アカウントに取り込めるファイルにします。",
   "profile.emptyChart.description": "より多くのデータを得るために、もう少しレッスンをこなしてください。",
   "profile.emptyChart.header": "データが十分ではありません",
   "profile.filter.codeCraft": "コードスニペット",

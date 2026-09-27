@@ -1398,6 +1398,8 @@
   "profile.course.classic": "Klassikaline",
   "profile.course.guided": "Juhendatud harjutamine",
   "profile.download.description": "Laadi alla kõik oma tippimisandmed JSON-vormingus.",
+  "profile.download.kids": "Ekspordi laste harjutused",
+  "profile.download.kids.description": "Laste harjutused selles seadmes failina, mille saad kontole importida.",
   "profile.emptyChart.description": "Harjuta veel mõned korrad, et saada piisavalt statistikat.",
   "profile.emptyChart.header": "Puudub piisavalt andmeid",
   "profile.filter.codeCraft": "Koodijupid",

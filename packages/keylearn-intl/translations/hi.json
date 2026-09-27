@@ -1403,6 +1403,8 @@
   "profile.course.classic": "क्लासिक",
   "profile.course.guided": "निर्देशित अभ्यास",
   "profile.download.description": "अपने टाइपिंग इतिहास का पूरा निर्यात एक JSON फ़ाइल के रूप में पाएँ।",
+  "profile.download.kids": "बच्चों का अभ्यास निर्यात करें",
+  "profile.download.kids.description": "इस डिवाइस पर बच्चों का अभ्यास, ऐसी फ़ाइल में जिसे आप किसी खाते में आयात कर सकते हैं।",
   "profile.emptyChart.description": "अपने आँकड़े जमा करने के लिए कुछ और सबक पूरे करें।",
   "profile.emptyChart.header": "अभी पर्याप्त डेटा नहीं",
   "profile.filter.codeCraft": "कोड शिल्प",

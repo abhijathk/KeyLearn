@@ -1403,6 +1403,8 @@
   "profile.course.classic": "କ୍ଲାସିକ୍",
   "profile.course.guided": "ମାର୍ଗଦର୍ଶିତ ଅଭ୍ୟାସ",
   "profile.download.description": "ଏକ JSON ଫାଇଲ୍ ଭାବେ ଆପଣଙ୍କ ପୂରା ଟାଇପିଂ ଇତିହାସ ରପ୍ତାନି କରନ୍ତୁ।",
+  "profile.download.kids": "ପିଲାଙ୍କ ଅଭ୍ୟାସ ରପ୍ତାନି କରନ୍ତୁ",
+  "profile.download.kids.description": "ଏହି ଡିଭାଇସରେ ପିଲାଙ୍କ ଅଭ୍ୟାସ, ଏକ ଫାଇଲ ଭାବେ ଯାହା ଆପଣ ଆକାଉଣ୍ଟରେ ଆମଦାନି କରିପାରିବେ।",
   "profile.emptyChart.description": "ଆପଣଙ୍କ ପରିସଂଖ୍ୟାନ ଗଢ଼ିବାକୁ ଆଉ କିଛି ପାଠ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ।",
   "profile.emptyChart.header": "ଏଯାଏଁ ଯଥେଷ୍ଟ ତଥ୍ୟ ନାହିଁ",
   "profile.filter.codeCraft": "କୋଡ୍ କାରିଗରୀ",

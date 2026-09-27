@@ -1399,6 +1399,8 @@
   "profile.course.classic": "Klasični",
   "profile.course.guided": "Vodene lekcije",
   "profile.download.description": "Prenesite vse podatke o vašem tipkanju v JSON formatu.",
+  "profile.download.kids": "Izvozi vadbo otrok",
+  "profile.download.kids.description": "Vadba otrok na tej napravi kot datoteka, ki jo lahko uvozite v račun.",
   "profile.emptyChart.description": "Opravite še kakšno vajo za več podatkovnih točk.",
   "profile.emptyChart.header": "Ni dovolj podatkov",
   "profile.filter.codeCraft": "Izvorna koda",

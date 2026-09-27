@@ -1403,6 +1403,8 @@
   "profile.course.classic": "經典",
   "profile.course.guided": "引導練習",
   "profile.download.description": "以JSON格式下載您所有的打字資料。",
+  "profile.download.kids": "匯出孩子的練習",
+  "profile.download.kids.description": "此裝置上孩子的練習，匯出為可匯入帳戶的檔案。",
   "profile.emptyChart.description": "多完成幾堂課，獲得更多的數據點。",
   "profile.emptyChart.header": "數據不足",
   "profile.filter.codeCraft": "原始碼",

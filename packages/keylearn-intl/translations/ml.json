@@ -1403,6 +1403,8 @@
   "profile.course.classic": "ക്ലാസിക്",
   "profile.course.guided": "ഗൈഡഡ് പരിശീലനം",
   "profile.download.description": "നിങ്ങളുടെ ടൈപ്പിംഗ് ചരിത്രത്തിന്റെ ഒരു പൂർണ്ണ കയറ്റുമതി ഒരു JSON ഫയലായി നേടുക.",
+  "profile.download.kids": "കുട്ടികളുടെ പരിശീലനം എക്സ്പോർട്ട് ചെയ്യുക",
+  "profile.download.kids.description": "ഈ ഉപകരണത്തിലെ കുട്ടികളുടെ പരിശീലനം, ഒരു അക്കൗണ്ടിലേക്ക് ഇംപോർട്ട് ചെയ്യാവുന്ന ഫയലായി.",
   "profile.emptyChart.description": "നിങ്ങളുടെ സ്ഥിതിവിവരക്കണക്കുകൾ ഉണ്ടാക്കാൻ കുറച്ച് പാഠങ്ങൾ കൂടി പൂർത്തിയാക്കുക.",
   "profile.emptyChart.header": "ഇതുവരെ മതിയായ ഡാറ്റയില്ല",
   "profile.filter.codeCraft": "കോഡ് പണി",

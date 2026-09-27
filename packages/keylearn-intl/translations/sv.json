@@ -1394,6 +1394,8 @@
   "profile.course.classic": "Klassisk",
   "profile.course.guided": "Guidad övning",
   "profile.download.description": "Ladda ner all din skrivdata i JSON format.",
+  "profile.download.kids": "Exportera barnens övning",
+  "profile.download.kids.description": "Barnens övning på den här enheten som en fil du kan importera till ett konto.",
   "profile.emptyChart.description": "Gör ett par fler lektioner för att få mer data.",
   "profile.emptyChart.header": "Otillräcklig data",
   "profile.filter.codeCraft": "Kodsnuttar",

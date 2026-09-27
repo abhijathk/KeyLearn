@@ -1403,6 +1403,8 @@
   "profile.course.classic": "ক্লাসিক",
   "profile.course.guided": "নির্দেশিত অনুশীলন",
   "profile.download.description": "আপনার সমস্ত টাইপিং ডেটা JSON ফর্ম্যাটে ডাউনলোড করুন।",
+  "profile.download.kids": "শিশুদের অনুশীলন এক্সপোর্ট করুন",
+  "profile.download.kids.description": "এই ডিভাইসে শিশুদের অনুশীলন, এমন ফাইলে যা আপনি কোনো অ্যাকাউন্টে ইমপোর্ট করতে পারেন।",
   "profile.emptyChart.description": "আরও ডেটা পয়েন্ট পেতে আরও কিছু পাঠ সম্পূর্ণ করুন।",
   "profile.emptyChart.header": "পর্যাপ্ত ডেটা নেই",
   "profile.filter.codeCraft": "কোড কাজ",

@@ -1403,6 +1403,8 @@
   "profile.course.classic": "קלאסי",
   "profile.course.guided": "תרגול מודרך",
   "profile.download.description": "הורד את כל נתוני ההקלדה שלך בפורמט JSON.",
+  "profile.download.kids": "ייצוא התרגול של הילדים",
+  "profile.download.kids.description": "התרגול של הילדים במכשיר הזה, כקובץ שאפשר לייבא לחשבון.",
   "profile.emptyChart.description": "השלם עוד כמה שיעורים כדי לקבל יותר נקודות נתונים.",
   "profile.emptyChart.header": "אין מספיק נתונים",
   "profile.filter.codeCraft": "קטעי קוד",

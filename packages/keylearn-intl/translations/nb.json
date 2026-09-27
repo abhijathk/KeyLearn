@@ -1397,6 +1397,8 @@
   "profile.course.classic": "Klassisk",
   "profile.course.guided": "Veiledet øving",
   "profile.download.description": "Få en full eksport av skrivehistorikken din som en JSON-fil.",
+  "profile.download.kids": "Eksporter barnas øving",
+  "profile.download.kids.description": "Barnas øving på denne enheten som en fil du kan importere til en konto.",
   "profile.emptyChart.description": "Fullfør noen flere leksjoner for å bygge opp statistikken din.",
   "profile.emptyChart.header": "Ikke nok data ennå",
   "profile.filter.codeCraft": "Kodebiter",

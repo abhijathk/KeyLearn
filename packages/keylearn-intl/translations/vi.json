@@ -1402,6 +1402,8 @@
   "profile.course.classic": "Cổ điển",
   "profile.course.guided": "Luyện tập có hướng dẫn",
   "profile.download.description": "Tải tất cả dữ liệu đánh máy dưới định dạng JSON.",
+  "profile.download.kids": "Xuất bài luyện của trẻ",
+  "profile.download.kids.description": "Bài luyện của trẻ trên thiết bị này, thành tệp bạn có thể nhập vào tài khoản.",
   "profile.emptyChart.description": "Hoàn thành thêm một vài bài học để nhận được nhiều điểm dữ liệu hơn.",
   "profile.emptyChart.header": "Chưa đủ dữ liệu",
   "profile.filter.codeCraft": "Đoạn mã",

@@ -1398,6 +1398,8 @@
   "profile.course.classic": "Clássico",
   "profile.course.guided": "Prática guiada",
   "profile.download.description": "Transfira todos os seus dados de escrita em formato JSON.",
+  "profile.download.kids": "Exportar a prática das crianças",
+  "profile.download.kids.description": "A prática das crianças neste dispositivo, num ficheiro que pode importar para uma conta.",
   "profile.emptyChart.description": "Complete mais algumas lições de modo a obter mais dados.",
   "profile.emptyChart.header": "Não existem dados suficientes",
   "profile.filter.codeCraft": "Excertos de código",

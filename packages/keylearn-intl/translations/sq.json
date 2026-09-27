@@ -1398,6 +1398,8 @@
   "profile.course.classic": "Klasik",
   "profile.course.guided": "Praktika e udhëhequr",
   "profile.download.description": "Shkarkoni të gjitha të dhënat tuaja të shtypjes në formatin JSON.",
+  "profile.download.kids": "Eksporto ushtrimet e fëmijëve",
+  "profile.download.kids.description": "Ushtrimet e fëmijëve në këtë pajisje, si skedar që mund ta importosh në një llogari.",
   "profile.emptyChart.description": "Përfundoni edhe disa mësime për të marrë më shumë pika të dhënash.",
   "profile.emptyChart.header": "Nuk ka të dhëna të mjaftueshme",
   "profile.filter.codeCraft": "Kodi burimor",

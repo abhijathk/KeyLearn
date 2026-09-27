@@ -1398,6 +1398,8 @@
   "profile.course.classic": "Klasický",
   "profile.course.guided": "Učenie pod vedením",
   "profile.download.description": "Stiahnite si všetky vaše údaje o písaní v JSON formáte.",
+  "profile.download.kids": "Exportovať precvičovanie detí",
+  "profile.download.kids.description": "Precvičovanie detí na tomto zariadení ako súbor, ktorý môžete importovať do účtu.",
   "profile.emptyChart.description": "Dokončite ešte zopár lekcií, aby sa nazbieralo viac údajov.",
   "profile.emptyChart.header": "Nedostatok dát",
   "profile.filter.codeCraft": "Úryvky kódu",

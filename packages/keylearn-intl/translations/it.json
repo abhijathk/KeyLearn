@@ -1400,6 +1400,8 @@
   "profile.course.classic": "Classico",
   "profile.course.guided": "Pratica guidata",
   "profile.download.description": "Scarica tutti i tuoi dati di digitazione in formato JSON.",
+  "profile.download.kids": "Esporta la pratica dei bambini",
+  "profile.download.kids.description": "La pratica dei bambini su questo dispositivo, in un file da importare in un account.",
   "profile.emptyChart.description": "Completa qualche lezione in più per ottenere più dati.",
   "profile.emptyChart.header": "Dati insufficienti",
   "profile.filter.codeCraft": "Codice sorgente",

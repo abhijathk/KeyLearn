@@ -1403,6 +1403,8 @@
   "profile.course.classic": "Класичний",
   "profile.course.guided": "Практика з підказками",
   "profile.download.description": "Завантажте всі ваші дані у форматі JSON.",
+  "profile.download.kids": "Експорт вправ дітей",
+  "profile.download.kids.description": "Вправи дітей на цьому пристрої у файлі, який можна імпортувати в обліковий запис.",
   "profile.emptyChart.description": "Закінчіть ще кілька уроків, щоб отримати більше даних.",
   "profile.emptyChart.header": "Недостатньо даних",
   "profile.filter.codeCraft": "Ремесло коду",

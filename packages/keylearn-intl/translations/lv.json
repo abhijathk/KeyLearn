@@ -1400,6 +1400,8 @@
   "profile.course.classic": "Klasiskais",
   "profile.course.guided": "Vadītais treniņš",
   "profile.download.description": "Iegūsti pilnu savas rakstīšanas vēstures eksportu JSON failā.",
+  "profile.download.kids": "Eksportēt bērnu vingrinājumus",
+  "profile.download.kids.description": "Bērnu vingrinājumi šajā ierīcē kā fails, ko var importēt kontā.",
   "profile.emptyChart.description": "Pabeidz vēl dažas nodarbības, lai uzkrātu statistiku.",
   "profile.emptyChart.header": "Vēl nepietiek datu",
   "profile.filter.codeCraft": "Koda amats",

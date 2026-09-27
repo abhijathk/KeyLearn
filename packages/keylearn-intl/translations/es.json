@@ -1398,6 +1398,8 @@
   "profile.course.classic": "Clásico",
   "profile.course.guided": "Práctica guiada",
   "profile.download.description": "Descarga todos tus datos de mecanografía en formato JSON.",
+  "profile.download.kids": "Exportar la práctica de los niños",
+  "profile.download.kids.description": "La práctica de los niños en este dispositivo, en un archivo que puedes importar a una cuenta.",
   "profile.emptyChart.description": "Completa algunas lecciones más para obtener más puntos de datos.",
   "profile.emptyChart.header": "No hay suficientes datos",
   "profile.filter.codeCraft": "Fragmentos de código",

@@ -1394,6 +1394,8 @@
   "profile.course.classic": "Clasic",
   "profile.course.guided": "Practică ghidată",
   "profile.download.description": "Descărcați toate datele dvs. de tastare în format JSON.",
+  "profile.download.kids": "Exportă exersarea copiilor",
+  "profile.download.kids.description": "Exersarea copiilor pe acest dispozitiv, ca fișier pe care îl poți importa într-un cont.",
   "profile.emptyChart.description": "Efectuați încă câteva lecții pentru a obține mai multe puncte de date.",
   "profile.emptyChart.header": "Nu există suficiente date",
   "profile.filter.codeCraft": "Fragmente de cod",

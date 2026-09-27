@@ -1385,6 +1385,8 @@
   "profile.course.classic": "Classique",
   "profile.course.guided": "Pratique guidée",
   "profile.download.description": "Télécharger toutes vos données de frappe au format JSON.",
+  "profile.download.kids": "Exporter l’entraînement des enfants",
+  "profile.download.kids.description": "L’entraînement des enfants sur cet appareil, dans un fichier à importer dans un compte.",
   "profile.emptyChart.description": "Complétez quelques leçons supplémentaires pour obtenir plus de points de données.",
   "profile.emptyChart.header": "Pas assez de données",
   "profile.filter.codeCraft": "Extraits de code",

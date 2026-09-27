@@ -1403,6 +1403,8 @@
   "profile.course.classic": "클래식",
   "profile.course.guided": "맞춤 연습",
   "profile.download.description": "타이핑 기록 전체를 JSON 파일로 내보냅니다.",
+  "profile.download.kids": "아이들 연습 내보내기",
+  "profile.download.kids.description": "이 기기에 있는 아이들의 연습을 계정으로 가져올 수 있는 파일로 저장합니다.",
   "profile.emptyChart.description": "데이터 확보를 위해 연습을 더 진행하세요.",
   "profile.emptyChart.header": "데이터 부족",
   "profile.filter.codeCraft": "코드 조각",

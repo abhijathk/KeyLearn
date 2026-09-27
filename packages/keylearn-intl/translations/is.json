@@ -1401,6 +1401,8 @@
   "profile.course.classic": "Klassískt",
   "profile.course.guided": "Leidd æfing",
   "profile.download.description": "Fáðu fullan útflutning af vélritunarsögu þinni sem JSON skrá.",
+  "profile.download.kids": "Flytja út æfingar barnanna",
+  "profile.download.kids.description": "Æfingar barnanna á þessu tæki, sem skrá sem þú getur flutt inn á aðgang.",
   "profile.emptyChart.description": "Kláraðu nokkrar lotur í viðbót til að byggja upp tölfræðina þína.",
   "profile.emptyChart.header": "Ekki nóg af gögnum ennþá",
   "profile.filter.codeCraft": "Kóðabútar",

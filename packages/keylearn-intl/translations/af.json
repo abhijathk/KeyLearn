@@ -1396,6 +1396,8 @@
   "profile.course.classic": "Klassiek",
   "profile.course.guided": "Begeleide oefening",
   "profile.download.description": "Laai al jou tikdata in JSON-formaat af.",
+  "profile.download.kids": "Voer die kinders se oefening uit",
+  "profile.download.kids.description": "Die kinders se oefening op hierdie toestel, as ’n lêer wat jy in ’n rekening kan invoer.",
   "profile.emptyChart.description": "Voltooi nog ’n paar lesse om meer datapunte te kry.",
   "profile.emptyChart.header": "Nie genoeg data nie",
   "profile.filter.codeCraft": "Kodefragmente",

@@ -1402,6 +1402,8 @@
   "profile.course.classic": "Klasikinis",
   "profile.course.guided": "Vedamos pratybos",
   "profile.download.description": "Gaukite pilną spausdinimo istorijos eksportą kaip JSON failą.",
+  "profile.download.kids": "Eksportuoti vaikų pratybas",
+  "profile.download.kids.description": "Vaikų pratybos šiame įrenginyje – failas, kurį galite importuoti į paskyrą.",
   "profile.emptyChart.description": "Atlikite dar kelias pamokas, kad gautumėte daugiau duomenų.",
   "profile.emptyChart.header": "Nepakanka duomenų",
   "profile.filter.codeCraft": "Išeities kodas",

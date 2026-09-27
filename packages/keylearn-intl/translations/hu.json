@@ -1403,6 +1403,8 @@
   "profile.course.classic": "Klasszikus",
   "profile.course.guided": "Vezetett gyakorlás",
   "profile.download.description": "Töltse le az összes gépelési adatot JSON formátumban.",
+  "profile.download.kids": "A gyerekek gyakorlásának exportálása",
+  "profile.download.kids.description": "A gyerekek gyakorlása ezen az eszközön, fájlként, amelyet fiókba importálhatsz.",
   "profile.emptyChart.description": "Végezzen el még néhány leckét, hogy több információpontot kapjon.",
   "profile.emptyChart.header": "Nincs elég információ",
   "profile.filter.codeCraft": "Forráskód",

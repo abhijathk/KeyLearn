@@ -1403,6 +1403,8 @@
   "profile.course.classic": "क्लासिक",
   "profile.course.guided": "मार्गदर्शित सराव",
   "profile.download.description": "तुमचा संपूर्ण टंकलेखनाचा इतिहास JSON फाइल म्हणून निर्यात करा.",
+  "profile.download.kids": "मुलांचा सराव निर्यात करा",
+  "profile.download.kids.description": "या डिव्हाइसवरील मुलांचा सराव, खात्यात आयात करता येईल अशा फाइलमध्ये.",
   "profile.emptyChart.description": "तुमची आकडेवारी उभी राहण्यासाठी आणखी काही धडे पूर्ण करा.",
   "profile.emptyChart.header": "अजून पुरेसा डेटा नाही",
   "profile.filter.codeCraft": "कोड क्राफ्ट",

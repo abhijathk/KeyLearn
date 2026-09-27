@@ -1403,6 +1403,8 @@
   "profile.course.classic": "பாரம்பரியம்",
   "profile.course.guided": "வழிகாட்டும் பயிற்சி",
   "profile.download.description": "உங்கள் தட்டச்சு வரலாற்றின் முழு ஏற்றுமதியை JSON கோப்பாகப் பெறுங்கள்.",
+  "profile.download.kids": "குழந்தைகளின் பயிற்சியை ஏற்றுமதி செய்",
+  "profile.download.kids.description": "இந்தச் சாதனத்தில் உள்ள குழந்தைகளின் பயிற்சி, ஒரு கணக்கில் இறக்குமதி செய்யக்கூடிய கோப்பாக.",
   "profile.emptyChart.description": "உங்கள் புள்ளிவிவரங்களை உருவாக்க இன்னும் சில பாடங்களை முடிக்கவும்.",
   "profile.emptyChart.header": "இன்னும் போதுமான தரவு இல்லை",
   "profile.filter.codeCraft": "நிரல் வேலை",

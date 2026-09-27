@@ -24,10 +24,12 @@ import {
   type KeyStatsMap,
   makeSummaryStats,
   MutableStreakList,
+  type Result,
   type SummaryStats,
   timeToSpeed,
   useResults,
 } from "@keylearn/result";
+import { openResultStorage } from "@keylearn/result-loader";
 import { useSettings } from "@keylearn/settings";
 import {
   Explainer,
@@ -39,6 +41,7 @@ import { clsx } from "clsx";
 import {
   type CSSProperties,
   type ReactNode,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useState,
@@ -1310,6 +1313,31 @@ function DataRow(): ReactNode {
   const { formatStamp } = useIntlDates();
   const [confirming, setConfirming] = useState(false);
   const named = "id" in publicUser && publicUser.id != null;
+  // A guest's kids pages keep their own history on this device, which no
+  // page read back out: the one route from a guest to an account is export
+  // then import, and it left the child's practice behind. Offered only to a
+  // guest, only when there is something to take.
+  const [kidsResults, setKidsResults] = useState<readonly Result[]>([]);
+  const guest = !named && namespace == null;
+  useEffect(() => {
+    if (!guest) {
+      return;
+    }
+    let live = true;
+    openResultStorage({ type: "private", userId: null, kids: true })
+      .load()
+      .then((loaded) => {
+        if (live) {
+          setKidsResults(loaded);
+        }
+      })
+      .catch(() => {
+        // Nothing to offer, then; the page itself is unaffected.
+      });
+    return () => {
+      live = false;
+    };
+  }, [guest]);
   const href = named
     ? (() => {
         const url = new URL(window.location.href);
@@ -1379,6 +1407,35 @@ function DataRow(): ReactNode {
             defaultMessage="Export your data"
           />
         </button>
+        {kidsResults.length > 0 && (
+          <button
+            type="button"
+            title={formatMessage({
+              id: "profile.download.kids.description",
+              defaultMessage:
+                "The kids’ practice on this device, as a file you can import into an account.",
+            })}
+            onClick={() => {
+              const json = JSON.stringify(kidsResults);
+              const blob = new Blob([json], { type: "application/json" });
+              downloadBlob(
+                blob,
+                exportFilename(
+                  "typing-data",
+                  "kids",
+                  "json",
+                  formatStamp(Date.now()),
+                ),
+              );
+            }}
+          >
+            ⬇{" "}
+            <FormattedMessage
+              id="profile.download.kids"
+              defaultMessage="Export the kids’ practice"
+            />
+          </button>
+        )}
         <button
           type="button"
           className={styles.danger}

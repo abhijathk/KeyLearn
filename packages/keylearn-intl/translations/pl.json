@@ -1399,6 +1399,8 @@
   "profile.course.classic": "Klasyczny",
   "profile.course.guided": "Ćwiczenia z przewodnikiem",
   "profile.download.description": "Pobierz wszystkie swoje dane dotyczące pisania na klawiaturze w formacie JSON.",
+  "profile.download.kids": "Eksportuj ćwiczenia dzieci",
+  "profile.download.kids.description": "Ćwiczenia dzieci na tym urządzeniu jako plik, który możesz zaimportować do konta.",
   "profile.emptyChart.description": "Ukończ jeszcze kilka lekcji, aby uzyskać więcej punktów danych.",
   "profile.emptyChart.header": "Zbyt mało danych",
   "profile.filter.codeCraft": "Fragmenty kodu",

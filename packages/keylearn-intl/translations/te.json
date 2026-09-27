@@ -1403,6 +1403,8 @@
   "profile.course.classic": "సంప్రదాయం",
   "profile.course.guided": "మార్గదర్శక సాధన",
   "profile.download.description": "మీ టైపింగ్ చరిత్ర మొత్తాన్ని JSON ఫైల్‌గా ఎగుమతి చేయండి.",
+  "profile.download.kids": "పిల్లల సాధనను ఎగుమతి చేయండి",
+  "profile.download.kids.description": "ఈ పరికరంలోని పిల్లల సాధన, ఖాతాలోకి దిగుమతి చేయగల ఫైల్‌గా.",
   "profile.emptyChart.description": "మీ గణాంకాలను నిర్మించడానికి మరికొన్ని పాఠాలను పూర్తి చేయండి.",
   "profile.emptyChart.header": "ఇంకా తగినంత డేటా లేదు",
   "profile.filter.codeCraft": "కోడ్ పని",

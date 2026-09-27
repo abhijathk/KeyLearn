@@ -1403,6 +1403,8 @@
   "profile.course.classic": "ક્લાસિક",
   "profile.course.guided": "માર્ગદર્શિત અભ્યાસ",
   "profile.download.description": "તમારા ટાઇપિંગ ઇતિહાસનો સંપૂર્ણ નિકાસ JSON ફાઇલ તરીકે મેળવો.",
+  "profile.download.kids": "બાળકોની પ્રેક્ટિસ નિકાસ કરો",
+  "profile.download.kids.description": "આ ઉપકરણ પર બાળકોની પ્રેક્ટિસ, એવી ફાઇલ તરીકે જે તમે એકાઉન્ટમાં આયાત કરી શકો.",
   "profile.emptyChart.description": "તમારા આંકડા બનાવવા થોડા વધુ પાઠ પૂરા કરો.",
   "profile.emptyChart.header": "હજુ પૂરતો ડેટા નથી",
   "profile.filter.codeCraft": "કોડ ક્રાફ્ટ",

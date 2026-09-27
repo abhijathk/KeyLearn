@@ -1390,6 +1390,8 @@
   "profile.course.classic": "Klassisk",
   "profile.course.guided": "Guidet øvelse",
   "profile.download.description": "Download alle dine skrivedata i JSON-format.",
+  "profile.download.kids": "Eksportér børnenes øvelse",
+  "profile.download.kids.description": "Børnenes øvelse på denne enhed som en fil, du kan importere til en konto.",
   "profile.emptyChart.description": "Gennemfør et par lektioner mere for at få flere datapunkter.",
   "profile.emptyChart.header": "Ikke nok data",
   "profile.filter.codeCraft": "Kodestumper",

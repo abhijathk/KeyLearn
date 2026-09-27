@@ -1394,6 +1394,8 @@
   "profile.course.classic": "Klasik",
   "profile.course.guided": "Latihan terpandu",
   "profile.download.description": "Unduh semua data pengetikanmu dalam format JSON.",
+  "profile.download.kids": "Ekspor latihan anak-anak",
+  "profile.download.kids.description": "Latihan anak-anak di perangkat ini, sebagai file yang bisa Anda impor ke akun.",
   "profile.emptyChart.description": "Selesaikan beberapa pelajaran lagi untuk mendapatkan lebih banyak poin data.",
   "profile.emptyChart.header": "Data tidak cukup",
   "profile.filter.codeCraft": "Sumber Kode",

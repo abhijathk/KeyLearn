@@ -1394,6 +1394,8 @@
   "profile.course.classic": "Klassisch",
   "profile.course.guided": "Geführtes Üben",
   "profile.download.description": "Laden Sie alle Ihre Typisierungsdaten im JSON-Format herunter.",
+  "profile.download.kids": "Übungen der Kinder exportieren",
+  "profile.download.kids.description": "Die Übungen der Kinder auf diesem Gerät als Datei, die du in ein Konto importieren kannst.",
   "profile.emptyChart.description": "Schließen Sie noch ein paar Lektionen ab, um mehr Datenpunkte zu erhalten.",
   "profile.emptyChart.header": "Nicht genügend Daten",
   "profile.filter.codeCraft": "Code-Schnipsel",

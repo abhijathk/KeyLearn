@@ -1402,6 +1402,8 @@
   "profile.course.classic": "Klassinen",
   "profile.course.guided": "Ohjatut harjoitukset",
   "profile.download.description": "Lataa täydellinen vienti kirjoitushistoriastasi JSON-tiedostona.",
+  "profile.download.kids": "Vie lasten harjoittelu",
+  "profile.download.kids.description": "Lasten harjoittelu tällä laitteella tiedostona, jonka voit tuoda tilille.",
   "profile.emptyChart.description": "Suorita muutama oppitunti lisää kerätäksesi tilastoja.",
   "profile.emptyChart.header": "Ei vielä tarpeeksi tietoa",
   "profile.filter.codeCraft": "Koodinpätkät",

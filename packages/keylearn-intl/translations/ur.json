@@ -1403,6 +1403,8 @@
   "profile.course.classic": "کلاسک",
   "profile.course.guided": "رہنمائی والی مشق",
   "profile.download.description": "اپنی ٹائپنگ کی پوری تاریخ کا JSON فائل کے طور پر مکمل ایکسپورٹ حاصل کریں۔",
+  "profile.download.kids": "بچوں کی مشق برآمد کریں",
+  "profile.download.kids.description": "اس آلے پر بچوں کی مشق، ایسی فائل میں جسے آپ کسی اکاؤنٹ میں درآمد کر سکتے ہیں۔",
   "profile.emptyChart.description": "اپنے اعداد و شمار بنانے کے لیے چند مزید اسباق مکمل کریں۔",
   "profile.emptyChart.header": "ابھی کافی ڈیٹا نہیں",
   "profile.filter.codeCraft": "کوڈ کے ٹکڑے",
