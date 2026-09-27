@@ -234,7 +234,14 @@ export function SettingsSheet({
   );
   const band = currentBand();
   const cfg = bandConfig(band);
-  const canToggleWords = band === "7-8" || band === "9-10";
+  // In Time Keepers every age has the switch (and it starts on); the other
+  // worlds keep their age rule.
+  const canToggleWords =
+    worldDraft === "village" || band === "7-8" || band === "9-10";
+  const blocksOn =
+    worldDraft === "village"
+      ? prefs.trailLetters
+      : band === "5-6" || (canToggleWords && prefs.wordBlocks);
   const canClassic = classicOffered(band);
   const village = worldDraft === "village";
   const hasCast = m.childCast(worldDraft);
@@ -774,10 +781,7 @@ export function SettingsSheet({
                   {/* Only while the words are in a panel. The in-world
                       letter blocks are capitals by their nature, so a
                       CAPITALS switch there changes nothing. */}
-                  {!(
-                    band === "5-6" ||
-                    (canToggleWords && prefs.wordBlocks)
-                  ) && (
+                  {!blocksOn && (
                     <Row label="Big letters" desc="show the words in CAPITALS">
                       {(ids) => (
                         <Switch
@@ -792,15 +796,29 @@ export function SettingsSheet({
                     <Row
                       label="Letters on the trail"
                       desc="show the words as blocks in the game"
-                      tags={<Tag kind="blue">Ages 7–10</Tag>}
+                      tags={
+                        worldDraft === "village" ? undefined : (
+                          <Tag kind="blue">Ages 7–10</Tag>
+                        )
+                      }
                     >
-                      {(ids) => (
-                        <Switch
-                          {...ids}
-                          on={prefs.wordBlocks}
-                          onToggle={(wordBlocks) => savePrefs({ wordBlocks })}
-                        />
-                      )}
+                      {(ids) =>
+                        worldDraft === "village" ? (
+                          <Switch
+                            {...ids}
+                            on={prefs.trailLetters}
+                            onToggle={(trailLetters) =>
+                              savePrefs({ trailLetters })
+                            }
+                          />
+                        ) : (
+                          <Switch
+                            {...ids}
+                            on={prefs.wordBlocks}
+                            onToggle={(wordBlocks) => savePrefs({ wordBlocks })}
+                          />
+                        )
+                      }
                     </Row>
                   )}
                   {/* Only once the alphabet is done — before that it is a

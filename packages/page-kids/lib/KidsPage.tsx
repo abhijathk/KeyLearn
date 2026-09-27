@@ -443,6 +443,12 @@ export type Prefs = {
    * in; the youngest always get it). */
   wordBlocks: boolean;
   /**
+   * Time Keepers' own letters-on-the-trail switch, apart from `wordBlocks`
+   * (owner, 27 Sep 2026): on for every age by default and every age may turn
+   * it off, while Dino Run and Hero Trail keep their age rules.
+   */
+  trailLetters: boolean;
+  /**
    * Which face of practice this learner is on: the dino trail, or Classic —
    * the grown-up practice page, which the route mounts instead of this one
    * (see `classicActive`).
@@ -531,6 +537,7 @@ function defaultPrefs(): Prefs {
     paleness: 0,
     motion: 0.7,
     wordBlocks: false,
+    trailLetters: true,
     classic: cfg.classic,
     fingerColours: true,
     board: "crayon",
@@ -6643,11 +6650,15 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const pos = textInput?.pos ?? 0;
   const nextChar = passage[pos] ?? null;
   const nextFinger = nextChar != null ? FINGER_OF[nextChar] : undefined;
-  // The very youngest always read the word as 3-D blocks in the world instead
-  // of the subtitle panel; 7-8 and 9-10 can opt in from the toy-box; everyone
-  // else keeps the panel.
+  // Outside Time Keepers the very youngest always read the word as 3-D blocks
+  // in the world instead of the subtitle panel; 7-8 and 9-10 can opt in from
+  // the toy-box; everyone else keeps the panel.
+  // Time Keepers has no age bar: on for everyone unless it is switched off.
   const use3dWord =
-    band === "5-6" || ((band === "7-8" || band === "9-10") && prefs.wordBlocks);
+    prefs.world === "village"
+      ? prefs.trailLetters
+      : band === "5-6" ||
+        ((band === "7-8" || band === "9-10") && prefs.wordBlocks);
   useEffect(() => {
     // Feed the whole passage; the world lays it out as one gliding ribbon so
     // there is no jumpy per-word rebuild.
