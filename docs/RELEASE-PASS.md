@@ -87,9 +87,9 @@ A guest's kid profile results stay in the browser with no export button, so the 
 
 ### Failing checks behind these bugs
 
-- [ ] **qdesk**: the staff password is not kept in plain text in the session store between steps (found in qdesk-data/sessions/rj/WXsu89XeXc8CZriNi9 /tmp/claude-0/-home-user-KeyLearn/30d4d5fd-2aac-5fee-bf9c-22625a1c6077/scratchpad/e2e/../qdesk-data/sessions/)
+- [ ] **qdesk**: the staff password is not kept in plain text in the session store between steps (found in qdesk-data/sessions/rj/WXsu89XeXc8CZriNi9 qdesk-data/sessions/)
 - [ ] **qdesk-link**: KeyLearn rate-limits repeated staff sign-in attempts (0 of 12 refused (limit 10 per email per 5 min))
-- [ ] **qdesk-link**: the shipped proxy config keeps /_/internal off the public internet (proxy configs: /home/user/KeyLearn/root/etc/nginx/sites-available/www.keylearn.com.conf; none mention /_/internal — the key is the only guard)
+- [ ] **qdesk-link**: the shipped proxy config keeps /_/internal off the public internet (proxy configs: root/etc/nginx/sites-available/www.keylearn.com.conf; none mention /_/internal — the key is the only guard)
 - [ ] **qdesk-stability**: with KeyLearn down, the message is readable (not an internal error dump) ("500 - Internal Server Error")
 - [ ] **qdesk-link**: an unknown email takes about as long as a wrong password (no timing oracle) (median unknown 3.4 ms vs wrong password 374.3 ms)
 - [ ] **qdesk**: a cross-site POST is refused (200 (SameSite=Lax cookie still keeps the session out of it))
