@@ -4,7 +4,7 @@ End-to-end browser tests of KeyLearn, QDesk and the link between them, on a fres
 
 | | |
 |---|---|
-| Feature checks passing | **247 / 254** |
+| Feature checks passing | **255 / 262** |
 | Open bugs (below) | **1** |
 | Fixed during this pass | 31 |
 | Critical accessibility issues | 0 |
@@ -49,7 +49,7 @@ Three QDesk checks still fail, and only because main is the old sign-in skeleton
 | Results and stats | results saved, profile and stats pages | 4 | all 4 pass |
 | Typing test | timed test, report screen | 3 | all 3 pass |
 | Kids worlds | Time Keepers, Dino Run, Hero Trail, Classic; ages 5–13 | 35 | 31 pass · 4 by design |
-| Kids settings | world, character, companions persist | 2 | all 2 pass |
+| Kids settings | world, character, companions persist | 10 | all 10 pass |
 | Braille | six-key chords, accuracy, next line | 5 | all 5 pass |
 | Multiplayer | two players, same passage, live speeds, chat | 6 | all 6 pass |
 | Certificates | Course pane, gatekeeping, server refusals, verify page | 10 | all 10 pass |
@@ -110,9 +110,9 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 
 | Lesson | Chapter | While walking | While sitting |
 |---|---|---|---|
-| 5 | 1 · The Village | 20 of 20 (road-squat) | child did not sit in the window |
+| 5 | 1 · The Village | 20 of 20 (road-stones) | 40 of 40 (wall-stones) |
 | 6 | 1 · The Village | 20 of 20 (road-behind) | 31 of 31 (road-behind) |
-| 7 | 1 · The Village | 20 of 20 (road-stones) | child did not sit in the window |
+| 7 | 1 · The Village | 20 of 20 (road-stones) | 40 of 40 (road-squat) |
 | 8 | 1 · The Village | 20 of 20 (wall-stones) | 40 of 40 (wall-stones, road-behind) |
 | 16 | 2 | 20 of 20 (road-squat) | child did not sit in the window |
 | 17 | 2 | 20 of 20 (road-squat) | child did not sit in the window |
@@ -287,10 +287,18 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 - ⏸ the run is saved to the learner _(Leo · village)_
 - ✅ no errors _(Leo · village)_
 
-### Kids settings (2)
+### Kids settings (10)
 
 - ✅ the world choice survives a reload
 - ✅ no page errors
+- ✅ Time Keepers shows letters on the trail by default, age 6
+- ✅ Time Keepers shows letters on the trail by default, age 10
+- ✅ Time Keepers shows letters on the trail by default, age 12 (no age bar)
+- ✅ the switch is offered at 12 in Time Keepers, with no age tag
+- ✅ switched off, Time Keepers shows the text panel
+- ✅ Dino Run unchanged, age 12 keeps the text panel
+- ✅ Dino Run unchanged, age 10 keeps the panel unless opted in
+- ✅ Hero Trail unchanged, age 6 still always gets the blocks
 
 ### Braille (5)
 
