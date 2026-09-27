@@ -12,6 +12,14 @@ type Bucket = { count: number; resetAt: number };
 const shared = new Map<string, Bucket>();
 /** Hits this worker has taken since that broadcast and not yet reported. */
 const pending = new Map<string, Bucket>();
+/**
+ * The cluster total at the last broadcast, and this worker's own hits since.
+ * What {@link allowed} shares out: `shared` already has this worker's own
+ * reported hits folded in, so a share worked out from it grew back every
+ * flush while the other workers' hits were still unknown.
+ */
+const told = new Map<string, Bucket>();
+const sinceTold = new Map<string, Bucket>();
 
 /** How often a worker reports its hits, and the primary answers with totals. */
 const SYNC_MS = 100;
@@ -33,9 +41,9 @@ const SYNC_MS = 100;
  * last total it was told plus its own unreported hits — so the check stays
  * synchronous and free, which is what lets it sit in front of a handler and
  * simply throw — and reports the hit for the next broadcast. Between
- * broadcasts the workers can collectively overshoot by at most one window's
- * traffic; {@link SYNC_MS} is a tenth of a second, so that is single digits
- * rather than a multiplier.
+ * broadcasts each worker may only spend its share of what is left (see
+ * {@link allowed}), so a burst overshoots by at most the worker count less
+ * one, rather than by one window's traffic, which a script makes unbounded.
  *
  * Outside a cluster (a single process, or the tests) there is nothing to
  * share and the local map is the whole truth.
@@ -51,7 +59,12 @@ export function rateLimit(
 
   const s = live(shared.get(key), now);
   const p = live(pending.get(key), now);
-  if ((s?.count ?? 0) + (p?.count ?? 0) >= limit) {
+  const t = live(told.get(key), now);
+  const mine = live(sinceTold.get(key), now);
+  if (
+    (s?.count ?? 0) + (p?.count ?? 0) >= limit ||
+    !allowed(t?.count ?? 0, mine?.count ?? 0, limit, workerCount())
+  ) {
     throw new HttpError(
       429,
       "Too many attempts. Please wait a minute and try again.",
@@ -63,8 +76,54 @@ export function rateLimit(
   } else {
     p.count += 1;
   }
+  if (mine == null) {
+    sinceTold.set(key, { count: 1, resetAt: now + windowMs });
+  } else {
+    mine.count += 1;
+  }
   scheduleSync();
   prune(now);
+}
+
+/**
+ * Whether one more hit fits, given the cluster total at the last broadcast
+ * and what this worker has taken since. The share is renewed only when a
+ * broadcast arrives, because only then does the worker know what the others
+ * have spent.
+ *
+ * The cluster total alone is not enough. Between broadcasts every worker
+ * decides on its own, so a burst spread across them could spend the whole
+ * limit once per worker before any of them heard about the others — measured
+ * at 40 of 60 staff sign-in checks through against a limit of 10 (release
+ * pass, 26 Sep). So between syncs a worker may take only its share of what
+ * is left: at most `workers - 1` over the limit however fast the burst, while
+ * anything paced slower than a sync gets the whole limit, because the share
+ * is recomputed from the fresh total each time.
+ *
+ * With one worker (a single process, or the tests) the share is everything
+ * that is left, which is the plain fixed-window rule.
+ */
+export function allowed(
+  /** The cluster total at the last broadcast this worker received. */
+  toldCount: number,
+  /** This worker's own hits since that broadcast. */
+  sinceCount: number,
+  limit: number,
+  workers: number,
+): boolean {
+  if (toldCount + sinceCount >= limit) {
+    return false;
+  }
+  const share = Math.max(
+    1,
+    Math.ceil((limit - toldCount) / Math.max(1, workers)),
+  );
+  return sinceCount < share;
+}
+
+/** How many workers share the limit: the configured count in a cluster, else one. */
+function workerCount(): number {
+  return cluster.isWorker ? Env.getNumber("SERVER_HTTP_WORKERS", 4) : 1;
 }
 
 /**
@@ -78,6 +137,8 @@ export function rateLimit(
 export function resetRateLimits(): void {
   shared.clear();
   pending.clear();
+  told.clear();
+  sinceTold.clear();
 }
 
 /** A bucket if its window has not closed, else nothing. */
@@ -87,10 +148,10 @@ function live(bucket: Bucket | undefined, now: number): Bucket | null {
 
 /** Opportunistic sweep so neither map can grow without bound. */
 function prune(now: number): void {
-  if (shared.size + pending.size <= 10_000) {
+  if (shared.size + pending.size + told.size + sinceTold.size <= 10_000) {
     return;
   }
-  for (const map of [shared, pending]) {
+  for (const map of [shared, pending, told, sinceTold]) {
     for (const [k, v] of map) {
       if (now >= v.resetAt) {
         map.delete(k);
@@ -202,8 +263,9 @@ export function serveRateLimits(): void {
   broadcast.unref?.();
 }
 
-// A worker adopts whatever the primary says the totals are. Its own unreported
-// hits are counted on top, so nothing it has just seen is lost.
+// A worker adopts the primary's totals when they are higher than what it
+// already knows. Its own unreported hits are counted on top, so nothing it
+// has just seen is lost.
 if (cluster.isWorker) {
   process.on("message", (message: any) => {
     if (message?.type !== MSG || !Array.isArray(message.totals)) {
@@ -214,6 +276,26 @@ if (cluster.isWorker) {
       number,
       number,
     ][]) {
+      // The share starts again from the cluster's own figure. Hits not yet
+      // reported cannot be in it, so they stay counted against this worker.
+      told.set(key, { count, resetAt });
+      const unreported = pending.get(key);
+      if (unreported != null && Date.now() < unreported.resetAt) {
+        sinceTold.set(key, {
+          count: unreported.count,
+          resetAt: unreported.resetAt,
+        });
+      } else {
+        sinceTold.delete(key);
+      }
+      // Never lower. A broadcast can be older than hits this worker has
+      // already reported and folded in (see `flush`); adopting it outright
+      // forgot them and reopened the budget mid-burst, which let 20 of 60
+      // through against a limit of 10. Within a window counts only rise.
+      const had = shared.get(key);
+      if (had != null && Date.now() < had.resetAt && had.count > count) {
+        continue;
+      }
       shared.set(key, { count, resetAt });
     }
   });

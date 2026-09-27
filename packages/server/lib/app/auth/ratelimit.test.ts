@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import { equal, isFalse, isTrue } from "rich-assert";
 import {
+  allowed,
   clientFromForwarded,
   rateLimit,
   resetTrustedProxies,
@@ -164,4 +165,32 @@ test("the window closes and the budget comes back", (ctx) => {
     refused = true;
   }
   isFalse(refused, "the window never reopened");
+});
+
+test("between syncs a worker spends only its share of what is left", () => {
+  // Four workers, a limit of ten: three each before anyone hears of the
+  // others, so a burst tops out at twelve, not forty.
+  isTrue(allowed(0, 2, 10, 4));
+  isFalse(allowed(0, 3, 10, 4));
+  // After a sync reports six used, each may take one more.
+  isTrue(allowed(6, 0, 10, 4));
+  isFalse(allowed(6, 1, 10, 4));
+  // The limit itself still holds.
+  isFalse(allowed(10, 0, 10, 4));
+});
+
+test("paced attempts still get the whole limit", () => {
+  // One attempt per sync, landing on the same worker: the share is recomputed
+  // from the fresh total each time and never drops below one while any of the
+  // limit is left.
+  let used = 0;
+  while (allowed(used, 0, 10, 4)) {
+    used += 1;
+  }
+  equal(used, 10);
+});
+
+test("one worker is the plain fixed-window rule", () => {
+  isTrue(allowed(0, 9, 10, 1));
+  isFalse(allowed(0, 10, 10, 1));
 });
