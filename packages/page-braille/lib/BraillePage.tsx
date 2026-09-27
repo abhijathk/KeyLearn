@@ -1,8 +1,8 @@
 import {
+  type LoggedSegment,
   useAssessment,
   useAssessmentPartial,
   useAssessmentReset,
-  type LoggedSegment,
 } from "@keylearn/assessment";
 import {
   BLANK,
@@ -987,7 +987,9 @@ function Practice(): ReactNode {
         <div className={styles.stats}>
           <Metric
             label={
-              <FormattedMessage id="braille.stat.line" defaultMessage="Line" />
+              // The cell you are on within this line, not a count of lines:
+              // "Line 1 / 25" read as the first of 25 lines (release pass).
+              <FormattedMessage id="braille.stat.cell" defaultMessage="Cell" />
             }
             value={`${Math.min(at + 1, lesson.steps.length)}`}
             unit={`/ ${lesson.steps.length}`}
