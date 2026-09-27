@@ -257,7 +257,7 @@ export function SettingsSheet({
     scene: worldDraft === "dino" ? "colours" : "light & colours",
     typing: "keyboard & words",
     sound: "sounds & coach",
-    session: canClassic ? "timer & style" : "timer & length",
+    session: "timer & length",
   };
 
   // ── the dialog's own keys ──────────────────────────────────────────────
@@ -541,6 +541,39 @@ export function SettingsSheet({
                         />
                       )}
                     </Row>
+                  </Group>
+                )}
+                {/* On Play, beside the world it replaces (owner, 27 Sep 2026): Classic
+                    is a way to play, not a session setting. It is the grown-up
+                    practice page, which the route
+                    mounts in place of this one — so choosing it saves the
+                    preference and reloads rather than switching in place. */}
+                {canClassic && (
+                  <Group
+                    title="Practice style"
+                    tags={<Tag kind="violet">Ages 9–13</Tag>}
+                  >
+                    <div className={styles.classic}>
+                      <span className={styles.classicIcon} aria-hidden="true">
+                        <Icon name="keys" size={28} color="#ffffff" />
+                      </span>
+                      <span className={styles.classicText}>
+                        <span className={styles.classicTitle}>
+                          Try Classic mode
+                        </span>
+                        <span className={styles.desc}>
+                          just the words, the keyboard and your progress — no
+                          trail
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.classicGo}
+                        onClick={() => m.choosePracticeStyle(true)}
+                      >
+                        Switch to Classic
+                      </button>
+                    </div>
                   </Group>
                 )}
               </>
@@ -1054,37 +1087,6 @@ export function SettingsSheet({
                     )}
                   </Row>
                 </Group>
-                {/* Classic is the grown-up practice page, which the route
-                    mounts in place of this one — so choosing it saves the
-                    preference and reloads rather than switching in place. */}
-                {canClassic && (
-                  <Group
-                    title="Practice style"
-                    tags={<Tag kind="violet">Ages 9+</Tag>}
-                  >
-                    <div className={styles.classic}>
-                      <span className={styles.classicIcon} aria-hidden="true">
-                        <Icon name="keys" size={28} color="#ffffff" />
-                      </span>
-                      <span className={styles.classicText}>
-                        <span className={styles.classicTitle}>
-                          Try Classic mode
-                        </span>
-                        <span className={styles.desc}>
-                          just the words, the keyboard and your progress — no
-                          trail
-                        </span>
-                      </span>
-                      <button
-                        type="button"
-                        className={styles.classicGo}
-                        onClick={() => m.choosePracticeStyle(true)}
-                      >
-                        Switch to Classic
-                      </button>
-                    </div>
-                  </Group>
-                )}
               </>
             )}
           </div>
