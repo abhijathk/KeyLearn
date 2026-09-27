@@ -49,7 +49,10 @@
 }
 
 .whoKind {
-  color: var(--secondary-l2);
+  // A text token, not a step of the palette: --secondary-l2 was 4.1:1 on
+  // the selected card in the dark theme, and even the muted-text token sits
+  // just under 4.5:1 on that tinted card (release pass).
+  color: var(--text-color-f1);
   font-size: 0.65rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;

@@ -45,7 +45,7 @@ export const ACCENTS: readonly Accent[] = [
     group: "core",
     deg: 152,
     night: "#8fd9b6",
-    day: "#2f8a5d",
+    day: "#247650",
   },
   {
     id: "home-row",

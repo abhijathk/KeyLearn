@@ -32,7 +32,8 @@
   --secondary-l1: darken(@colors[@secondary], 15);
   --secondary-l2: darken(@colors[@secondary], 30);
   --secondary-f1: mix(@colors[@primary], @colors[@secondary], 25);
-  --secondary-f2: mix(@colors[@primary], @colors[@secondary], 45);
+  // 35, not 45: muted text at 45 was 3.9:1 on raised panels (release pass).
+  --secondary-f2: mix(@colors[@primary], @colors[@secondary], 35);
   --accent-d2: darken(@colors[@accent], 14);
   --accent-d1: darken(@colors[@accent], 7);
   --accent: @colors[@accent];

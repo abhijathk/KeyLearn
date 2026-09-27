@@ -215,7 +215,7 @@ export function ThemeWindow(): ReactNode {
                   editing: null,
                   name: "",
                   night: "#8fd9b6",
-                  day: "#2f8a5d",
+                  day: "#247650",
                   forKids: false,
                   zones: null,
                 })

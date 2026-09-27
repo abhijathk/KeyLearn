@@ -154,11 +154,15 @@
 }
 
 .bKids {
-  color: var(--fast-key-color);
+  // Toward the text colour, as the practice screen does with the same
+  // colours: on its own the key colour was 3.1:1 as small text.
+  color: color-mix(in oklab, var(--fast-key-color) 70%, var(--text-color));
 }
 
 .bMine {
-  color: var(--slow-key-color);
+  // Toward the text colour, as the practice screen does with the same
+  // colours: on its own the key colour was 3.1:1 as small text.
+  color: color-mix(in oklab, var(--slow-key-color) 70%, var(--text-color));
 }
 
 .ops {

@@ -5,6 +5,11 @@
   --text-color: var(--secondary);
   --text-color-f1: var(--secondary-f1);
   --text-color-f2: var(--secondary-f2);
+  // Error text. Sixty-odd rules ask for --error-color and nothing defined
+  // it, so all of them fell back to a hard-coded #d0322e: 4.2:1 on the light
+  // theme and 3.3:1 on the dark one (release pass). A theme whose --error is
+  // too light for text on its ground points this at a deeper step instead.
+  --error-color: var(--error);
   --separator-color: var(--primary-d1);
   --separator-border: 1px solid var(--separator-color);
 

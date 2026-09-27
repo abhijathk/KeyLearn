@@ -11,7 +11,9 @@
     // the point — the whole surface moves together.
     @primary: #eef0f3;
     @secondary: #1f2433;
-    @accent: #2f8a5d;
+    // Deepened from #2f8a5d, which as text or a link was 3.74:1 on the page
+    // (WCAG AA asks 4.5:1). Same hue; 4.8:1 now.
+    @accent: #247650;
     @error: #cf5a4a;
   };
 
@@ -25,7 +27,9 @@
   --secondary-l1: lighten(@colors[@secondary], 12);
   --secondary-l2: lighten(@colors[@secondary], 24);
   --secondary-f1: mix(@colors[@primary], @colors[@secondary], 20);
-  --secondary-f2: mix(@colors[@primary], @colors[@secondary], 40);
+  // 30, not 40: at 40 the muted text (#727680) was 3.98:1 on the page and
+  // the most common WCAG AA failure on the site (release pass, 26 Sep).
+  --secondary-f2: mix(@colors[@primary], @colors[@secondary], 30);
   --accent-d2: darken(@colors[@accent], 16);
   --accent-d1: darken(@colors[@accent], 8);
   --accent: @colors[@accent];
@@ -41,6 +45,8 @@
   --accent-d1-ink: contrast(darken(@colors[@accent], 8), #241a12, #ffffff, 21%);
   --error-d1: darken(@colors[@error], 10);
   --error: @colors[@error];
+  // #cf5a4a is 3.5:1 on this ground; the deeper step reads as text.
+  --error-color: var(--error-d1);
   --error-l1: lighten(@colors[@error], 10);
   // Darker than the night theme's amber (#e8a819) — that value fails
   // contrast against this pale ground, same compression the error color
@@ -49,7 +55,7 @@
   --shadow-color: #00000033;
   --slow-key-color: #d2653c;
   --fast-key-color: #2f9e5c;
-  --effort-color: #2f8a5d;
+  --effort-color: #247650;
   .use-textinput-colors(@colors);
   --textinput-cursor__color: @colors[@primary];
   --textinput-cursor__background-color: @colors[@accent];
@@ -86,7 +92,7 @@
   --syntax-string: #3e7d3e;
   --syntax-number: #7a4f9d;
   --syntax-comment: #8a7070;
-  --control-color: #2f8a5d;
+  --control-color: #247650;
 }
 
 html[data-color="keylearn-day"] {

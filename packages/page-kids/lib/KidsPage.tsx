@@ -7111,6 +7111,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             {!prefs.sounds && (
               <span
                 className={styles.mutedMark}
+                // A label is only allowed on an element with a role; a bare
+                // span with one is ignored by some screen readers (axe).
+                role="img"
                 title="Sounds are off"
                 aria-label="Sounds are off"
               >

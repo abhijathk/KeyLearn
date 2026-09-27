@@ -246,7 +246,7 @@
 // The desk's own wordmark is followed by the one app it currently manages —
 // a small badge naming it, rather than plain text. Deliberately colored
 // with KeyLearn's OWN default accent (the "keylearn" entry in accents.ts —
-// mint #8fd9b6 / forest #2f8a5d), not `--accent`, which on /desk resolves
+// mint #8fd9b6 / forest #247650), not `--accent`, which on /desk resolves
 // to the desk's own amber (accents.less' `.desk-app` scoping) — the badge
 // is naming the app, so it wears that app's colour, independent of
 // whichever accent the signed-in staff member happens to have picked.
@@ -278,14 +278,14 @@
 
 :global(html[data-color="keylearn-day"]) .appBadge {
   border-color: rgb(47 138 93 / 40%);
-  color: #2f8a5d;
+  color: #247650;
   background-color: rgb(47 138 93 / 12%);
 }
 
 @media (prefers-color-scheme: light) {
   :global(html[data-color="auto"]) .appBadge {
     border-color: rgb(47 138 93 / 40%);
-    color: #2f8a5d;
+    color: #247650;
     background-color: rgb(47 138 93 / 12%);
   }
 }
