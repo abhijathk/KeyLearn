@@ -38,7 +38,11 @@ export class Histogram implements Iterable<Sample> {
   }
 
   validate(): boolean {
-    if (this.#data.size < 3) {
+    // Two, not three: the Classic course drills one new key at a time
+    // ("d d d …" is a letter and a space), and at three every such lesson
+    // completed and was thrown away, so the course could never count it
+    // (release pass, 27 Sep 2026). One character is still not a lesson.
+    if (this.#data.size < 2) {
       return false; // Too few characters.
     }
     for (const sample of this.#data.values()) {

@@ -62,6 +62,14 @@ test("validate histogram", () => {
   isFalse(
     new Histogram([
       { codePoint: A, hitCount: 10, missCount: 0, timeToType: 100 },
+    ]).validate(),
+  );
+
+  // A one-key drill is a letter and a space, and must count.
+
+  isTrue(
+    new Histogram([
+      { codePoint: A, hitCount: 10, missCount: 0, timeToType: 100 },
       { codePoint: B, hitCount: 10, missCount: 0, timeToType: 100 },
     ]).validate(),
   );
