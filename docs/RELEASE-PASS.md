@@ -5,8 +5,8 @@ End-to-end browser tests of KeyLearn, QDesk and the link between them, on a fres
 | | |
 |---|---|
 | Feature checks passing | **247 / 254** |
-| Open bugs (below) | **2** |
-| Fixed during this pass | 30 |
+| Open bugs (below) | **1** |
+| Fixed during this pass | 31 |
 | Critical accessibility issues | 0 |
 | Unit-test failures | 0 (72 packages) |
 | Languages complete | 54 |
@@ -21,13 +21,6 @@ Found by these tests and **not fixed yet**, most severe first. Each says where t
 - **Where:** `QDesk main (e44a609) vs claude/cool-albattani-4odtli (b64fb5a + 3661a2b)`
 
 Three QDesk checks still fail, and only because main is the old sign-in skeleton: the staff password in the session file, a bare 500 when KeyLearn is down, and cross-site POSTs. The full desk already holds the password in memory (pending-login.ts) and has a cross-site guard (csrf.ts); 3661a2b makes its sign-in answer 503 with a sentence. A push of main to the desk branch was blocked by this session's safety check, so it needs the owner: git push origin origin/claude/cool-albattani-4odtli:main.
-
-### 2. Kuttichathan is not seen while the child sits at lesson 38
-
-- **Severity:** Low
-- **Where:** `packages/page-kids/lib/world.ts (Crossing haunts)`
-
-Deep night, lesson 38 (the Crossing): he is on the ferry deck in 20 of 20 samples while the child walks, and in 0 of 40 once the child sits. Every other lesson with a sitting result shows him (6, 24, 27, 28, 32, 35, 36, 37). Found after the fix round; not yet looked into.
 
 ### Failing checks behind these bugs
 
@@ -109,6 +102,7 @@ Deep night, lesson 38 (the Crossing): he is on the ferry deck in 20 of 20 sample
 | `28463b1b` | Guest kids' data | A guest's kids practice could not leave the device. The guest profile page now exports it, and it imports into a kid profile (tested end to end). |
 | `b29515d9` | Braille | The counter said LINE while counting cells. |
 | `20d9794a` | Kids | An unknown saved world made the trail request undefined.glb and throw while the child typed. Found while testing the guest export; it now loads the default world. |
+| `8b57f5ed` | Kuttichathan | On the crossing (lessons 37–38) he never chose a look, so he was nearly always an unlit shape. He now picks the lamp, the halo or the dark per spot, and takes a lit look when the child sits. Lesson 38: 35 of 39 sitting and 15 of 20 walking on the current build (the earlier 0 of 40 came from a server on an older build). Lesson 8: 40 of 40 sitting, 20 of 20 walking. |
 
 ## Kuttichathan, walking and sitting
 
@@ -119,7 +113,7 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 | 5 | 1 · The Village | 20 of 20 (road-squat) | child did not sit in the window |
 | 6 | 1 · The Village | 20 of 20 (road-behind) | 31 of 31 (road-behind) |
 | 7 | 1 · The Village | 20 of 20 (road-stones) | child did not sit in the window |
-| 8 | 1 · The Village | not yet run | |
+| 8 | 1 · The Village | 20 of 20 (wall-stones) | 40 of 40 (wall-stones, road-behind) |
 | 16 | 2 | 20 of 20 (road-squat) | child did not sit in the window |
 | 17 | 2 | 20 of 20 (road-squat) | child did not sit in the window |
 | 24 | 3 | 20 of 20 (road-squat) | 17 of 17 (road-squat) |
@@ -129,7 +123,7 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 | 35 | 4 | 20 of 20 (road-squat) | 4 of 4 (road-squat) |
 | 36 | 4 | 20 of 20 (road-stones) | 30 of 33 (rail) |
 | 37 | Crossing | 20 of 20 (rail) | 36 of 40 (rail) |
-| 38 | Crossing | 20 of 20 (deck) | 0 of 40 (none) |
+| 38 | Crossing | 15 of 20 (island) | 35 of 39 (rail) |
 
 ## Behaving as designed
 
