@@ -91,7 +91,12 @@ fixed or consciously waived (write down which, and why).
 - [ ] **Tab:** restart both services —
       `launchctl kickstart -k gui/$(id -u)/com.keylearn.support-triage` and
       `…support-worker` — so they pick up new code.
-- [ ] **nginx:** `nginx -t`, then reload.
+- [ ] **nginx:** `nginx -t`, then reload. `/_/internal/` is now refused at
+      the edge for everyone but this machine. QDesk on the same host must use
+      `KEYLEARN_API_URL=http://localhost:3000` (the app directly, not the
+      public address). A desk on another host needs its address in
+      `/etc/nginx/keylearn-internal-allow.conf` (`allow 203.0.113.7;`) before
+      the reload, or its sign-in stops working.
 - [ ] **Virus scanner:** clamd is running and `CLAMAV_HOST` points at it.
       Support attachments fail closed without it: every upload is refused
       with a 503 ("Files can't be checked for viruses right now").
