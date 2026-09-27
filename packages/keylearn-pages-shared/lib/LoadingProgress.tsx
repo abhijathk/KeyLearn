@@ -1,4 +1,11 @@
-import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { IntlContext } from "react-intl";
 import * as styles from "./LoadingProgress.module.less";
 
 /**
@@ -77,6 +84,8 @@ export function LoadingProgress({
    */
   readonly kids?: boolean;
 }): ReactNode {
+  // Null outside a provider: the server shell and the tests render this bare.
+  const intl = useContext(IntlContext);
   const [isKids] = useState(() => kids ?? onKidsPage());
   // Both decided once, at mount, and held in state so a re-render cannot
   // restart the animation or make the bar jump backwards mid-wait.
@@ -173,6 +182,16 @@ export function LoadingProgress({
         <div
           className={styles.track}
           role="progressbar"
+          // A progress bar with no name reads as "progress bar, 40" and
+          // leaves the listener to guess what is progressing (axe, serious,
+          // on every page while the loader was up). Drawn by the server shell
+          // before any translations exist, so English is the fallback.
+          aria-label={
+            intl?.formatMessage({
+              id: "loader.label",
+              defaultMessage: "Loading…",
+            }) ?? "Loading…"
+          }
           aria-valuemin={0}
           aria-valuemax={100}
           // Announced only when it is a real measurement. A screen reader

@@ -26,7 +26,7 @@ import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import { openResultStorage } from "@keylearn/result-loader";
 import { clsx } from "clsx";
 import { type ReactNode, useEffect, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { useNavigate } from "react-router";
 import { BrailleBadge } from "../profiles/BrailleBadge.tsx";
 import { useProfiles } from "../profiles/context.tsx";
@@ -287,6 +287,7 @@ function Row({
   held,
 }: RowData): ReactNode {
   const [ready, setReady] = useState(false);
+  const intl = useIntl();
   const navigate = useNavigate();
   const { select } = useProfiles();
   const [showing, setShowing] = useState<IssuedCertificate | null>(null);
@@ -332,6 +333,10 @@ function Row({
       <div
         className={styles.bar}
         role="progressbar"
+        aria-label={intl.formatMessage({
+          id: "account.course.progress",
+          defaultMessage: "Progress towards the certificate",
+        })}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(progress * 100)}
