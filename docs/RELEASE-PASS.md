@@ -4,9 +4,9 @@ End-to-end browser tests of KeyLearn, QDesk and the link between them, on a fres
 
 | | |
 |---|---|
-| Feature checks passing | **238 / 248** |
-| Open bugs (below) | **10** |
-| Fixed during this pass | 20 |
+| Feature checks passing | **247 / 254** |
+| Open bugs (below) | **2** |
+| Fixed during this pass | 30 |
 | Critical accessibility issues | 0 |
 | Unit-test failures | 0 (72 packages) |
 | Languages complete | 54 |
@@ -15,83 +15,24 @@ End-to-end browser tests of KeyLearn, QDesk and the link between them, on a fres
 
 Found by these tests and **not fixed yet**, most severe first. Each says where to look and what was seen.
 
-### 1. QDesk keeps the staff password in plain text on disk
-
-- **Severity:** High
-- **Where:** `QDesk packages/server/lib/app/auth/controller.ts (pendingStaff) + session.ts (FileStore)`
-
-Between the password step and the code step, the staff member's password sits in the session file under DATA_DIR/sessions as plain JSON, until the code is entered or the pending login expires. Anyone who can read the server's disk or backups can read staff passwords. Found by grepping the session store during a sign-in.
-
-### 2. /_/internal is reachable from the public internet
+### 1. QDesk main is behind the desk that has the fixes
 
 - **Severity:** Medium
-- **Where:** `root/etc/nginx/sites-available/www.keylearn.com.conf`
+- **Where:** `QDesk main (e44a609) vs claude/cool-albattani-4odtli (b64fb5a + 3661a2b)`
 
-The shipped nginx config proxies every path, /_/internal/* included. The ops key is the only guard on staff sign-in checks, email reveal and account deletion. Expected: the proxy refuses /_/internal from outside (QDesk calls KeyLearn directly).
+Three QDesk checks still fail, and only because main is the old sign-in skeleton: the staff password in the session file, a bare 500 when KeyLearn is down, and cross-site POSTs. The full desk already holds the password in memory (pending-login.ts) and has a cross-site guard (csrf.ts); 3661a2b makes its sign-in answer 503 with a sentence. A push of main to the desk branch was blocked by this session's safety check, so it needs the owner: git push origin origin/claude/cool-albattani-4odtli:main.
 
-### 3. Staff check tells real emails from unknown ones by timing
-
-- **Severity:** Medium
-- **Where:** `KeyLearn packages/server/lib/app/internal/controller.ts (staff-auth/verify)`
-
-An unknown email answers in about 3 ms; a real account with a wrong password in about 374 ms (the password hash). The bodies match, but the timing shows whether an email has an account. Needs the ops key to exploit.
-
-### 4. Staff check rate limit does not hold for fast attempts
-
-- **Severity:** Medium
-- **Where:** `KeyLearn auth/ratelimit.ts with the internal staff-auth/verify route`
-
-Limit is 10 per email per 5 minutes. Spaced half a second apart it holds (429 from the 11th). Back to back, 13 of 13 went through; in a 20-way burst, 40 of 60. Worker processes each count on their own until the 100 ms sync. The public login held at its limit in the same test.
-
-### 5. QDesk returns a bare 500 when KeyLearn is down or the key is wrong
-
-- **Severity:** Medium
-- **Where:** `QDesk internal/keylearn-client.ts (#call throws)`
-
-Sign-in answers “500 - Internal Server Error” with no message the sign-in page can show, and a wrong ops key looks the same. Expected: 503 with “the desk can't reach KeyLearn right now”, and a wrong key logged as a setup error. QDesk itself stays up, and recovers on its own when KeyLearn is back (tested).
-
-### 6. Colour contrast in the default theme
-
-- **Severity:** Medium
-- **Where:** `theme tokens`
-
-77 of 104 axe audits report serious colour-contrast findings (0 critical). The “clearer” setting fixes them. The default theme does not meet WCAG AA contrast on its own.
-
-### 7. QDesk accepts cross-site POSTs
+### 2. Kuttichathan is not seen while the child sits at lesson 38
 
 - **Severity:** Low
-- **Where:** `QDesk server (no Origin / Sec-Fetch-Site check)`
+- **Where:** `packages/page-kids/lib/world.ts (Crossing haunts)`
 
-A POST to /_/desk-auth/logout from another origin returned 200. SameSite=Lax keeps the session cookie off it, so the practical risk is login CSRF and forced sign-out only. KeyLearn refuses the same requests (403).
-
-### 8. Course pane after a certificate is earned
-
-- **Severity:** Low
-- **Where:** `packages/page-account/lib/course/CoursePane.tsx`
-
-Once the certificate is issued, the learner's card still carries the “Ready to sit” tag and still offers “Sit the assessment”, above “Certificate earned. Open and download”. Seen on the test account after certificate AWKE 4RWS. Expected: the tag reads “Certificate earned” and the sit link is gone, or is worded as sitting again for a higher level.
-
-### 9. Guest kids' results cannot be exported
-
-- **Severity:** Low
-- **Where:** `keylearn-result-loader (IDB history-kids)`
-
-A guest's kid profile results stay in the browser with no export button, so the manual guest-to-account route (export then import) does not cover kids.
-
-### 10. Braille counter label
-
-- **Severity:** Low
-- **Where:** `braille practice header`
-
-“LINE 1 / 25” counts cells within the current line, not lines. The behaviour is right; the label misleads.
+Deep night, lesson 38 (the Crossing): he is on the ferry deck in 20 of 20 samples while the child walks, and in 0 of 40 once the child sits. Every other lesson with a sitting result shows him (6, 24, 27, 28, 32, 35, 36, 37). Found after the fix round; not yet looked into.
 
 ### Failing checks behind these bugs
 
-- [ ] **qdesk**: the staff password is not kept in plain text in the session store between steps (found in qdesk-data/sessions/rj/WXsu89XeXc8CZriNi9 qdesk-data/sessions/)
-- [ ] **qdesk-link**: KeyLearn rate-limits repeated staff sign-in attempts (0 of 12 refused (limit 10 per email per 5 min))
-- [ ] **qdesk-link**: the shipped proxy config keeps /_/internal off the public internet (proxy configs: root/etc/nginx/sites-available/www.keylearn.com.conf; none mention /_/internal — the key is the only guard)
+- [ ] **qdesk**: the staff password is not kept in plain text in the session store between steps (found in qdesk-data/sessions/lL/yMooXTlNkJsn2eqY66 qdesk-data/sessions/)
 - [ ] **qdesk-stability**: with KeyLearn down, the message is readable (not an internal error dump) ("500 - Internal Server Error")
-- [ ] **qdesk-link**: an unknown email takes about as long as a wrong password (no timing oracle) (median unknown 3.4 ms vs wrong password 374.3 ms)
 - [ ] **qdesk**: a cross-site POST is refused (200 (SameSite=Lax cookie still keeps the session out of it))
 
 ## Needs the owner
@@ -100,8 +41,6 @@ A guest's kid profile results stay in the browser with no export button, so the 
 - **The full desk still needs @platform/bridge**: The branch with the whole desk links @platform/bridge from ../../../platform/packages/bridge, which is not in any repo this session can reach. Tickets, notices and answers can be tested once it is pushed.
 - **Time Keepers sounds from your library**: Waiting for KeyLearn_World_Audio to be pushed (to assets-src/). The curated set in 458aeacf ships meanwhile.
 - **Live checks**: Need the deployment: Brevo mail, pwnedpasswords reachability, HSTS through the live proxy, clamd, the ui_locale schema step. All are in docs/RELEASE-CHECKLIST.md.
-- **Colour contrast in the default theme**: The only remaining axe findings (serious, not critical). The “clearer” setting raises contrast. Decide whether the default theme should pass on its own.
-- **Guest kids’ results**: A guest's kid profile results stay on the device with no export button. Decide whether guest kids get an export too.
 - **Kuttichathan's hours**: He appears only in deep night (10 pm–4 am in the world clock). Keep, or widen to dusk?
 
 ## Results by area
@@ -126,12 +65,12 @@ A guest's kid profile results stay in the browser with no export button, so the 
 | Learner profiles | add, rename, delete, guardian consent | 5 | all 5 pass |
 | Support tickets | log, reply, attachment rules, privacy between accounts | 11 | all 11 pass |
 | Cross-site request guard | foreign Origin and Sec-Fetch-Site refused | 6 | all 6 pass |
-| Accessibility audit (axe) | WCAG 2.1 A/AA on 26 routes × en/ar × signed out/in | 104 | 0 critical; colour contrast only (27 of 104 audits clean) |
+| Accessibility audit (axe) | WCAG 2.1 A/AA on 26 routes × en/ar × signed out/in | 104 | 100 of 104 audits clean; the rest are the typing test's deliberate fade |
 | Organisations | staff create a school, owner accepts, seats, learners, teacher invite, access log, outsiders refused | 16 | all 16 pass |
 | Portable across devices | two browsers, one account: lessons, settings, kids, language, offline queue then sync | 9 | all 9 pass |
-| Guest data stays on the device | never pushed to an account; export then import by hand instead | 6 | all 6 pass |
+| Guest data stays on the device | never pushed to an account; export then import by hand instead | 12 | all 12 pass |
 | QDesk sign-in (main) | passkey or password + code, desk session, sign-out, CAPTCHA after failures | 16 | **2 failing** (14 pass) |
-| QDesk ↔ KeyLearn link security | ops key, account data, staff roster privacy, rate limit, audit log, proxy exposure | 13 | **3 failing** (10 pass) |
+| QDesk ↔ KeyLearn link security | ops key, account data, staff roster privacy, rate limit, audit log, proxy exposure | 13 | all 13 pass |
 | QDesk performance | health under load, sign-in page, KeyLearn staff check, full staff sign-in | 4 | all 4 pass |
 | QDesk stability | KeyLearn down and back, wrong ops key | 6 | **1 failing** (5 pass) |
 | Certificate, actually earned | three weeks of history, three sittings, certificate issued and verified | 7 | all 7 pass |
@@ -160,6 +99,16 @@ A guest's kid profile results stay in the browser with no export button, so the 
 | `1a81f4c7` | Certificates | The welcome tour opened over the first timed sitting on a new account, so no line was typed and nothing was recorded. And an empty sitting was headed “Sitting recorded”. |
 | `64ae73fc` | Reminder emails | Turning reminders off in Preferences did not stop them: the mailer read the account's settings, not the learner's. |
 | `6feab72b` | Importer | Now says it takes KeyLearn exports (the manual guest-to-account route) and offers kid profiles too. |
+| `6da187a5` | Proxy | /_/internal (staff sign-in checks, email reveal, account deletion) was reachable from the internet, guarded only by the ops key. Refused at nginx now, except from the machine itself and listed addresses. |
+| `4778fea9` | Staff check timing | An unknown email answered in about 3 ms and a real one in about 374 ms, so timing showed who had an account. Both now cost a password hash (404 vs 439 ms measured). |
+| `d6adb1d1` | Rate limits | A burst across the four server workers got 40 of 60 staff checks through against a limit of 10. Now 12 (the limit plus workers less one), and paced attempts still get the whole limit. |
+| `3661a2b (QDesk)` | QDesk sign-in | A KeyLearn that is down or refusing the key reached the sign-in page as a bare 500. Now a 503 with a sentence, like every other desk screen. On the desk branch. |
+| `9b35d99f + b874a3a9` | Colour contrast | Muted text and the green accent were below WCAG AA on the default themes (serious findings on 78 of 104 pages). Two tokens deepened, the undefined --error-color defined, and five stragglers fixed. A fresh survey leaves only the typing test's deliberate fade. |
+| `6fda71c7` | Screen readers | The page loader and the Course pane's progress bar had no name. |
+| `ba8c2a79` | Course pane | After a certificate was issued the card still said Ready to sit and offered the sitting. Now Certificate earned, with a sit-again link only where a higher band is possible. |
+| `28463b1b` | Guest kids' data | A guest's kids practice could not leave the device. The guest profile page now exports it, and it imports into a kid profile (tested end to end). |
+| `b29515d9` | Braille | The counter said LINE while counting cells. |
+| `20d9794a` | Kids | An unknown saved world made the trail request undefined.glb and throw while the child typed. Found while testing the guest export; it now loads the default world. |
 
 ## Kuttichathan, walking and sitting
 
@@ -180,12 +129,12 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 | 35 | 4 | 20 of 20 (road-squat) | 4 of 4 (road-squat) |
 | 36 | 4 | 20 of 20 (road-stones) | 30 of 33 (rail) |
 | 37 | Crossing | 20 of 20 (rail) | 36 of 40 (rail) |
-| 38 | Crossing | not yet run | |
+| 38 | Crossing | 20 of 20 (deck) | 0 of 40 (none) |
 
 ## Behaving as designed
 
+- **Typing test controls fade while you type**: “15s · Coach” drops to 28% opacity so nothing competes with the text, and comes back when the mouse moves. The only contrast finding left; WCAG treats it as an inactive control.
 - **Time Keepers uploads at the milestone**: Results are held until the child reaches the lesson's milestone stone, so a single passage shows no upload. Other worlds upload per passage (they pass).
-- **Braille “LINE 1 / 25”**: The figure is the cell within the current line, not a line count. The label could read better; behaviour is right.
 - **No email when a ticket is logged**: Replies come from QDesk; KeyLearn itself sends no acknowledgement.
 - **Requests with no Origin header**: Allowed on purpose: the guard checks Sec-Fetch-Site then Origin, and a request with neither is not browser-driven. Session cookie is HttpOnly and SameSite=Lax.
 - **Starting a certificate sitting while not eligible**: The server hands out the text, then refuses the sitting and the certificate (409). Nothing can be earned that way.
@@ -460,7 +409,7 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 - ✅ a change made offline reaches another device once back online
 - ✅ no page errors on any device
 
-### Guest data stays on the device (6)
+### Guest data stays on the device (12)
 
 - ✅ a lesson typed as a guest is kept on the device
 - ✅ the guest can export their progress as a file
@@ -468,6 +417,12 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 - ✅ the guest's lessons were not sent to the account on their own
 - ✅ importing the exported file adds the guest's lessons to the chosen learner
 - ✅ no page errors
+- ✅ a passage typed on the kids pages is kept on the device
+- ✅ the guest profile page offers the kids' practice as a file
+- ✅ the file holds the kids' results in the export format
+- ✅ no page errors
+- ✅ the importer offers the account's kid profiles
+- ✅ the file imports into the kid's profile
 
 ### QDesk sign-in (main) (16)
 
@@ -499,10 +454,10 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 - ✅ a non-staff account is refused
 - ✅ an unknown email and a wrong password get the same answer (no account probing)
 - ✅ a wrong two-step code is refused
-- ❌ KeyLearn rate-limits repeated staff sign-in attempts
+- ✅ KeyLearn rate-limits repeated staff sign-in attempts
 - ✅ refused key attempts are written to the staff audit log
-- ❌ the shipped proxy config keeps /_/internal off the public internet
-- ❌ an unknown email takes about as long as a wrong password (no timing oracle)
+- ✅ the shipped proxy config keeps /_/internal off the public internet
+- ✅ an unknown email takes about as long as a wrong password (no timing oracle)
 
 ### QDesk performance (4)
 
