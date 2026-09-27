@@ -49,7 +49,7 @@ Findings live on the owner's machine in the session scratchpad (`e2e/findings/*.
 
 ## Release end-to-end pass (26 Sep, cloud)
 
-Browser tests of every KeyLearn area, plus QDesk and the link between them, on a fresh test stack. 238 of 248 feature checks pass; the ten that fail are the open bugs below. The unit suite has 0 failures. The full report is a private artifact, "KeyLearn release pass".
+Browser tests of every KeyLearn area, plus QDesk and the link between them, on a fresh test stack. 238 of 248 feature checks pass; the ten that fail are the open bugs below. The unit suite has 0 failures. The full report, with every check and the bugs still to fix, is `docs/RELEASE-PASS.md` (also a private artifact, "KeyLearn release pass").
 
 **Tested since the first report:** organisations (with ADMIN_EMAILS as staff), a certificate actually earned (three weeks of imported history, three sittings; AWKE 4RWS verifies), portability across two browsers, guest isolation with manual export and import, Code craft, and Kuttichathan walking and sitting. QDesk main was tested with a second KeyLearn on :4220, sharing an ops key.
 
