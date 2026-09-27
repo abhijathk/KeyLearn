@@ -467,18 +467,22 @@ export class Controller {
   ) {
     ctx.state.requireOpsApi();
     rateLimit(ctx, `ops-staff-auth:${input.email}`, 10, 300_000);
-    const user = await User.findByEmail(input.email);
     // Password verified before anything about staff/2FA status is
     // revealed — checking staff eligibility first would let an
     // unauthenticated caller map the staff roster (who's on it, who
     // still needs a second factor) purely from the `reason` in the
     // response, without ever proving they hold the account.
-    if (
-      user == null ||
-      input.password == null ||
-      user.passwordHash == null ||
-      (await User.loginWithPassword(input.email, input.password)) == null
-    ) {
+    //
+    // Always through `loginWithPassword`, which hashes against a dummy for
+    // an unknown address. Looking the user up first and stopping at null
+    // skipped that: an unknown email answered in ~3 ms and a real one in
+    // ~370 ms, so the bodies matched and the clock told you who had an
+    // account (release pass, 26 Sep). An empty password never matches.
+    const user = await User.loginWithPassword(
+      input.email,
+      input.password ?? "",
+    );
+    if (user == null) {
       ctx.response.body = { ok: false, reason: "invalid" };
       return;
     }
