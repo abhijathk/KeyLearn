@@ -94,7 +94,7 @@
   --paper: #fdfcf9;
   --card: #ffffff;
   --kink: #3a3a4e;
-  --kink2: #8f8fa3;
+  --kink2: #6b6b80;
   // Every cue on this page is the learner's own colour: the caret, the next
   // key, the glowing finger dots, the progress ring, the buttons. The scene's
   // greens and sands below are the *world* and stay put, and so do the
@@ -3137,13 +3137,16 @@
 
 .askSoundOn {
   border-color: var(--leaf);
-  color: var(--leaf-d);
+  /* The border and fill say it is chosen. As text, a light accent (the
+     night mint on this always-light card) fell to 1.7:1. */
+  color: var(--kink);
   background: color-mix(in srgb, var(--leaf) 16%, var(--paper));
 }
 
 .askSoundNote {
+  /* No fade. At 0.75 the note was 3.1:1, and it is the one line telling a
+     child where the switch is. */
   color: var(--kink2);
-  opacity: 0.75;
   font-size: 0.68rem;
   font-weight: 700;
 }

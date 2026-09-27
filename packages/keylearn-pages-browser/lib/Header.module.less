@@ -574,6 +574,13 @@
   }
 }
 
+:global(body[data-kids="day"]) .header .kidsMark {
+  // The learner's accent, pulled toward the kids ink: this header stays
+  // light whatever the device's scheme, and a dark theme's pale mint on it
+  // was 2.4:1. Large bold text, so 3:1 is the bar.
+  color: color-mix(in oklab, var(--accent) 55%, #3a3a4e);
+}
+
 :global(body[data-kids="night"]) .header {
   --background-color: #1d2136;
   --primary: #1d2136;
