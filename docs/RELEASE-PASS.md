@@ -1,12 +1,12 @@
 # KeyLearn release pass
 
-End-to-end browser tests of KeyLearn, QDesk and the link between them, on a fresh test stack: sqlite, logged mail, and nginx in front, splitting game sockets the way production does. Branch `claude/cool-albattani-4odtli`, generated 2026-09-27.
+End-to-end browser tests of KeyLearn, QDesk and the link between them, on a fresh test stack: sqlite, logged mail, and nginx in front, splitting game sockets the way production does. Branch `claude/cool-albattani-4odtli`, generated 2026-09-28.
 
 | | |
 |---|---|
-| Feature checks passing | **257 / 265** |
+| Feature checks passing | **258 / 265** |
 | Open bugs (below) | **1** |
-| Fixed during this pass | 31 |
+| Fixed during this pass | 34 |
 | Critical accessibility issues | 0 |
 | Unit-test failures | 0 (72 packages) |
 | Languages complete | 54 |
@@ -24,10 +24,9 @@ Three QDesk checks still fail, and only because main is the old sign-in skeleton
 
 ### Failing checks behind these bugs
 
-- [ ] **qdesk**: the staff password is not kept in plain text in the session store between steps (found in qdesk-data/sessions/lL/yMooXTlNkJsn2eqY66 qdesk-data/sessions/)
+- [ ] **qdesk**: the staff password is not kept in plain text in the session store between steps (found in qdesk-data/sessions/Yr/KHU3QYeJphmeZXud4m qdesk-data/sessions/)
 - [ ] **qdesk-stability**: with KeyLearn down, the message is readable (not an internal error dump) ("500 - Internal Server Error")
 - [ ] **qdesk**: a cross-site POST is refused (200 (SameSite=Lax cookie still keeps the session out of it))
-- [ ] **kids-settings**: age 10 finds Classic on the Play page
 
 ## Needs the owner
 
@@ -41,7 +40,7 @@ Three QDesk checks still fail, and only because main is the old sign-in skeleton
 
 | Area | What was tested | Checks | Result |
 |---|---|---|---|
-| Every route renders | en + ar, 1400 px + 390 px, light + dark, signed out + in | 248 | 201 of 248 loads clean; the rest explained below |
+| Every route renders | en + ar, 1400 px + 390 px, light + dark, signed out + in | 248 | 208 of 248 loads clean; the rest explained below |
 | Sign-up and sign-in | register, verify, password, magic link, reset | 20 | all 20 pass |
 | Two-step verification | set up, sign in with code and recovery code, turn off | 10 | all 10 pass |
 | Passkeys | add, sign in with passkey only, refused elsewhere | 5 | all 5 pass |
@@ -50,7 +49,7 @@ Three QDesk checks still fail, and only because main is the old sign-in skeleton
 | Results and stats | results saved, profile and stats pages | 4 | all 4 pass |
 | Typing test | timed test, report screen | 3 | all 3 pass |
 | Kids worlds | Time Keepers, Dino Run, Hero Trail, Classic; ages 5–13 | 35 | 31 pass · 4 by design |
-| Kids settings | world, character, companions persist | 13 | **1 failing** (12 pass) |
+| Kids settings | world, character, companions persist | 13 | all 13 pass |
 | Braille | six-key chords, accuracy, next line | 5 | all 5 pass |
 | Multiplayer | two players, same passage, live speeds, chat | 6 | all 6 pass |
 | Certificates | Course pane, gatekeeping, server refusals, verify page | 10 | all 10 pass |
@@ -104,6 +103,9 @@ Three QDesk checks still fail, and only because main is the old sign-in skeleton
 | `b29515d9` | Braille | The counter said LINE while counting cells. |
 | `20d9794a` | Kids | An unknown saved world made the trail request undefined.glb and throw while the child typed. Found while testing the guest export; it now loads the default world. |
 | `8b57f5ed` | Kuttichathan | On the crossing (lessons 37–38) he never chose a look, so he was nearly always an unlit shape. He now picks the lamp, the halo or the dark per spot, and takes a lit look when the child sits. Lesson 38: 35 of 39 sitting and 15 of 20 walking on the current build (the earlier 0 of 40 came from a server on an older build). Lesson 8: 40 of 40 sitting, 20 of 20 walking. |
+| `f71586ca` | Classic course | Every one-key drill (“d d d …”, a letter and a space) was completed and silently thrown away, because a result needed three different characters: the course could never count it. Found by the full feature pass; now saved and the course moves on. |
+| `337cc738` | Time Keepers | Owner's call: letters on the trail for every age, on by default; the other worlds keep their age rules. |
+| `18cbd361` | Kids settings | Owner's call: Classic moves to the Play page, for ages 9–13. |
 
 ## Kuttichathan, walking and sitting
 
@@ -142,10 +144,6 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 - `/support/deletion-cancel` ×8: Needs a cancel token; the emailed link works (Account deletion passes).
 - `/for-schools` ×8: Switched off in the control centre by default (pages.forSchools.state = 404).
 - `/support/t` ×8: Needs a ticket reference; bare path is a 404 by design (ticket threads pass in Support).
-- `/forgot-password` ×1: Harness: the server restarted mid-crawl. The page passes on every other run.
-- `/multiplayer` ×3: Old result from before multiplayer was switched on for the test; now 200.
-- `/join` ×2: Old result from before /ar/join was served; now 200.
-- `/assessment` ×1: Old result from before /ar/assessment was served; now 200.
 
 ## Every check
 
@@ -300,7 +298,7 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 - ✅ Dino Run unchanged, age 12 keeps the text panel
 - ✅ Dino Run unchanged, age 10 keeps the panel unless opted in
 - ✅ Hero Trail unchanged, age 6 still always gets the blocks
-- ❌ age 10 finds Classic on the Play page
+- ✅ age 10 finds Classic on the Play page
 - ✅ and no longer under Session
 - ✅ age 6 is not offered Classic
 
@@ -485,11 +483,11 @@ Deep night in Time Keepers, for every lesson with a haunt. Walking samples are t
 
 - ✅ three weeks of history imported for the test learner
 - ✅ the Course pane offers the assessment once everything is proved
-- ✅ three sittings at a steady pace earn the certificate
 - ✅ the public verify API confirms the new certificate
 - ✅ the verify page, signed out, shows it as issued by KeyLearn
 - ✅ a made-up number does not verify
 - ✅ no page errors
+- ✅ the Course pane offers the earned certificate
 
 ---
-Checks rewritten because the first version of the test was wrong are not counted (15 of them). Colour-contrast findings count in the accessibility row only.
+Checks rewritten because the first version of the test was wrong are not counted (16 of them). Colour-contrast findings count in the accessibility row only.
