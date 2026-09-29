@@ -72,6 +72,11 @@ jobs:
         run: |
           npm ci
           npm run compile
+          # The server tests read the built asset manifest
+          # (root/public/assets/manifest.json), so this job needs the same
+          # build the sqlite job does. Without it about seventy tests fail
+          # on a missing file, which looks like a MySQL problem and is not.
+          npm run build -- --no-stats
           npm run test
         env:
           DATABASE_CLIENT: mysql
