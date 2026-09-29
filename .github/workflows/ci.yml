@@ -42,25 +42,27 @@ jobs:
   mysql:
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8
-        # native_password so the driver connects the same way the local
-        # development container does.
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: keylearn_tests
-          MYSQL_USER: keylearn
-          MYSQL_PASSWORD: keylearn
-        ports:
-          - 3306:3306
-
     steps:
+      # Started by hand rather than as a service, because a service cannot
+      # pass flags to mysqld. MySQL 8.4 ships with mysql_native_password
+      # switched off, and the app's (deliberately legacy) `mysql` driver
+      # cannot speak caching_sha2_password: every connection failed with
+      # ER_NOT_SUPPORTED_AUTH_MODE. Production turns the plugin on and gives
+      # the keylearn user a native password (docs/go-live.md); this does the
+      # same. The loop waits for TCP, which the entrypoint's temporary
+      # server never opens, so the user is made on the real one.
+      - name: Start MySQL 8.4, native passwords on (as in production)
+        run: |
+          docker run -d --name mysql -p 3306:3306 \
+            -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=keylearn_tests \
+            mysql:8.4 --mysql-native-password=ON
+          for i in $(seq 90); do
+            docker exec mysql mysql -h127.0.0.1 -uroot -proot -e "SELECT 1" >/dev/null 2>&1 && break
+            sleep 2
+          done
+          docker exec mysql mysql -h127.0.0.1 -uroot -proot -e "
+            CREATE USER 'keylearn'@'%' IDENTIFIED WITH mysql_native_password BY 'keylearn';
+            GRANT ALL PRIVILEGES ON keylearn_tests.* TO 'keylearn'@'%';"
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:

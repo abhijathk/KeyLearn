@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import { Application } from "@fastr/core";
+import { measure } from "@keylearn/certificate";
 import {
   Certificate,
   CertificateSitting,
@@ -17,7 +18,6 @@ import {
   isNull,
   isTrue,
 } from "rich-assert";
-import { measure } from "@keylearn/certificate";
 import { EvidenceSource } from "../certificate/evidence.ts";
 import { kMain } from "../module.ts";
 import { TestContext } from "../test/context.ts";

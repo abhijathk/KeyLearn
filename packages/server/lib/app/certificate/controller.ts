@@ -7,6 +7,7 @@ import { type RouterState } from "@fastr/middleware-router";
 import { type SessionState } from "@fastr/middleware-session";
 import {
   assess,
+  canonicalLog,
   type CertificateEvidence,
   certificateNumber,
   certificateTemplate,
@@ -16,7 +17,6 @@ import {
   type NumberingKey,
   planFor,
   proctor,
-  canonicalLog,
   readLog,
   sequenceOf,
   type Sitting,

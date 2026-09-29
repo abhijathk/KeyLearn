@@ -3,8 +3,8 @@ import {
   AssessmentSettings,
   BetweenRuns,
   CertificateDialog,
-  type LoggedSegment,
   Hud,
+  type LoggedSegment,
   type Outcome,
   OutcomeDialog,
 } from "@keylearn/assessment";
@@ -16,11 +16,11 @@ import {
   type Run,
 } from "@keylearn/certificate";
 import { Layout, loadKeyboard } from "@keylearn/keyboard";
-import { LessonType, lessonProps } from "@keylearn/lesson";
+import { lessonProps, LessonType } from "@keylearn/lesson";
 import {
   brailleEvidence,
-  pullBrailleProgress,
   languageLineOf,
+  pullBrailleProgress,
   typingEvidence,
   useProfiles,
 } from "@keylearn/page-account";
@@ -38,8 +38,8 @@ import {
 import { Letter } from "@keylearn/phonetic-model";
 import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import { type Result } from "@keylearn/result";
-import { SettingsContext, useSettings } from "@keylearn/settings";
 import { openResultStorage, ResultLoader } from "@keylearn/result-loader";
+import { SettingsContext, useSettings } from "@keylearn/settings";
 import {
   type ReactNode,
   useCallback,
