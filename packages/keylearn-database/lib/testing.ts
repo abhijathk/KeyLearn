@@ -68,7 +68,12 @@ export function useDatabase() {
 
 export async function seedModels() {
   await User.query().delete();
-  await User.query().insertGraph([
+  // One at a time, in order. insertGraph runs sibling inserts concurrently,
+  // which on MySQL hands out the auto-increment ids in whatever order the
+  // connections win: user 1 was sometimes user3@, and the tests that read
+  // user id 1 failed one run in four. Sqlite serialises writes, so it never
+  // showed there.
+  const users = [
     {
       email: "user1@keylearn.org",
       name: "user1",
@@ -114,7 +119,10 @@ export async function seedModels() {
         } as UserExternalId,
       ],
     } as User,
-  ]);
+  ];
+  for (const user of users) {
+    await User.query().insertGraph(user);
+  }
 }
 
 export async function clearTables() {
