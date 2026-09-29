@@ -76,6 +76,15 @@ test("a due deletion erases the account completely and leaves others alone", asy
   const goneSession = await session(gone.id!, "gone");
   const keptSession = await session(kept.id!, "kept");
 
+  // Counted before the sweep and compared after: what matters is that the
+  // sweep leaves this user's rows alone, not that there is exactly one. A
+  // fire-and-forget write from an earlier test can land late (MySQL is slow
+  // enough to show it) and add one of its own.
+  const keptNotifications = await Notification.query()
+    .where("userId", kept.id!)
+    .resultSize();
+  isTrue(keptNotifications >= 1);
+
   const { request } = await AccountDeletionRequest.request({
     userId: gone.id!,
     requestedByUserId: null,
@@ -96,7 +105,10 @@ test("a due deletion erases the account completely and leaves others alone", asy
 
   // Nobody else's.
   isTrue((await User.query().findById(kept.id!)) != null);
-  equal(await Notification.query().where("userId", kept.id!).resultSize(), 1);
+  equal(
+    await Notification.query().where("userId", kept.id!).resultSize(),
+    keptNotifications,
+  );
   for (const path of files.kept) {
     isTrue(await exists(path), path);
   }

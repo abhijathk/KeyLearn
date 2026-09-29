@@ -302,7 +302,9 @@ test("a sitting is checked key by key against the text the server served", async
   const speeds = [1, 11, 21]
     .map((seed) => sittingOf(typed(seed)).speed)
     .sort((a, b) => a - b);
-  isTrue(Math.abs(cert.speed - speeds[1]) < 1e-6, String(cert.speed));
+  // Within the column's own precision: speed is float(8,2), so MySQL keeps
+  // 42.57 where sqlite keeps 42.5666…, and neither is wrong.
+  isTrue(Math.abs(cert.speed - speeds[1]) < 0.01, String(cert.speed));
   equal(cert.evidence, "keystroke");
 });
 

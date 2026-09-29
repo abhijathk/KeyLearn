@@ -65,12 +65,26 @@ async function refusal(
   throw new Error("expected a refusal");
 }
 
-async function auditActions(): Promise<string[]> {
-  const rows = await StaffAuditEvent.query().orderBy("id");
-  return rows.map((row) => row.action!);
-}
-
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function auditActions(): Promise<string[]> {
+  const read = async () =>
+    (await StaffAuditEvent.query().orderBy("id")).map((row) => row.action!);
+  // The service writes its audit rows without awaiting them (a refused
+  // write still answers at once), so a read straight after can beat the
+  // insert. Sqlite is quick enough to hide that; MySQL is not. Read until
+  // two reads agree.
+  let last = await read();
+  for (let i = 0; i < 20; i++) {
+    await sleep(25);
+    const now = await read();
+    if (now.length === last.length) {
+      return now;
+    }
+    last = now;
+  }
+  return last;
+}
 
 test("default → stored: a write is applied by this worker at once", async () => {
   const { service, userId } = await fresh();
