@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "40e8ff0d9d07";
+export const ASSET_VERSION = "8b3ecc67a46d";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -593,13 +593,13 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "models/dino/Apatosaurus.glb": {
-    "u": "v5dc60c53/models/dino/Apatosaurus.glb",
-    "b": 132748,
+    "u": "vb9c447e4/models/dino/Apatosaurus.glb",
+    "b": 177764,
     "g": "dino"
   },
   "models/dino/Parasaurolophus.glb": {
-    "u": "v83d42338/models/dino/Parasaurolophus.glb",
-    "b": 116140,
+    "u": "vfc403194/models/dino/Parasaurolophus.glb",
+    "b": 165428,
     "g": "dino"
   },
   "models/dino/Sign.glb": {
@@ -608,23 +608,23 @@ export const ASSET_MAP: Readonly<
     "g": "dino"
   },
   "models/dino/Stegosaurus.glb": {
-    "u": "v712f09d6/models/dino/Stegosaurus.glb",
-    "b": 151608,
+    "u": "vfd1de0b1/models/dino/Stegosaurus.glb",
+    "b": 184632,
     "g": "dino"
   },
   "models/dino/TRex.glb": {
-    "u": "v5eff71f4/models/dino/TRex.glb",
-    "b": 128204,
+    "u": "v05e8f352/models/dino/TRex.glb",
+    "b": 189356,
     "g": "dino"
   },
   "models/dino/Triceratops.glb": {
-    "u": "v208ba3f0/models/dino/Triceratops.glb",
-    "b": 125820,
+    "u": "ve972e232/models/dino/Triceratops.glb",
+    "b": 170988,
     "g": "dino"
   },
   "models/dino/Velociraptor.glb": {
-    "u": "v9d82786e/models/dino/Velociraptor.glb",
-    "b": 110956,
+    "u": "v3a61ac33/models/dino/Velociraptor.glb",
+    "b": 153176,
     "g": "dino"
   },
   "models/hero/Barbarian.glb": {
