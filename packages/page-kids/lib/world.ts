@@ -2074,6 +2074,22 @@ function castHeight(name: string): number {
     // walking past it — that is the whole point of the charge.
     case "Buffalo":
       return 6.0;
+    // THE HERO TRAIL'S THREE MAIN CHARACTERS — Knight, Skeleton, Scout — ARE
+    // THE SAME AGE, and the game fits the WHOLE bounding box to this number.
+    // A helmet with a plume or a pair of horns is part of that box, so a
+    // plain 3.4 for all three shrinks whoever is wearing the taller hat and
+    // they stop reading as the same height. These are the values that put
+    // their chins and crowns level (measured on the models: the same head
+    // line, the head 46% of the crown height on all three), so whichever one
+    // is chosen and whichever walks beside them read as two friends of an
+    // age. Change one and change the others.
+    case "Knight":
+      return 3.4;
+    case "Skeleton_Warrior":
+      return 3.1;
+    // The Scout is the `Ranger` model, redrawn as a kid.
+    case "Ranger":
+      return 3.1;
     // The hero world's costume box: Knight, Skeleton and the rest.
     default:
       return 3.4;

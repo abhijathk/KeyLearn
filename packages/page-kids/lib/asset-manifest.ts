@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "d59e7d69a526";
+export const ASSET_VERSION = "40e8ff0d9d07";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -628,8 +628,8 @@ export const ASSET_MAP: Readonly<
     "g": "dino"
   },
   "models/hero/Barbarian.glb": {
-    "u": "vc0f49f0e/models/hero/Barbarian.glb",
-    "b": 260368,
+    "u": "vcef69646/models/hero/Barbarian.glb",
+    "b": 84164,
     "g": "hero"
   },
   "models/hero/HeroBuildings.glb": {
@@ -658,28 +658,28 @@ export const ASSET_MAP: Readonly<
     "g": "hero"
   },
   "models/hero/Knight.glb": {
-    "u": "v69aba76f/models/hero/Knight.glb",
-    "b": 234336,
+    "u": "v66ad4229/models/hero/Knight.glb",
+    "b": 151436,
     "g": "hero"
   },
   "models/hero/Mage.glb": {
-    "u": "v5e74f1db/models/hero/Mage.glb",
-    "b": 240184,
+    "u": "v847002c1/models/hero/Mage.glb",
+    "b": 67732,
     "g": "hero"
   },
   "models/hero/Ranger.glb": {
-    "u": "vd03df196/models/hero/Ranger.glb",
-    "b": 327524,
+    "u": "v6f0a71b7/models/hero/Ranger.glb",
+    "b": 79764,
     "g": "hero"
   },
   "models/hero/Rogue.glb": {
-    "u": "v3d23e639/models/hero/Rogue.glb",
-    "b": 275028,
+    "u": "v3c55fb6a/models/hero/Rogue.glb",
+    "b": 71432,
     "g": "hero"
   },
   "models/hero/Rogue_Hooded.glb": {
-    "u": "vb8cb9daa/models/hero/Rogue_Hooded.glb",
-    "b": 259008,
+    "u": "vf1cd88ea/models/hero/Rogue_Hooded.glb",
+    "b": 66076,
     "g": "hero"
   },
   "models/hero/Sign.glb": {
@@ -688,23 +688,23 @@ export const ASSET_MAP: Readonly<
     "g": "hero"
   },
   "models/hero/Skeleton_Mage.glb": {
-    "u": "v284a4c90/models/hero/Skeleton_Mage.glb",
-    "b": 182700,
+    "u": "v6c596c2c/models/hero/Skeleton_Mage.glb",
+    "b": 129956,
     "g": "hero"
   },
   "models/hero/Skeleton_Minion.glb": {
-    "u": "v55ec1568/models/hero/Skeleton_Minion.glb",
-    "b": 217040,
+    "u": "vc990a7f7/models/hero/Skeleton_Minion.glb",
+    "b": 118648,
     "g": "hero"
   },
   "models/hero/Skeleton_Rogue.glb": {
-    "u": "v8f2845fd/models/hero/Skeleton_Rogue.glb",
-    "b": 225324,
+    "u": "vd0f4408d/models/hero/Skeleton_Rogue.glb",
+    "b": 121608,
     "g": "hero"
   },
   "models/hero/Skeleton_Warrior.glb": {
-    "u": "vdea57b7b/models/hero/Skeleton_Warrior.glb",
-    "b": 253516,
+    "u": "v5e74e9b1/models/hero/Skeleton_Warrior.glb",
+    "b": 153052,
     "g": "hero"
   },
   "models/hero/anims-idle.glb": {
