@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "5ce71fe69a52";
+export const ASSET_VERSION = "d59e7d69a526";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -338,13 +338,13 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "cards/world-dino.webp": {
-    "u": "v71e7c224/cards/world-dino.webp",
-    "b": 15338,
+    "u": "v97dd80d5/cards/world-dino.webp",
+    "b": 20802,
     "g": "village"
   },
   "cards/world-hero.webp": {
-    "u": "v3db24d33/cards/world-hero.webp",
-    "b": 11524,
+    "u": "vd36123e7/cards/world-hero.webp",
+    "b": 30284,
     "g": "village"
   },
   "cards/world-village.webp": {
