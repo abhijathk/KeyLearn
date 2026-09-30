@@ -120,6 +120,7 @@ import { paceTarget } from "./pace.ts";
 import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
 import { fitPassageToRoad, RUN_LEN } from "./run-length.ts";
+import { landForScene, sceneIndexOf, sceneJustEnded } from "./scene-order.ts";
 import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
 import { STORY, type StoryPart } from "./story.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
@@ -128,6 +129,7 @@ import {
   createLoaderScene,
   createPickerScene,
   DINO_THEME,
+  HERO_LANDS,
   HERO_THEME,
   type KidsWorld,
   LANDS,
@@ -256,6 +258,15 @@ export type Prefs = {
    * world starts numbering from there rather than from one.
    */
   roadStones?: number;
+  /**
+   * Lessons finished on the Hero Trail and on Dino Run, each counted on its
+   * own road — a lesson being the round that ends at a flag.
+   *
+   * It decides the scene: ten lessons to a scene, then the next place. See
+   * `scene-order.ts`. Kept per world because a child who plays both has done
+   * two journeys, not one, and Time Keepers counts its stones instead.
+   */
+  lessonsByWorld?: Partial<Record<WorldId, number>>;
   villageGap?: number;
   /**
    * Who walks the trail beside them, or null for nobody.
@@ -2655,13 +2666,24 @@ function useCloseKeys(onClose: () => void): void {
   }, []);
 }
 
-function peekNextLandName(): string {
-  try {
-    const n = Number(localStorage.getItem(profileStorageKey("kids.land")) ?? 0);
-    return LANDS[n % LANDS.length].name;
-  } catch {
-    return LANDS[0].name;
-  }
+/** The places a world is set in, in the order it keeps them. */
+const landsOf = (world: WorldId) => (world === "hero" ? HERO_LANDS : LANDS);
+
+/** Lessons finished on this world's own road. */
+const lessonsDoneOf = (p: Pick<Prefs, "lessonsByWorld" | "world">): number =>
+  p.lessonsByWorld?.[p.world] ?? 0;
+
+/**
+ * The name of the place the road is about to cross into.
+ *
+ * Asked when a scene has just ended, so the lessons finished already name the
+ * NEXT scene: the tenth lesson is what moves the count into it. On the Hero
+ * Trail and Dino Run that is fixed by how far the child has got — not the
+ * next item on a counter that moves every time the page is loaded, which is
+ * what this used to read.
+ */
+function peekNextLandName(p: Prefs): string {
+  return landForScene(landsOf(p.world), sceneIndexOf(lessonsDoneOf(p))).name;
 }
 
 /**
@@ -4806,7 +4828,17 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         say("a buffalo");
       }
     }
-    const world = createKidsWorld(canvas, pickLand(theme.lands), theme, {
+    // The scene is a function of how many lessons have been finished: ten
+    // to a scene, the same place for all ten, then the next. Time Keepers
+    // keeps its own authored road and the old counter.
+    const land =
+      prefsRef.current.world === "village"
+        ? pickLand(theme.lands)
+        : landForScene(
+            theme.lands,
+            sceneIndexOf(lessonsDoneOf(prefsRef.current)),
+          );
+    const world = createKidsWorld(canvas, land, theme, {
       nightStyle: resolveNightStyle(band, nightStyleOf(prefsRef.current)),
       villageDue,
       // `?wild` — the buffalo's charge, brought within reach of a reviewer.
@@ -5468,8 +5500,23 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           // not just Time Keepers: a child who spends a week on Hero Trail and
           // comes back should find a village waiting rather than have to earn
           // four more flags for one.
+          //
+          // AND IT IS A LESSON, on the two procedural roads: ten of them make
+          // a scene, and the world changes only when the tenth is finished.
+          const lessonsNow =
+            prefsRef.current.world === "village"
+              ? 0
+              : lessonsDoneOf(prefsRef.current) + 1;
           savePrefs({
             villageFlags: (prefsRef.current.villageFlags ?? 0) + 1,
+            ...(prefsRef.current.world === "village"
+              ? {}
+              : {
+                  lessonsByWorld: {
+                    ...prefsRef.current.lessonsByWorld,
+                    [prefsRef.current.world]: lessonsNow,
+                  },
+                }),
             // The milestone just reached. Only Time Keepers plants stones, so
             // only Time Keepers counts them — unlike the village itself,
             // which accrues on every world because a village rewards
@@ -5507,8 +5554,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           // press Enter and throw the scene away. The chapter ends at the
           // tenth stone and nowhere else.
           roundsRef.current += 1;
+          // A NEW PLACE EVERY TEN LESSONS, NOT EVERY THIRD ROUND. Between the
+          // first lesson of a scene and the tenth the road simply carries on,
+          // so nothing interrupts it; the crossing is offered once, when the
+          // tenth flag is reached.
           if (
-            roundsRef.current % 3 === 0 &&
+            sceneJustEnded(lessonsNow) &&
             assessmentRef.current == null &&
             !onVillageRef.current
           ) {
@@ -6548,7 +6599,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
   const crossIntoNextLand = () => {
     setMapOpen(false);
-    const land = peekNextLandName();
+    const land = peekNextLandName(prefsRef.current);
     speak("crossed", { chapter: String(chapter + 1), land });
     collect(`land:${land}`);
     // THE VILLAGE ROAD HAS ONE CHAPTER, and it is Chapter 1.
@@ -7719,17 +7770,17 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         <RoadCard
           kind="chapter"
           eyebrow={`Chapter ${chapter}`}
-          title={peekNextLandName()}
+          title={peekNextLandName(prefs)}
           keys={[{ cap: "enter", what: "to walk on", zone: "rose" }]}
         >
           <p>
             {landName} is behind you. {dinoName()} walks on, and the road bends
-            toward {peekNextLandName()}.
+            toward {peekNextLandName(prefs)}.
           </p>
           <div className={styles.mapRow}>
-            {LANDS.map(({ name }, i) => {
+            {landsOf(prefs.world).map(({ name }, i) => {
               const here = name === landName;
-              const next = name === peekNextLandName();
+              const next = name === peekNextLandName(prefs);
               return (
                 <div key={name} className={styles.mapStopWrap}>
                   {i > 0 && <span className={styles.mapHop} />}
@@ -7770,9 +7821,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               Green Valley.
             </div>
             <div className={styles.mapRow}>
-              {LANDS.map(({ name }, i) => {
+              {landsOf(prefs.world).map(({ name }, i) => {
                 const here = name === landName;
-                const next = name === peekNextLandName();
+                const next = name === peekNextLandName(prefs);
                 return (
                   <div key={name} className={styles.mapStopWrap}>
                     {i > 0 && <span className={styles.mapHop} />}
@@ -7831,7 +7882,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               className={styles.cta}
               onClick={crossIntoNextLand}
             >
-              Cross into {peekNextLandName()}!
+              Cross into {peekNextLandName(prefs)}!
             </button>
           </div>
         </div>
