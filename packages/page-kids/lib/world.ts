@@ -11929,33 +11929,28 @@ export function createKidsWorld(
    * herd, plainly not grown.
    */
   /**
-   * HOW FAR TO SINK AN ANIMAL BELOW ITS OWN FOOT PLANT, as a fraction of its
-   * height.
+   * HOW FAR TO BED AN ANIMAL INTO THE GROUND BELOW ITS OWN FOOT PLANT, in
+   * world units.
    *
-   * `plantFeet` puts the lowest posed vertex on the ground, which is right
-   * for the children and wrong for these two. Neither rig has a bone matching
-   * toe, foot, ankle, paw or hoof — they are `frontleg0..2` and `backleg0..2`
-   * — so the plant falls to the leg pass, narrows to the chain tips and
-   * measures the lowest vertex weighted to those. On a hoofed animal that
-   * vertex sits up the fetlock rather than under the hoof, and the whole
-   * animal stands that far above the field.
+   * A HAIRLINE, NOT A CORRECTION. This used to be 1.09 for all three animals,
+   * on the belief that the plant left them standing up the fetlock. It does
+   * not: measured on the posed models (Idle, Walk and Graze), the lowest
+   * vertex of the cow is weighted to a `*leg2` tip bone — the hoof itself —
+   * so the plant already puts the hoof on the ground. The 1.09 was sinking
+   * each animal by about a fifth of its height, which is roughly half of a
+   * cow's visible leg: the cow on Lesson 7's road stood with her shins
+   * buried and no hooves showing, and the game's own foot check was logging
+   * "Buffalo sunk 1.4" on every load.
    *
-   * Measured by eye against the shadow rather than derived: the rigs record
-   * no hoof, so there is no number to derive it from, and the alternative is
-   * re-authoring two files.
-   *
-   * WORLD UNITS, NOT A FRACTION OF HEIGHT. It was a fraction, which sounds
-   * like the more principled choice and was wrong: the buffalo is 6.8 units
-   * and the cow 4.5, so one number sank the cow a third less than the
-   * buffalo and left it hanging while the buffalo stood. The error is in the
-   * rig — the height of a leg tip above a hoof — and these are the same rig
-   * at different sizes, so the number that matters is the same for all of
-   * them. Still multiplied by depth, because the animal itself is.
+   * What is left is a tenth of a unit so a hoof beds into soft ground the way
+   * a child's shoe does (see FOLK_SINK), scaled with the animal's height.
+   * Checked by eye at 2x on the Lesson 7 road, and by the foot check, which
+   * is now silent.
    */
   const WILD_SINK: Record<string, number> = {
-    Buffalo: 1.09,
-    Cow: 1.09,
-    Cow_Calf: 1.09,
+    Buffalo: 0.12,
+    Cow: 0.1,
+    Cow_Calf: 0.06,
   };
 
   /**
