@@ -169,7 +169,7 @@
    * parser only models the named properties, so it reads `--paper` here as
    * a typo rather than as the thing this rule exists to animate.
    */
-  /* stylelint-disable-next-line declaration-property-value-no-unknown */
+  /* stylelint-disable declaration-property-value-no-unknown */
   transition:
     --paper @dark-cross ease,
     --kink @dark-cross ease,
@@ -180,6 +180,7 @@
     --glass @dark-cross ease,
     color @dark-cross ease,
     background-color @dark-cross ease;
+  /* stylelint-enable declaration-property-value-no-unknown */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -272,26 +273,6 @@
 }
 
 // ── the world ──────────────────────────────────────────────────────────
-
-// A small "N keys on your trail" chip in the corner of the scene (moved off the
-// header, which now shows only the KeyLearn Kids logo).
-.keysChip {
-  position: absolute;
-  inset-inline-start: 0.7rem;
-  inset-block-start: 0.7rem;
-  z-index: 2;
-  padding: 0.35rem 0.8rem;
-  border-radius: 999px;
-  color: var(--kink2);
-  background: var(--glass);
-  box-shadow: var(--kshadow);
-  font-size: 0.72rem;
-  font-weight: 700;
-
-  b {
-    color: var(--kink);
-  }
-}
 
 /* ══════════════════════════════════════════════════════════════════
    VILLAGE ROAD · ONE WINDOW
@@ -1848,123 +1829,6 @@
     transform: none;
     animation: none;
   }
-}
-
-// The score chips, stacked down the LEFT edge under the trail counter.
-//
-// They used to sit on the right and hop to the left only when the in-game
-// practice text was on, because the word ribbon owns the bottom of the pane
-// and chips sitting on it covered the very letters being typed. Keeping two
-// placements bought nothing: the chips read the same on either side, and a
-// panel that moves when a setting is toggled is a panel a child has to find
-// again. One place, always, under the counter they belong with.
-.hudStack {
-  display: flex;
-  position: absolute;
-  inset-inline-start: 0.9rem;
-  inset-block-start: 3.1rem;
-  z-index: 6;
-  flex-direction: column;
-  gap: 0.45rem;
-  align-items: flex-start;
-}
-
-.chip {
-  display: flex;
-  gap: 0.45rem;
-  align-items: center;
-  min-inline-size: 7.4rem;
-  min-block-size: 2.35rem;
-  padding: 0.3rem 0.8rem 0.3rem 0.38rem;
-  border-radius: 999px;
-  background: var(--glass);
-  box-shadow: 0 4px 14px rgba(40, 60, 30, 0.18);
-  text-align: start;
-  backdrop-filter: blur(6px);
-}
-
-.ci {
-  display: grid;
-  flex: none;
-  place-items: center;
-  inline-size: 1.5rem;
-  block-size: 1.5rem;
-  border-radius: 50%;
-  background: var(--disc);
-
-  svg {
-    inline-size: 0.9rem;
-    block-size: 0.9rem;
-    fill: #8f95a3;
-  }
-}
-
-.chipLab {
-  color: var(--kink2);
-  font-size: 0.5rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.chipVal {
-  color: var(--kink);
-  font-size: 1rem;
-  font-weight: 800;
-  line-height: 1.05;
-  font-variant-numeric: tabular-nums;
-}
-
-/**
- * A chip holding a NAME rather than a number.
- *
- * The rest of the scoreboard is digits — score, streak, a stage count — and
- * every rule up there is written for digits: tabular figures so they do not
- * jitter as they tick, one line because a number never needs two. A lesson
- * title is words, and "The Mixed Orchard Belt" in a slot cut for "x7" either
- * clips or shoves the chips beside it off the row.
- *
- * So it gets its own treatment: smaller, allowed two lines, and capped in
- * width so a long title wraps instead of stretching the chip. Not tabular —
- * proportional figures are correct for text and tabular ones leave gaps
- * around the spaces in a name.
- */
-.chipName {
-  max-inline-size: 9.5rem;
-  color: var(--kink);
-  font-size: 0.82rem;
-  font-weight: 700;
-  line-height: 1.15;
-  text-wrap: balance;
-  font-variant-numeric: normal;
-}
-
-.ringT {
-  position: relative;
-  flex: none;
-  inline-size: 1.5rem;
-  block-size: 1.5rem;
-  border-radius: 50%;
-  background: conic-gradient(var(--leaf) calc(var(--tp, 100) * 1%), #e8ecdc 0);
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 4px;
-    border-radius: 50%;
-    background: var(--card);
-  }
-}
-
-.timerLow {
-  color: #e0442e;
-}
-
-// The clock is stopped because nobody is typing. It has to read as held
-// rather than broken — a parent watching a frozen number assumes the page
-// has crashed, and a child watching one learns nothing from it.
-.timerHeld {
-  opacity: 0.45;
 }
 
 .scorePop {

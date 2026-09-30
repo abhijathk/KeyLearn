@@ -93,15 +93,12 @@ import {
   DinoFill,
   EggIcon,
   FlagIcon,
-  FlameIcon,
   KeysIcon,
   LeafBookIcon,
   MoonIcon,
   SoundIcon,
-  SproutIcon,
   StarIcon,
   TentIcon,
-  TrophyIcon,
 } from "./icons.tsx";
 import {
   FINGER_DOTS,
@@ -121,8 +118,10 @@ import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
 import { fitPassageToRoad, RUN_LEN } from "./run-length.ts";
 import { landForScene, sceneIndexOf, sceneJustEnded } from "./scene-order.ts";
+import { Scoreboard, useTypingFade } from "./scoreboard.tsx";
 import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
 import { STORY, type StoryPart } from "./story.ts";
+import { useFlash } from "./use-flash.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
 import {
   createKidsWorld,
@@ -2801,44 +2800,6 @@ export function KidsPage() {
  * Ids are document-global — CSS-module hashing does not reach inside
  * `url(#...)` — hence the `klv` prefix.
  */
-/**
- * True for a moment after `value` changes, and false to begin with.
- *
- * Used to light the one figure on the notice that just moved. `prev`
- * starts at the first value, so a fresh page does not flash all four
- * lines at a child who has not done anything yet.
- */
-/**
- * Lights an element for a moment whenever `value` changes.
- *
- * ON THE ELEMENT, NOT IN STATE. As a boolean in state this was two extra
- * renders of the whole game for every point scored — one to light the row
- * and one, 750ms later, to put it out — and the score changes on every
- * correct key. The class is toggled on the element directly; the element's
- * own `className` never changes, so React has no reason to write over it.
- */
-function useFlash<T extends HTMLElement>(
-  value: unknown,
-  className: string | undefined,
-  ms = 750,
-) {
-  const el = useRef<T>(null);
-  const prev = useRef(value);
-  useEffect(() => {
-    if (prev.current === value) {
-      return;
-    }
-    prev.current = value;
-    const node = el.current;
-    if (node == null || className == null) {
-      return;
-    }
-    node.classList.add(className);
-    const id = setTimeout(() => node.classList.remove(className), ms);
-    return () => clearTimeout(id);
-  }, [value, className, ms]);
-  return el;
-}
 
 /**
  * The scene pane's height when the keyboard helper is hidden and there has
@@ -3795,6 +3756,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     styles.noteFlash,
   );
   const flashBest = useFlash<HTMLDivElement>(best, styles.noteFlash);
+  // The scoreboard on the other two worlds fades while keys are going down.
+  const { ref: boardRef, bump: bumpBoard } = useTypingFade();
   const storyOpenCount = STORY.filter((part) =>
     part.graduate === true
       ? included >= lesson.letters.length
@@ -5239,6 +5202,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
         return; // synthetic double-dispatch guard
       }
       lastKeyAtRef.current = now;
+      bumpBoard();
       ev.preventDefault();
       // The keys that are not letters, behaving the way the grown-up board
       // behaves. Without this they arrive as whatever their name starts
@@ -5638,7 +5602,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       clearTimeout(pressedTimer.current);
       pressedKey.set(null);
     };
-  }, [settings, appendResults]);
+  }, [settings, appendResults, bumpBoard]);
 
   // ── the session timer ─────────────────────────────────────────────────
   //
@@ -6482,7 +6446,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // only one that is not telling them to do something this second.
     const hold = next === "buffaloSafe" ? 2600 : 1600;
     alarmTimer.current = setTimeout(runAlarm, hold);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pushAlarm = useCallback(
@@ -6522,7 +6485,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     if (say === "" && loaded) {
       speak("start");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [say, loaded]);
 
   /**
@@ -6942,13 +6904,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
                 {storyUnread > 0 && <span className={styles.storyNew} />}
               </button>
             )}
-          {!onVillage && (
-            <span className={styles.keysChip}>
-              <b>{included}</b> keys on your trail
-            </span>
-          )}
           {!onVillage && loaderPane}
-          {onVillage ? (
+          {prefs.world === "village" ? (
             /*
               VILLAGE ROAD'S HUD: one torn sheet of newsprint with every
               figure printed on it, and no icons anywhere. See `.notice`
@@ -7024,81 +6981,34 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               </div>
             </div>
           ) : (
-            <div className={styles.hudStack}>
-              {prefs.timerVisible && !noClock() && (
-                <div className={styles.chip}>
-                  <span
-                    className={styles.ringT}
-                    style={{
-                      ["--tp" as never]: Math.round(
-                        (sessionSecs / Math.max(1, sessionTotal)) * 100,
-                      ),
-                    }}
-                  />
-                  <div>
-                    <div className={styles.chipLab}>
-                      {timerIdle && !sessionOver ? "Waiting…" : "Timer"}
-                    </div>
-                    <div
-                      className={clsx(
-                        styles.chipVal,
-                        sessionSecs <= 60 && !sessionOver && styles.timerLow,
-                        timerIdle && !sessionOver && styles.timerHeld,
-                      )}
-                    >
-                      {Math.floor(sessionSecs / 60)}:
-                      {String(sessionSecs % 60).padStart(2, "0")}
-                    </div>
-                  </div>
-                </div>
+            /*
+              HERO TRAIL AND DINO RUN: one plaque with a ribbon, in place of
+              the five pills. The "keys on your trail" count lives in the
+              ribbon now. Fed the same figures the pills were; see
+              scoreboard.tsx.
+            */
+            <Scoreboard
+              boardRef={boardRef}
+              world={prefs.world}
+              keys={included}
+              score={score}
+              combo={combo}
+              best={best}
+              stageLabel={stageLabel(prefs.world)}
+              stage={stageOf(prefs.world)(
+                dinoAgeOf(included, lesson.letters.length),
               )}
-              <div className={styles.chip}>
-                <span className={styles.ci}>
-                  <StarIcon />
-                </span>
-                <div>
-                  <div className={styles.chipLab}>Score</div>
-                  <div className={styles.chipVal}>{score}</div>
-                </div>
-              </div>
-              <div className={styles.chip}>
-                <span className={styles.ci}>
-                  <FlameIcon />
-                </span>
-                <div>
-                  <div className={styles.chipLab}>
-                    {onVillage ? `Lesson ${lessonNo}` : "Combo"}
-                  </div>
-                  <div className={onVillage ? styles.chipName : styles.chipVal}>
-                    {onVillage ? lessonName : `×${combo}`}
-                  </div>
-                </div>
-              </div>
-              <div className={styles.chip}>
-                <span className={styles.ci}>
-                  <SproutIcon />
-                </span>
-                <div>
-                  <div className={styles.chipLab}>
-                    {stageLabel(prefs.world)}
-                  </div>
-                  <div className={styles.chipVal}>
-                    {stageOf(prefs.world)(
-                      dinoAgeOf(included, lesson.letters.length),
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className={styles.chip}>
-                <span className={styles.ci}>
-                  <TrophyIcon />
-                </span>
-                <div>
-                  <div className={styles.chipLab}>Best</div>
-                  <div className={styles.chipVal}>{best}</div>
-                </div>
-              </div>
-            </div>
+              timer={
+                prefs.timerVisible && !noClock()
+                  ? {
+                      secs: sessionSecs,
+                      total: sessionTotal,
+                      waiting: timerIdle && !sessionOver,
+                      low: sessionSecs <= 60 && !sessionOver,
+                    }
+                  : null
+              }
+            />
           )}
           {!use3dWord && (
             <div className={styles.words} ref={wordsViewRef}>

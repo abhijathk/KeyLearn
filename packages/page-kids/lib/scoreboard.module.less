@@ -1,0 +1,708 @@
+/* stylelint-disable no-descending-specificity -- the hero and dino rules never meet on one element; the rule cannot know that */
+// THE SCOREBOARD · Hero Trail and Dino Run.
+//
+// One plaque with a ribbon across the top, in place of the five white pills
+// these two worlds used to stack down the left edge. Time Keepers keeps its
+// own torn-newsprint notice (`.notice` in kids.module.less) and never mounts
+// this.
+//
+// Both worlds share ONE structure, spacing and size; only the materials
+// differ (`data-world`). Night is keyed off the same `body[data-kids]` the
+// rest of the page answers to, so the board dims with the world instead of
+// carrying a second opinion about the hour.
+//
+// SIZED LIKE THE VILLAGE NOTICE: every length is in `em` off one font-size
+// that follows `--kscale` (set on the scene card from its measured box, 1 at
+// the 1216px reference pane). At that size the plaque is about 13% of the
+// pane wide and 42% tall. Below 580px the labels drop out of sight (they stay
+// in the DOM for screen readers) and the whole board shrinks.
+//
+// WHILE A CHILD TYPES the board fades to about 40% in 0.28s and returns once
+// the keys stop. `data-state` is written straight onto the element by
+// `useTypingFade`, not through React state, so a keystroke costs no render.
+// The numbers keep a halo in the OPPOSITE lightness of their ink (cream round
+// brown by day, deep violet round warm ink by night) so they stay legible over
+// whatever the road is doing behind a 40% plate. The halo has the same four
+// layers idle, at alpha 0, so it fades in rather than popping.
+//
+// TRAPS:
+//  * Nothing from the board up to the scene card may carry `opacity`,
+//    `filter`, `clip-path` or `mask`: the plate's `backdrop-filter` would then
+//    sample that ancestor instead of the road. The fade is on the PARTS.
+//  * Keyframe names are prefixed `sb` so none can collide with a class name
+//    in this module.
+
+/* ───────── HUD: shared structure ───────── */
+.board {
+  position: absolute;
+  inset-inline-start: 1.5em;
+  inset-block-start: 1.15em;
+  z-index: 6;
+  inline-size: 11.6em;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: calc(0.856rem * var(--kscale, 1));
+  font-weight: 800;
+  line-height: 1.1;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  isolation: isolate;
+}
+.head {
+  display: grid;
+  position: relative;
+  z-index: 3;
+  place-items: center;
+  block-size: 1.9em;
+  margin-inline: -0.55em;
+  margin-block-end: -0.8em;
+  filter: drop-shadow(0 0.16em 0.14em rgba(0, 0, 0, 0.28));
+}
+.ribbon {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    calc(100% - 0.6em) 50%,
+    100% 100%,
+    0 100%,
+    0.6em 50%
+  );
+}
+.rtxt {
+  position: relative;
+  color: var(--ribbon-ink);
+  font-size: 0.72em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.rtxt b {
+  font-size: 1.15em;
+  font-variant-numeric: tabular-nums;
+}
+.plate {
+  position: absolute;
+  inset: 0.95em 0 0 0;
+  -webkit-backdrop-filter: blur(0.55em) saturate(1.15);
+  backdrop-filter: blur(0.55em) saturate(1.15);
+}
+.rows {
+  position: relative;
+  z-index: 2;
+  list-style: none;
+  margin: 0;
+  padding: 1.05em 0.8em 0.6em 0.75em;
+}
+.row {
+  display: grid;
+  position: relative;
+  grid-template-columns: 2.05em 1fr;
+  align-items: center;
+  min-block-size: 2.42em;
+  padding-block: 0.12em;
+  column-gap: 0.6em;
+}
+.row + .row::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  block-size: 2px;
+  border-radius: 2px;
+  background: var(--groove);
+}
+.row::after {
+  content: "";
+  position: absolute;
+  inset: 0.1em -0.25em;
+  border-radius: 0.7em;
+  background: radial-gradient(ellipse at 30% 50%, var(--glow), transparent 72%);
+  opacity: 0;
+  pointer-events: none;
+}
+.txt {
+  min-inline-size: 0;
+}
+.lab {
+  display: block;
+  color: var(--ink2);
+  font-size: 0.62em;
+  line-height: 1.25;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.val {
+  display: inline-block;
+  color: var(--ink);
+  font-size: 1.2em;
+  line-height: 1.05;
+  white-space: nowrap;
+  transform-origin: 0 60%;
+  font-variant-numeric: tabular-nums;
+}
+.val.name {
+  vertical-align: top;
+  max-inline-size: 100%;
+  margin: -0.2em;
+  padding: 0.2em;
+  overflow: hidden;
+  font-size: 1.06em;
+  text-overflow: ellipsis;
+}
+.ic {
+  display: grid;
+  position: relative;
+  place-items: center;
+  inline-size: 2.05em;
+  block-size: 2.05em;
+}
+.ic svg {
+  position: relative;
+  inline-size: 1.3em;
+  block-size: 1.3em;
+  overflow: visible;
+}
+
+/* text: engraved when idle, haloed when typing (same layer count so it can transition) */
+.val,
+.lab,
+.rtxt {
+  text-shadow:
+    0 1px 0 rgba(var(--halo), 0.55),
+    0 0 1px rgba(var(--halo), 0),
+    0 0 4px rgba(var(--halo), 0),
+    0 0 9px rgba(var(--halo), 0);
+}
+
+/* transitions: quick fade out when typing starts, slow settle back */
+.plate,
+.ribbon {
+  transition:
+    opacity 0.85s ease-in-out,
+    backdrop-filter 0.85s ease-in-out,
+    -webkit-backdrop-filter 0.85s ease-in-out;
+}
+.ic,
+.lab,
+.rtxt,
+.val {
+  transition:
+    opacity 0.85s ease-in-out,
+    text-shadow 0.85s ease-in-out;
+}
+
+/* typing: material ~40%, icons 55%, labels 70%, values ~95% with a halo */
+.board[data-state="typing"] .plate {
+  opacity: 0.4;
+  -webkit-backdrop-filter: blur(0) saturate(1);
+  backdrop-filter: blur(0) saturate(1);
+}
+.board[data-state="typing"] .ribbon {
+  opacity: 0.42;
+}
+.board[data-state="typing"] .ic {
+  opacity: 0.6;
+}
+.board[data-state="typing"] .lab {
+  opacity: 0.72;
+}
+.board[data-state="typing"] .rtxt {
+  opacity: 0.8;
+}
+.board[data-state="typing"] .val {
+  opacity: 0.97;
+}
+.board[data-state="typing"] .val,
+.board[data-state="typing"] .lab,
+.board[data-state="typing"] .rtxt {
+  text-shadow:
+    0 0 1px rgb(var(--halo)),
+    0 0 3px rgba(var(--halo), 0.95),
+    0 0 6px rgba(var(--halo), 0.85),
+    0 0 11px rgba(var(--halo), 0.65);
+}
+.board[data-state="typing"] .plate,
+.board[data-state="typing"] .ribbon,
+.board[data-state="typing"] .ic,
+.board[data-state="typing"] .lab,
+.board[data-state="typing"] .rtxt,
+.board[data-state="typing"] .val {
+  transition-timing-function: ease-out;
+  transition-duration: 0.28s;
+}
+
+/* the session timer, when the grown-up has it switched on */
+.val.low {
+  color: var(--alert);
+}
+.val.held {
+  opacity: 0.45;
+}
+.ring {
+  inline-size: 1.3em;
+  block-size: 1.3em;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+.ringTrack {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 3.4;
+}
+.ringArc {
+  fill: none;
+  stroke: #ffe9a8;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-dasharray: var(--tp, 100) 100;
+}
+
+/* value pop */
+@keyframes sbValPop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.16);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes sbGlow {
+  0% {
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes sbIconPop {
+  0%,
+  100% {
+    transform: scale(1) rotate(0);
+  }
+  35% {
+    transform: scale(1.1) rotate(-5deg);
+  }
+}
+.row.flash .val {
+  animation: sbValPop 0.42s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.row.flash .ic {
+  animation: sbIconPop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.row.flash::after {
+  animation: sbGlow 0.75s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plate,
+  .ribbon,
+  .ic,
+  .lab,
+  .rtxt,
+  .val,
+  .board[data-state="typing"] .plate,
+  .board[data-state="typing"] .ribbon,
+  .board[data-state="typing"] .ic,
+  .board[data-state="typing"] .lab,
+  .board[data-state="typing"] .rtxt,
+  .board[data-state="typing"] .val {
+    transition-timing-function: linear;
+    transition-duration: 0.2s;
+    transition-property: opacity;
+  }
+  .row.flash .val,
+  .row.flash .ic {
+    animation: none;
+  }
+  .row.flash::after {
+    animation: sbGlow 0.9s linear;
+  }
+}
+
+/* phone: labels drop out (kept for screen readers), everything shrinks */
+@media (max-width: 580px) {
+  .board {
+    inset-inline-start: 0.9em;
+    inset-block-start: 0.8em;
+    inline-size: auto;
+    font-size: 0.53rem;
+  }
+  .lab {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+  .row {
+    grid-template-columns: 2em auto;
+    min-block-size: 2.05em;
+    padding-block: 0.06em;
+    column-gap: 0.5em;
+  }
+  .rows {
+    padding-inline: 0.7em 0.9em;
+  }
+  .rtxt .long {
+    display: none;
+  }
+  .head {
+    margin-inline: -0.3em;
+  }
+}
+
+/* ═══════════════════════ HERO TRAIL: parchment on carved wood ═══════════════════════ */
+.board[data-world="hero"] {
+  --ink: #3a2210;
+  --ink2: #6a4520;
+  --halo: 250, 236, 196;
+  --glow: rgba(255, 214, 120, 0.85);
+  --groove: linear-gradient(#b48a4a55, #fff3cf66);
+  --alert: #a4170d;
+  --ribbon-ink: #fff4dc;
+  --face-a: rgba(250, 236, 196, 0.95);
+  --face-b: rgba(236, 208, 148, 0.95);
+  --wood-a: #a06c3a;
+  --wood-b: #5a3617;
+  --wood-c: #3a200e;
+}
+:global(body[data-kids="night"]) .board[data-world="hero"] {
+  --ink: #ffe3ae;
+  --ink2: #dcc294;
+  --halo: 14, 8, 24;
+  --glow: rgba(255, 190, 90, 0.55);
+  --groove: linear-gradient(#00000066, #ffd79a22);
+  --alert: #ff9a88;
+  --ribbon-ink: #ffe9c4;
+  --face-a: rgba(52, 42, 72, 0.93);
+  --face-b: rgba(30, 24, 46, 0.95);
+  --wood-a: #6d4726;
+  --wood-b: #3b2312;
+  --wood-c: #22130a;
+}
+.board[data-world="hero"] .plate {
+  border-radius: 0.95em;
+  background:
+    repeating-linear-gradient(
+      92deg,
+      rgba(0, 0, 0, 0.1) 0 1px,
+      transparent 1px 6px,
+      rgba(255, 220, 160, 0.06) 6px 7px,
+      transparent 7px 13px
+    ),
+    linear-gradient(180deg, var(--wood-a), var(--wood-b) 60%, var(--wood-c));
+  box-shadow:
+    0 0.45em 1.1em rgba(15, 25, 8, 0.34),
+    inset 0 0.09em 0 rgba(255, 222, 165, 0.55),
+    inset 0 -0.14em 0 rgba(0, 0, 0, 0.4);
+}
+.board[data-world="hero"] .plate::before {
+  /* the parchment */
+  content: "";
+  position: absolute;
+  inset: 0.42em 0.4em 0.42em;
+  border-radius: 0.6em;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .42  0 0 0 0 .27  0 0 0 0 .1  0 0 0 .3 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(255, 255, 255, 0.25),
+      transparent 60%
+    ),
+    linear-gradient(180deg, var(--face-a), var(--face-b));
+  box-shadow:
+    inset 0 0 0.95em rgba(110, 60, 15, 0.4),
+    inset 0 0.08em 0.1em rgba(255, 255, 255, 0.4),
+    0 0 0 0.07em rgba(40, 20, 6, 0.6);
+}
+:global(body[data-kids="night"]) .board[data-world="hero"] .plate::before {
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .9  0 0 0 0 .7  0 0 0 0 .5  0 0 0 .1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(255, 200, 120, 0.16),
+      transparent 65%
+    ),
+    linear-gradient(180deg, var(--face-a), var(--face-b));
+  box-shadow:
+    inset 0 0 1em rgba(0, 0, 0, 0.5),
+    inset 0 0.08em 0.1em rgba(255, 210, 150, 0.18),
+    0 0 0 0.07em rgba(10, 5, 0, 0.7);
+}
+.board[data-world="hero"] .plate::after {
+  --s: radial-gradient(
+    circle at 36% 30%,
+    #fff4c4 0 14%,
+    #e6b445 35%,
+    #8b5a14 78%,
+    #4a2c06 100%
+  );
+  /* brass studs in the wooden frame corners */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    var(--s) 0.03em calc(100% - 0.37em) / 0.4em 0.4em no-repeat,
+    var(--s) calc(100% - 0.03em) calc(100% - 0.37em) / 0.4em 0.4em no-repeat,
+    var(--s) 0.03em 1.3em/0.4em 0.4em no-repeat,
+    var(--s) calc(100% - 0.03em) 1.3em/0.4em 0.4em no-repeat;
+}
+.board[data-world="hero"] .ribbon {
+  background: linear-gradient(180deg, #e05a48, #c13a2e 45%, #93241f);
+  box-shadow: inset 0 1px 0 rgba(255, 200, 180, 0.6);
+}
+:global(body[data-kids="night"]) .board[data-world="hero"] .ribbon {
+  background: linear-gradient(180deg, #b04238, #8a2a26 50%, #621a1c);
+}
+.board[data-world="hero"] .rtxt {
+  text-shadow:
+    0 1px 0 rgba(70, 10, 8, 0.7),
+    0 0 1px rgba(70, 10, 8, 0),
+    0 0 4px rgba(70, 10, 8, 0),
+    0 0 9px rgba(70, 10, 8, 0);
+}
+.board[data-world="hero"][data-state="typing"] .rtxt {
+  text-shadow:
+    0 0 1px #3a0806,
+    0 0 3px rgba(58, 8, 6, 0.95),
+    0 0 6px rgba(58, 8, 6, 0.85),
+    0 0 11px rgba(58, 8, 6, 0.65);
+}
+/* folded ribbon tails peeking out under the band ends */
+.board[data-world="hero"] .head::before,
+.board[data-world="hero"] .head::after {
+  content: "";
+  position: absolute;
+  inset-block-end: -0.28em;
+  z-index: -1;
+  inline-size: 0.7em;
+  block-size: 0.9em;
+  background: linear-gradient(180deg, #7a1c18, #5a1212);
+  transition: opacity 0.85s;
+}
+.board[data-world="hero"] .head::before {
+  inset-inline-start: 0.15em;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 55% 80%, 0 100%);
+}
+.board[data-world="hero"] .head::after {
+  inset-inline-end: 0.15em;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 45% 80%, 0 100%);
+}
+.board[data-world="hero"][data-state="typing"] .head::before,
+.board[data-world="hero"][data-state="typing"] .head::after {
+  opacity: 0.4;
+}
+/* shield-badge icon holders */
+.board[data-world="hero"] .ic::before {
+  content: "";
+  position: absolute;
+  inset: 0.02em 0.1em 0;
+  border-radius: 0.32em 0.32em 60% 60%/0.32em 0.32em 78% 78%;
+  background: radial-gradient(circle at 35% 25%, #6b98e2, #2a509f 62%, #1a3372);
+  box-shadow:
+    0 0 0 0.1em #e2b04a,
+    0 0 0 0.18em #6d430f,
+    inset 0 0.12em 0.16em rgba(255, 255, 255, 0.35),
+    0 0.22em 0.3em rgba(0, 0, 0, 0.35);
+}
+.board[data-world="hero"] .ic svg {
+  inline-size: 1.42em;
+  block-size: 1.42em;
+  margin-block-start: -0.08em;
+}
+
+/* ═══════════════════════ DINO RUN: stone tablet, amber, moss ═══════════════════════ */
+.board[data-world="dino"] {
+  --ink: #2a1706;
+  --ink2: #3e2204;
+  --halo: 255, 226, 150;
+  --glow: rgba(255, 235, 150, 0.9);
+  --groove: linear-gradient(#7a420a66, #ffe8a877);
+  --alert: #8a1208;
+  --ribbon-ink: #f6ffe2;
+  --face-a: rgba(248, 196, 102, 0.98);
+  --face-b: rgba(226, 146, 58, 0.98);
+  --rock-a: #6b655b;
+  --rock-b: #3a352f;
+  --rock-c: #26221e;
+}
+:global(body[data-kids="night"]) .board[data-world="dino"] {
+  --ink: #ffd487;
+  --ink2: #e2c08c;
+  --halo: 16, 9, 3;
+  --glow: rgba(255, 170, 70, 0.55);
+  --groove: linear-gradient(#00000077, #ffc27a22);
+  --alert: #ff9a88;
+  --ribbon-ink: #e8f7cf;
+  --face-a: rgba(66, 49, 34, 0.94);
+  --face-b: rgba(38, 29, 21, 0.96);
+  --rock-a: #48433b;
+  --rock-b: #2a2622;
+  --rock-c: #181512;
+}
+.board[data-world="dino"] .plate {
+  border-radius: 0.85em 1.15em 0.7em 1.05em/1.05em 0.75em 1.15em 0.85em;
+  background:
+    radial-gradient(
+      circle at 12% 22%,
+      rgba(255, 255, 255, 0.16) 0 0.08em,
+      transparent 0.1em
+    ),
+    radial-gradient(
+      circle at 78% 80%,
+      rgba(0, 0, 0, 0.35) 0 0.12em,
+      transparent 0.14em
+    ),
+    radial-gradient(
+      circle at 92% 18%,
+      rgba(255, 255, 255, 0.12) 0 0.07em,
+      transparent 0.09em
+    ),
+    radial-gradient(
+      circle at 30% 92%,
+      rgba(0, 0, 0, 0.3) 0 0.1em,
+      transparent 0.12em
+    ),
+    linear-gradient(170deg, var(--rock-a), var(--rock-b) 55%, var(--rock-c));
+  box-shadow:
+    0 0.45em 1.1em rgba(15, 20, 8, 0.4),
+    inset 0 0.09em 0 rgba(255, 255, 255, 0.28),
+    inset 0 -0.16em 0 rgba(0, 0, 0, 0.45);
+}
+.board[data-world="dino"] .plate::before {
+  /* the amber tablet, chipped corners */
+  content: "";
+  position: absolute;
+  inset: 0.44em 0.42em 0.44em;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'><g fill='none' stroke='%23000' stroke-opacity='.11' stroke-width='3' stroke-linecap='round'><path d='M62 62a4 4 0 0 1 8 0a8 8 0 0 1-16 0a12 12 0 0 1 24 0a16 16 0 0 1-32 0a20 20 0 0 1 40 0'/></g></svg>")
+      right -0.3em bottom -0.2em/5.6em 5.6em no-repeat,
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .18  0 0 0 0 .04  0 0 0 .38 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(
+      ellipse at 40% 0%,
+      rgba(255, 240, 190, 0.35),
+      transparent 62%
+    ),
+    linear-gradient(180deg, var(--face-a), var(--face-b));
+  box-shadow:
+    inset 0 0 1em rgba(120, 55, 0, 0.45),
+    inset 0 0 0 0.07em rgba(110, 55, 5, 0.35);
+  clip-path: polygon(
+    0 0.55em,
+    0.4em 0.05em,
+    calc(100% - 0.7em) 0,
+    100% 0.45em,
+    calc(100% - 0.05em) calc(100% - 0.55em),
+    calc(100% - 0.45em) 100%,
+    0.6em calc(100% - 0.04em),
+    0 calc(100% - 0.4em)
+  );
+}
+:global(body[data-kids="night"]) .board[data-world="dino"] .plate::before {
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'><g fill='none' stroke='%23ffb35a' stroke-opacity='.12' stroke-width='3' stroke-linecap='round'><path d='M62 62a4 4 0 0 1 8 0a8 8 0 0 1-16 0a12 12 0 0 1 24 0a16 16 0 0 1-32 0a20 20 0 0 1 40 0'/></g></svg>")
+      right -0.3em bottom -0.2em/5.6em 5.6em no-repeat,
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .9  0 0 0 0 .6  0 0 0 0 .3  0 0 0 .12 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(
+      ellipse at 40% 0%,
+      rgba(255, 170, 80, 0.16),
+      transparent 65%
+    ),
+    linear-gradient(180deg, var(--face-a), var(--face-b));
+  box-shadow: inset 0 0 1em rgba(0, 0, 0, 0.55);
+}
+.board[data-world="dino"] .plate::after {
+  /* moss draping over the bottom edge of the tablet */
+  content: "";
+  position: absolute;
+  inset-inline-start: 0.5em;
+  inset-inline-end: 0.8em;
+  inset-block-end: 0;
+  block-size: 0.44em;
+  background:
+    radial-gradient(circle at 3% 0%, #6faa30 0 0.2em, transparent 0.21em),
+    radial-gradient(circle at 14% 0%, #588f26 0 0.3em, transparent 0.31em),
+    radial-gradient(circle at 26% 0%, #7db93a 0 0.17em, transparent 0.18em),
+    radial-gradient(circle at 39% 0%, #5f9a2a 0 0.26em, transparent 0.27em),
+    radial-gradient(circle at 52% 0%, #74b034 0 0.19em, transparent 0.2em),
+    radial-gradient(circle at 64% 0%, #588f26 0 0.32em, transparent 0.33em),
+    radial-gradient(circle at 77% 0%, #7db93a 0 0.18em, transparent 0.19em),
+    radial-gradient(circle at 89% 0%, #5f9a2a 0 0.27em, transparent 0.28em);
+}
+:global(body[data-kids="night"]) .board[data-world="dino"] .plate::after {
+  filter: brightness(0.62) saturate(0.9);
+}
+.board[data-world="dino"] .ribbon {
+  background:
+    radial-gradient(
+      circle at 20% 15%,
+      rgba(255, 255, 255, 0.22) 0 0.16em,
+      transparent 0.2em
+    ),
+    radial-gradient(
+      circle at 70% 90%,
+      rgba(0, 0, 0, 0.2) 0 0.2em,
+      transparent 0.24em
+    ),
+    linear-gradient(180deg, #86c443, #5a9426 55%, #3f7519);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  clip-path: polygon(
+    0.35em 0,
+    calc(100% - 0.3em) 0.08em,
+    100% 45%,
+    calc(100% - 0.25em) 100%,
+    0.4em calc(100% - 0.05em),
+    0 55%
+  );
+}
+:global(body[data-kids="night"]) .board[data-world="dino"] .ribbon {
+  background: linear-gradient(180deg, #517d2a, #3c6420 55%, #2b4c15);
+}
+.board[data-world="dino"] .rtxt {
+  padding-inline-start: 0.9em;
+  text-shadow:
+    0 1px 0 rgba(20, 50, 5, 0.75),
+    0 0 1px rgba(20, 50, 5, 0),
+    0 0 4px rgba(20, 50, 5, 0),
+    0 0 9px rgba(20, 50, 5, 0);
+}
+.board[data-world="dino"][data-state="typing"] .rtxt {
+  text-shadow:
+    0 0 1px #173a04,
+    0 0 3px rgba(23, 58, 4, 0.95),
+    0 0 6px rgba(23, 58, 4, 0.85),
+    0 0 11px rgba(23, 58, 4, 0.65);
+}
+/* pebble icon holders */
+.board[data-world="dino"] .ic::before {
+  content: "";
+  position: absolute;
+  inset: 0.04em 0.06em 0.02em;
+  border-radius: 46% 54% 50% 50%/54% 46% 54% 46%;
+  background: radial-gradient(circle at 35% 25%, #8a8378, #4a453d 62%, #2c2823);
+  box-shadow:
+    0 0 0 0.1em #2a2620,
+    0 0 0 0.17em rgba(255, 236, 190, 0.55),
+    inset 0 0.12em 0.16em rgba(255, 255, 255, 0.28),
+    0 0.22em 0.3em rgba(0, 0, 0, 0.35);
+}
+.board[data-world="dino"] .ic svg {
+  inline-size: 1.42em;
+  block-size: 1.42em;
+}
+.board[data-world="dino"] .head .leaf {
+  position: absolute;
+  inset-inline-start: 0.55em;
+  z-index: 1;
+  inline-size: 1.05em;
+  block-size: 1.05em;
+  transform: rotate(-20deg);
+}
