@@ -22,6 +22,7 @@ import type { NightOverride } from "./night.ts";
 import * as styles from "./settings-sheet.module.less";
 import { speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
 import type { WorldId } from "./world.ts";
+import { WORLD_SIGN } from "./world-signs/index.ts";
 
 /**
  * ── YOUR GAME, YOUR WAY ─────────────────────────────────────────────────
@@ -105,6 +106,7 @@ const FACE_TINT: Readonly<Record<string, string>> = {
   Apatosaurus: "#7a9a6a",
   Knight: "#9fb0c8",
   Skeleton_Warrior: "#c8b89f",
+  Ranger: "#8fbf7a",
 };
 
 type Section = "play" | "scene" | "typing" | "sound" | "session";
@@ -333,8 +335,8 @@ export function SettingsSheet({
           </h2>
           <span className={styles.playing}>
             <img
-              className={styles.playingImg}
-              src={worldUrl(prefs.world)}
+              className={styles.playingLogo}
+              src={WORLD_SIGN[prefs.world]}
               alt=""
             />
             <span className={styles.playingText}>
@@ -457,9 +459,11 @@ export function SettingsSheet({
                     <Group
                       title="Walking with you"
                       note={
-                        companionChoices.length > 2
-                          ? "pick up to two"
-                          : undefined
+                        worldDraft === "hero"
+                          ? "pick one, or nobody"
+                          : companionChoices.length > 2
+                            ? "pick up to two"
+                            : undefined
                       }
                     >
                       <div className={styles.faces}>

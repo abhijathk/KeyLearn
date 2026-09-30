@@ -12888,6 +12888,7 @@ export function createKidsWorld(
       const ud = root.userData as {
         nightOnly?: boolean;
         dayOnly?: boolean;
+        castHidden?: boolean;
         scary?: boolean;
         twinWrap?: THREE.Object3D;
       };
@@ -12900,11 +12901,13 @@ export function createKidsWorld(
       const banishedAfterDark =
         trueNight && character && nightStyle === "full" && ud.scary !== true;
       const want =
-        ud.nightOnly === true
-          ? nightNow
-          : ud.dayOnly === true || banishedAfterDark
-            ? !nightNow
-            : root.visible;
+        ud.castHidden === true
+          ? false
+          : ud.nightOnly === true
+            ? nightNow
+            : ud.dayOnly === true || banishedAfterDark
+              ? !nightNow
+              : root.visible;
       if (want === root.visible) {
         continue;
       }
@@ -16582,6 +16585,49 @@ export function createKidsWorld(
   let pendingColours: ClothingColours = {};
 
   /**
+   * NOBODY MEETS THEMSELVES ON THE TRAIL.
+   *
+   * The Hero Trail's three main characters are also its friends and its
+   * bystanders: the Scout is the `Ranger` model, and a Ranger stands beside
+   * the road in the herd list. When the child plays as the Scout — or walks
+   * beside one — that bystander would be a twin standing a few strides away,
+   * so anyone whose model is the player's or a companion's is stood down.
+   * Only the hero world does this; nowhere else has a cast that overlaps.
+   */
+  function hideCastTwins(): void {
+    if (theme.modelDir !== "hero") {
+      return;
+    }
+    const twins = new Set<string>([playerWho, ...companionNames]);
+    for (const f of friends) {
+      const ud = f.wrap.userData as {
+        castModel?: string;
+        castHidden?: boolean;
+        nightOnly?: boolean;
+        dayOnly?: boolean;
+      };
+      if (typeof ud.castModel !== "string") {
+        continue;
+      }
+      if (twins.has(ud.castModel)) {
+        ud.castHidden = true;
+        f.wrap.visible = false;
+      } else if (ud.castHidden === true) {
+        // Let them back the way the light would have them: the night-only
+        // figures and the day-only ones follow the hour, everyone else is
+        // simply out.
+        ud.castHidden = false;
+        f.wrap.visible =
+          ud.nightOnly === true
+            ? nightNow
+            : ud.dayOnly === true
+              ? !nightNow
+              : true;
+      }
+    }
+  }
+
+  /**
    * Bring a friend along, or send them home.
    *
    * Deliberately thin: it loads a rig and parks it. Everything the companion
@@ -16610,6 +16656,7 @@ export function createKidsWorld(
       return;
     }
     companionNames = want;
+    hideCastTwins();
     // THE GUIDE IS NOT A COMPANION and must survive this.
     //
     // This rebuilds the whole line from scratch — cheaper than reshuffling —
@@ -16799,6 +16846,7 @@ export function createKidsWorld(
     }
     playerH = theme.playerHeight(name);
     playerWho = name;
+    hideCastTwins();
     const rig = rigOf(gltf, playerH, name);
     // Recolouring is a nicety; being able to play is not.
     //
@@ -17448,6 +17496,9 @@ export function createKidsWorld(
       // stop and stare when the hero passes.
       wrap.userData = {
         homeY,
+        // Which model this is, so a bystander who is ALSO the player's
+        // character or friend can be stood down — see `hideCastTwins`.
+        castModel: model,
         // An explicitly placed facing is a decision, not a starting point:
         // `companionsWatch` otherwise swings anyone standing near the hero
         // round to watch them, which quietly undoes it.
@@ -18283,6 +18334,7 @@ export function createKidsWorld(
         }
       }
     }
+    hideCastTwins();
     // The Lost Travellers. Night only, every one of them — by day the road
     // is clean and pleasant, and the two that used to stand watch in full
     // sunlight are gone. How many come out, and how close to the trail they

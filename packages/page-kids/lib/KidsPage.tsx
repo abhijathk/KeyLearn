@@ -492,12 +492,10 @@ function defaultPrefs(): Prefs {
     // Either can switch worlds any time in the toy-box.
     world: band === "5-6" || band === "7-8" ? "hero" : "dino",
     dino: "TRex",
-    // A child their own size, in both directions.
-    //
-    // Little Drew for 5-6 and 7-8, Dave for 9-10 and 11+. Nobody starts as
-    // the Knight any more: a child playing as a child is the point of these
-    // two, and the fantasy figures stay in the toy-box for whoever wants one.
-    hero: band === "5-6" || band === "7-8" ? "Explorer6" : "Explorer",
+    // The Hero Trail's three main characters — Knight, Skeleton and Scout —
+    // are all the same age and size, so there is no "their own size" to
+    // pick by band any more. The Knight opens the row and is the default.
+    hero: "Knight",
     // The same child, on the village road. Peeli is the world's own default
     // but a band that opens as Little Drew should stay Little Drew.
     village: band === "5-6" || band === "7-8" ? "Explorer6" : "Peeli",
@@ -1861,18 +1859,21 @@ function agedPool(
 const GAIT_SAMPLE = 6;
 
 const HERO_CHARACTERS = [
-  // KNIGHT AND SKELETON FIRST. This is the world where you are a hero out of
-  // a story, and those two are what it is FOR — the two children are here
-  // because a child who does not want to be either of them should not be
-  // shut out, not because they are what this trail is about. Time Keepers is
-  // where they lead.
+  // THE THREE MAIN CHARACTERS OF THE HERO TRAIL: Knight, Skeleton and Scout.
+  //
+  // All three are the same age and the same size (see `playerHeight` in
+  // world.ts — they take the default height), so whoever is chosen and
+  // whoever walks beside them read as two friends of an age. Dave, Little
+  // Drew and the puppy left this world; the two children live on in Time
+  // Keepers, where a village is the point.
+  //
+  // The ids are the model filenames, and they are what a saved profile has
+  // already stored: `Skeleton_Warrior` stays that, and the Scout is the
+  // `Ranger` model until it is redrawn. A profile that saved Dave or Little
+  // Drew for this world falls back to the default through `charOf`.
   { id: "Knight", label: "Knight" },
   { id: "Skeleton_Warrior", label: "Skeleton" },
-  // The ids stay `Explorer` and `Explorer6`: they are the model filenames,
-  // and they are what a saved profile has already stored. Renaming those
-  // would silently reset every child's choice back to whoever is first.
-  { id: "Explorer", label: "Dave" },
-  { id: "Explorer6", label: "Little Drew" },
+  { id: "Ranger", label: "Scout" },
 ] as const;
 
 /**
@@ -2070,6 +2071,12 @@ const COMPANIONS = [
   // is somebody's robot, not somebody a child plays as.
   { id: "Robot", label: "Robot" },
   { id: "Puppy", label: "Puppy" },
+  // The Hero Trail's companions are its other two main characters — see
+  // `HERO_CHARACTERS` and `walksIn`. They are listed here, after the
+  // village's own, so the shared lookups (label, cast order) know them.
+  { id: "Knight", label: "Knight" },
+  { id: "Skeleton_Warrior", label: "Skeleton" },
+  { id: "Ranger", label: "Scout" },
 ] as const;
 
 /**
@@ -2457,6 +2464,20 @@ const CAST_ORDER: readonly string[] = COMPANIONS.map(({ id }) => id);
  * either way, so switching back finds them where they were left; it is only
  * hidden while standing somewhere they do not belong.
  */
+/** The Hero Trail's three main characters — also its only companions. */
+const HERO_MAINS: ReadonlySet<string> = new Set(
+  HERO_CHARACTERS.map(({ id }) => id),
+);
+
+/**
+ * How many friends walk beside a child in this world.
+ *
+ * One on the Hero Trail, where the friend is one of the other two main
+ * characters; two everywhere else. The stored list is one per profile, so
+ * every read and every write goes through this cap.
+ */
+const maxCompanions = (world: WorldId): number => (world === "hero" ? 1 : 2);
+
 const walksIn = (world: WorldId, id: string): boolean =>
   // THE BUFFALO WALKS WITH NOBODY, IN ANY WORLD — see `companionChoices` for
   // why. Said here rather than only in the picker because a child who chose
@@ -2467,9 +2488,9 @@ const walksIn = (world: WorldId, id: string): boolean =>
   id === "Buffalo"
     ? false
     : world === "village"
-      ? true
+      ? !HERO_MAINS.has(id)
       : world === "hero"
-        ? id === "Puppy"
+        ? HERO_MAINS.has(id)
         : false;
 
 const companionsOf = (
@@ -2487,7 +2508,7 @@ const companionsOf = (
       const ib = CAST_ORDER.indexOf(b);
       return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
     })
-    .slice(0, 2);
+    .slice(0, maxCompanions(p.world));
 };
 
 /**
@@ -6029,16 +6050,17 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   ) => {
     // TAPPING SOMEBODY TOGGLES THEM, and `null` is "nobody at all".
     //
-    // Two is the ceiling, and a third tap takes the one who has been
-    // in the line longest rather than refusing: a pill that does
-    // nothing when pressed is a pill a child presses again harder.
+    // Two is the ceiling (one on the Hero Trail), and one tap too many
+    // takes the one who has been in the line longest rather than
+    // refusing: a pill that does nothing when pressed is a pill a child
+    // presses again harder.
     const now = companionsOf({ ...prefsRef.current, world: forWorld });
     const next =
       who == null
         ? []
         : now.includes(who)
           ? now.filter((id) => id !== who)
-          : [...now, who].slice(-2);
+          : [...now, who].slice(-maxCompanions(forWorld));
     const ordered = companionsOf({
       companions: next,
       companion: null,
