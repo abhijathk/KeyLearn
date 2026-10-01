@@ -240,10 +240,7 @@ export function SettingsSheet({
   // worlds keep their age rule.
   const canToggleWords =
     worldDraft === "village" || band === "7-8" || band === "9-10";
-  const blocksOn =
-    worldDraft === "village"
-      ? prefs.trailLetters
-      : band === "5-6" || (canToggleWords && prefs.wordBlocks);
+  const blocksOn = prefs.trailLetters;
   const canClassic = classicOffered(band);
   const village = worldDraft === "village";
   const hasCast = m.childCast(worldDraft);
@@ -833,29 +830,16 @@ export function SettingsSheet({
                     <Row
                       label="Letters on the trail"
                       desc="show the words as blocks in the game"
-                      tags={
-                        worldDraft === "village" ? undefined : (
-                          <Tag kind="blue">Ages 7–10</Tag>
-                        )
-                      }
                     >
-                      {(ids) =>
-                        worldDraft === "village" ? (
-                          <Switch
-                            {...ids}
-                            on={prefs.trailLetters}
-                            onToggle={(trailLetters) =>
-                              savePrefs({ trailLetters })
-                            }
-                          />
-                        ) : (
-                          <Switch
-                            {...ids}
-                            on={prefs.wordBlocks}
-                            onToggle={(wordBlocks) => savePrefs({ wordBlocks })}
-                          />
-                        )
-                      }
+                      {(ids) => (
+                        <Switch
+                          {...ids}
+                          on={prefs.trailLetters}
+                          onToggle={(trailLetters) =>
+                            savePrefs({ trailLetters })
+                          }
+                        />
+                      )}
                     </Row>
                   )}
                   {/* Only once the alphabet is done — before that it is a

@@ -3081,6 +3081,35 @@ const DEFAULT_VIEW = {
   botF: 1.38,
 } as const;
 
+/** The perspective rig this world briefly used; kept, switched off. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const DINO_PERSPECTIVE: NonNullable<WorldTheme["perspective"]> = {
+    fov: 34,
+    shiftY: 0.7,
+    near: 2,
+    far: 640,
+    followDx: 8.5,
+    fogNear: 22,
+    fogFar: 105,
+    groundBack: 90,
+    farBank: 0.5,
+    scatterDepth: 2.4,
+    scatterCount: 1.8,
+    treeScatter: 0.9,
+    sightClear: 12,
+    clusterNear: 2.2,
+    clusterDensity: 1,
+    dryShare: 0.25,
+    wordZ: 6,
+    wordY: 0,
+    skyTop: 0x8fb0c8,
+    skyBottom: 0xb5c9c0,
+    ranges: [
+      { dist: 380, height: 90, peak: 0.84, haze: 0.3, seed: 1.7, far: true },
+      { dist: 300, height: 60, peak: 0.74, haze: 0.12, seed: 4.2, far: false },
+    ],
+  };
+
 export const DINO_THEME: WorldTheme = {
   modelDir: "dino",
   sign: "dino/Sign",
@@ -3241,45 +3270,24 @@ export const DINO_THEME: WorldTheme = {
   // edge. camY and lookY move together, so the angle is unchanged.
   //
   // A REAL PERSPECTIVE CAMERA, as the Hero Trail's: see there.
+  // THE SAME CAMERA AS TIME KEEPERS (owner, 1 Oct 2026): the village's view,
+  // line for line. The perspective camera these two worlds briefly had is kept
+  // as HERO_PERSPECTIVE / DINO_PERSPECTIVE below, switched off.
   view: {
     followRoad: true,
-    camY: 6.5,
-    camZ: 18,
-    camX: 9.6,
-    lookY: 6.5,
-    frustum: 13,
-    topF: 0.98,
-    botF: 1.02,
-  },
-  perspective: {
-    fov: 34,
-    shiftY: 0.7,
-    near: 2,
-    far: 640,
-    followDx: 8.5,
-    fogNear: 22,
-    fogFar: 105,
-    groundBack: 90,
-    farBank: 0.5,
-    scatterDepth: 2.4,
-    scatterCount: 1.8,
-    treeScatter: 0.9,
-    sightClear: 12,
-    clusterNear: 2.2,
-    clusterDensity: 1,
-    dryShare: 0.25,
-    wordZ: 6,
-    wordY: 0,
-    skyTop: 0x8fb0c8,
-    skyBottom: 0xb5c9c0,
-    ranges: [
-      { dist: 380, height: 90, peak: 0.84, haze: 0.3, seed: 1.7, far: true },
-      { dist: 300, height: 60, peak: 0.74, haze: 0.12, seed: 4.2, far: false },
-    ],
+    camY: 12.6,
+    camZ: 42,
+    camX: 9,
+    lookY: 4.25,
+    frustum: 12.2,
+    topF: 0.9,
+    botF: 1.5,
   },
   // The word cards a little nearer the camera, which sits them lower in the
   // pane, below the runner's path rather than on it.
-  wordZ: 14.5,
+  // The practice text lies on the ground below the road, as on the village road.
+  wordZ: 28,
+  wordY: 2,
   // MISTY, as the mock is: muted greens under a grey-green haze.
   grade: {
     exposure: 1.12,
@@ -3293,6 +3301,35 @@ export const DINO_THEME: WorldTheme = {
 // Hero Trail — a little band of adventurers questing home through the forest.
 // KayKit heroes share one rig, so their walk/run/idle clips are loaded from a
 // shared animation GLB and bound to every character by bone name.
+/** The perspective rig this world briefly used; kept, switched off. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const HERO_PERSPECTIVE: NonNullable<WorldTheme["perspective"]> = {
+    fov: 34,
+    shiftY: 0.6,
+    near: 2,
+    far: 640,
+    followDx: 11,
+    fogNear: 55,
+    fogFar: 140,
+    groundBack: 120,
+    farBank: 0.35,
+    scatterDepth: 2.4,
+    scatterCount: 1.8,
+    treeScatter: 1.8,
+    sightClear: 12,
+    clusterNear: 2.2,
+    clusterDensity: 2.2,
+    dryShare: 0.6,
+    wordZ: 4,
+    wordY: 0,
+    skyTop: 0x9ec3de,
+    skyBottom: 0xe9dcc8,
+    ranges: [
+      { dist: 380, height: 70, peak: 0.74, haze: 0.16, seed: 1.7, far: true },
+      { dist: 300, height: 46, peak: 0.68, haze: 0.0, seed: 4.2, far: false },
+    ],
+  };
+
 export const HERO_THEME: WorldTheme = {
   modelDir: "hero",
   sign: "hero/Sign",
@@ -3481,45 +3518,24 @@ export const HERO_THEME: WorldTheme = {
   // `view` are then the rig itself: where it stands relative to the road
   // (`camY` over the ground, `camZ` back from it, `camX` sets the yaw so the
   // path runs away on a diagonal) and a level aim (`lookY` = `camY`).
+  // THE SAME CAMERA AS TIME KEEPERS (owner, 1 Oct 2026): the village's view,
+  // line for line. The perspective camera these two worlds briefly had is kept
+  // as HERO_PERSPECTIVE / DINO_PERSPECTIVE below, switched off.
   view: {
     followRoad: true,
-    camY: 4.9,
-    camZ: 16,
-    camX: 11.6,
-    lookY: 4.9,
-    frustum: 12,
-    topF: 0.84,
-    botF: 1.04,
-  },
-  perspective: {
-    fov: 34,
-    shiftY: 0.6,
-    near: 2,
-    far: 640,
-    followDx: 11,
-    fogNear: 55,
-    fogFar: 140,
-    groundBack: 120,
-    farBank: 0.35,
-    scatterDepth: 2.4,
-    scatterCount: 1.8,
-    treeScatter: 1.8,
-    sightClear: 12,
-    clusterNear: 2.2,
-    clusterDensity: 2.2,
-    dryShare: 0.6,
-    wordZ: 4,
-    wordY: 0,
-    skyTop: 0x9ec3de,
-    skyBottom: 0xe9dcc8,
-    ranges: [
-      { dist: 380, height: 70, peak: 0.74, haze: 0.16, seed: 1.7, far: true },
-      { dist: 300, height: 46, peak: 0.68, haze: 0.0, seed: 4.2, far: false },
-    ],
+    camY: 12.6,
+    camZ: 42,
+    camX: 9,
+    lookY: 4.25,
+    frustum: 12.2,
+    topF: 0.9,
+    botF: 1.5,
   },
   // The word cards a little nearer the camera, which sits them lower in the
   // pane, below the runner's path rather than on it.
-  wordZ: 14.5,
+  // The practice text lies on the ground below the road, as on the village road.
+  wordZ: 28,
+  wordY: 2,
   // Softer grade — the default punchy look was too saturated and distracting.
   // Just a gentle calm (a touch less saturation, a little more ambient fill),
   // not washed out; the child can dial brightness/paleness further with the

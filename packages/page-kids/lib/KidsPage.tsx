@@ -117,6 +117,7 @@ import { paceTarget } from "./pace.ts";
 import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
 import { fitPassageToRoad, RUN_LEN } from "./run-length.ts";
+import { dinoLand, dinoSceneName, heroLand, heroSceneName } from "./scene-kit.ts";
 import {
   SCENE_LESSONS,
   sceneIndexOf,
@@ -124,7 +125,6 @@ import {
 } from "./scene-order.ts";
 import { Scoreboard, useTypingFade } from "./scoreboard.tsx";
 import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
-import { dinoLand, dinoSceneName, heroLand, heroSceneName } from "./scene-kit.ts";
 import { STORY, type StoryPart } from "./story.ts";
 import { useFlash } from "./use-flash.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
@@ -6728,11 +6728,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   // in the world instead of the subtitle panel; 7-8 and 9-10 can opt in from
   // the toy-box; everyone else keeps the panel.
   // Time Keepers has no age bar: on for everyone unless it is switched off.
-  const use3dWord =
-    prefs.world === "village"
-      ? prefs.trailLetters
-      : band === "5-6" ||
-        ((band === "7-8" || band === "9-10") && prefs.wordBlocks);
+  //
+  // NOW ON ALL THREE ROADS (owner, 1 Oct 2026): the words lie on the ground
+  // below the path, the same size as on the village road, and the toy-box
+  // switch is the village's. The subtitle panel is what is left when it is off.
+  const use3dWord = prefs.trailLetters;
   useEffect(() => {
     // Feed the whole passage; the world lays it out as one gliding ribbon so
     // there is no jumpy per-word rebuild.
