@@ -1402,6 +1402,16 @@ export type Land = {
   };
   readonly trees: string;
   readonly friend: string;
+  /**
+   * This land's own recolouring of the scattered foliage, over the theme's.
+   * It is what makes a season: the same trees, turned autumn gold or frosted,
+   * with no new model to download.
+   */
+  readonly foliageTint?: {
+    readonly leaf: number;
+    readonly trunk: number;
+    readonly strength: number;
+  };
 };
 
 /** Bright lands only — one per session, straight from the Dino Run biomes. */
@@ -1467,6 +1477,73 @@ export const LANDS: readonly Land[] = [
     trees: "PalmTrees",
     friend: "Parasaurolophus",
   },
+  {
+    name: "Mossy Hollow",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x4f9a52,
+    grassVar: 0x68b064,
+    dirt: 0x7b6a4a,
+    sun: 0xfff2d2,
+    fog: 0xbfe0c8,
+    path: "stones",
+    trees: "Trees",
+    friend: "Velociraptor",
+    foliageTint: { leaf: 0x3f8f4e, trunk: 0x5a4636, strength: 0.7 },
+  },
+  {
+    name: "Golden Savanna",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0xb7b95a,
+    grassVar: 0xcccf70,
+    dirt: 0xb98a52,
+    sun: 0xffe2a8,
+    fog: 0xf0e2b8,
+    path: "sand",
+    trees: "Trees",
+    friend: "Triceratops",
+    foliageTint: { leaf: 0xc2b24e, trunk: 0x7a5a38, strength: 0.75 },
+  },
+  {
+    name: "Birch Glade",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x86c25c,
+    grassVar: 0x9fd672,
+    dirt: 0xa88a5c,
+    sun: 0xfff6dc,
+    fog: 0xd6efce,
+    path: "stones",
+    trees: "BirchTrees",
+    friend: "Parasaurolophus",
+  },
+  {
+    name: "Misty Pines",
+    mood: "overcast",
+    tex: "leafy_grass",
+    grass: 0x5c8c66,
+    grassVar: 0x74a47c,
+    dirt: 0x7d7058,
+    sun: 0xe6ecf2,
+    fog: 0xc4d4d8,
+    path: "stones",
+    trees: "PineTrees",
+    friend: "Stegosaurus",
+  },
+  {
+    name: "Palm Shore",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x7fc25a,
+    grassVar: 0x98d570,
+    dirt: 0xdcc58c,
+    sun: 0xfff0cc,
+    fog: 0xd8f0e4,
+    path: "sand",
+    trees: "PalmTrees",
+    friend: "Apatosaurus",
+  },
 ];
 
 // Hero Trail — a gentle quest through the enchanted forest. Same trails and
@@ -1510,6 +1587,76 @@ export const HERO_LANDS: readonly Land[] = [
     path: "sand",
     trees: "HeroTrees",
     friend: "Barbarian",
+  },
+  {
+    name: "Autumn Lane",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x9fb04a,
+    grassVar: 0xb8c45e,
+    dirt: 0xb07a48,
+    sun: 0xffe0b0,
+    fog: 0xf0dcb8,
+    path: "sand",
+    trees: "HeroTrees",
+    friend: "Rogue",
+    foliageTint: { leaf: 0xe0902c, trunk: 0x6a4630, strength: 0.85 },
+  },
+  {
+    name: "Misty Hills",
+    mood: "overcast",
+    tex: "leafy_grass",
+    grass: 0x5fa07a,
+    grassVar: 0x78b890,
+    dirt: 0x8a7a5c,
+    sun: 0xe4ecf4,
+    fog: 0xc8d8e0,
+    path: "stones",
+    trees: "HeroTrees",
+    friend: "Mage",
+    foliageTint: { leaf: 0x4f9a8a, trunk: 0x5b4a3c, strength: 0.6 },
+  },
+  {
+    name: "Golden Meadow",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0xc8c864,
+    grassVar: 0xdadc7c,
+    dirt: 0xc8a468,
+    sun: 0xfff0c0,
+    fog: 0xf6eccc,
+    path: "sand",
+    trees: "HeroTrees",
+    friend: "Barbarian",
+    foliageTint: { leaf: 0xb8c04a, trunk: 0x7a5a38, strength: 0.6 },
+  },
+  {
+    name: "Blossom Way",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x8cd070,
+    grassVar: 0xa6e288,
+    dirt: 0xc2a278,
+    sun: 0xfff4e0,
+    fog: 0xf0e8f0,
+    path: "stones",
+    trees: "HeroTrees",
+    friend: "Rogue_Hooded",
+    foliageTint: { leaf: 0xf0a8c4, trunk: 0x7a5a4a, strength: 0.55 },
+  },
+  {
+    name: "Pine Hollow",
+    mood: "day",
+    tex: "leafy_grass",
+    grass: 0x4e9a58,
+    grassVar: 0x66b070,
+    dirt: 0x866a48,
+    sun: 0xf6efd6,
+    fog: 0xc2e0cc,
+    path: "stones",
+    trees: "HeroTrees",
+    friend: "Ranger",
+    foliageTint: { leaf: 0x2f7a4c, trunk: 0x4e3a2c, strength: 0.7 },
   },
 ];
 
@@ -8149,7 +8296,7 @@ export function createKidsWorld(
    * every world that had loaded the same file.
    */
   function tintFoliage(root: THREE.Object3D): void {
-    const tint = theme.foliageTint;
+    const tint = land.foliageTint ?? theme.foliageTint;
     if (tint == null) {
       return;
     }
