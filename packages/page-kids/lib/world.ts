@@ -1446,7 +1446,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xffe9c4,
     fog: 0xcdeec0,
     path: "stones",
-    trees: "Trees",
+    trees: "dino/DinoPlants",
     friend: "Triceratops",
   },
   {
@@ -1509,7 +1509,7 @@ export const LANDS: readonly Land[] = [
     sun: 0xfff2d2,
     fog: 0xbfe0c8,
     path: "stones",
-    trees: "Trees",
+    trees: "dino/DinoPlants",
     friend: "Velociraptor",
     terrain: "gully",
     foliageTint: { leaf: 0x3f8f4e, trunk: 0x5a4636, strength: 0.7 },
@@ -2522,6 +2522,12 @@ export type WorldTheme = {
     readonly file: string;
     /** Clump size, drawn per verge per point. */
     readonly min: number;
+    /**
+     * Which mesh of a collection file to plant, by (part of) its node name.
+     * Left out, the first one — which is what every single-model file wants
+     * and what a collection file only ever gave: one variant of six.
+     */
+    readonly node?: string;
     readonly max: number;
     /** How far the clump spreads along the road. */
     readonly spread: number;
@@ -3010,6 +3016,13 @@ export const DINO_THEME: WorldTheme = {
     ["Flowers", 24, 3, 14, "both"],
   ],
   sceneryScale: 1,
+    // The valley's own plants (ferns, cycads, horsetail, palms, slim
+    // redwoods whose crowns are high above the dinosaurs) and set pieces
+    // (spires, arches, bones, nests, tar pits, crags), by full path.
+    ["dino/DinoPlants", 36, 3, 18, "both"],
+    ["dino/DinoSets", 14, 5, 24, "both"],
+    // Placed by name along the road: see `landmarkRun`.
+    ["dino/DinoLandmarks", 4, 8, 22, "back"],
   sheep: true,
   // A rare pacing "guard" here and there; commoner over on the Hero Trail.
   guardRate: 0.1,
@@ -3123,6 +3136,97 @@ export const HERO_THEME: WorldTheme = {
   ],
   sceneryScale: 1.2,
   // Skeleton_Warrior is reserved as a selectable main character, so the trail
+  // THICK PLANTING ALONG THE ROAD, the way the approved scene has it: dark
+  // grass tufts running right up to both edges of the path, wildflowers
+  // among them, a bush every so often. Drawn instanced, so a few hundred of
+  // them cost a handful of draw calls where the old random scatter of whole
+  // models could afford a few dozen.
+  groundClusters: [
+    {
+      file: "hero/HeroGrass",
+      node: "Grass_1_A",
+      min: 5,
+      max: 9,
+      spread: 4,
+      near: 1.5,
+      far: 9,
+      stride: 3,
+      verge: "both",
+      roadRelative: true,
+      lo: 1.1,
+      hi: 2,
+    },
+    {
+      file: "hero/HeroGrass",
+      node: "Grass_2_A",
+      min: 3,
+      max: 6,
+      spread: 5,
+      near: 2,
+      far: 12,
+      stride: 4,
+      verge: "both",
+      roadRelative: true,
+      lo: 1,
+      hi: 1.8,
+    },
+    {
+      file: "hero/HeroFlowers",
+      node: "Wildflower_1",
+      min: 2,
+      max: 5,
+      spread: 4,
+      near: 1.8,
+      far: 10,
+      stride: 5,
+      verge: "both",
+      roadRelative: true,
+      lo: 1.2,
+      hi: 2.2,
+    },
+    {
+      file: "hero/HeroFlowers",
+      node: "Wildflower_3",
+      min: 2,
+      max: 4,
+      spread: 5,
+      near: 2.2,
+      far: 11,
+      stride: 6,
+      verge: "both",
+      roadRelative: true,
+      lo: 1.2,
+      hi: 2.2,
+    },
+    {
+      file: "hero/HeroFlowers",
+      node: "Patch_1",
+      min: 1,
+      max: 3,
+      spread: 6,
+      near: 1.6,
+      far: 8,
+      stride: 7,
+      verge: "both",
+      roadRelative: true,
+      lo: 1.4,
+      hi: 2.4,
+    },
+    {
+      file: "hero/HeroBushes",
+      node: "Bush_1_A",
+      min: 1,
+      max: 2,
+      spread: 6,
+      near: 3,
+      far: 10,
+      stride: 13,
+      verge: "both",
+      roadRelative: true,
+      lo: 0.9,
+      hi: 1.5,
+    },
+  ],
   // guards are the other skeletons only.
   flagGuard: ["Skeleton_Minion", "Skeleton_Mage", "Skeleton_Rogue"],
   floorTextured: false,
@@ -4115,8 +4219,8 @@ const shapeLateral = (x: number, off: number): number => {
   switch (SHAPE) {
     case "sunken": {
       // A far bank rising to about two units and a near one barely a third.
-      const far = off < 0 ? smooth01((-off - 2.4) / 3.2) * 2.1 : 0;
-      const near = off > 0 ? smooth01((off - 3) / 3) * 0.35 : 0;
+      const far = off < 0 ? smooth01((-off - 2.2) / 3) * 3.4 : 0;
+      const near = off > 0 ? smooth01((off - 2.6) / 2.4) * 0.5 : 0;
       return far + near;
     }
     case "ridge": {
@@ -4124,15 +4228,15 @@ const shapeLateral = (x: number, off: number): number => {
       // nine units deep, and rising again as the far wall.
       if (off >= 0) return 0;
       const d = -off;
-      const fall = smooth01((d - 4) / 5) * 9;
-      const wall = smooth01((d - 18) / 7) * 11;
+      const fall = smooth01((d - 3.2) / 4) * 13;
+      const wall = smooth01((d - 19) / 7) * 16;
       return -fall + wall;
     }
     case "gully": {
       if (off >= 0) return 0;
       const d = -off;
       const bowl =
-        smooth01((d - 4) / 3) * (1 - smooth01((d - 12) / 4)) * 2.6;
+        smooth01((d - 3.2) / 2.5) * (1 - smooth01((d - 13) / 4)) * 4.2;
       return -bowl;
     }
     default:
@@ -8571,6 +8675,17 @@ export function createKidsWorld(
     // house behind its wall, and a house standing on lawn is exactly what
     // this pass exists to prevent. The first list is Chapter 1's; the second
         // Stone, petals, hulls and flames are not foliage and are painted from
+        // Stone, petals, hulls and flames are not foliage and are painted from
+        // a palette: a model says so with `extras.noTint`, and is left alone
+        // rather than being pulled toward the trunk colour.
+        if (
+          src.userData?.noTint === true ||
+          /rock|stone|bone|egg|tar_|smoke|steam|water|lava|sinter|basalt|mist|cliff/i.test(
+            src.name ?? "",
+          )
+        ) {
+          return m;
+        }
         // a palette: a model says so with `extras.noTint`, and is left alone
         // rather than being pulled toward the trunk colour.
         if (src.userData?.noTint === true) {
@@ -19280,7 +19395,11 @@ export function createKidsWorld(
       // in the matrix.
       let src: THREE.Mesh | null = null;
       gltf.scene.traverse((n) => {
-        if (src == null && (n as THREE.Mesh).isMesh) {
+        if (
+          src == null &&
+          (n as THREE.Mesh).isMesh &&
+          (spec.node == null || n.name.includes(spec.node))
+        ) {
           src = n as THREE.Mesh;
         }
       });
@@ -19735,6 +19854,29 @@ export function createKidsWorld(
        * building stands. Most of the village is behind the road, so +z faces
        * it — but some houses are deliberately put on the far side and turned
        * round, and for those the front is -z. Lighting the geometric max in
+      // LANDMARKS, NOT SCATTER. On the Hero Trail the buildings are the
+      // things a child walks TOWARDS: a tower on the skyline that is bigger
+      // every lesson, a windmill after it. So each is set at a fixed
+      // distance along the scene's road, the kind seeded from the scene, and
+      // not thrown down at random with the trees.
+      const landmarkRun =
+        (String(file) === "HeroBuildings" ||
+          String(file) === "HeroLandmarks" ||
+          String(file) === "dino/DinoLandmarks") &&
+        opts.sceneIndex != null &&
+        variants.length > 1;
+      const landmarkOrder = landmarkRun
+        ? variants
+            .map((_, vi) => vi)
+            // Spans and piers need water under them and are placed by the
+            // water code, not scattered on the grass.
+            .filter((vi) => !/bridge|dock|fence|wall|hedge|volcano|waterfall/i.test(variants[vi]!.name))
+            .sort(
+              (a, b) =>
+                hashSeed("landmark", opts.sceneIndex ?? 0, a) -
+                hashSeed("landmark", opts.sceneIndex ?? 0, b),
+            )
+        : [];
        * every case would have hung a lamp on the back wall of every house
        * across the road, lighting nothing and visible to nobody.
        */
@@ -19782,6 +19924,17 @@ export function createKidsWorld(
         // THE EVENING PUJA, hoisted out of the temple's own block. The lamps
         // ON the temple and the standing lamp IN FRONT of it are lit by the
         // same people at the same hour, and two copies of that window are
+          if (landmarkRun) {
+            // Evenly along the road, with a little give so they do not look
+            // surveyed.
+            // The two sets are interleaved: landmarks sit half a step off the
+            // buildings.
+            const offset = /Landmarks$/.test(String(file)) ? 0.5 : 0;
+            x =
+              30 +
+              (i + 0.5 + offset * 0.5 + (rand() - 0.5) * 0.3) *
+                ((TRAIL_END - 60) / count);
+          }
         // two things to keep in step by hand.
         const PUJA = [17.5, 20.5] as const;
 

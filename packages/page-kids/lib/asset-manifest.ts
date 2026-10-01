@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "be10bcfe070d";
+export const ASSET_VERSION = "11c4494b9426";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -602,6 +602,21 @@ export const ASSET_MAP: Readonly<
     "b": 177764,
     "g": "dino"
   },
+  "models/dino/DinoLandmarks.glb": {
+    "u": "v8cdb38c9/models/dino/DinoLandmarks.glb",
+    "b": 95192,
+    "g": "dino"
+  },
+  "models/dino/DinoPlants.glb": {
+    "u": "vecf35fc3/models/dino/DinoPlants.glb",
+    "b": 285604,
+    "g": "dino"
+  },
+  "models/dino/DinoSets.glb": {
+    "u": "vde9a272f/models/dino/DinoSets.glb",
+    "b": 207944,
+    "g": "dino"
+  },
   "models/dino/Parasaurolophus.glb": {
     "u": "vfc403194/models/dino/Parasaurolophus.glb",
     "b": 165428,
@@ -1085,6 +1100,11 @@ export const ASSET_MAP: Readonly<
   "models/village-util/Haystack.glb": {
     "u": "v654b05fe/models/village-util/Haystack.glb",
     "b": 235428,
+    "g": "village"
+  },
+  "models/village-util/Kulappura_Pond.glb": {
+    "u": "vfa439710/models/village-util/Kulappura_Pond.glb",
+    "b": 58936,
     "g": "village"
   },
   "models/village-util/Laterite_Wall.glb": {

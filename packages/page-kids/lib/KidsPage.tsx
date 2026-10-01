@@ -4802,10 +4802,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     const land =
       prefsRef.current.world === "village"
         ? pickLand(theme.lands)
-        : landForScene(
+        : (theme.lands.find((l) => l.name === reviewLand) ??
+          landForScene(
             theme.lands,
             sceneIndexOf(lessonsDoneOf(prefsRef.current)),
           );
+    // `?land=Name` — review only: build that land whatever the scene says.
+    const reviewLand =
+      typeof window === "undefined"
+        ? null
+        : new URLSearchParams(window.location.search).get("land");
     const world = createKidsWorld(canvas, land, theme, {
       nightStyle: resolveNightStyle(band, nightStyleOf(prefsRef.current)),
       villageDue,
