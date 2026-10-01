@@ -88,9 +88,10 @@ import {
   runAlongLesson,
   runLengthFor,
 } from "./run-length.ts";
+import type { DinoScene, HeroScene } from "./scene-kit.ts";
+import { hashSeed, mulberry32, SCENE_LESSONS } from "./scene-order.ts";
 import { MIN_STONE_GAP, stoneXFor } from "./stone-x.ts";
 import { createWorldLogo } from "./world-logo.ts";
-import { hashSeed, mulberry32, SCENE_LESSONS } from "./scene-order.ts";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
 export { ASSETS, versioned };
@@ -1424,8 +1425,8 @@ export type Land = {
    * kit (see scene-kit.ts): terrain, landmark, season, weather, trees. What a
    * land is made of beyond colour and light is read from it.
    */
-  readonly heroScene?: import("./scene-kit.ts").HeroScene;
-  readonly dinoScene?: import("./scene-kit.ts").DinoScene;
+  readonly heroScene?: HeroScene;
+  readonly dinoScene?: DinoScene;
 };
 
 /**
@@ -2535,6 +2536,11 @@ export type WorldTheme = {
      * and what a collection file only ever gave: one variant of six.
      */
     readonly node?: string;
+    /**
+     * Brightens or shifts the whole planting, as a per-channel multiplier on
+     * the model's own colour. Instanced, so it costs nothing.
+     */
+    readonly tint?: readonly [number, number, number];
     /** Clump size, drawn per verge per point. */
     readonly min: number;
     readonly max: number;
@@ -2890,6 +2896,78 @@ export type WorldTheme = {
   /** GLBs whose animation clips are shared by every character (KayKit rigs
    * ship their movement clips separately from the meshes). */
   readonly animationUrls?: readonly string[];
+  /**
+   * A REAL PERSPECTIVE CAMERA, for the two procedural worlds.
+   *
+   * Every other world is drawn with an orthographic camera and fakes depth
+   * (`depthScale`) so far things are smaller. The approved Blender mocks for
+   * Hero Trail and Dino Run are perspective renders (a real horizon, mountains
+   * layered above it, a path running away on a diagonal), and an orthographic
+   * camera can never produce that. Setting this swaps the camera and turns
+   * the faked depth off (`perspective()` returns 1), so nothing shrinks
+   * twice. Time Keepers leaves it unset and is untouched.
+   *
+   * `view.camX/camY/camZ/lookY` still place and aim the camera; `view.frustum`
+   * and `topF`/`botF` are not used.
+   */
+  readonly perspective?: {
+    /** Vertical field of view, in degrees. Held constant as the pane resizes. */
+    readonly fov: number;
+    /**
+     * Lens shift, as a fraction of half the frame's height: positive lifts
+     * the whole picture, which brings the horizon DOWN from where the
+     * camera's own pitch puts it. The mocks are rendered with a level camera
+     * and a lens shift, so verticals stay vertical.
+     */
+    readonly shiftY: number;
+    readonly near: number;
+    readonly far: number;
+    /** How far in front of the camera (along x) the party stands. */
+    readonly followDx: number;
+    /** Fog range, from the camera. The ground's far edge must be hidden by `far`. */
+    readonly fogNear: number;
+    readonly fogFar: number;
+    /** How far BEHIND the road the ground goes, in units (it is 38 in front). */
+    readonly groundBack: number;
+    /** The far bank's rise, as `farBank` but for the deeper ground. */
+    readonly farBank?: number;
+    /** How much further behind the road the scatter reaches, and how many more of it there are. */
+    readonly scatterDepth: number;
+    readonly scatterCount: number;
+    /** The same for the large trees, which cost far more than anything else. */
+    readonly treeScatter: number;
+    /**
+     * THE SIGHT-LINE LINE: how far behind the lane (z, as a distance) a tall
+     * plant's nearest edge must stand. Everything the camera follows is in
+     * front of it, so nothing tall can ever come between lens and cast.
+     */
+    readonly sightClear: number;
+    /**
+     * Thickets of ground cover, on this camera: the near verge starts this
+     * far from the lane (so the path stays clear), and nothing in a thicket
+     * stands taller than the low line (1.6) unless it is behind `sightClear`.
+     */
+    readonly clusterNear: number;
+    /** How many more of each thicket's plants, because the lens sees so much more ground. */
+    readonly clusterDensity: number;
+    /** How much of the ground's bare-earth patches show, 0..1. */
+    readonly dryShare: number;
+    /** Where the word row rides: towards the camera, and how high above the ground. */
+    readonly wordZ: number;
+    readonly wordY: number;
+    /** Day sky: the zenith, and the haze on the horizon. */
+    readonly skyTop: number;
+    readonly skyBottom: number;
+    /** The ranges: distance, height, and how far up the frame their peaks reach. */
+    readonly ranges: readonly {
+      readonly dist: number;
+      readonly height: number;
+      readonly peak: number;
+      readonly haze: number;
+      readonly seed: number;
+      readonly far: boolean;
+    }[];
+  };
   /** Camera framing. The hero world uses a flatter, side-on, zoomed view;
    * dino/cube keep the original 3/4 angle. */
   readonly view?: {
@@ -3031,6 +3109,102 @@ export const DINO_THEME: WorldTheme = {
     // Placed by name along the road: see `landmarkRun`.
     ["dino/DinoLandmarks", 4, 8, 22, "back"],
   ],
+  // THE VALLEY FLOOR, PLANTED THE WAY THE APPROVED SCENE IS: leafy ground
+  // cover in bands along both edges of the path, round-leaf plants and ferns
+  // and wispy grass with wildflowers between them, always low (the near verge
+  // is held to a knee by the perspective camera — see `view`). Drawn instanced,
+  // so a few hundred cost a handful of draw calls. Brightened a little with
+  // `tint`: the Mega set is cut for dark forest floor.
+  groundClusters: [
+    {
+      file: "nature/MegaPlants",
+      node: "Fern_1",
+      tint: [1.35, 1.6, 1.0],
+      min: 2,
+      max: 4,
+      spread: 6,
+      near: 1.5,
+      far: 20,
+      stride: 3,
+      verge: "both",
+      roadRelative: true,
+      lo: 0.7,
+      hi: 1.3,
+    },
+    {
+      file: "nature/MegaPlants",
+      node: "Clover_1",
+      tint: [1.25, 1.6, 0.95],
+      min: 3,
+      max: 6,
+      spread: 6,
+      near: 1.2,
+      far: 22,
+      stride: 3,
+      verge: "both",
+      roadRelative: true,
+      lo: 0.7,
+      hi: 1.4,
+    },
+    {
+      file: "nature/MegaPlants",
+      node: "Clover_2",
+      tint: [1.25, 1.6, 0.95],
+      min: 2,
+      max: 5,
+      spread: 6,
+      near: 1.2,
+      far: 22,
+      stride: 4,
+      verge: "both",
+      roadRelative: true,
+      lo: 0.7,
+      hi: 1.4,
+    },
+    {
+      file: "nature/MegaPlants",
+      node: "Grass_Wispy_Short",
+      tint: [1.3, 1.5, 1.0],
+      min: 3,
+      max: 6,
+      spread: 6,
+      near: 1.2,
+      far: 20,
+      stride: 3,
+      verge: "both",
+      roadRelative: true,
+      lo: 0.7,
+      hi: 1.3,
+    },
+    {
+      file: "nature/MegaFlowers",
+      node: "Flower_3_Single",
+      min: 3,
+      max: 6,
+      spread: 6,
+      near: 1.5,
+      far: 20,
+      stride: 4,
+      verge: "both",
+      roadRelative: true,
+      lo: 0.6,
+      hi: 1.1,
+    },
+    {
+      file: "nature/MegaFlowers",
+      node: "Flower_3_Group",
+      min: 2,
+      max: 5,
+      spread: 6,
+      near: 1.5,
+      far: 20,
+      stride: 5,
+      verge: "both",
+      roadRelative: true,
+      lo: 0.6,
+      hi: 1.1,
+    },
+  ],
   sceneryScale: 1,
   sheep: true,
   // A rare pacing "guard" here and there; commoner over on the Hero Trail.
@@ -3055,31 +3229,61 @@ export const DINO_THEME: WorldTheme = {
   sky: "flat",
   // Sky and ranges above the land: see `farBank`.
   farBank: 0.15,
-  ridgeCrag: 1,
+  ridgeCrag: 0.3,
   // Gentle country: the rolling hills lifted the far edge of the ground off
   // the top of the frame wherever the road climbed, so the sky came and went.
   relief: 0.25,
-  mountains: { colorNear: 0x6f8f55, colorFar: 0x9db380 },
+  mountains: { colorNear: 0x5b7d52, colorFar: 0x8fa98c },
   // The path and runner sit lower in the pane than they used to: the
   // bottom of the frame was empty ground. Same total view (top + bottom).
   // Then a unit and a half back UP, and the camera following the road's
   // height: in the hills' dips the word row was running off the bottom
   // edge. camY and lookY move together, so the angle is unchanged.
+  //
+  // A REAL PERSPECTIVE CAMERA, as the Hero Trail's: see there.
   view: {
     followRoad: true,
-    camY: 9.5,
-    camZ: 30,
-    lookY: 1.5,
+    camY: 6.5,
+    camZ: 18,
+    camX: 9.6,
+    lookY: 6.5,
     frustum: 13,
     topF: 0.98,
     botF: 1.02,
   },
+  perspective: {
+    fov: 34,
+    shiftY: 0.7,
+    near: 2,
+    far: 640,
+    followDx: 8.5,
+    fogNear: 22,
+    fogFar: 105,
+    groundBack: 90,
+    farBank: 0.5,
+    scatterDepth: 2.4,
+    scatterCount: 1.8,
+    treeScatter: 0.9,
+    sightClear: 12,
+    clusterNear: 2.2,
+    clusterDensity: 1,
+    dryShare: 0.25,
+    wordZ: 6,
+    wordY: 0,
+    skyTop: 0x8fb0c8,
+    skyBottom: 0xb5c9c0,
+    ranges: [
+      { dist: 380, height: 90, peak: 0.84, haze: 0.3, seed: 1.7, far: true },
+      { dist: 300, height: 60, peak: 0.74, haze: 0.12, seed: 4.2, far: false },
+    ],
+  },
   // The word cards a little nearer the camera, which sits them lower in the
   // pane, below the runner's path rather than on it.
   wordZ: 14.5,
+  // MISTY, as the mock is: muted greens under a grey-green haze.
   grade: {
-    exposure: 1.36,
-    sat: 1.2,
+    exposure: 1.12,
+    sat: 1.0,
     bright: 1.05,
     sun: 2.85,
     hemi: 0.82,
@@ -3258,7 +3462,7 @@ export const HERO_THEME: WorldTheme = {
   // Gentle country: the rolling hills lifted the far edge of the ground off
   // the top of the frame wherever the road climbed, so the sky came and went.
   relief: 0.25,
-  mountains: { colorNear: 0x5f9078, colorFar: 0x8db5a8 },
+  mountains: { colorNear: 0x4a6e62, colorFar: 0x7f98a0 },
   pointerRing: true,
   companionsWatch: true,
   nightMode: "night",
@@ -3269,14 +3473,49 @@ export const HERO_THEME: WorldTheme = {
   // enough to show the forest behind the trail. The runner sits high in the
   // frame (big botF) so the practice-text card never covers it.
   // Lowered in the pane for the same reason as Dino Run — see there.
+  //
+  // A REAL PERSPECTIVE CAMERA, to match the approved mock (see
+  // `WorldTheme.perspective`). The mock is a level camera low and well back
+  // with a lens shift, a horizon a fifth of the way down, mountains layered
+  // above it and the cast about a fifth of the frame tall. The numbers in
+  // `view` are then the rig itself: where it stands relative to the road
+  // (`camY` over the ground, `camZ` back from it, `camX` sets the yaw so the
+  // path runs away on a diagonal) and a level aim (`lookY` = `camY`).
   view: {
     followRoad: true,
-    camY: 11,
-    camZ: 33,
-    lookY: 3.6,
+    camY: 4.9,
+    camZ: 16,
+    camX: 11.6,
+    lookY: 4.9,
     frustum: 12,
     topF: 0.84,
     botF: 1.04,
+  },
+  perspective: {
+    fov: 34,
+    shiftY: 0.6,
+    near: 2,
+    far: 640,
+    followDx: 11,
+    fogNear: 55,
+    fogFar: 140,
+    groundBack: 120,
+    farBank: 0.35,
+    scatterDepth: 2.4,
+    scatterCount: 1.8,
+    treeScatter: 1.8,
+    sightClear: 12,
+    clusterNear: 2.2,
+    clusterDensity: 2.2,
+    dryShare: 0.6,
+    wordZ: 4,
+    wordY: 0,
+    skyTop: 0x9ec3de,
+    skyBottom: 0xe9dcc8,
+    ranges: [
+      { dist: 380, height: 70, peak: 0.74, haze: 0.16, seed: 1.7, far: true },
+      { dist: 300, height: 46, peak: 0.68, haze: 0.0, seed: 4.2, far: false },
+    ],
   },
   // The word cards a little nearer the camera, which sits them lower in the
   // pane, below the runner's path rather than on it.
@@ -3286,8 +3525,8 @@ export const HERO_THEME: WorldTheme = {
   // not washed out; the child can dial brightness/paleness further with the
   // in-game slider. The hero keeps a small colour boost so it stays the focus.
   grade: {
-    exposure: 1.42,
-    sat: 1.12,
+    exposure: 1.25,
+    sat: 1.35,
     bright: 1.04,
     sun: 2.75,
     hemi: 0.78,
@@ -5219,7 +5458,7 @@ export function createKidsWorld(
   // Set before ANYTHING measures the ground - the mesh, the props and the
   // helpers must all be built against the same relief.
   RELIEF = theme.relief ?? 1;
-  FAR_BANK = theme.farBank ?? 1;
+  FAR_BANK = theme.perspective?.farBank ?? theme.farBank ?? 1;
   SHAPE =
     theme.village != null
       ? null
@@ -5233,9 +5472,9 @@ export function createKidsWorld(
             } as Record<string, LandShape>
           )[land.heroScene.terrain] ?? null)
         : land.dinoScene != null
-          ? ((
-              { ridge: "ridge", hills: "hill" } as Record<string, LandShape>
-            )[land.dinoScene.shape] ?? null)
+          ? (({ ridge: "ridge", hills: "hill" } as Record<string, LandShape>)[
+              land.dinoScene.shape
+            ] ?? null)
           : (land.terrain ?? null);
   ROAD_SINK = land.path === "mud" ? 0.22 : 0;
   const trueNight = (theme.nightMode ?? "dusk") === "night";
@@ -5392,11 +5631,13 @@ export function createKidsWorld(
   const bright = theme.sky === "flat";
   // Hero Trail is punchy and kids-bright; the dino world is graded subtler so
   // it doesn't sit at high contrast. Falls back to the classic HDR grade.
-  const grade =
-    theme.grade ??
-    (bright
-      ? { exposure: 1.5, sat: 1.5, bright: 1.12, sun: 3.0, hemi: 1.0 }
-      : { exposure: 1.16, sat: 1.07, bright: 1.0, sun: 2.4, hemi: 0.5 });
+  // A copy, so a review build can re-grade live (`__world.tune`).
+  const grade = {
+    ...(theme.grade ??
+      (bright
+        ? { exposure: 1.5, sat: 1.5, bright: 1.12, sun: 3.0, hemi: 1.0 }
+        : { exposure: 1.16, sat: 1.07, bright: 1.0, sun: 2.4, hemi: 0.5 })),
+  };
   renderer.toneMappingExposure = grade.exposure;
   renderer.setPixelRatio(Math.min(devicePixelRatio, lowTier ? 1.25 : 2));
   // The child's brightness/paleness slider scales the base grade live:
@@ -5725,7 +5966,9 @@ export function createKidsWorld(
     stars: 0,
   };
   /** Redraw the backdrop only when it has actually moved. See `drawFlatSky`. */
-  let flatDrawn = { top: -1, bottom: -1, stars: -1 };
+  let flatDrawn = { top: -1, bottom: -1, stars: -1, horizon: -1 };
+  /** How far down the backdrop the horizon is (1 = the bottom edge: the old ortho sky). */
+  let skyHorizon = 1;
   const readSky = (into: SkyLook): SkyLook => {
     into.sun.copy(sun.color);
     into.hemi.copy(hemi.color);
@@ -5805,19 +6048,29 @@ export function createKidsWorld(
   scene.add(sun, hemi, heroLamp, companionLamp);
   // The cube world fogs in nearer so the ground dissolves into the flat sky
   // at the horizon — no hard grass/sky seam.
-  scene.fog = bright
-    ? // 100, not 120. THE GROUND'S FAR EDGE IS A DIAGONAL and cannot be
-      // made otherwise: it is a straight line in world space, and this view
-      // is yawed twelve degrees, so it projects across the screen at an
-      // angle while the painted horizon is level. They meet along one line
-      // and open a wedge of sky everywhere else.
-      //
-      // The edge does not have to be level, though — it has to be INVISIBLE,
-      // and fog does that regardless of which way it runs. Saturating at 100
-      // instead of 120 hides it before it can be seen, which is what lets
-      // the camera pitch down far enough to see the children on the road.
-      new THREE.Fog(land.fog, 38, 96)
-    : new THREE.Fog(land.fog, 60, 160);
+  scene.fog =
+    theme.perspective != null
+      ? // A real camera: the range is measured from the lens, so it is the
+        // theme's own, and the ground is built deep enough that `far` hides its
+        // edge.
+        new THREE.Fog(
+          land.fog,
+          theme.perspective.fogNear,
+          theme.perspective.fogFar,
+        )
+      : bright
+        ? // 100, not 120. THE GROUND'S FAR EDGE IS A DIAGONAL and cannot be
+          // made otherwise: it is a straight line in world space, and this view
+          // is yawed twelve degrees, so it projects across the screen at an
+          // angle while the painted horizon is level. They meet along one line
+          // and open a wedge of sky everywhere else.
+          //
+          // The edge does not have to be level, though — it has to be INVISIBLE,
+          // and fog does that regardless of which way it runs. Saturating at 100
+          // instead of 120 hides it before it can be seen, which is what lets
+          // the camera pitch down far enough to see the children on the road.
+          new THREE.Fog(land.fog, 38, 96)
+        : new THREE.Fog(land.fog, 60, 160);
 
   /**
    * WHERE THE HAZE STARTS BY DAY, against where it starts at night.
@@ -5830,8 +6083,9 @@ export function createKidsWorld(
    * takes a little of the milkiness out of the middle distance without
    * touching the far edge, where `far` still does the hiding.
    */
-  const FOG_NEAR_NIGHT = (scene.fog as THREE.Fog).near;
-  const FOG_NEAR_DAY = FOG_NEAR_NIGHT * 1.17;
+  let FOG_NEAR_NIGHT = (scene.fog as THREE.Fog).near;
+  let FOG_NEAR_DAY =
+    theme.perspective != null ? FOG_NEAR_NIGHT : FOG_NEAR_NIGHT * 1.17;
 
   /**
    * THE CHAPTER, AND THE ROAD IT NEEDS.
@@ -5898,7 +6152,19 @@ export function createKidsWorld(
     }
   }
 
-  const V = theme.view ?? DEFAULT_VIEW;
+  // A PLAIN COPY, so a review build can nudge the view live (`__world.tune`).
+  // Nothing else writes to it.
+  const V: {
+    -readonly [K in keyof NonNullable<WorldTheme["view"]>]: NonNullable<
+      WorldTheme["view"]
+    >[K];
+  } = { ...(theme.view ?? DEFAULT_VIEW) };
+  // PERSPECTIVE, FOR THE TWO PROCEDURAL WORLDS ONLY: see `WorldTheme.perspective`.
+  const PERSP = theme.perspective == null ? null : { ...theme.perspective };
+  const cam: THREE.OrthographicCamera | THREE.PerspectiveCamera =
+    PERSP != null
+      ? new THREE.PerspectiveCamera(PERSP.fov, 2.75, PERSP.near, PERSP.far)
+      : new THREE.OrthographicCamera();
   PONDS = [];
   if (CHAPTER != null) {
     for (const l of LESSONS) {
@@ -5916,7 +6182,6 @@ export function createKidsWorld(
       }
     }
   }
-  const cam = new THREE.OrthographicCamera();
   // A way in, for measuring. Off unless the URL asks for it, so it costs a
   // string compare once per world and nothing at all in normal play.
   if (
@@ -5932,9 +6197,17 @@ export function createKidsWorld(
       scene,
       cam,
       renderer,
+      // Review only: nudge the perspective rig live and look again.
+      tune: (o: Record<string, number>) => tuneView(o),
+      view: () => ({
+        V,
+        PERSP,
+        fog: scene.fog && { ...(scene.fog as object) },
+      }),
+      sight: () => ({ ...sightStats, clear: PERSP?.sightClear ?? null }),
       crossing: () => ({ island: WILD, decks: BRIDGES, waterY: RIVER_SURFACE }),
       walker: () => player?.wrap.position.toArray(),
-      bridgeFlex: () => BRIDGE_FLEX.map((m) => +m.d.toFixed(4)),
+      bridgeFlex: () => BRIDGE_FLEX.map((m) => Number(m.d.toFixed(4))),
       passage: () => ({ text: wordText, index: wordIdx }),
       night: () => ({ blend: nightBlend, look: nightLook, now: nightNow }),
       // Skips his wait between appearances — up to a minute of game time,
@@ -6333,7 +6606,9 @@ export function createKidsWorld(
     const k = refH > 0 ? Math.min(1.3, Math.max(0.72, h / refH)) : 1;
     frustumK = k;
     frustumA = a;
+    refreshPaneVis();
     applyFrustum();
+    updateHorizon();
     renderer.setSize(w, h, false);
   }
   /**
@@ -6356,6 +6631,29 @@ export function createKidsWorld(
    */
   let frustumK = 1;
   let frustumA = 2;
+  /**
+   * How much of the canvas the pane shows, 0..1, from the top. See
+   * `applyFrustum`. Read from the DOM, so it is refreshed on resize and
+   * every half-second, because the pane's cap changes without the canvas
+   * ever resizing.
+   */
+  let paneVis = 1;
+  let visTick = 0;
+  const _hz = new THREE.Vector3();
+  function refreshPaneVis(): boolean {
+    if (PERSP == null) {
+      return false;
+    }
+    const pane = canvas.parentElement;
+    const ph = pane?.clientHeight ?? 0;
+    const ch = canvas.clientHeight;
+    const next = ph > 0 && ch > 0 ? Math.min(1, ph / ch) : 1;
+    if (Math.abs(next - paneVis) < 0.002) {
+      return false;
+    }
+    paneVis = next;
+    return true;
+  }
   /** 0 on the open road, 1 in the middle of a village; eased in the tick. */
   let villageWide = 0;
   // Half again as wide. With the market gone and the shrine brought down to
@@ -6363,23 +6661,110 @@ export function createKidsWorld(
   // open enough to clear a roof — not enough to make the children small.
   const VILLAGE_WIDEN = 0.5;
   function applyFrustum(): void {
+    if (PERSP != null) {
+      // The vertical field of view is held, so the cast is the same fraction
+      // of the pane's height whatever shape the pane is; a wider pane simply
+      // sees more country sideways.
+      //
+      // THE PANE IS ONLY PART OF THE CANVAS. The canvas keeps the 2:1 shape
+      // of its drawing buffer and the card that holds it is capped shorter
+      // and clips the rest (see the capping effect in KidsPage), so what a
+      // child sees is the TOP `paneVis` of what is rendered. The lens is
+      // therefore set for the window, and mapped onto the whole canvas:
+      // clip y of the canvas is 1 - vis * (1 - clip y of the window).
+      const vis = paneVis;
+      const pc = cam as THREE.PerspectiveCamera;
+      pc.fov =
+        (2 * Math.atan(Math.tan((PERSP.fov * Math.PI) / 360) / vis) * 180) /
+        Math.PI;
+      pc.aspect = frustumA;
+      pc.near = PERSP.near;
+      pc.far = PERSP.far;
+      pc.updateProjectionMatrix();
+      // The lens shift: a level camera whose picture is slid up, so the
+      // horizon comes down to where the mock has it without tilting the
+      // verticals. Clip y = e5 * y - e9 * depth, so the skew goes in negated.
+      pc.projectionMatrix.elements[9] = -(1 - vis + vis * PERSP.shiftY);
+      pc.projectionMatrixInverse.copy(pc.projectionMatrix).invert();
+      return;
+    }
+    const oc = cam as THREE.OrthographicCamera;
     const S = V.frustum * frustumK * (1 + villageWide * VILLAGE_WIDEN);
-    cam.left = -S * frustumA;
-    cam.right = S * frustumA;
+    oc.left = -S * frustumA;
+    oc.right = S * frustumA;
     // The frustum reaches further below the look-at point than above it, so
     // the trail (and the runner) sit clear of the floating words bar.
-    cam.top = S * V.topF;
-    cam.bottom = -S * V.botF;
-    cam.near = -100;
+    oc.top = S * V.topF;
+    oc.bottom = -S * V.botF;
+    oc.near = -100;
     // 420, not 300. The painted horizon sat a hundredth of a clip unit past
     // the old far plane and was silently discarded; the volume now has room
     // for anything that wants to stand behind the world rather than in it.
-    cam.far = 420;
-    cam.updateProjectionMatrix();
+    oc.far = 420;
+    oc.updateProjectionMatrix();
   }
   resize();
   cam.position.set(-(V.camX ?? 10), V.camY, V.camZ);
   cam.lookAt(0, V.lookY, 0);
+  /** Where the horizon falls in the backdrop, from where the camera is aimed. */
+  function updateHorizon(): void {
+    if (PERSP == null) {
+      return;
+    }
+    cam.updateMatrixWorld(true);
+    _hz.set(0, 0, -1).transformDirection(cam.matrixWorld);
+    _hz.y = 0;
+    _hz.normalize().multiplyScalar(5000).add(cam.position);
+    _hz.y = cam.position.y;
+    _hz.project(cam);
+    skyHorizon = Math.min(1, Math.max(0, (1 - _hz.y) / 2));
+  }
+  updateHorizon();
+  /**
+   * RE-AIM THE PERSPECTIVE RIG after a live nudge (`__world.tune`), keeping
+   * the camera where the walk has taken it. Review only: the game itself
+   * aims once, above, and the tick only ever translates.
+   */
+  function tuneView(o: Record<string, number>): void {
+    let regrade = false;
+    const v = V as unknown as Record<string, number>;
+    const p = PERSP as unknown as Record<string, number> | null;
+    for (const [k, val] of Object.entries(o)) {
+      if (k in v) v[k] = val;
+      else if (p != null && k in p) p[k] = val;
+      else if (k === "fogNear") {
+        FOG_NEAR_NIGHT = val;
+        FOG_NEAR_DAY = val;
+      } else if (k === "fogFar" && scene.fog != null) {
+        (scene.fog as THREE.Fog).far = val;
+      } else {
+        tuned[k] = val;
+      }
+    }
+    const x = cam.position.x;
+    cam.position.set(x, V.camY, V.camZ);
+    cam.lookAt(x + (V.camX ?? 10), V.lookY, 0);
+    refreshPaneVis();
+    for (const k of ["exposure", "sat", "bright", "sun", "hemi"] as const) {
+      if (typeof o[`g_${k}`] === "number") {
+        grade[k] = o[`g_${k}`]!;
+        regrade = true;
+      }
+    }
+    if (regrade || "skyTop" in o || "skyBottom" in o) {
+      applyLook();
+      void applySky(land.mood);
+    }
+    applyFrustum();
+    cam.updateMatrixWorld(true);
+    updateHorizon();
+  }
+  /** What the scatter placed that is taller than a bush, for `__world.sight()`. */
+  const sightStats = { tall: 0, nearestEdge: -Infinity };
+  /** The thickets of a perspective road, in lengths; see where they are built. */
+  const clusterLengths: { mesh: THREE.InstancedMesh; cx: number }[] = [];
+  /** Review-only dials with no home elsewhere (sky layer heights and so on). */
+  const tuned: Record<string, number> = {};
   /**
    * The lowest the road gets across the stretch the word cards cover — a
    * little behind the runner to well past the far edge of the row. The
@@ -6400,6 +6785,17 @@ export function createKidsWorld(
    */
   const roadRef =
     "followRoad" in V && V.followRoad === true ? lowestRoad(0) : null;
+  /** The road's mean height over the stretch the frame covers, for the perspective rig. */
+  const avgRoad = (x: number) => {
+    let s = 0;
+    let n = 0;
+    for (let at = x - 6; at <= x + 18; at += 3) {
+      s += roadTopY(at);
+      n += 1;
+    }
+    return s / n;
+  };
+  const roadRef0 = PERSP != null ? avgRoad(0) : 0;
 
   // ── sky ────────────────────────────────────────────────────────────────
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -6694,13 +7090,20 @@ export function createKidsWorld(
     if (
       top === flatDrawn.top &&
       bottom === flatDrawn.bottom &&
-      Math.abs(stars - flatDrawn.stars) < 0.002
+      Math.abs(stars - flatDrawn.stars) < 0.002 &&
+      skyHorizon === flatDrawn.horizon
     ) {
       return;
     }
-    flatDrawn = { top, bottom, stars };
+    flatDrawn = { top, bottom, stars, horizon: skyHorizon };
     const grad = skyCtx.createLinearGradient(0, 0, 0, SKY_H);
     grad.addColorStop(0, `#${flatSky.top.getHexString()}`);
+    // On a perspective camera the sky only reaches the haze at the horizon,
+    // which is a fifth of the way down the pane, not at its bottom edge.
+    grad.addColorStop(
+      Math.min(1, Math.max(0.05, skyHorizon)),
+      `#${flatSky.bottom.getHexString()}`,
+    );
     grad.addColorStop(1, `#${flatSky.bottom.getHexString()}`);
     skyCtx.globalAlpha = 1;
     skyCtx.fillStyle = grad;
@@ -7077,7 +7480,7 @@ export function createKidsWorld(
         // is where you are looking through the least air and so where the
         // cloud has the most to hide.
         flatSky.top
-          .set(0x7ec5f2)
+          .set(PERSP?.skyTop ?? 0x7ec5f2)
           .lerp(SKY_DAWN_TOP, warm * 0.8)
           .lerp(SKY_NOON_TOP, dreamy * 0.3)
           .lerp(HAZE_OVERCAST, overcast * 0.82);
@@ -7088,7 +7491,7 @@ export function createKidsWorld(
         // The painted treeline does that job now, so the sky is allowed to
         // be sky all the way down to it.
         flatSky.bottom
-          .set(0xbcdcf0)
+          .set(PERSP?.skyBottom ?? 0xbcdcf0)
           .lerp(SKY_DAWN_LOW, warm)
           .lerp(SKY_NOON_LOW, dreamy * 0.34)
           .lerp(HAZE_OVERCAST, overcast * 0.7);
@@ -7140,7 +7543,9 @@ export function createKidsWorld(
       // the light change.
       (scene.fog as THREE.Fog).near =
         FOG_NEAR_DAY + (FOG_NEAR_NIGHT - FOG_NEAR_DAY) * nightLook;
-      if (night) {
+      if (night || PERSP != null) {
+        // On a perspective camera the ground's far edge, the ranges and the
+        // sky all meet at ONE horizon, so the haze IS the sky's bottom stop.
         (scene.fog as THREE.Fog).color.copy(flatSky.bottom);
       } else {
         (scene.fog as THREE.Fog).color
@@ -7418,18 +7823,22 @@ export function createKidsWorld(
       for (let i = 0; i < bridgeModules3d.length; i++) {
         const m = bridgeModules3d[i]!;
         if (x < m.flex.x0 - 0.5 || x > m.flex.x1 + 0.5) continue;
-        const u = (x - (m.flex.x0 + m.flex.x1) / 2) / ((m.flex.x1 - m.flex.x0) / 2);
+        const u =
+          (x - (m.flex.x0 + m.flex.x1) / 2) / ((m.flex.x1 - m.flex.x0) / 2);
         const shape = Math.max(0, 1 - u * u * 0.8);
         // ONLY MOVING FEET MOVE IT. Somebody standing still puts no force on
         // the deck at all, so it settles within a second of the last step.
         const drive = speed < 0.12 ? 0 : speed;
-        const step = Math.sin(bridgeClock * cadence * Math.PI * 2 + wrap.position.z + i * 0.6);
+        const step = Math.sin(
+          bridgeClock * cadence * Math.PI * 2 + wrap.position.z + i * 0.6,
+        );
         load[i]!.f += drive * shape * (0.55 + 0.45 * step);
         const side = Math.sin(bridgeClock * cadence * Math.PI + i);
         load[i]!.roll += speed * shape * side;
         // The neighbours feel a quarter of it through the joint.
         if (i > 0) load[i - 1]!.f += 0.25 * drive * shape * step;
-        if (i < bridgeModules3d.length - 1) load[i + 1]!.f += 0.25 * drive * shape * step;
+        if (i < bridgeModules3d.length - 1)
+          load[i + 1]!.f += 0.25 * drive * shape * step;
       }
     }
     const K = 150; // (2*pi*1.95 Hz)^2: about two vibrations a second
@@ -7443,7 +7852,10 @@ export function createKidsWorld(
       m.v += acc * dt;
       m.flex.d += m.v * dt;
       m.flex.d = Math.max(-0.035, Math.min(0.01, m.flex.d));
-      const rollAcc = -K * 1.2 * m.roll - C * 1.4 * m.rollV + 0.6 * Math.max(-1.5, Math.min(1.5, load[i]!.roll));
+      const rollAcc =
+        -K * 1.2 * m.roll -
+        C * 1.4 * m.rollV +
+        0.6 * Math.max(-1.5, Math.min(1.5, load[i]!.roll));
       m.rollV += rollAcc * dt;
       m.roll += m.rollV * dt;
       m.roll = Math.max(-0.004, Math.min(0.004, m.roll));
@@ -7539,7 +7951,98 @@ export function createKidsWorld(
   }[] = [];
   /** How much of the walk the ranges keep for themselves: almost none. */
   const RIDGE_DRIFT = 0.06;
+  /**
+   * THE RANGES ON A PERSPECTIVE CAMERA.
+   *
+   * Under an orthographic camera a layer's screen height is a dot product and
+   * can be solved once. Here it is a projection, so it is solved against the
+   * real camera every frame instead: each layer is a flat sheet standing
+   * square to the view `dist` units out, and its height is found numerically
+   * so its peaks land at a chosen height in the frame. Tilt, raise or re-lens
+   * the camera and the mountains stay where the mock has them.
+   */
+  const perspRanges: {
+    readonly mesh: THREE.Mesh;
+    readonly dist: number;
+    /** Where the peaks reach, in clip y (-1 bottom, 1 top). */
+    readonly peakNdc: number;
+    /** Local height of the typical peak, before scale. */
+    readonly peakLocal: number;
+    readonly base: THREE.Color;
+    readonly haze: number;
+    readonly camX0: number;
+    y: number;
+  }[] = [];
+  const _pf = new THREE.Vector3();
+  const _tc = new THREE.Color();
+  const _pr = new THREE.Vector3();
+  const _pp = new THREE.Vector3();
+  /** A height in the PANE's clip space, as the canvas's (see `paneVis`). */
+  const windowNdc = (y: number) => 1 - paneVis + paneVis * y;
+  /** The y that puts a point at (x, z) at clip height `target`. */
+  function solveY(x: number, z: number, target: number, guess: number): number {
+    let y = guess;
+    for (let i = 0; i < 3; i++) {
+      const a = _pp.set(x, y, z).project(cam).y;
+      const b = _pp.set(x, y + 1, z).project(cam).y;
+      const d = b - a;
+      if (!Number.isFinite(d) || Math.abs(d) < 1e-9) {
+        break;
+      }
+      y += (target - a) / d;
+    }
+    return y;
+  }
+  /** A sheet standing square to the view, `dist` out along it, nudged `slide` along the lens's right. */
+  function squareToView(
+    obj: THREE.Object3D,
+    dist: number,
+    slide: number,
+  ): { x: number; z: number } {
+    cam.updateMatrixWorld(true);
+    _pf.set(0, 0, -1).transformDirection(cam.matrixWorld);
+    _pf.y = 0;
+    _pf.normalize();
+    _pr.set(-_pf.z, 0, _pf.x);
+    obj.rotation.y = Math.atan2(-_pf.x, -_pf.z);
+    return {
+      x: cam.position.x + _pf.x * dist + _pr.x * slide,
+      z: cam.position.z + _pf.z * dist + _pr.z * slide,
+    };
+  }
   function followRidges(): void {
+    if (PERSP != null) {
+      const fog = (scene.fog as THREE.Fog).color;
+      const lift = tuned.rangeLift ?? 0;
+      const kH = tuned.rangeH ?? 1;
+      for (const r of perspRanges) {
+        const lag = RIDGE_DRIFT * (cam.position.x - r.camX0);
+        const at = squareToView(r.mesh, r.dist, -lag);
+        r.mesh.scale.y = kH;
+        const peak = r.peakLocal * kH;
+        r.y =
+          solveY(at.x, at.z, windowNdc(r.peakNdc + lift), r.y + peak) - peak;
+        r.mesh.position.set(at.x, r.y, at.z);
+        // Aerial perspective: the further the range, the nearer the haze.
+        const ri = perspRanges.indexOf(r);
+        const mc = (r.mesh.material as THREE.MeshBasicMaterial).color;
+        mc.copy(
+          tuned[`col${ri}`] != null ? _tc.setHex(tuned[`col${ri}`]!) : r.base,
+        ).lerp(fog, tuned[`haze${ri}`] ?? r.haze);
+      }
+      if (cloudLayer != null) {
+        const at = squareToView(cloudLayer, 420, 0);
+        const peak = 0;
+        const y = solveY(
+          at.x,
+          at.z,
+          windowNdc(tuned.cloudNdc ?? 0.7),
+          cloudLayer.position.y,
+        );
+        cloudLayer.position.set(at.x, y + peak, at.z);
+      }
+      return;
+    }
     for (const r of ridgeLayers) {
       const dcx = cam.position.x - r.camX0;
       const dcy = cam.position.y - r.camY0;
@@ -8821,15 +9324,20 @@ export function createKidsWorld(
     // stone — 40 was enough to keep the terrain in frame, and doubled so the
     // next chapter's preview has ground to stand on (owner, 25 Sep 2026).
     const GROUND_WIDE = TRAIL_END + 220;
+    // A perspective camera sees to the horizon, so the ground runs much
+    // further back (it still stops 38 in front, which is behind the lens) and
+    // the extra rows are spread at the same two units apiece.
+    const groundBack = PERSP != null ? PERSP.groundBack : GROUND_DEPTH / 2;
+    const groundDeep = groundBack + GROUND_DEPTH / 2;
     const geo = new THREE.PlaneGeometry(
       GROUND_WIDE,
-      GROUND_DEPTH,
+      groundDeep,
       Math.round(GROUND_WIDE / (WILD != null ? 0.8 : 2)),
-      WILD != null ? 96 : 40,
+      WILD != null ? 96 : Math.round((groundDeep / GROUND_DEPTH) * 40),
     );
     geo.rotateX(-Math.PI / 2);
     // Centre it on the road it carries, not on the origin.
-    geo.translate((TRAIL_END - 60) / 2, 0, 0);
+    geo.translate((TRAIL_END - 60) / 2, 0, (GROUND_DEPTH / 2 - groundBack) / 2);
     const pos = geo.attributes.position;
     const colors = new Float32Array(pos.count * 3);
     const cGrass = new THREE.Color(land.grass);
@@ -9141,7 +9649,7 @@ export function createKidsWorld(
         .lerp(cVar, n * (textured ? 0.2 : 0.32));
       const patch = (noise2(x * 0.09 + 7.3, z * 0.13) + 1) / 2;
       if (patch > 0.62) {
-        tmp.lerp(cDirt, (patch - 0.62) * 0.9);
+        tmp.lerp(cDirt, (patch - 0.62) * 0.9 * (PERSP?.dryShare ?? 1));
       }
       // An unmade village road is far wider than a footpath - it has to take
       // a bullock cart with room for people to walk past it both ways - and it
@@ -9304,8 +9812,13 @@ export function createKidsWorld(
         // whatever else is true, the cart track is bare.
         const damp = (noise2(x * 0.045 + 12.7, z * 0.05) + 1) / 2;
         const dryN = (noise2(x * 0.031 - 6.2, z * 0.037) + 1) / 2;
-        const litter = ss(0.52, 0.8, damp) * (1 - road);
-        const dry = ss(0.55, 0.84, dryN) * (1 - road) * (1 - litter);
+        const litter =
+          ss(0.52, 0.8, damp) * (1 - road) * (PERSP?.dryShare ?? 1);
+        const dry =
+          ss(0.55, 0.84, dryN) *
+          (1 - road) *
+          (1 - litter) *
+          (PERSP?.dryShare ?? 1);
         // The trading ground, worn to bare earth. Blended with a smoothstep
         // like everything else here: a hard-edged patch of laterite would
         // read as a rug thrown on the grass, and what this is meant to be is
@@ -9712,7 +10225,10 @@ export function createKidsWorld(
         uDeep: { value: new THREE.Color(0x0a3846) },
         uSky: { value: new THREE.Color(0xbcd8ea) },
         uScale: {
-          value: WILD != null ? new THREE.Vector2(0.34, 0.15) : new THREE.Vector2(0.6, 0.26),
+          value:
+            WILD != null
+              ? new THREE.Vector2(0.34, 0.15)
+              : new THREE.Vector2(0.6, 0.26),
         },
         uRipple: { value: WILD != null ? 0.032 : 0.026 },
       };
@@ -9866,12 +10382,21 @@ export function createKidsWorld(
         const target = new THREE.Vector3();
         const rot = new THREE.Matrix4();
         const sz = new THREE.Vector2();
-        const clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), -RIVER_SURFACE);
+        const clip = new THREE.Plane(
+          new THREE.Vector3(0, 1, 0),
+          -RIVER_SURFACE,
+        );
         // Switches for finding out why a mirror is wrong, read only when the
         // page was opened with ?perf.
         const opts_ = { clip: true, shadowOff: true, keepOn: false };
-        if (typeof window !== "undefined" && window.location.search.includes("perf")) {
-          (window as unknown as Record<string, unknown>).__mirror = { opts: opts_, rt: reflRT };
+        if (
+          typeof window !== "undefined" &&
+          window.location.search.includes("perf")
+        ) {
+          (window as unknown as Record<string, unknown>).__mirror = {
+            opts: opts_,
+            rt: reflRT,
+          };
         }
         let frameNo = 0;
         let lastCall = 0;
@@ -9905,8 +10430,16 @@ export function createKidsWorld(
             const m = o as THREE.Mesh;
             if (!m.isMesh && !(o as THREE.Sprite).isSprite) return;
             if (!o.visible) return;
-            const mat = m.material as THREE.Material | THREE.Material[] | undefined;
-            if (mat == null || Array.isArray(mat) || (mat as THREE.ShaderMaterial).isShaderMaterial) return;
+            const mat = m.material as
+              | THREE.Material
+              | THREE.Material[]
+              | undefined;
+            if (
+              mat == null ||
+              Array.isArray(mat) ||
+              (mat as THREE.ShaderMaterial).isShaderMaterial
+            )
+              return;
             if ((o as THREE.InstancedMesh).isInstancedMesh) {
               if (seenInstanced.has(o)) return;
               seenInstanced.add(o);
@@ -9936,7 +10469,10 @@ export function createKidsWorld(
           // Only when the water is actually on screen: the river exists for
           // the whole chapter, and the other nine lessons must not pay.
           cam.updateMatrixWorld();
-          viewProj.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+          viewProj.multiplyMatrices(
+            cam.projectionMatrix,
+            cam.matrixWorldInverse,
+          );
           frustum.setFromProjectionMatrix(viewProj);
           if (!frustum.intersectsObject(water)) return;
           // A mirror is a second drawing of the scene, so it pays its own
@@ -9978,7 +10514,24 @@ export function createKidsWorld(
           reflCam.updateMatrixWorld();
           reflCam.projectionMatrix.copy(cam.projectionMatrix);
           reflCam.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
-          reflMat.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1);
+          reflMat.set(
+            0.5,
+            0,
+            0,
+            0.5,
+            0,
+            0.5,
+            0,
+            0.5,
+            0,
+            0,
+            0.5,
+            0.5,
+            0,
+            0,
+            0,
+            1,
+          );
           reflMat.multiply(reflCam.projectionMatrix);
           reflMat.multiply(reflCam.matrixWorldInverse);
           r.getDrawingBufferSize(sz);
@@ -10033,7 +10586,13 @@ export function createKidsWorld(
           return seed / 4294967296;
         };
         const span = Math.max(0.6, RIVER_SURFACE - RIVER_BED);
-        const spots: { x: number; z: number; s: number; r: number; lotus: boolean }[] = [];
+        const spots: {
+          x: number;
+          z: number;
+          s: number;
+          r: number;
+          lotus: boolean;
+        }[] = [];
         const centres: { x: number; z: number }[] = [];
         for (let tries = 0; tries < 200 && centres.length < 6; tries++) {
           const z = -26 + rnd() * 40;
@@ -10082,18 +10641,49 @@ export function createKidsWorld(
             const px = -Math.sin(a) * w;
             const pz = Math.cos(a) * w;
             blades.push(
-              bx - px, 0, bz - pz, bx + px, 0, bz + pz, midX + px * 0.8, h * 0.55, midZ + pz * 0.8,
-              bx - px, 0, bz - pz, midX + px * 0.8, h * 0.55, midZ + pz * 0.8, midX - px * 0.8, h * 0.55, midZ - pz * 0.8,
-              midX - px * 0.8, h * 0.55, midZ - pz * 0.8, midX + px * 0.8, h * 0.55, midZ + pz * 0.8, tipX, h, tipZ,
+              bx - px,
+              0,
+              bz - pz,
+              bx + px,
+              0,
+              bz + pz,
+              midX + px * 0.8,
+              h * 0.55,
+              midZ + pz * 0.8,
+              bx - px,
+              0,
+              bz - pz,
+              midX + px * 0.8,
+              h * 0.55,
+              midZ + pz * 0.8,
+              midX - px * 0.8,
+              h * 0.55,
+              midZ - pz * 0.8,
+              midX - px * 0.8,
+              h * 0.55,
+              midZ - pz * 0.8,
+              midX + px * 0.8,
+              h * 0.55,
+              midZ + pz * 0.8,
+              tipX,
+              h,
+              tipZ,
             );
             shade.setHex(rnd() < 0.5 ? 0x4f8a3a : 0x6aa044);
             for (let v = 0; v < 9; v++) cols.push(shade.r, shade.g, shade.b);
           }
           const reedGeo = new THREE.BufferGeometry();
-          reedGeo.setAttribute("position", new THREE.Float32BufferAttribute(blades, 3));
-          reedGeo.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+          reedGeo.setAttribute(
+            "position",
+            new THREE.Float32BufferAttribute(blades, 3),
+          );
+          reedGeo.setAttribute(
+            "color",
+            new THREE.Float32BufferAttribute(cols, 3),
+          );
           reedGeo.computeVertexNormals();
-          const reedSpots: { x: number; z: number; s: number; r: number }[] = [];
+          const reedSpots: { x: number; z: number; s: number; r: number }[] =
+            [];
           for (let tries = 0; tries < 500 && reedSpots.length < 70; tries++) {
             const z = -27 + rnd() * 44;
             if (Math.abs(z - meander(RIVER.x)) < 4.2) continue;
@@ -10101,7 +10691,12 @@ export function createKidsWorld(
             const x = RIVER.x + side * riverHalfAt(z) * (0.62 + rnd() * 0.32);
             const f = (RIVER_SURFACE - terrainY(x, z)) / span;
             if (f < 0.02 || f > 0.4) continue;
-            reedSpots.push({ x, z, s: (0.8 + rnd() * 0.7) * perspective(z), r: rnd() * 6.28 });
+            reedSpots.push({
+              x,
+              z,
+              s: (0.8 + rnd() * 0.7) * perspective(z),
+              r: rnd() * 6.28,
+            });
           }
           if (reedSpots.length > 0) {
             const reeds = new THREE.InstancedMesh(
@@ -10127,7 +10722,12 @@ export function createKidsWorld(
           }
         }
         if (spots.length > 0) {
-          const padGeo = new THREE.CircleGeometry(1, 28, 0.35, Math.PI * 2 - 0.35);
+          const padGeo = new THREE.CircleGeometry(
+            1,
+            28,
+            0.35,
+            Math.PI * 2 - 0.35,
+          );
           padGeo.rotateX(-Math.PI / 2);
           const pads = new THREE.InstancedMesh(
             padGeo,
@@ -10964,6 +11564,11 @@ export function createKidsWorld(
    * thing in the frame that looked like it was ignoring depth.
    */
   function perspective(z: number): number {
+    // A real perspective camera shrinks the distance by itself; applying the
+    // faked factor as well would take everything down twice.
+    if (PERSP != null) {
+      return 1;
+    }
     return depthScale(z, V.camZ, theme.laneZ ?? 0);
   }
   function chapterPlacements(): ReturnType<typeof placements> {
@@ -13302,9 +13907,22 @@ export function createKidsWorld(
    * a mismeasured step could not make anybody lurch.
    */
   const GAIT_PROFILE: Record<string, readonly number[]> = {
-    "Headman:Walking": [0.844, 0.898, 1.046, 1.163, 0.871, 0.699, 0.723, 0.809, 1.128, 1.016, 0.88, 0.908, 0.967, 1.201, 1.225, 0.939, 0.89, 0.941, 1.047, 1.209, 0.797, 0.751, 0.822, 0.897, 1.343, 1.314, 1.1, 1.13, 1.152, 1.188, 1.155, 0.944],
-    "Headman:Walk_Night": [1.02, 0.798, 0.72, 0.812, 0.699, 0.878, 0.959, 0.974, 1.113, 0.905, 1.034, 0.992, 0.925, 1.186, 1.003, 1.097, 1.201, 0.859, 1.025, 0.891, 0.904, 1.261, 1.01, 1.193, 1.078, 0.943, 1.22, 0.971, 1.109, 1.172, 0.989, 1.06],
-    "Blacksmith:Walking": [0.858, 0.894, 0.942, 1.037, 0.896, 0.774, 0.792, 0.854, 1.034, 0.997, 0.943, 0.952, 1.009, 1.134, 1.162, 1.07, 1.013, 1.041, 1.066, 1.074, 0.833, 0.788, 0.842, 0.907, 1.166, 1.207, 1.134, 1.163, 1.183, 1.16, 1.133, 0.94],
+    "Headman:Walking": [
+      0.844, 0.898, 1.046, 1.163, 0.871, 0.699, 0.723, 0.809, 1.128, 1.016,
+      0.88, 0.908, 0.967, 1.201, 1.225, 0.939, 0.89, 0.941, 1.047, 1.209, 0.797,
+      0.751, 0.822, 0.897, 1.343, 1.314, 1.1, 1.13, 1.152, 1.188, 1.155, 0.944,
+    ],
+    "Headman:Walk_Night": [
+      1.02, 0.798, 0.72, 0.812, 0.699, 0.878, 0.959, 0.974, 1.113, 0.905, 1.034,
+      0.992, 0.925, 1.186, 1.003, 1.097, 1.201, 0.859, 1.025, 0.891, 0.904,
+      1.261, 1.01, 1.193, 1.078, 0.943, 1.22, 0.971, 1.109, 1.172, 0.989, 1.06,
+    ],
+    "Blacksmith:Walking": [
+      0.858, 0.894, 0.942, 1.037, 0.896, 0.774, 0.792, 0.854, 1.034, 0.997,
+      0.943, 0.952, 1.009, 1.134, 1.162, 1.07, 1.013, 1.041, 1.066, 1.074,
+      0.833, 0.788, 0.842, 0.907, 1.166, 1.207, 1.134, 1.163, 1.183, 1.16,
+      1.133, 0.94,
+    ],
   };
   const gaitSpeedAt = (who: string, clip: string, fraction: number): number => {
     const t = GAIT_PROFILE[`${who}:${clip}`];
@@ -19669,8 +20287,14 @@ export function createKidsWorld(
         const span = TRAIL_END + 24;
         // The open near-field (z > 0) is grassy and tree-free; the far side
         // has the odd shallow clearing between trail and trees.
-        const fieldZ = () => 5 + Math.random() * 12; // open grass, near side
-        const farZ = () => -(3.5 + Math.random() * 4); // shallow strip, far side
+        // On a perspective camera the flock keeps behind the cast (owner
+        // rule: nothing between the lens and the children), so both sides of
+        // this are the far meadow.
+        const farZ = () =>
+          PERSP != null
+            ? -(PERSP.sightClear + 1.5 + Math.random() * 10)
+            : -(3.5 + Math.random() * 4); // shallow strip, far side
+        const fieldZ = () => (PERSP != null ? farZ() : 5 + Math.random() * 12); // open grass, near side
         for (let g = 0; g < CLUSTERS; g++) {
           const gx = -12 + (span / CLUSTERS) * (g + Math.random() * 0.8);
           // ~70% of clusters graze the open field, the rest the far side.
@@ -19827,7 +20451,8 @@ export function createKidsWorld(
     // village is authored, and the table is the only thing that plants it.
     // The road is ten runs long now, so the same planting has to cover two and
     // a half times the ground to look as full as it did on 260 units.
-    const spread = CHAPTER != null ? 0 : ROAD_SCALE;
+    const spread =
+      CHAPTER != null ? 0 : ROAD_SCALE * (PERSP?.scatterCount ?? 1);
     // REPEATABLE. The same scene is the same scatter on every load: seeded
     // from the scene and the place it is set in, not from `Math.random`.
     // Without a scene (a review build) it stays random.
@@ -19876,7 +20501,15 @@ export function createKidsWorld(
             return [
               [
                 land.trees,
-                Math.round((theme.treeCount ?? 30) * spread),
+                // The big trees are the expensive part of the scatter (a dino
+                // tree is 26,000 triangles), so on a perspective camera, where
+                // far more of the road is in shot, they have their own count.
+                Math.round(
+                  (theme.treeCount ?? 30) *
+                    (PERSP != null
+                      ? (CHAPTER != null ? 0 : ROAD_SCALE) * PERSP.treeScatter
+                      : spread),
+                ),
                 6,
                 26,
                 "back",
@@ -19945,7 +20578,12 @@ export function createKidsWorld(
             .map((_, vi) => vi)
             // Spans and piers need water under them and are placed by the
             // water code, not scattered on the grass.
-            .filter((vi) => !/bridge|dock|fence|wall|hedge|volcano|waterfall/i.test(variants[vi]!.name))
+            .filter(
+              (vi) =>
+                !/bridge|dock|fence|wall|hedge|volcano|waterfall/i.test(
+                  variants[vi]!.name,
+                ),
+            )
             .sort(
               (a, b) =>
                 hashSeed("landmark", opts.sceneIndex ?? 0, a) -
@@ -19982,7 +20620,15 @@ export function createKidsWorld(
         );
         const wrap = new THREE.Group();
         wrap.add(v);
-        const scl = (0.8 + rand() * 0.8) * theme.sceneryScale * scaleMul;
+        let scl = (0.8 + rand() * 0.8) * theme.sceneryScale * scaleMul;
+        // GRASS AND FLOWERS ARE SIZED FOR AN ORTHOGRAPHIC FRAME, where height
+        // costs nothing; with the lens down among them a tuft that is
+        // chest-high to the cast is a wall. They are fitted to a low line so
+        // they can stay on both verges (the rule is for tall things).
+        if (PERSP != null && /grass|flower/i.test(String(file))) {
+          const own = Math.max(0.05, box.max.y - box.min.y);
+          scl = Math.min(scl, 0.8 / (own * 1.25));
+        }
         // How far this particular plant sticks out sideways, once scaled.
         // The wrap is spun to a random heading below, so the worst case is
         // the larger of its two horizontal half-extents, whichever way round
@@ -19998,7 +20644,13 @@ export function createKidsWorld(
         let x = 0;
         let z = 0;
         for (let attempt = 0; attempt < 8; attempt++) {
-          x = -26 + rand() * (TRAIL_END + 26);
+          // A perspective camera sees a great deal further sideways at depth
+          // than the orthographic frame ever did, so the planting starts
+          // further back along the road and reaches deeper behind it; the
+          // near verge stays short because a bush at the lens is a wall.
+          x =
+            (PERSP != null ? -110 : -26) +
+            rand() * (TRAIL_END + 26 + (PERSP != null ? 84 : 0));
           if (landmarkRun) {
             // Evenly along the road, with a little give so they do not look
             // surveyed.
@@ -20010,18 +20662,35 @@ export function createKidsWorld(
               (i + 0.5 + offset * 0.5 + (rand() - 0.5) * 0.3) *
                 ((TRAIL_END - 60) / count);
           }
-          const depth = minD + rand() * (maxD - minD);
+          const reachD = maxD * (PERSP?.scatterDepth ?? 1);
+          let depth = minD + rand() * (reachD - minD);
           // NOTHING TALL BETWEEN THE CAMERA AND THE ROAD (owner rule). The
           // near verge is the bottom of the frame, and anything standing there
           // rises up the screen over the path and the children on it. So a
           // plant taller than a bush goes on the far verge only; low things
           // (grass, flowers, small rocks, shrubs) may use both.
           const tallOne = (box.max.y - box.min.y) * scl > 1.6;
+          // On a perspective camera the near verge is the bottom of the frame
+          // at close range, where a knee-high shrub already stands up over
+          // the path: only the genuinely low (grass, flowers, pebbles) stay.
+          const notLow = PERSP != null && (box.max.y - box.min.y) * scl > 0.9;
+          if (PERSP != null && (tallOne || notLow)) {
+            // AND ON A PERSPECTIVE CAMERA THE RULE IS EXACT, not a side. The
+            // camera stands on the near side and walks with the party, so
+            // anything nearer the lens than a character can stand in front of
+            // it at SOME point of the walk. Everything the camera follows —
+            // the lane, the companion, the herd at 6 to 10 behind it, the
+            // flag — lies in front of z = -SIGHT_CLEAR, so a tall plant's
+            // NEAREST edge is held behind that line, whatever its girth.
+            // The footprint is turned by a random heading, so its worst reach
+            // is the diagonal: 1.45 half-extents is 2.2 of `reach`.
+            depth = Math.max(depth, PERSP.sightClear + reach * 2.2);
+          }
           z =
-            side === "back" || tallOne
+            side === "back" || tallOne || notLow
               ? -depth
               : rand() > 0.65
-                ? depth
+                ? Math.min(depth, PERSP != null ? 12 : depth)
                 : -depth;
           if (!onRoad(x, z, String(file), reach)) {
             break;
@@ -20044,6 +20713,15 @@ export function createKidsWorld(
           ? (box.max.y - box.min.y) * scl * (0.25 + rand() * 0.25)
           : 0;
         wrap.position.set(x, surfaceY(x, z) - buried, z);
+        if ((box.max.y - box.min.y) * scl > 1.6) {
+          // For review: the nearest edge of the tall things, so the sight-line
+          // rule can be read off a live world (`__world.sight()`).
+          sightStats.tall += 1;
+          sightStats.nearestEdge = Math.max(
+            sightStats.nearestEdge,
+            z + reach * 2.2,
+          );
+        }
         // Trees only, and only so the village can clear a space round the
         // banyan — see `scatterTrees` where it is planted.
         if (file === land.trees) {
@@ -20069,11 +20747,7 @@ export function createKidsWorld(
           // The depth cue rides on top of the per-plant variation, so a tree
           // on the far verge is smaller than the same tree on the near one.
           const d = perspective(z);
-          wrap.scale.set(
-            scl * d,
-            scl * d * (0.85 + rand() * 0.4),
-            scl * d,
-          );
+          wrap.scale.set(scl * d, scl * d * (0.85 + rand() * 0.4), scl * d);
         }
         // NO PER-PLANT TINT ON THIS PATH.
         //
@@ -20291,7 +20965,23 @@ export function createKidsWorld(
     // laid end to end before the first thicket appeared -- and they are
     // independent, so there was never a reason to wait. The browser caps its
     // own parallelism; asking for them together simply lets it.
-    const clusterSpecs = theme.groundClusters ?? [];
+    // REVIEW ONLY: `?perf&clusters=[...]` plants extra thickets from the URL, so
+    // a planting can be judged against the mock without a rebuild per try.
+    const reviewClusters: NonNullable<WorldTheme["groundClusters"]> = (() => {
+      if (
+        typeof window === "undefined" ||
+        !window.location.search.includes("perf")
+      ) {
+        return [];
+      }
+      try {
+        const raw = new URLSearchParams(window.location.search).get("clusters");
+        return raw == null ? [] : JSON.parse(raw);
+      } catch {
+        return [];
+      }
+    })();
+    const clusterSpecs = [...(theme.groundClusters ?? []), ...reviewClusters];
     const clusterGltfs = await Promise.all(
       clusterSpecs.map(async (spec) => {
         try {
@@ -20370,12 +21060,17 @@ export function createKidsWorld(
       // stepping by `MIN_STONE_GAP` stopped landing on a milestone the
       // moment the stones started following the typing. A band keeps its
       // stride; a milestone clump goes where the milestone is.
+      // A perspective lens sees well BEHIND the start of the road, so the
+      // planting begins there too, or the left of the frame is bare.
+      const clusterLead = PERSP != null ? 66 : 0;
       const centres =
         CHAPTER != null && spec.stride == null
           ? CHAPTER.slice(1)
           : Array.from(
-              { length: Math.ceil((TRAIL_END + 26) / step) - 1 },
-              (_, k) => (k + 1) * step,
+              {
+                length: Math.ceil((TRAIL_END + 26 + clusterLead) / step) - 1,
+              },
+              (_, k) => (k + 1) * step - clusterLead,
             );
       for (const [stone, cx] of centres.entries()) {
         // DETERMINISTIC PER CLUMP. Every wobble, gap and row offset below
@@ -20457,11 +21152,19 @@ export function createKidsWorld(
           if (spec.chance != null && rand() > spec.chance) {
             continue;
           }
-          const n = spec.min + Math.floor(rand() * (spec.max - spec.min + 1));
+          const n = Math.round(
+            (spec.min + Math.floor(rand() * (spec.max - spec.min + 1))) *
+              (PERSP?.clusterDensity ?? 1),
+          );
           for (let k = 0; k < n; k++) {
             // Tight, so they touch and overlap rather than dotting a line.
             const x = cx + (rand() - 0.5) * spec.spread;
-            const depth = spec.near + rand() * (spec.far - spec.near);
+            let depth = spec.near + rand() * (spec.far - spec.near);
+            // The near verge keeps off the path, on a perspective camera: it
+            // is the bottom of the frame, and a thicket there is a wall.
+            if (PERSP != null && sideSign > 0) {
+              depth = Math.max(depth, PERSP.clusterNear + rand() * 1.5);
+            }
             const z = spec.roadRelative
               ? meander(x) + sideSign * depth
               : sideSign * depth;
@@ -20482,8 +21185,19 @@ export function createKidsWorld(
             // distance rather than a stunted plant, and it goes through
             // `onRoad` below with the same factor: a clump that is drawn
             // two thirds the size takes up two thirds the room.
-            const scl =
+            let scl =
               (lo + rand() * (hi - lo)) * theme.sceneryScale * perspective(z);
+            if (PERSP != null) {
+              // NOTHING TALL BETWEEN THE CAMERA AND THE CAST, in a thicket too:
+              // sized in orthographic units, a tuft stands up over the path
+              // the moment the lens is down among them. Held to the low line
+              // (1.6, owner rule) — and to a knee on the near verge — unless
+              // it stands behind the sight-line.
+              const tall = gb.max.y - gb.min.y;
+              const behind = -z >= PERSP.sightClear + half * scl;
+              const cap = behind ? Infinity : sideSign > 0 ? 0.5 : 1.6;
+              scl = Math.min(scl, cap / (tall * 1.3));
+            }
             if (onRoad(x, z, spec.file, half * scl * 0.66)) {
               rejected += 1;
               continue;
@@ -20500,7 +21214,13 @@ export function createKidsWorld(
             scl3.set(scl, scl * (0.8 + rand() * 0.5), scl);
             mats.push(m4.clone().compose(pos, q, scl3));
             const t = 0.94 + rand() * 0.12;
-            tints.push(new THREE.Color(t, t, t));
+            tints.push(
+              new THREE.Color(
+                t * (spec.tint?.[0] ?? 1),
+                t * (spec.tint?.[1] ?? 1),
+                t * (spec.tint?.[2] ?? 1),
+              ),
+            );
           }
         }
       }
@@ -20518,6 +21238,43 @@ export function createKidsWorld(
         );
       }
       if (mats.length === 0) {
+        continue;
+      }
+      if (PERSP != null) {
+        // CUT INTO LENGTHS OF ROAD, so the camera can leave out what it cannot
+        // see. One mesh for the whole road is cheap to describe and ruinous
+        // to draw: a lens that looks a hundred units down it needs perhaps a
+        // sixth of the plants, but a single instanced mesh draws every one of
+        // them every frame (measured: five million triangles). Each length
+        // has its own bounds, so frustum culling and the distance test in the
+        // tick can drop whole lengths at once.
+        const CH = 40;
+        const lengths = new Map<number, number[]>();
+        for (let k = 0; k < mats.length; k++) {
+          const key = Math.floor(mats[k]!.elements[12]! / CH);
+          const ids = lengths.get(key);
+          if (ids == null) {
+            lengths.set(key, [k]);
+          } else {
+            ids.push(k);
+          }
+        }
+        for (const [key, ids] of lengths) {
+          const part = new THREE.InstancedMesh(geo, mat, ids.length);
+          ids.forEach((k, j) => {
+            part.setMatrixAt(j, mats[k]!);
+            part.setColorAt(j, tints[k]!);
+          });
+          part.instanceMatrix.needsUpdate = true;
+          if (part.instanceColor != null) {
+            part.instanceColor.needsUpdate = true;
+          }
+          part.castShadow = false;
+          part.receiveShadow = true;
+          part.computeBoundingSphere();
+          scene.add(part);
+          clusterLengths.push({ mesh: part, cx: (key + 0.5) * CH });
+        }
         continue;
       }
       const inst = new THREE.InstancedMesh(geo, mat, mats.length);
@@ -21713,7 +22470,10 @@ export function createKidsWorld(
           const lz = LZ0 + (wp.getZ(i) + 0.5) * (LZ1 - LZ0);
           wp.setX(i, fl * lx * sc);
           wp.setZ(i, lz * sc);
-          let d = Math.min(1, Math.min(lx - LX0, LX1 - lx, lz - LZ0, LZ1 - lz) / 1.7);
+          let d = Math.min(
+            1,
+            Math.min(lx - LX0, LX1 - lx, lz - LZ0, LZ1 - lz) / 1.7,
+          );
           if (lx < -0.6 && lz > 1.7) d *= 0.35; // the flight of steps into it
           dep[i] = d;
         }
@@ -21742,7 +22502,10 @@ export function createKidsWorld(
               "#include <common>",
               "#include <common>\nvarying vec2 vWave;\nattribute float aDepth;\nvarying float vDepth;\nvarying vec4 vRefl;\nuniform mat4 uReflMat;",
             )
-            .replace("#include <begin_vertex>", "#include <begin_vertex>\nvDepth = aDepth;")
+            .replace(
+              "#include <begin_vertex>",
+              "#include <begin_vertex>\nvDepth = aDepth;",
+            )
             .replace(
               "#include <worldpos_vertex>",
               "#include <worldpos_vertex>\nvWave = (modelMatrix * vec4(transformed, 1.0)).xz;\nvRefl = uReflMat * (modelMatrix * vec4(transformed, 1.0));",
@@ -21831,7 +22594,9 @@ export function createKidsWorld(
         builtGroup.add(pwater);
 
         // ── the mirror: only what stands near the pond, on its own layer ──
-        const pRT = new THREE.WebGLRenderTarget(512, 192, { type: THREE.HalfFloatType });
+        const pRT = new THREE.WebGLRenderTarget(512, 192, {
+          type: THREE.HalfFloatType,
+        });
         pu.uReflect.value = pRT.texture;
         const pCam = new THREE.OrthographicCamera();
         const PLAYER = 5;
@@ -21859,7 +22624,8 @@ export function createKidsWorld(
           scene.traverse((o) => {
             if (o === pwater) return;
             // not the ground: it carries the surface-mix attribute
-            if ((o as THREE.Mesh).geometry?.getAttribute?.("aMix") != null) return;
+            if ((o as THREE.Mesh).geometry?.getAttribute?.("aMix") != null)
+              return;
             if ((o as THREE.Light).isLight) {
               o.layers.enable(PLAYER);
               return;
@@ -21867,8 +22633,16 @@ export function createKidsWorld(
             const m = o as THREE.Mesh;
             if (!m.isMesh && !(o as THREE.Sprite).isSprite) return;
             if (!o.visible) return;
-            const mat = m.material as THREE.Material | THREE.Material[] | undefined;
-            if (mat == null || Array.isArray(mat) || (mat as THREE.ShaderMaterial).isShaderMaterial) return;
+            const mat = m.material as
+              | THREE.Material
+              | THREE.Material[]
+              | undefined;
+            if (
+              mat == null ||
+              Array.isArray(mat) ||
+              (mat as THREE.ShaderMaterial).isShaderMaterial
+            )
+              return;
             if ((o as THREE.InstancedMesh).isInstancedMesh) {
               const im = o as THREE.InstancedMesh;
               const e = im.instanceMatrix.array;
@@ -21909,7 +22683,24 @@ export function createKidsWorld(
           pCam.updateMatrixWorld();
           pCam.projectionMatrix.copy(cam.projectionMatrix);
           pCam.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
-          pu.uReflMat.value.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1);
+          pu.uReflMat.value.set(
+            0.5,
+            0,
+            0,
+            0.5,
+            0,
+            0.5,
+            0,
+            0.5,
+            0,
+            0,
+            0.5,
+            0.5,
+            0,
+            0,
+            0,
+            1,
+          );
           pu.uReflMat.value.multiply(pCam.projectionMatrix);
           pu.uReflMat.value.multiply(pCam.matrixWorldInverse);
           r.getDrawingBufferSize(pSz);
@@ -21954,21 +22745,46 @@ export function createKidsWorld(
           seed = (seed * 1664525 + 1013904223) >>> 0;
           return seed / 4294967296;
         };
-        const padGeo = new THREE.CircleGeometry(1, 28, 0.35, Math.PI * 2 - 0.35);
+        const padGeo = new THREE.CircleGeometry(
+          1,
+          28,
+          0.35,
+          Math.PI * 2 - 0.35,
+        );
         padGeo.rotateX(-Math.PI / 2);
-        const padSpots: { x: number; z: number; s: number; r: number; lotus: boolean }[] = [];
+        const padSpots: {
+          x: number;
+          z: number;
+          s: number;
+          r: number;
+          lotus: boolean;
+        }[] = [];
         for (let tries = 0; tries < 600 && padSpots.length < 64; tries++) {
           const lx = LX0 + 0.6 + rnd() * (LX1 - LX0 - 1.2);
           const lz = LZ0 + 0.6 + rnd() * (LZ1 - LZ0 - 1.2);
           if (lx < -0.6 && lz > 1.5) continue;
           // gather in drifts, not an even sprinkle
-          if (Math.sin(lx * 0.9 + 1.3) * Math.cos(lz * 0.8) < -0.15 && rnd() < 0.7) continue;
+          if (
+            Math.sin(lx * 0.9 + 1.3) * Math.cos(lz * 0.8) < -0.15 &&
+            rnd() < 0.7
+          )
+            continue;
           const wxz = pondWorldXZ(def, lx, lz);
-          padSpots.push({ x: wxz.x, z: wxz.z, s: (0.18 + rnd() * 0.3) * sc, r: rnd() * Math.PI * 2, lotus: rnd() < 0.16 });
+          padSpots.push({
+            x: wxz.x,
+            z: wxz.z,
+            s: (0.18 + rnd() * 0.3) * sc,
+            r: rnd() * Math.PI * 2,
+            lotus: rnd() < 0.16,
+          });
         }
         const pads = new THREE.InstancedMesh(
           padGeo,
-          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4, side: THREE.DoubleSide }),
+          new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.4,
+            side: THREE.DoubleSide,
+          }),
           padSpots.length,
         );
         const dm = new THREE.Object3D();
@@ -21999,7 +22815,11 @@ export function createKidsWorld(
           );
           const lotus = new THREE.InstancedMesh(
             cup,
-            new THREE.MeshStandardMaterial({ color: 0xf0a3c4, roughness: 0.55, side: THREE.DoubleSide }),
+            new THREE.MeshStandardMaterial({
+              color: 0xf0a3c4,
+              roughness: 0.55,
+              side: THREE.DoubleSide,
+            }),
             flowerSpots.length,
           );
           flowerSpots.forEach((q, i) => {
@@ -22032,16 +22852,46 @@ export function createKidsWorld(
           const px = -Math.sin(a) * w;
           const pz = Math.cos(a) * w;
           blades.push(
-            bx - px, 0, bz - pz, bx + px, 0, bz + pz, midX + px * 0.8, h * 0.55, midZ + pz * 0.8,
-            bx - px, 0, bz - pz, midX + px * 0.8, h * 0.55, midZ + pz * 0.8, midX - px * 0.8, h * 0.55, midZ - pz * 0.8,
-            midX - px * 0.8, h * 0.55, midZ - pz * 0.8, midX + px * 0.8, h * 0.55, midZ + pz * 0.8, tipX, h, tipZ,
+            bx - px,
+            0,
+            bz - pz,
+            bx + px,
+            0,
+            bz + pz,
+            midX + px * 0.8,
+            h * 0.55,
+            midZ + pz * 0.8,
+            bx - px,
+            0,
+            bz - pz,
+            midX + px * 0.8,
+            h * 0.55,
+            midZ + pz * 0.8,
+            midX - px * 0.8,
+            h * 0.55,
+            midZ - pz * 0.8,
+            midX - px * 0.8,
+            h * 0.55,
+            midZ - pz * 0.8,
+            midX + px * 0.8,
+            h * 0.55,
+            midZ + pz * 0.8,
+            tipX,
+            h,
+            tipZ,
           );
           shade.setHex(rnd() < 0.5 ? 0x4f8a3a : 0x6aa044);
           for (let v = 0; v < 9; v++) cols.push(shade.r, shade.g, shade.b);
         }
         const reedGeo = new THREE.BufferGeometry();
-        reedGeo.setAttribute("position", new THREE.Float32BufferAttribute(blades, 3));
-        reedGeo.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+        reedGeo.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(blades, 3),
+        );
+        reedGeo.setAttribute(
+          "color",
+          new THREE.Float32BufferAttribute(cols, 3),
+        );
         reedGeo.computeVertexNormals();
         const reedSpots: { x: number; z: number; s: number; r: number }[] = [];
         for (let tries = 0; tries < 400 && reedSpots.length < 56; tries++) {
@@ -22049,16 +22899,32 @@ export function createKidsWorld(
           const side = rnd();
           let lx: number;
           let lz: number;
-          if (side < 0.4) { lx = LX0 + 0.3 + rnd() * (LX1 - LX0 - 0.6); lz = LZ0 + 0.15 + rnd() * 0.7; }
-          else if (side < 0.7) { lx = LX0 + 0.3 + rnd() * (LX1 - LX0 - 0.6); lz = LZ1 - 0.15 - rnd() * 0.7; }
-          else { lx = LX1 - 0.2 - rnd() * 0.8; lz = LZ0 + 0.3 + rnd() * (LZ1 - LZ0 - 0.6); }
+          if (side < 0.4) {
+            lx = LX0 + 0.3 + rnd() * (LX1 - LX0 - 0.6);
+            lz = LZ0 + 0.15 + rnd() * 0.7;
+          } else if (side < 0.7) {
+            lx = LX0 + 0.3 + rnd() * (LX1 - LX0 - 0.6);
+            lz = LZ1 - 0.15 - rnd() * 0.7;
+          } else {
+            lx = LX1 - 0.2 - rnd() * 0.8;
+            lz = LZ0 + 0.3 + rnd() * (LZ1 - LZ0 - 0.6);
+          }
           if (lx < -0.6 && lz > 1.5) continue;
           const wxz = pondWorldXZ(def, lx, lz);
-          reedSpots.push({ x: wxz.x, z: wxz.z, s: (0.8 + rnd() * 0.8) * sc, r: rnd() * 6.28 });
+          reedSpots.push({
+            x: wxz.x,
+            z: wxz.z,
+            s: (0.8 + rnd() * 0.8) * sc,
+            r: rnd() * 6.28,
+          });
         }
         const reeds = new THREE.InstancedMesh(
           reedGeo,
-          new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, side: THREE.DoubleSide }),
+          new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            roughness: 0.7,
+            side: THREE.DoubleSide,
+          }),
           reedSpots.length,
         );
         reedSpots.forEach((q, i) => {
@@ -22082,7 +22948,14 @@ export function createKidsWorld(
           units = false,
         ) => {
           const xz = pondWorldXZ(def, lx, lz);
-          const w = await stand(model, xz.x, xz.z, units ? hMetres : hMetres * p.h, rnd() * Math.PI * 2, 0);
+          const w = await stand(
+            model,
+            xz.x,
+            xz.z,
+            units ? hMetres : hMetres * p.h,
+            rnd() * Math.PI * 2,
+            0,
+          );
           if (w == null) return;
           if (mode === "top") w.position.y = wallTop - 0.02;
           if (mode === "water") w.position.y = wl - 0.12 * sc;
@@ -22099,26 +22972,90 @@ export function createKidsWorld(
           const onEnd = rnd() < 0.18;
           const lx = onEnd ? (rnd() < 0.5 ? -7.4 : 7.4) : -7.4 + along * 14.8;
           const lz = onEnd ? -4.2 + rnd() * 8.4 : front ? 4.58 : -4.58;
-          jobs.push(put(rnd() < 0.55 ? G : F, lx, lz, 0.45 + rnd() * 0.4, "top"));
+          jobs.push(
+            put(rnd() < 0.55 ? G : F, lx, lz, 0.45 + rnd() * 0.4, "top"),
+          );
         }
         // standing in the water along the back wall and at the corners
-        for (let i = 0; i < 9; i++) jobs.push(put(T, -1.4 + i * 1.0 + rnd() * 0.4, -3.85 + rnd() * 0.3, 0.8 + rnd() * 0.5, "water"));
-        for (let i = 0; i < 6; i++) jobs.push(put(G, LX0 + 0.5 + rnd() * 9, 3.9 + rnd() * 0.3, 0.5 + rnd() * 0.4, "water"));
-        for (let i = 0; i < 5; i++) jobs.push(put(F, 5.5 + rnd() * 1.4, -3.4 + rnd() * 6.8, 0.6 + rnd() * 0.4, "water"));
+        for (let i = 0; i < 9; i++)
+          jobs.push(
+            put(
+              T,
+              -1.4 + i + rnd() * 0.4,
+              -3.85 + rnd() * 0.3,
+              0.8 + rnd() * 0.5,
+              "water",
+            ),
+          );
+        for (let i = 0; i < 6; i++)
+          jobs.push(
+            put(
+              G,
+              LX0 + 0.5 + rnd() * 9,
+              3.9 + rnd() * 0.3,
+              0.5 + rnd() * 0.4,
+              "water",
+            ),
+          );
+        for (let i = 0; i < 5; i++)
+          jobs.push(
+            put(
+              F,
+              5.5 + rnd() * 1.4,
+              -3.4 + rnd() * 6.8,
+              0.6 + rnd() * 0.4,
+              "water",
+            ),
+          );
         // the ring round the outside
         for (let i = 0; i < 80; i++) {
           const r = rnd();
           let lx: number;
           let lz: number;
-          if (r < 0.1) { lx = -9 + rnd() * 18; lz = 5.8 + rnd() * 2.6; }
-          else if (r < 0.62) { lx = -9 + rnd() * 18; lz = -5.4 - rnd() * 3.6; }
-          else if (r < 0.85) { lx = -8.7 - rnd() * 2.6; lz = -5 + rnd() * 10; }
-          else { lx = 8.1 + rnd() * 2.8; lz = -5 + rnd() * 10; }
+          if (r < 0.1) {
+            lx = -9 + rnd() * 18;
+            lz = 5.8 + rnd() * 2.6;
+          } else if (r < 0.62) {
+            lx = -9 + rnd() * 18;
+            lz = -5.4 - rnd() * 3.6;
+          } else if (r < 0.85) {
+            lx = -8.7 - rnd() * 2.6;
+            lz = -5 + rnd() * 10;
+          } else {
+            lx = 8.1 + rnd() * 2.8;
+            lz = -5 + rnd() * 10;
+          }
           const k = rnd();
-          jobs.push(put(k < 0.42 ? G : k < 0.74 ? F : T, lx, lz, 0.4 + rnd() * (lz > 5 ? 0.35 : 0.9), "ground"));
+          jobs.push(
+            put(
+              k < 0.42 ? G : k < 0.74 ? F : T,
+              lx,
+              lz,
+              0.4 + rnd() * (lz > 5 ? 0.35 : 0.9),
+              "ground",
+            ),
+          );
         }
-        for (let i = 0; i < 6; i++) jobs.push(put("village-plants/Hibiscus_Chemparathi", -8 + rnd() * 16, -6.3 - rnd() * 2.4, 1.2 + rnd() * 0.4, "ground"));
-        for (let i = 0; i < 4; i++) jobs.push(put("village-plants/Banana_Plant", -8 + rnd() * 16, -7.5 - rnd() * 2, 2.1 + rnd() * 0.5, "ground"));
+        for (let i = 0; i < 6; i++)
+          jobs.push(
+            put(
+              "village-plants/Hibiscus_Chemparathi",
+              -8 + rnd() * 16,
+              -6.3 - rnd() * 2.4,
+              1.2 + rnd() * 0.4,
+              "ground",
+            ),
+          );
+        for (let i = 0; i < 4; i++)
+          jobs.push(
+            put(
+              "village-plants/Banana_Plant",
+              -8 + rnd() * 16,
+              -7.5 - rnd() * 2,
+              2.1 + rnd() * 0.5,
+              "ground",
+            ),
+          );
         // rocks
         for (const [lx, lz, hm, name] of [
           [-8.9, 6.1, 1.0, "village-stone/Granite_Boulder"],
@@ -22130,12 +23067,21 @@ export function createKidsWorld(
           [5.4, 6.3, 0.6, "village-stone/Mossy_Stone"],
           [0.4, -6.2, 0.7, "village-stone/Granite_Boulder"],
           [-5.8, -6.4, 0.55, "village-stone/River_Stone"],
-        ] as const) jobs.push(put(name, lx, lz, hm, "ground"));
+        ] as const)
+          jobs.push(put(name, lx, lz, hm, "ground"));
         // trees: a banyan nearby, palms at the corners
-        jobs.push(put("village-plants/Banyan_Almaram", 10.4, -4.6, 21, "ground", true));
-        jobs.push(put("village-plants/Coconut_Palm", -10.4, -6.0, 17, "ground", true));
-        jobs.push(put("village-plants/Coconut_Palm", 4.5, -9.6, 18, "ground", true));
-        jobs.push(put("village-plants/Arecanut_Palm", -3.0, -8.8, 15, "ground", true));
+        jobs.push(
+          put("village-plants/Banyan_Almaram", 10.4, -4.6, 21, "ground", true),
+        );
+        jobs.push(
+          put("village-plants/Coconut_Palm", -10.4, -6.0, 17, "ground", true),
+        );
+        jobs.push(
+          put("village-plants/Coconut_Palm", 4.5, -9.6, 18, "ground", true),
+        );
+        jobs.push(
+          put("village-plants/Arecanut_Palm", -3.0, -8.8, 15, "ground", true),
+        );
         await Promise.all(jobs);
       };
       if (CHAPTER != null) {
@@ -22585,7 +23531,11 @@ export function createKidsWorld(
             builtGroup.add(w);
             // One springy section of deck: see BRIDGE_FLEX.
             const half = (module.length + 0.04) / 2;
-            const flex: BridgeFlex = { x0: module.x - half, x1: module.x + half, d: 0 };
+            const flex: BridgeFlex = {
+              x0: module.x - half,
+              x1: module.x + half,
+              d: 0,
+            };
             BRIDGE_FLEX.push(flex);
             bridgeModules3d.push({
               w,
@@ -22597,8 +23547,7 @@ export function createKidsWorld(
               phase: BRIDGE_FLEX.length * 1.7,
               // The section that rests on the bank (or the island) is part of
               // the land: it does not give.
-              anchored:
-                flex.x0 <= span.from + 0.3 || flex.x1 >= span.to - 0.3,
+              anchored: flex.x0 <= span.from + 0.3 || flex.x1 >= span.to - 0.3,
             });
           }
           BRIDGES.push(deck);
@@ -24810,7 +25759,14 @@ export function createKidsWorld(
           throw new Error("disposed");
         }
         const variants = [...dead.scene.children];
-        const plant = (x: number, z: number, big: boolean) => {
+        const plant = (x: number, zWanted: number, big: boolean) => {
+          // The dead wood is tall: on a perspective camera it stands behind
+          // the sight-line like every other tall thing, never beside the
+          // children (owner rule).
+          const z =
+            PERSP != null
+              ? Math.min(zWanted, -(PERSP.sightClear + 14))
+              : zWanted;
           const wrap = placeVariant(
             variants,
             Math.floor(Math.random() * variants.length),
@@ -25668,7 +26624,82 @@ export function createKidsWorld(
       // SKIPPED ENTIRELY where a painted horizon is going up: that art has
       // its own hills in it, and a sine-drawn range behind a photographed one
       // is two horizons at two different levels of detail.
-      if (theme.horizon == null) {
+      if (PERSP != null) {
+        // ── THE RANGES, ON A REAL CAMERA ─────────────────────────────────
+        //
+        // Each layer is a strip with the same sine-and-crag profile as the
+        // orthographic ranges, but built as a ribbon so its FOOT can fade to
+        // nothing: the foot of a distant mountain is lost in haze, and the
+        // haze at the horizon is the sky's own bottom stop, so a faded foot
+        // meets the sky and the far edge of the ground without a seam.
+        // Placed and sized each frame in `followRidges`.
+        const crag = theme.ridgeCrag ?? 0;
+        for (const rg of PERSP.ranges) {
+          const span = 1500;
+          const steps = 360;
+          const pos: number[] = [];
+          const col: number[] = [];
+          const idx: number[] = [];
+          for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const x = -span / 2 + span * t;
+            // The same three octaves as `ridge`, with the crag octaves
+            // stretched in x so a peak is a mountain and not a spike: at this
+            // distance a unit of x is a small slice of the view.
+            const f = 0.35;
+            const h =
+              rg.height *
+              (0.55 +
+                0.3 * Math.sin(x * 0.006 * f * 3 + rg.seed) +
+                0.12 * Math.sin(x * 0.021 * f * 3 + rg.seed * 2.3) +
+                0.05 * Math.sin(x * 0.06 * f * 3 + rg.seed * 5.1) +
+                crag *
+                  (0.2 * Math.sin(x * 0.12 * f + rg.seed * 1.3) +
+                    0.11 * Math.sin(x * 0.29 * f + rg.seed * 4.1) +
+                    0.05 * Math.sin(x * 0.7 * f + rg.seed * 2.2)));
+            const top = Math.max(1, h);
+            pos.push(x, top, 0, x, top * 0.55, 0, x, 0, 0);
+            col.push(1, 1, 1, 1, 1, 1, 1, 0.92, 1, 1, 1, 0);
+            if (i < steps) {
+              const a = i * 3;
+              // Two quads per column: top to mid, mid to foot.
+              idx.push(a, a + 1, a + 3, a + 1, a + 4, a + 3);
+              idx.push(a + 1, a + 2, a + 4, a + 2, a + 5, a + 4);
+            }
+          }
+          const geo = new THREE.BufferGeometry();
+          geo.setAttribute(
+            "position",
+            new THREE.Float32BufferAttribute(pos, 3),
+          );
+          geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 4));
+          geo.setIndex(idx);
+          const mat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            vertexColors: true,
+            transparent: true,
+            depthWrite: false,
+            fog: false,
+            side: THREE.DoubleSide,
+          });
+          const mesh = new THREE.Mesh(geo, mat);
+          mesh.renderOrder = rg.far ? -20 : -10;
+          mesh.frustumCulled = false;
+          scene.add(mesh);
+          perspRanges.push({
+            mesh,
+            dist: rg.dist,
+            peakNdc: rg.peak,
+            peakLocal: rg.height * 0.7,
+            base: new THREE.Color(
+              rg.far ? theme.mountains.colorFar : theme.mountains.colorNear,
+            ),
+            haze: rg.haze,
+            camX0: cam.position.x,
+            y: 0,
+          });
+        }
+      } else if (theme.horizon == null) {
         ridge(150, 15, theme.mountains.colorFar, 1.7, 0.5, 0.94);
         ridge(120, 11, theme.mountains.colorNear, 4.2, 0.75, 0.74);
       }
@@ -25683,14 +26714,16 @@ export function createKidsWorld(
     // merely goes grey.
     {
       const tex = makeCloudTexture(cloudCover);
-      const w = 520;
+      // On a perspective camera the sheet is hung 420 out and is sized for
+      // that; `followRidges` solves where it hangs.
+      const w = PERSP != null ? 1500 : 520;
       // 16, NOT 130. A plane 130 units tall reaches from well below the road
       // to far above the frame, and since the cloud strip carries heaps all
       // the way down its own height, that painted clouds straight over the
       // hills and the field. The sky is a band about six units deep between
       // the horizon's ridge and the top of the frame; the sheet belongs in
       // that band and above it, not across everything.
-      const h = 16;
+      const h = PERSP != null ? 70 : 16;
       const dist = 150;
       cam.updateMatrixWorld(true);
       const up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
@@ -27009,7 +28042,9 @@ export function createKidsWorld(
         //
         // Twenty-four units is roughly a frame's width of slack. Nothing is
         // allowed to appear or disappear inside it.
-        const seen = Math.abs(f.wrap.position.x - playerX) < cam.right + 24;
+        const seen =
+          Math.abs(f.wrap.position.x - playerX) <
+          (PERSP != null ? 60 : (cam as THREE.OrthographicCamera).right) + 24;
         if (rw.wait != null && rw.wait > 0) {
           rw.wait -= dt;
           // Never resume in view: a man fading up on camera is the same bug
@@ -29082,8 +30117,14 @@ export function createKidsWorld(
             0.03 + Math.sin(clock.elapsedTime * 55) * hit * 0.4 * shakeAmp;
         }
       }
-      cam.position.x += (p.x - 2 - cam.position.x) * 0.06;
-      if (roadRef != null) {
+      cam.position.x += (p.x - (PERSP?.followDx ?? 2) - cam.position.x) * 0.06;
+      if (PERSP != null) {
+        // The rig rides the road both ways, so the party keeps its place in
+        // the pane whatever the ground does under them: a perspective camera
+        // that stayed put would see the road climb into the lens on a rise.
+        cam.position.y +=
+          (V.camY + (avgRoad(p.x) - roadRef0) - cam.position.y) * 0.04;
+      } else if (roadRef != null) {
         // Down only, and only by as much as the road has dipped below where
         // the framing was set: a crest lifts the picture, which never hides
         // a word; a dip is what ran the row off the bottom. Eased like x,
@@ -29092,6 +30133,21 @@ export function createKidsWorld(
         const rel = lowestRoad(p.x) - roadRef;
         const dip = SHAPE === "hill" ? rel : Math.min(0, rel);
         cam.position.y += (V.camY + dip - cam.position.y) * 0.04;
+      }
+      if (PERSP != null && ++visTick % 30 === 0 && refreshPaneVis()) {
+        applyFrustum();
+        updateHorizon();
+      }
+      if (PERSP != null) {
+        // A length of thicket further than the haze reaches cannot be seen:
+        // the ground it stands on is a unit or two off the lane, so how far
+        // along the road it is, and how far back the lane is, is the whole
+        // distance. (The frustum test drops the ones to the side.)
+        const reach = PERSP.fogFar + 20;
+        const back = Math.abs(cam.position.z) + 22;
+        for (const c of clusterLengths) {
+          c.mesh.visible = Math.hypot(c.cx - cam.position.x, back) < reach + 20;
+        }
       }
       followRidges();
       // The sun sets and the moon rises, as one move. `SUN_AT` is eased
@@ -29119,7 +30175,7 @@ export function createKidsWorld(
         // The ribbon glides so the current letter always sits at the same spot
         // (just to the right of the runner, low in the pane); typed letters
         // scroll off left, upcoming ones flow in from the right — no jump.
-        const gz = theme.wordZ ?? 10;
+        const gz = PERSP?.wordZ ?? theme.wordZ ?? 10;
         const anchorX = p.x + 3;
         const targetX = anchorX - wordIdx * TILE_GAP;
         if (wordSnap) {
@@ -29129,7 +30185,7 @@ export function createKidsWorld(
           wordGroup.position.x += (targetX - wordGroup.position.x) * 0.18;
         }
         wordGroup.position.z = gz;
-        wordGroup.position.y = theme.wordY ?? 0;
+        wordGroup.position.y = PERSP?.wordY ?? theme.wordY ?? 0;
         for (let i = 0; i < wordTiles.length; i++) {
           const g = wordTiles[i].grp;
           const cur = i === wordIdx;
