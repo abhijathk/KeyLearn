@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "87e0c50393a5";
+export const ASSET_VERSION = "be10bcfe070d";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -398,8 +398,8 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "faces/Knight.webp": {
-    "u": "v25be9da8/faces/Knight.webp",
-    "b": 8334,
+    "u": "vcf2482e6/faces/Knight.webp",
+    "b": 10622,
     "g": "village"
   },
   "faces/Parasaurolophus.webp": {
@@ -428,13 +428,13 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "faces/Rogue_Hooded.webp": {
-    "u": "v4eb15a62/faces/Rogue_Hooded.webp",
-    "b": 8908,
+    "u": "v3a20ba95/faces/Rogue_Hooded.webp",
+    "b": 8008,
     "g": "village"
   },
   "faces/Skeleton_Warrior.webp": {
-    "u": "vcca92392/faces/Skeleton_Warrior.webp",
-    "b": 10312,
+    "u": "v69d7b9de/faces/Skeleton_Warrior.webp",
+    "b": 9530,
     "g": "village"
   },
   "faces/Stegosaurus.webp": {
@@ -647,9 +647,19 @@ export const ASSET_MAP: Readonly<
     "b": 22484,
     "g": "hero"
   },
+  "models/hero/HeroFlowers.glb": {
+    "u": "v66cd85f4/models/hero/HeroFlowers.glb",
+    "b": 60504,
+    "g": "hero"
+  },
   "models/hero/HeroGrass.glb": {
     "u": "v12778faa/models/hero/HeroGrass.glb",
     "b": 59968,
+    "g": "hero"
+  },
+  "models/hero/HeroLandmarks.glb": {
+    "u": "va4771ff0/models/hero/HeroLandmarks.glb",
+    "b": 93840,
     "g": "hero"
   },
   "models/hero/HeroRocks.glb": {
@@ -662,9 +672,19 @@ export const ASSET_MAP: Readonly<
     "b": 169288,
     "g": "hero"
   },
+  "models/hero/HeroTreesV2.glb": {
+    "u": "ve9dbdca4/models/hero/HeroTreesV2.glb",
+    "b": 169000,
+    "g": "hero"
+  },
+  "models/hero/HeroWater.glb": {
+    "u": "v530929fb/models/hero/HeroWater.glb",
+    "b": 56636,
+    "g": "hero"
+  },
   "models/hero/Knight.glb": {
-    "u": "v0d76ba68/models/hero/Knight.glb",
-    "b": 150580,
+    "u": "v48f52ec4/models/hero/Knight.glb",
+    "b": 248572,
     "g": "hero"
   },
   "models/hero/Mage.glb": {
@@ -708,8 +728,8 @@ export const ASSET_MAP: Readonly<
     "g": "hero"
   },
   "models/hero/Skeleton_Warrior.glb": {
-    "u": "v19262f6f/models/hero/Skeleton_Warrior.glb",
-    "b": 144252,
+    "u": "v66af5336/models/hero/Skeleton_Warrior.glb",
+    "b": 260852,
     "g": "hero"
   },
   "models/hero/anims-idle.glb": {

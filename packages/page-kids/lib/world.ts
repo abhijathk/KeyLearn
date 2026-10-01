@@ -1412,7 +1412,27 @@ export type Land = {
     readonly trunk: number;
     readonly strength: number;
   };
+  /**
+   * THE SHAPE OF THE GROUND in this land, where the road is not simply
+   * crossing rolling country. See `LandShape`. Hero Trail and Dino Run only:
+   * Time Keepers is authored and has its own terrain.
+   */
+  readonly terrain?: LandShape;
 };
+
+/**
+ * What the ground does in a land.
+ *
+ * - `hill`: the road climbs, in treads (a long flat, then a short rise), so a
+ *   scene that is ten lessons of walking actually goes somewhere.
+ * - `sunken`: a lane worn down between banks. The far bank is high and the
+ *   near one only a little, because a high near bank would stand between the
+ *   camera and the children.
+ * - `ridge`: the road runs along a crest and the ground falls away behind it
+ *   into a gorge, with the far wall and the mountains beyond.
+ * - `gully`: a dry bowl cut between the road and the far field.
+ */
+export type LandShape = "hill" | "sunken" | "ridge" | "gully";
 
 /** Bright lands only — one per session, straight from the Dino Run biomes. */
 export const LANDS: readonly Land[] = [
@@ -1441,6 +1461,7 @@ export const LANDS: readonly Land[] = [
     path: "stones",
     trees: "BirchTrees",
     friend: "Stegosaurus",
+    terrain: "hill",
   },
   {
     name: "Pine Ridge",
@@ -1454,6 +1475,7 @@ export const LANDS: readonly Land[] = [
     path: "stones",
     trees: "PineTrees",
     friend: "Apatosaurus",
+    terrain: "ridge",
   },
   {
     name: "Amber Sands",
@@ -1489,6 +1511,7 @@ export const LANDS: readonly Land[] = [
     path: "stones",
     trees: "Trees",
     friend: "Velociraptor",
+    terrain: "gully",
     foliageTint: { leaf: 0x3f8f4e, trunk: 0x5a4636, strength: 0.7 },
   },
   {
@@ -1503,6 +1526,7 @@ export const LANDS: readonly Land[] = [
     path: "sand",
     trees: "Trees",
     friend: "Triceratops",
+    terrain: "hill",
     foliageTint: { leaf: 0xc2b24e, trunk: 0x7a5a38, strength: 0.75 },
   },
   {
@@ -1517,6 +1541,7 @@ export const LANDS: readonly Land[] = [
     path: "stones",
     trees: "BirchTrees",
     friend: "Parasaurolophus",
+    terrain: "sunken",
   },
   {
     name: "Misty Pines",
@@ -1530,6 +1555,7 @@ export const LANDS: readonly Land[] = [
     path: "stones",
     trees: "PineTrees",
     friend: "Stegosaurus",
+    terrain: "ridge",
   },
   {
     name: "Palm Shore",
@@ -1559,7 +1585,7 @@ export const HERO_LANDS: readonly Land[] = [
     sun: 0xfff0cf,
     fog: 0xcdeec0,
     path: "stones",
-    trees: "HeroTrees",
+    trees: "HeroTreesV2",
     friend: "Ranger",
   },
   {
@@ -1574,6 +1600,7 @@ export const HERO_LANDS: readonly Land[] = [
     path: "stones",
     trees: "HeroTrees",
     friend: "Mage",
+    terrain: "hill",
   },
   {
     name: "Old Oak Way",
@@ -1585,8 +1612,9 @@ export const HERO_LANDS: readonly Land[] = [
     sun: 0xffecc0,
     fog: 0xcbe8bc,
     path: "sand",
-    trees: "HeroTrees",
+    trees: "HeroTreesV2",
     friend: "Barbarian",
+    terrain: "sunken",
   },
   {
     name: "Autumn Lane",
@@ -1598,8 +1626,9 @@ export const HERO_LANDS: readonly Land[] = [
     sun: 0xffe0b0,
     fog: 0xf0dcb8,
     path: "sand",
-    trees: "HeroTrees",
+    trees: "HeroTreesV2",
     friend: "Rogue",
+    terrain: "ridge",
     foliageTint: { leaf: 0xe0902c, trunk: 0x6a4630, strength: 0.85 },
   },
   {
@@ -1612,8 +1641,9 @@ export const HERO_LANDS: readonly Land[] = [
     sun: 0xe4ecf4,
     fog: 0xc8d8e0,
     path: "stones",
-    trees: "HeroTrees",
+    trees: "HeroTreesV2",
     friend: "Mage",
+    terrain: "hill",
     foliageTint: { leaf: 0x4f9a8a, trunk: 0x5b4a3c, strength: 0.6 },
   },
   {
@@ -1640,8 +1670,9 @@ export const HERO_LANDS: readonly Land[] = [
     sun: 0xfff4e0,
     fog: 0xf0e8f0,
     path: "stones",
-    trees: "HeroTrees",
+    trees: "HeroTreesV2",
     friend: "Rogue_Hooded",
+    terrain: "sunken",
     foliageTint: { leaf: 0xf0a8c4, trunk: 0x7a5a4a, strength: 0.55 },
   },
   {
@@ -1654,8 +1685,9 @@ export const HERO_LANDS: readonly Land[] = [
     sun: 0xf6efd6,
     fog: 0xc2e0cc,
     path: "stones",
-    trees: "HeroTrees",
+    trees: "HeroTreesV2",
     friend: "Ranger",
+    terrain: "gully",
     foliageTint: { leaf: 0x2f7a4c, trunk: 0x4e3a2c, strength: 0.7 },
   },
 ];
@@ -3083,6 +3115,9 @@ export const HERO_THEME: WorldTheme = {
   ground: [
     ["HeroBuildings", 4, 9, 18, "back", 2.6],
     ["HeroBushes", 54, 2.5, 15, "both"],
+    // Set pieces along the road, by name: see `landmarkRun`.
+    ["HeroLandmarks", 4, 8, 20, "back", 1],
+    ["HeroFlowers", 40, 2.2, 13, "both", 1],
     ["HeroRocks", 20, 3, 18, "both"],
     ["HeroGrass", 96, 1.5, 14, "both"],
   ],
@@ -4053,7 +4088,59 @@ let FAR_BANK = 1;
  */
 let ROAD_SINK = 0;
 const groundY = (x: number) =>
-  (Math.sin(x * 0.045) * 1.6 + Math.sin(x * 0.011 + 1.7) * 2.4) * RELIEF;
+/** The shape of the ground in the land being built, or null for plain. */
+let SHAPE: LandShape | null = null;
+const smooth01 = (t: number) => {
+  const c = Math.max(0, Math.min(1, t));
+  return c * c * (3 - 2 * c);
+};
+/**
+ * How far the ROAD itself has climbed by x, in a `hill` land: treads of 9
+ * units, each a flat followed by a short rise, 1.15 units a step. Over a ten
+ * lesson scene that is about eighty steps and a climb of roughly twenty-five
+ * units, which the camera follows.
+ */
+const shapeRise = (x: number): number => {
+  if (SHAPE !== "hill") return 0;
+  const tread = 9;
+  const u = Math.max(0, x + 20) / tread;
+  const n = Math.floor(u);
+  return (n + smooth01((u - n - 0.55) / 0.45)) * 1.15 * 0.5;
+};
+/**
+ * What a land's shape adds beside the road, at lateral offset `off` from the
+ * trail (negative is the far side, away from the camera).
+ */
+const shapeLateral = (x: number, off: number): number => {
+  switch (SHAPE) {
+    case "sunken": {
+      // A far bank rising to about two units and a near one barely a third.
+      const far = off < 0 ? smooth01((-off - 2.4) / 3.2) * 2.1 : 0;
+      const near = off > 0 ? smooth01((off - 3) / 3) * 0.35 : 0;
+      return far + near;
+    }
+    case "ridge": {
+      // Level to four units behind the road, then falling away into a gorge
+      // nine units deep, and rising again as the far wall.
+      if (off >= 0) return 0;
+      const d = -off;
+      const fall = smooth01((d - 4) / 5) * 9;
+      const wall = smooth01((d - 18) / 7) * 11;
+      return -fall + wall;
+    }
+    case "gully": {
+      if (off >= 0) return 0;
+      const d = -off;
+      const bowl =
+        smooth01((d - 4) / 3) * (1 - smooth01((d - 12) / 4)) * 2.6;
+      return -bowl;
+    }
+    default:
+      return 0;
+  }
+};
+  (Math.sin(x * 0.045) * 1.6 + Math.sin(x * 0.011 + 1.7) * 2.4) * RELIEF +
+  shapeRise(x);
 /** The trail wanders a little, like feet chose it — never far from the lane. */
 const meander = (x: number) =>
   Math.sin(x * 0.07) * 0.7 + Math.sin(x * 0.023 + 2.1) * 0.4;
@@ -4511,6 +4598,9 @@ type DinoRig = {
    * A separate, slower gait. Null for the characters that ship one move clip
    * — they run or they stand, exactly as before.
    */
+  if (SHAPE != null) {
+    y += shapeLateral(x, z - meander(x));
+  }
   readonly walk: THREE.AnimationAction | null;
   /**
    * The calm loop CURRENTLY showing. Not readonly: a character with several
@@ -5018,6 +5108,7 @@ export function createKidsWorld(
    * in the evening is "day" to every population rule there is, and the whole
    * village stands about in the fields and at the market under a night sky.
    * The window is small in clock terms and total in effect: it is hit whenever
+  SHAPE = theme.village != null ? null : (land.terrain ?? null);
    * the real time is between about ten past six and seven, morning or evening.
    *
    * Corrected here and NOT in the fold, because the fold also aims the sun and
@@ -8479,6 +8570,12 @@ export function createKidsWorld(
     // matter: Chapter 2 has a thatched roof at the back road and an estate
     // house behind its wall, and a house standing on lawn is exactly what
     // this pass exists to prevent. The first list is Chapter 1's; the second
+        // Stone, petals, hulls and flames are not foliage and are painted from
+        // a palette: a model says so with `extras.noTint`, and is left alone
+        // rather than being pulled toward the trunk colour.
+        if (src.userData?.noTint === true) {
+          return m;
+        }
     // follows the buildings.
     const yards = [
       ...(CHAPTER == null || CHAPTER_N !== 1
@@ -19643,6 +19740,27 @@ export function createKidsWorld(
        */
       async function lightBuilding(
         name: string,
+      // LANDMARKS, NOT SCATTER. On the Hero Trail the buildings are the
+      // things a child walks TOWARDS: a tower on the skyline that is bigger
+      // every lesson, a windmill after it. So each is set at a fixed
+      // distance along the scene's road, the kind seeded from the scene, and
+      // not thrown down at random with the trees.
+      const landmarkRun =
+        (String(file) === "HeroBuildings" || String(file) === "HeroLandmarks") &&
+        opts.sceneIndex != null &&
+        variants.length > 1;
+      const landmarkOrder = landmarkRun
+        ? variants
+            .map((_, vi) => vi)
+            // Spans and piers need water under them and are placed by the
+            // water code, not scattered on the grass.
+            .filter((vi) => !/bridge|dock|fence|wall|hedge/i.test(variants[vi]!.name))
+            .sort(
+              (a, b) =>
+                hashSeed("landmark", opts.sceneIndex ?? 0, a) -
+                hashSeed("landmark", opts.sceneIndex ?? 0, b),
+            )
+        : [];
         wrap: THREE.Object3D,
       ): Promise<void> {
         const box = measureBox(wrap);
@@ -19658,6 +19776,9 @@ export function createKidsWorld(
         const on = (across: number, up: number, out: number) =>
           [cx + across, foot + tall * up, front + faces * out] as const;
 
+        if (landmarkRun) {
+          pick = landmarkOrder[i % landmarkOrder.length]!;
+        }
         // THE EVENING PUJA, hoisted out of the temple's own block. The lamps
         // ON the temple and the standing lamp IN FRONT of it are lit by the
         // same people at the same hour, and two copies of that window are
@@ -19687,6 +19808,17 @@ export function createKidsWorld(
           // a single lit line across it.
           for (let i = 0; i < 4; i++) {
             makeLamp(...on((i / 3 - 0.5) * wide * 0.52, 0.34, -0.2), {
+          if (landmarkRun) {
+            // Evenly along the road, with a little give so they do not look
+            // surveyed.
+            // The two sets are interleaved: landmarks sit half a step off the
+            // buildings.
+            const offset = String(file) === "HeroLandmarks" ? 0.5 : 0;
+            x =
+              30 +
+              (i + 0.5 + offset * 0.5 + (rand() - 0.5) * 0.3) *
+                ((TRAIL_END - 60) / count);
+          }
               size: 0.95,
               peak: 0.7,
               hours: PUJA,
@@ -27422,7 +27554,9 @@ export function createKidsWorld(
         // the framing was set: a crest lifts the picture, which never hides
         // a word; a dip is what ran the row off the bottom. Eased like x,
         // so it is a glide and not a lurch.
-        const dip = Math.min(0, lowestRoad(p.x) - roadRef);
+        // A hill climbs, so there the camera climbs with the road too.
+        const rel = lowestRoad(p.x) - roadRef;
+        const dip = SHAPE === "hill" ? rel : Math.min(0, rel);
         cam.position.y += (V.camY + dip - cam.position.y) * 0.04;
       }
       // The sun sets and the moon rises, as one move. `SUN_AT` is eased
