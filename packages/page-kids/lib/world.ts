@@ -2483,6 +2483,22 @@ export type WorldTheme = {
     /** How far to pull each material toward those, 0-1. */
     readonly strength: number;
   };
+  /**
+   * How steeply the land rises behind the trail, as a fraction of the usual
+   * slope. The far bank is what lifts the far edge of the ground up the
+   * screen, and on a flat road it lifted it off the TOP of the frame: no
+   * horizon, no mountains, no sky. Lowering it lets the ground end below the
+   * top, so the ranges standing on its edge — and the sky above them — show.
+   */
+  readonly farBank?: number;
+  /**
+   * How craggy the drawn ranges are, 0 being the long soft swell the village
+   * uses. The swell varies over hundreds of units, which is right for a
+   * road seen from a long way back and reads as a flat band in the narrow
+   * stretch a short, wide pane shows: no peaks. Crags add fast octaves, so
+   * the skyline has summits and saddles within the width of the frame.
+   */
+  readonly ridgeCrag?: number;
   /** Distant mountain range on the horizon, or none. */
   readonly mountains?: {
     readonly colorNear: number;
@@ -2835,6 +2851,13 @@ export const DINO_THEME: WorldTheme = {
   },
   floorOpacity: 1,
   sky: "flat",
+  // Sky and ranges above the land: see `farBank`.
+  farBank: 0.15,
+  ridgeCrag: 1,
+  // Gentle country: the rolling hills lifted the far edge of the ground off
+  // the top of the frame wherever the road climbed, so the sky came and went.
+  relief: 0.25,
+  mountains: { colorNear: 0x6f8f55, colorFar: 0x9db380 },
   // The path and runner sit lower in the pane than they used to: the
   // bottom of the frame was empty ground. Same total view (top + bottom).
   // Then a unit and a half back UP, and the camera following the road's
@@ -2933,6 +2956,13 @@ export const HERO_THEME: WorldTheme = {
   },
   floorOpacity: 1,
   sky: "flat",
+  // Sky and ranges above the land: see `farBank`.
+  farBank: 0.15,
+  ridgeCrag: 1,
+  // Gentle country: the rolling hills lifted the far edge of the ground off
+  // the top of the frame wherever the road climbed, so the sky came and went.
+  relief: 0.25,
+  mountains: { colorNear: 0x5f9078, colorFar: 0x8db5a8 },
   pointerRing: true,
   companionsWatch: true,
   nightMode: "night",
@@ -3860,6 +3890,8 @@ let TRAIL_END = 260;
  * not really that place" before a child had read a single word.
  */
 let RELIEF = 1;
+/** How much of the usual slope the far bank keeps. See `WorldTheme.farBank`. */
+let FAR_BANK = 1;
 /**
  * How far the road is worn BELOW the field beside it.
  *
@@ -4275,7 +4307,11 @@ const terrainY = (x: number, z: number) => {
     // The far bank rising behind the trail. Kept at a fraction of its usual
     // slope on a flat world, so the land still lifts towards the horizon
     // rather than running to a hard edge - the mountains go on top of this.
-    y += (-z - 10) * (0.3 + 0.1 * Math.sin(x * 0.05)) * (0.25 + 0.75 * RELIEF);
+    y +=
+      (-z - 10) *
+      (0.3 + 0.1 * Math.sin(x * 0.05)) *
+      (0.25 + 0.75 * RELIEF) *
+      FAR_BANK;
   }
   if (WILD != null) return wildTerrain(WILD, x, z, y, WILD_BANK_Y);
   // ── THE CHANNEL, CUT LAST ────────────────────────────────────────────
@@ -4751,6 +4787,7 @@ export function createKidsWorld(
   // Set before ANYTHING measures the ground - the mesh, the props and the
   // helpers must all be built against the same relief.
   RELIEF = theme.relief ?? 1;
+  FAR_BANK = theme.farBank ?? 1;
   ROAD_SINK = land.path === "mud" ? 0.22 : 0;
   const trueNight = (theme.nightMode ?? "dusk") === "night";
 
@@ -6928,6 +6965,38 @@ export function createKidsWorld(
 
   // ══ LAMPLIGHT ════════════════════════════════════════════════════════
   //
+  /**
+   * THE DRAWN RANGES ON THE HORIZON, and what they need to stay there.
+   *
+   * They are laid out once, with the camera where it stands at build time,
+   * and the camera then walks along the road. Left alone they slide down the
+   * screen as it goes: this camera is yawed, so a point further along x is
+   * higher on the screen, and the ranges were solved for one spot. They
+   * follow the camera instead, holding back a little of the journey (see
+   * `RIDGE_DRIFT`), and pay for the difference in y so their height on the
+   * screen never changes. `followRidges` does it, after the camera has moved.
+   */
+  const ridgeLayers: {
+    readonly mesh: THREE.Mesh;
+    readonly x0: number;
+    readonly y0: number;
+    readonly camX0: number;
+    readonly camY0: number;
+    readonly upX: number;
+    readonly upY: number;
+  }[] = [];
+  /** How much of the walk the ranges keep for themselves: almost none. */
+  const RIDGE_DRIFT = 0.06;
+  function followRidges(): void {
+    for (const r of ridgeLayers) {
+      const dcx = cam.position.x - r.camX0;
+      const dcy = cam.position.y - r.camY0;
+      r.mesh.position.x = r.x0 + dcx * (1 - RIDGE_DRIFT);
+      r.mesh.position.y =
+        r.y0 + (r.upX * dcx * RIDGE_DRIFT + r.upY * dcy) / r.upY;
+    }
+  }
+
   // The village after dark is lit by what the village owns: a wick in oil at
   // every doorway, a pressure lantern over the market stalls, and rows of
   // them at the temple. Nothing here is a "night effect" laid over the
@@ -9300,7 +9369,8 @@ export function createKidsWorld(
   loader.setKTX2Loader(ktx2);
   // The title sign in the top-right corner — see `world-logo.ts`. Drawn by
   // this renderer as a second pass, so it costs no context of its own.
-  const logo = createWorldLogo();
+  // Two thirds the size on the short, wide hero and dino panes.
+  const logo = createWorldLogo(theme.village != null ? 1 : 0.65);
   // Dust and prints underfoot on the Time Keepers road — see footprints.ts.
   const footprints = theme.village != null ? createFootprints(scene) : null;
   /** Each walker's height, measured once, for sizing its prints. */
@@ -23637,7 +23707,8 @@ export function createKidsWorld(
         peakAt: number,
       ) => {
         const span = TRAIL_END + 420;
-        const steps = 90;
+        const crag = theme.ridgeCrag ?? 0;
+        const steps = crag > 0 ? 420 : 90;
         const shape = new THREE.Shape();
         shape.moveTo(-span / 2, 0);
         for (let i = 0; i <= steps; i++) {
@@ -23652,7 +23723,11 @@ export function createKidsWorld(
             (0.55 +
               0.3 * Math.sin(x * 0.006 + seed) +
               0.12 * Math.sin(x * 0.021 + seed * 2.3) +
-              0.05 * Math.sin(x * 0.06 + seed * 5.1));
+              0.05 * Math.sin(x * 0.06 + seed * 5.1) +
+              crag *
+                (0.2 * Math.sin(x * 0.12 + seed * 1.3) +
+                  0.11 * Math.sin(x * 0.29 + seed * 4.1) +
+                  0.05 * Math.sin(x * 0.7 + seed * 2.2)));
           shape.lineTo(x, Math.max(0, h));
         }
         shape.lineTo(span / 2, 0);
@@ -24162,11 +24237,23 @@ export function createKidsWorld(
    * Real dust does the opposite of all of that. It is small, there is not much
    * of it, it goes sideways rather than up, it expands as it thins, and it is
    * gone almost at once. So: quarter the size, half the number, a fifth of the
+        // Solved at the camera's own x — it is the only x the walk starts
+        // from, and `followRidges` carries the answer along from there.
+        const x0 = cam.position.x;
    * lift, a third of the life — and it fades by going transparent and
    * spreading rather than by shrinking, because dust disperses, it does not
    * retract.
    */
   function dust(x: number, y: number, z: number, n = 3) {
+        ridgeLayers.push({
+          mesh,
+          x0,
+          y0: y,
+          camX0: cam.position.x,
+          camY0: cam.position.y,
+          upX: camUp.x,
+          upY: camUp.y,
+        });
     if (calmMode) {
       return;
     }
@@ -27584,6 +27671,7 @@ export function createKidsWorld(
         // The herd lies down after dark and gets up at dawn, on the authored
         // `Rest` clip. Each animal has its own threshold, so the field goes
         // down one by one over the dusk rather than on a single frame, and
+      followRidges();
         // the gap between lying down and getting up keeps one sitting on
         // the line from bobbing. A buffalo coming over still gets her up —
         // `walking` wins — and she lies down again once it has gone.

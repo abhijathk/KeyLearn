@@ -61,6 +61,10 @@ export type WorldLogo = {
  * About 9% of the canvas width, held to 85–120 CSS px. Height is capped
  * too, because Hero Trail's shield is nearly square and would otherwise
  * stand taller than the others read wide.
+ *
+ * `scale` shrinks all of it together. The Hero Trail and Dino Run panes are
+ * short and wide and their scoreboard sits opposite, so their sign is drawn
+ * at two thirds of the size the village road uses.
  */
 const WIDTH_SHARE = 0.09;
 const MIN_W = 85;
@@ -90,7 +94,7 @@ const BOB_PERIOD = 6.2;
 /** Bob amplitude in CSS pixels. */
 const BOB_PX = 1.5;
 
-export function createWorldLogo(): WorldLogo {
+export function createWorldLogo(scale = 1): WorldLogo {
   const scene = new THREE.Scene();
   // Its own light, neutral by default: the sign is a title, not a prop, so
   // in Dino Run and Hero Trail it does not go orange at sunset or blue after
@@ -208,8 +212,16 @@ export function createWorldLogo(): WorldLogo {
       const w = size.x;
       const h = size.y;
       if (w < 240 || h < 140) return;
-      const maxH = THREE.MathUtils.clamp(h * HEIGHT_SHARE, MIN_H, MAX_H);
-      let sw = THREE.MathUtils.clamp(w * WIDTH_SHARE, MIN_W, MAX_W);
+      const maxH = THREE.MathUtils.clamp(
+        h * HEIGHT_SHARE * scale,
+        MIN_H * scale,
+        MAX_H * scale,
+      );
+      let sw = THREE.MathUtils.clamp(
+        w * WIDTH_SHARE * scale,
+        MIN_W * scale,
+        MAX_W * scale,
+      );
       sw = Math.min(sw, maxH * aspect);
       const sh = sw / aspect;
       const vw = Math.round(sw * PAD);
