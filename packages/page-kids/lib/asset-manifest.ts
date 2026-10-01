@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "8b3ecc67a46d";
+export const ASSET_VERSION = "87e0c50393a5";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -427,6 +427,11 @@ export const ASSET_MAP: Readonly<
     "b": 5408,
     "g": "village"
   },
+  "faces/Rogue_Hooded.webp": {
+    "u": "v4eb15a62/faces/Rogue_Hooded.webp",
+    "b": 8908,
+    "g": "village"
+  },
   "faces/Skeleton_Warrior.webp": {
     "u": "vcca92392/faces/Skeleton_Warrior.webp",
     "b": 10312,
@@ -658,8 +663,8 @@ export const ASSET_MAP: Readonly<
     "g": "hero"
   },
   "models/hero/Knight.glb": {
-    "u": "v66ad4229/models/hero/Knight.glb",
-    "b": 151436,
+    "u": "v0d76ba68/models/hero/Knight.glb",
+    "b": 150580,
     "g": "hero"
   },
   "models/hero/Mage.glb": {
@@ -703,8 +708,8 @@ export const ASSET_MAP: Readonly<
     "g": "hero"
   },
   "models/hero/Skeleton_Warrior.glb": {
-    "u": "v5e74e9b1/models/hero/Skeleton_Warrior.glb",
-    "b": 153052,
+    "u": "v19262f6f/models/hero/Skeleton_Warrior.glb",
+    "b": 144252,
     "g": "hero"
   },
   "models/hero/anims-idle.glb": {
