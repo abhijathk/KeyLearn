@@ -90,6 +90,7 @@ import {
 } from "./run-length.ts";
 import { MIN_STONE_GAP, stoneXFor } from "./stone-x.ts";
 import { createWorldLogo } from "./world-logo.ts";
+import { hashSeed, mulberry32, SCENE_LESSONS } from "./scene-order.ts";
 
 // Lives beside (not inside) /assets — webpack cleans that directory on build.
 export { ASSETS, versioned };
@@ -4633,6 +4634,18 @@ export function createKidsWorld(
     /** Which night this learner gets; see night.ts. Hero world only. */
     readonly nightStyle?: NightStyle;
     /**
+     * Where in its scene the road opens, on the Hero Trail and Dino Run:
+     * the lessons already finished in this scene, 0 to 9. A scene is ten
+     * lessons of ONE road, so a child on the fifth begins five runs along it
+     * and not back at the start. Unused on Time Keepers, which has chapters.
+     */
+    readonly sceneLesson?: number;
+    /**
+     * Which scene this is, counted from zero. It seeds the scatter, so the
+     * same scene is the same trees and rocks every time it is built.
+     */
+    readonly sceneIndex?: number;
+    /**
      * Whether this trail contains a village (Time Keepers only).
      *
      * The page decides, not the world. Villages fall every four to seven
@@ -5406,7 +5419,19 @@ export function createKidsWorld(
   let resolvedChapterPlacements: ReturnType<typeof placements> | null = null;
   if (CHAPTER != null) {
     TRAIL_END = chapterEnd(CHAPTER);
+  } else {
+    // A SCENE IS TEN LESSONS OF ONE ROAD, so the road is ten runs long (plus
+    // a little to stand on past the last flag). It used to be 260 units for
+    // everything: four runs, after which every flag was clamped into the last
+    // 64 units and the party stopped getting anywhere. Module state, so it is
+    // set on every build and not only when a chapter changes it.
+    TRAIL_END = SCENE_LESSONS * RUN_LEN + 40;
   }
+  /**
+   * How much longer this road is than the 260 units every planting count was
+   * written for. 1 on Time Keepers, whose table plants it by hand.
+   */
+  const ROAD_SCALE = CHAPTER != null ? 1 : TRAIL_END / 260;
   // THE RIVER IS CUT HERE, before the ground is meshed, because the mesh
   // samples `terrainY` and a channel cut after that is a channel the water
   // sits in and nothing else noticed. And it is cut EVERY build, to null when
@@ -9299,7 +9324,7 @@ export function createKidsWorld(
 
     // Pebbles kicked to the edges of the trail — every land has them.
     {
-      const count = 130;
+      const count = Math.round(130 * ROAD_SCALE);
       const pebbles = new THREE.InstancedMesh(
         new THREE.DodecahedronGeometry(0.14, 0),
         new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 }),
@@ -11336,7 +11361,14 @@ export function createKidsWorld(
             ),
           )
         ]!
-      : -6;
+      : // The lessons already finished in THIS scene put the party that many
+        // runs along its one road.
+        -6 +
+        Math.min(
+          SCENE_LESSONS - 1,
+          Math.max(0, Math.floor(opts.sceneLesson ?? 0)),
+        ) *
+          RUN_LEN;
   let playerX = resumeX;
   let targetX = resumeX;
   let runStart = resumeX;
@@ -18304,7 +18336,19 @@ export function createKidsWorld(
      * while this runs behind it.
      */
     let firstWild = true;
-    for (const spot of theme.herd) {
+    // THE HERD IS WRITTEN FOR 260 UNITS OF ROAD, and the road is ten runs
+    // long now, so it comes round again twice, further along. The same cast
+    // by the roadside every couple of hundred units, which is how a country
+    // road looks; the friend, who stands at the very start, is not repeated.
+    const herdSpots =
+      CHAPTER != null
+        ? theme.herd
+        : [0, 220, 440].flatMap((shift) =>
+            theme.herd
+              .filter((spot) => shift === 0 || spot.model !== "$friend")
+              .map((spot) => ({ ...spot, x: spot.x + shift })),
+          );
+    for (const spot of herdSpots) {
       const model = spot.model === "$friend" ? land.friend : spot.model;
       // THE CHAPTER OWNS THE ANIMALS WHEN THERE IS A CHAPTER.
       //
@@ -18718,7 +18762,16 @@ export function createKidsWorld(
     // The other two worlds keep it. Dino Run and Hero Trail are procedural
     // by design and a scattered forest is the right answer there; the
     // village is authored, and the table is the only thing that plants it.
-    const spread = CHAPTER != null ? 0 : 1;
+    // The road is ten runs long now, so the same planting has to cover two and
+    // a half times the ground to look as full as it did on 260 units.
+    const spread = CHAPTER != null ? 0 : ROAD_SCALE;
+    // REPEATABLE. The same scene is the same scatter on every load: seeded
+    // from the scene and the place it is set in, not from `Math.random`.
+    // Without a scene (a review build) it stays random.
+    const rand =
+      opts.sceneIndex != null
+        ? mulberry32(hashSeed("scatter", opts.sceneIndex, land.name))
+        : Math.random;
     const groundSpecs = [
       [
         land.trees,
@@ -18766,10 +18819,10 @@ export function createKidsWorld(
         // other the repeat is plain. Drawing at random fixes the pattern;
         // refusing the previous draw stops the one thing random does that a
         // cycle never does, which is give you the same plant twice running.
-        let pick = Math.floor(Math.random() * variants.length);
+        let pick = Math.floor(rand() * variants.length);
         if (variants.length > 1 && pick === lastPick) {
           pick =
-            (pick + 1 + Math.floor(Math.random() * (variants.length - 1))) %
+            (pick + 1 + Math.floor(rand() * (variants.length - 1))) %
             variants.length;
         }
         lastPick = pick;
@@ -18784,7 +18837,7 @@ export function createKidsWorld(
         );
         const wrap = new THREE.Group();
         wrap.add(v);
-        const scl = (0.8 + Math.random() * 0.8) * theme.sceneryScale * scaleMul;
+        const scl = (0.8 + rand() * 0.8) * theme.sceneryScale * scaleMul;
         // How far this particular plant sticks out sideways, once scaled.
         // The wrap is spun to a random heading below, so the worst case is
         // the larger of its two horizontal half-extents, whichever way round
@@ -18800,9 +18853,9 @@ export function createKidsWorld(
         let x = 0;
         let z = 0;
         for (let attempt = 0; attempt < 8; attempt++) {
-          x = -26 + Math.random() * (TRAIL_END + 26);
-          const depth = minD + Math.random() * (maxD - minD);
-          z = side === "back" ? -depth : Math.random() > 0.65 ? depth : -depth;
+          x = -26 + rand() * (TRAIL_END + 26);
+          const depth = minD + rand() * (maxD - minD);
+          z = side === "back" ? -depth : rand() > 0.65 ? depth : -depth;
           if (!onRoad(x, z, String(file), reach)) {
             break;
           }
@@ -18821,7 +18874,7 @@ export function createKidsWorld(
         // Height, not a fixed distance: a pebble and a laterite block want
         // the same FRACTION buried, not the same number of units.
         const buried = /rock|stone|boulder|laterite/i.test(String(file))
-          ? (box.max.y - box.min.y) * scl * (0.25 + Math.random() * 0.25)
+          ? (box.max.y - box.min.y) * scl * (0.25 + rand() * 0.25)
           : 0;
         wrap.position.set(x, surfaceY(x, z) - buried, z);
         // Trees only, and only so the village can clear a space round the
@@ -18829,7 +18882,7 @@ export function createKidsWorld(
         if (file === land.trees) {
           scatterTrees.push(wrap);
         }
-        wrap.rotation.y = Math.random() * Math.PI * 2;
+        wrap.rotation.y = rand() * Math.PI * 2;
         // NOTHING GROWS PLUMB.
         //
         // Yaw alone leaves every plant standing to attention, and turning a
@@ -18837,8 +18890,8 @@ export function createKidsWorld(
         // you can see -- which is why a row of them still read as a row of
         // copies. A few degrees of lean is the cheapest tell that these grew
         // rather than being placed.
-        wrap.rotation.x = (Math.random() - 0.5) * 0.17; // about +-5 degrees
-        wrap.rotation.z = (Math.random() - 0.5) * 0.17;
+        wrap.rotation.x = (rand() - 0.5) * 0.17; // about +-5 degrees
+        wrap.rotation.z = (rand() - 0.5) * 0.17;
         // AND THE SILHOUETTE CHANGES, not merely the size.
         //
         // A uniform scale is the same plant seen from further away: the
@@ -18851,7 +18904,7 @@ export function createKidsWorld(
           const d = perspective(z);
           wrap.scale.set(
             scl * d,
-            scl * d * (0.85 + Math.random() * 0.4),
+            scl * d * (0.85 + rand() * 0.4),
             scl * d,
           );
         }
@@ -18924,7 +18977,7 @@ export function createKidsWorld(
           trueNight &&
           theme.nightTrees !== "keep" &&
           file === land.trees &&
-          Math.random() < plan.treeThin
+          rand() < plan.treeThin
         ) {
           wrap.userData.dayOnly = true;
           wrap.visible = !nightNow;
@@ -24268,6 +24321,16 @@ export function createKidsWorld(
       );
       m.position.set(
         x + (Math.random() - 0.5) * 0.12,
+        // Solved at the camera's own x — it is the only x the walk starts
+        // from, and `followRidges` carries the answer along from there.
+        //
+        // THE SOLVE ASSUMES THE CAMERA STANDS WHERE IT WAS FIRST PLACED, and
+        // a road that opens part-way along (lesson five of a scene) has
+        // already moved it. So the ridge is solved for the camera's own
+        // starting place and then shifted by however far the camera is from
+        // that — in x, which the up vector turns into height, and in y.
+        const x0 = cam.position.x;
+        const baseX = -(V.camX ?? 10);
         y,
         z + (Math.random() - 0.5) * 0.12,
       );

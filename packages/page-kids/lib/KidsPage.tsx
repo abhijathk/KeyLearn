@@ -117,7 +117,12 @@ import { paceTarget } from "./pace.ts";
 import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
 import { fitPassageToRoad, RUN_LEN } from "./run-length.ts";
-import { landForScene, sceneIndexOf, sceneJustEnded } from "./scene-order.ts";
+import {
+  landForScene,
+  SCENE_LESSONS,
+  sceneIndexOf,
+  sceneJustEnded,
+} from "./scene-order.ts";
 import { Scoreboard, useTypingFade } from "./scoreboard.tsx";
 import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
 import { STORY, type StoryPart } from "./story.ts";
@@ -4810,6 +4815,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // most recent few behind them so the road reads as already travelled.
       // The pinned hour, at construction. Handing it over afterwards with
       // `setHour` was too late for everything the build decides from it —
+      // Where in its scene the road opens, and which scene it is. Time
+      // Keepers has chapters instead and ignores both.
+      sceneLesson: lessonsDoneOf(prefsRef.current) % SCENE_LESSONS,
+      sceneIndex: sceneIndexOf(lessonsDoneOf(prefsRef.current)),
       // see `hour` in the world's own options.
       hour:
         prefsRef.current.dayHour === "auto" ? null : prefsRef.current.dayHour,
