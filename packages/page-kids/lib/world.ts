@@ -19214,7 +19214,18 @@ export function createKidsWorld(
         for (let attempt = 0; attempt < 8; attempt++) {
           x = -26 + rand() * (TRAIL_END + 26);
           const depth = minD + rand() * (maxD - minD);
-          z = side === "back" ? -depth : rand() > 0.65 ? depth : -depth;
+          // NOTHING TALL BETWEEN THE CAMERA AND THE ROAD (owner rule). The
+          // near verge is the bottom of the frame, and anything standing there
+          // rises up the screen over the path and the children on it. So a
+          // plant taller than a bush goes on the far verge only; low things
+          // (grass, flowers, small rocks, shrubs) may use both.
+          const tallOne = (box.max.y - box.min.y) * scl > 1.6;
+          z =
+            side === "back" || tallOne
+              ? -depth
+              : rand() > 0.65
+                ? depth
+                : -depth;
           if (!onRoad(x, z, String(file), reach)) {
             break;
           }
