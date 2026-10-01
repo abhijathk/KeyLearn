@@ -118,13 +118,13 @@ import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
 import { fitPassageToRoad, RUN_LEN } from "./run-length.ts";
 import {
-  landForScene,
   SCENE_LESSONS,
   sceneIndexOf,
   sceneJustEnded,
 } from "./scene-order.ts";
 import { Scoreboard, useTypingFade } from "./scoreboard.tsx";
 import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
+import { dinoLand, dinoSceneName, heroLand, heroSceneName } from "./scene-kit.ts";
 import { STORY, type StoryPart } from "./story.ts";
 import { useFlash } from "./use-flash.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
@@ -133,7 +133,6 @@ import {
   createLoaderScene,
   createPickerScene,
   DINO_THEME,
-  HERO_LANDS,
   HERO_THEME,
   type KidsWorld,
   LANDS,
@@ -1883,12 +1882,14 @@ const HERO_CHARACTERS = [
   // Keepers, where a village is the point.
   //
   // The ids are the model filenames, and they are what a saved profile has
-  // already stored: `Skeleton_Warrior` stays that, and the Scout is the
-  // `Ranger` model until it is redrawn. A profile that saved Dave or Little
-  // Drew for this world falls back to the default through `charOf`.
+  // already stored: `Skeleton_Warrior` stays that. The third is the hooded
+  // rogue, the green one (owner, 1 Oct 2026); it replaced the Scout, which
+  // was the `Ranger` model, and a profile that saved `Ranger` is read as the
+  // rogue (see `renamed`). A profile that saved Dave or Little Drew for this
+  // world falls back to the default through `charOf`.
   { id: "Knight", label: "Knight" },
   { id: "Skeleton_Warrior", label: "Skeleton" },
-  { id: "Ranger", label: "Scout" },
+  { id: "Rogue_Hooded", label: "Rogue" },
 ] as const;
 
 /**
@@ -2063,9 +2064,13 @@ const DEFAULT_CHAR: Readonly<Record<WorldId, string>> = {
  * more, and the game and the panel disagree about who the child is. Falling
  * back here fixes both at once, because both read this.
  */
+/** Characters that were renamed: what an old profile stored, and who it means now. */
+const renamed = (id: string): string => (id === "Ranger" ? "Rogue_Hooded" : id);
+
 const charOf = (p: Pick<Prefs, "world" | "dino" | "hero" | "village">) => {
-  const saved =
-    p.world === "village" ? p.village : p.world === "hero" ? p.hero : p.dino;
+  const saved = renamed(
+    p.world === "village" ? p.village : p.world === "hero" ? p.hero : p.dino,
+  );
   return playableIn(p.world, saved) ? saved : DEFAULT_CHAR[p.world];
 };
 
@@ -2091,7 +2096,7 @@ const COMPANIONS = [
   // village's own, so the shared lookups (label, cast order) know them.
   { id: "Knight", label: "Knight" },
   { id: "Skeleton_Warrior", label: "Skeleton" },
-  { id: "Ranger", label: "Scout" },
+  { id: "Rogue_Hooded", label: "Rogue" },
 ] as const;
 
 /**
@@ -2516,6 +2521,7 @@ const companionsOf = (
     p.companions ??
     (p.companion != null ? [p.companion] : []);
   return [...raw]
+    .map(renamed)
     .filter((id) => walksIn(p.world, id))
     .filter((id, i, all) => all.indexOf(id) === i)
     .sort((a, b) => {
@@ -2670,8 +2676,18 @@ function useCloseKeys(onClose: () => void): void {
   }, []);
 }
 
-/** The places a world is set in, in the order it keeps them. */
-const landsOf = (world: WorldId) => (world === "hero" ? HERO_LANDS : LANDS);
+/** The land a scene of a world is set in, from the scene kit. */
+const sceneLand = (world: WorldId, scene: number) =>
+  world === "hero" ? heroLand(scene) : dinoLand(scene);
+
+/** The scenes the crossing card draws as the road: a few behind, a few ahead. */
+const sceneRoad = (p: Pick<Prefs, "lessonsByWorld" | "world">) => {
+  const here = sceneIndexOf(lessonsDoneOf(p));
+  return [-3, -2, -1, 0, 1, 2]
+    .map((d) => here + d)
+    .filter((n) => n >= 0)
+    .map((n) => ({ n, name: sceneLand(p.world, n).name }));
+};
 
 /** Lessons finished on this world's own road. */
 const lessonsDoneOf = (p: Pick<Prefs, "lessonsByWorld" | "world">): number =>
@@ -2687,7 +2703,9 @@ const lessonsDoneOf = (p: Pick<Prefs, "lessonsByWorld" | "world">): number =>
  * what this used to read.
  */
 function peekNextLandName(p: Prefs): string {
-  return landForScene(landsOf(p.world), sceneIndexOf(lessonsDoneOf(p))).name;
+  return p.world === "hero"
+    ? heroSceneName(sceneIndexOf(lessonsDoneOf(p)))
+    : dinoSceneName(sceneIndexOf(lessonsDoneOf(p)));
 }
 
 /**
@@ -4799,21 +4817,31 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // The scene is a function of how many lessons have been finished: ten
     // to a scene, the same place for all ten, then the next. Time Keepers
     // keeps its own authored road and the old counter.
+    // `?land=Name` — review only: build that land whatever the scene says.
+    const reviewQuery =
+      typeof window === "undefined"
+        ? null
+        : new URLSearchParams(window.location.search);
+    const reviewLand = reviewQuery?.get("land") ?? null;
+    // `?scene=N` — review only: build scene N (counted from zero).
+    const reviewScene =
+      reviewQuery?.get("scene") != null
+        ? Number(reviewQuery.get("scene"))
+        : null;
     const land =
       prefsRef.current.world === "village"
         ? pickLand(theme.lands)
         : (theme.lands.find((l) => l.name === reviewLand) ??
-          landForScene(
-            theme.lands,
-            sceneIndexOf(lessonsDoneOf(prefsRef.current)),
-          );
-    // `?land=Name` — review only: build that land whatever the scene says.
-    const reviewLand =
-      typeof window === "undefined"
-        ? null
-        : new URLSearchParams(window.location.search).get("land");
+          sceneLand(
+            prefsRef.current.world,
+            reviewScene ?? sceneIndexOf(lessonsDoneOf(prefsRef.current)),
+          ));
     const world = createKidsWorld(canvas, land, theme, {
       nightStyle: resolveNightStyle(band, nightStyleOf(prefsRef.current)),
+      // Where in its scene the road opens, and which scene it is. Time
+      // Keepers has chapters instead and ignores both.
+      sceneLesson: lessonsDoneOf(prefsRef.current) % SCENE_LESSONS,
+      sceneIndex: sceneIndexOf(lessonsDoneOf(prefsRef.current)),
       villageDue,
       // `?wild` — the buffalo's charge, brought within reach of a reviewer.
       wildReview: qs?.has("wild") === true,
@@ -4821,10 +4849,6 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // most recent few behind them so the road reads as already travelled.
       // The pinned hour, at construction. Handing it over afterwards with
       // `setHour` was too late for everything the build decides from it —
-      // Where in its scene the road opens, and which scene it is. Time
-      // Keepers has chapters instead and ignores both.
-      sceneLesson: lessonsDoneOf(prefsRef.current) % SCENE_LESSONS,
-      sceneIndex: sceneIndexOf(lessonsDoneOf(prefsRef.current)),
       // see `hour` in the world's own options.
       hour:
         prefsRef.current.dayHour === "auto" ? null : prefsRef.current.dayHour,
@@ -7703,9 +7727,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             toward {peekNextLandName(prefs)}.
           </p>
           <div className={styles.mapRow}>
-            {landsOf(prefs.world).map(({ name }, i) => {
-              const here = name === landName;
-              const next = name === peekNextLandName(prefs);
+            {sceneRoad(prefs).map(({ n, name }, i) => {
+              // The road is drawn when a scene has just ended, so the scene
+              // the count names is the NEXT one and the one before it is
+              // the one just crossed.
+              const here = n === sceneIndexOf(lessonsDoneOf(prefs)) - 1;
+              const next = n === sceneIndexOf(lessonsDoneOf(prefs));
               return (
                 <div key={name} className={styles.mapStopWrap}>
                   {i > 0 && <span className={styles.mapHop} />}
@@ -7746,9 +7773,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
               Green Valley.
             </div>
             <div className={styles.mapRow}>
-              {landsOf(prefs.world).map(({ name }, i) => {
-                const here = name === landName;
-                const next = name === peekNextLandName(prefs);
+              {sceneRoad(prefs).map(({ n, name }, i) => {
+                const here = n === sceneIndexOf(lessonsDoneOf(prefs)) - 1;
+                const next = n === sceneIndexOf(lessonsDoneOf(prefs));
                 return (
                   <div key={name} className={styles.mapStopWrap}>
                     {i > 0 && <span className={styles.mapHop} />}

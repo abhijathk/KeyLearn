@@ -575,6 +575,7 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Washing_Stone", "a washing stone"],
   ["Petromax_Lamp", "a lamp"],
   ["Wooden_Bridge", "a wooden bridge"],
+  ["Kulappura_Pond", "the village pond"],
   ["Village_Cart", "a cart"],
   // ── THE OUTER FIELDS ─────────────────────────────────────────────────
   //
@@ -1418,6 +1419,13 @@ export type Land = {
    * Time Keepers is authored and has its own terrain.
    */
   readonly terrain?: LandShape;
+  /**
+   * The scene record this land was built from, when it came from the scene
+   * kit (see scene-kit.ts): terrain, landmark, season, weather, trees. What a
+   * land is made of beyond colour and light is read from it.
+   */
+  readonly heroScene?: import("./scene-kit.ts").HeroScene;
+  readonly dinoScene?: import("./scene-kit.ts").DinoScene;
 };
 
 /**
@@ -2263,13 +2271,14 @@ function castHeight(name: string): number {
     // line, the head 46% of the crown height on all three), so whichever one
     // is chosen and whichever walks beside them read as two friends of an
     // age. Change one and change the others.
+    // THE THREE MAIN CHARACTERS ARE ONE AGE AND ONE HEIGHT (owner, 1 Oct
+    // 2026): whoever is played and whoever walks beside them are two
+    // friends of an age, and both scale together with the child's own age
+    // (see `heroGrowth`). Change one and change the others.
     case "Knight":
-      return 3.4;
     case "Skeleton_Warrior":
-      return 3.1;
-    // The Scout is the `Ranger` model, redrawn as a kid.
-    case "Ranger":
-      return 3.1;
+    case "Rogue_Hooded":
+      return 3.2;
     // The hero world's costume box: Knight, Skeleton and the rest.
     default:
       return 3.4;
@@ -2520,14 +2529,14 @@ export type WorldTheme = {
    */
   readonly groundClusters?: readonly {
     readonly file: string;
-    /** Clump size, drawn per verge per point. */
-    readonly min: number;
     /**
      * Which mesh of a collection file to plant, by (part of) its node name.
      * Left out, the first one — which is what every single-model file wants
      * and what a collection file only ever gave: one variant of six.
      */
     readonly node?: string;
+    /** Clump size, drawn per verge per point. */
+    readonly min: number;
     readonly max: number;
     /** How far the clump spreads along the road. */
     readonly spread: number;
@@ -3014,8 +3023,6 @@ export const DINO_THEME: WorldTheme = {
     ["Bushes", 16, 4, 16, "both"],
     ["Rocks", 12, 5, 22, "back"],
     ["Flowers", 24, 3, 14, "both"],
-  ],
-  sceneryScale: 1,
     // The valley's own plants (ferns, cycads, horsetail, palms, slim
     // redwoods whose crowns are high above the dinosaurs) and set pieces
     // (spires, arches, bones, nests, tar pits, crags), by full path.
@@ -3023,6 +3030,8 @@ export const DINO_THEME: WorldTheme = {
     ["dino/DinoSets", 14, 5, 24, "both"],
     // Placed by name along the road: see `landmarkRun`.
     ["dino/DinoLandmarks", 4, 8, 22, "back"],
+  ],
+  sceneryScale: 1,
   sheep: true,
   // A rare pacing "guard" here and there; commoner over on the Hero Trail.
   guardRate: 0.1,
@@ -3119,7 +3128,7 @@ export const HERO_THEME: WorldTheme = {
   herd: [
     { model: "$friend", x: 10, z: -6, h: 3.2 },
     { model: "Mage", x: 46, z: -8, h: 3.2 },
-    { model: "Ranger", x: 92, z: -6, h: 3.2 },
+    { model: "Rogue_Hooded", x: 92, z: -6, h: 3.2 },
     { model: "Rogue", x: 132, z: -8, h: 3.0 },
   ],
   // A lush tropical forest — a few big trees, lots of bushes, grass and rocks,
@@ -3127,15 +3136,13 @@ export const HERO_THEME: WorldTheme = {
   treeCount: 15,
   ground: [
     ["HeroBuildings", 4, 9, 18, "back", 2.6],
-    ["HeroBushes", 54, 2.5, 15, "both"],
     // Set pieces along the road, by name: see `landmarkRun`.
     ["HeroLandmarks", 4, 8, 20, "back", 1],
     ["HeroFlowers", 40, 2.2, 13, "both", 1],
+    ["HeroBushes", 54, 2.5, 15, "both"],
     ["HeroRocks", 20, 3, 18, "both"],
     ["HeroGrass", 96, 1.5, 14, "both"],
   ],
-  sceneryScale: 1.2,
-  // Skeleton_Warrior is reserved as a selectable main character, so the trail
   // THICK PLANTING ALONG THE ROAD, the way the approved scene has it: dark
   // grass tufts running right up to both edges of the path, wildflowers
   // among them, a bush every so often. Drawn instanced, so a few hundred of
@@ -3227,6 +3234,8 @@ export const HERO_THEME: WorldTheme = {
       hi: 1.5,
     },
   ],
+  sceneryScale: 1.2,
+  // Skeleton_Warrior is reserved as a selectable main character, so the trail
   // guards are the other skeletons only.
   flagGuard: ["Skeleton_Minion", "Skeleton_Mage", "Skeleton_Rogue"],
   floorTextured: false,
@@ -4191,7 +4200,6 @@ let FAR_BANK = 1;
  * the child walking on it, all in agreement.
  */
 let ROAD_SINK = 0;
-const groundY = (x: number) =>
 /** The shape of the ground in the land being built, or null for plain. */
 let SHAPE: LandShape | null = null;
 const smooth01 = (t: number) => {
@@ -4243,6 +4251,7 @@ const shapeLateral = (x: number, off: number): number => {
       return 0;
   }
 };
+const groundY = (x: number) =>
   (Math.sin(x * 0.045) * 1.6 + Math.sin(x * 0.011 + 1.7) * 2.4) * RELIEF +
   shapeRise(x);
 /** The trail wanders a little, like feet chose it — never far from the lane. */
@@ -4481,6 +4490,54 @@ type BridgeDeck = {
 };
 let BRIDGE: BridgeDeck | null = null;
 let BRIDGES: BridgeDeck[] = [];
+/**
+ * THE LONG BRIDGE GIVES A LITTLE UNDERFOOT (owner, 1 Oct 2026).
+ *
+ * It is built of separate wooden modules joined end to end, and a real one
+ * like that moves when people cross it. Each module's own sag (`d`) is
+ * driven in the tick from who is walking on it; `deckY` adds it, so feet
+ * ride the deck rather than hovering over it. Always a few centimetres.
+ */
+/**
+ * THE VILLAGE POND (kulam + kulippura), a sunk stone tank with a roofed
+ * bathing shed (owner, 1 Oct 2026). One asset, placed from the lessons' own
+ * prop tables like anything else, but it needs the ground out of its way: the
+ * basin is 1.5 m deep and the ground is a solid sheet, so a hole is cut in the
+ * ground's shader inside the walls (no terrain pit, so nothing that walks the
+ * land can fall in) and the land under and round it is levelled so the walls
+ * stand true. Lengths below are the asset's own, in metres.
+ */
+type PondDef = {
+  readonly x: number;
+  readonly z: number;
+  /** World units per metre of the asset, already including the depth falloff. */
+  readonly s: number;
+  /** The long axis runs left to right; a flipped pond has the shed on the right. */
+  readonly flip: boolean;
+  g0: number | null;
+};
+let PONDS: PondDef[] = [];
+const POND_HW = 7.6;
+const POND_HD = 4.8;
+const POND_IN_HW = 7.15;
+const POND_IN_HD = 4.35;
+/** How far the whole asset is sunk, so the wall tops stand a hand above the ground. */
+const POND_LIFT = -0.5;
+/** Where the water stands, in the asset's own metres (ground is 0). */
+const POND_WATER = 0.52;
+const pondWorldXZ = (d: PondDef, lx: number, lz: number) => ({
+  x: d.x + (d.flip ? -1 : 1) * lx * d.s,
+  z: d.z + lz * d.s,
+});
+
+type BridgeFlex = { readonly x0: number; readonly x1: number; d: number };
+let BRIDGE_FLEX: BridgeFlex[] = [];
+const flexAt = (x: number): number => {
+  for (const m of BRIDGE_FLEX) {
+    if (x >= m.x0 && x <= m.x1) return m.d;
+  }
+  return 0;
+};
 const bridgeAt = (x: number) =>
   BRIDGES.find((b) => Math.abs(x - b.x) <= b.halfLen);
 
@@ -4506,9 +4563,9 @@ const deckY = (x: number, z: number): number | null => {
   const into = BRIDGE.halfLen - dx;
   if (into < ramp) {
     const t = into / ramp;
-    return terrainY(x, z) * (1 - t) + BRIDGE.y * t;
+    return terrainY(x, z) * (1 - t) + (BRIDGE.y + flexAt(x)) * t;
   }
-  return BRIDGE.y;
+  return BRIDGE.y + flexAt(x);
 };
 
 /** Where a foot rests: the deck over the water, the ground everywhere else. */
@@ -4607,6 +4664,7 @@ function setRiver(cut: RiverCut | null): void {
   RIVER = null;
   BRIDGE = null;
   BRIDGES = [];
+  BRIDGE_FLEX = [];
   WILD = null;
   if (cut == null) {
     return;
@@ -4619,7 +4677,7 @@ function setRiver(cut: RiverCut | null): void {
   RIVER_BED = bank - cut.depth;
 }
 
-const terrainY = (x: number, z: number) => {
+const terrainYBase = (x: number, z: number) => {
   let y = groundY(x);
   if (ROAD_SINK > 0) {
     const off = Math.abs(z - meander(x));
@@ -4651,6 +4709,9 @@ const terrainY = (x: number, z: number) => {
       (0.3 + 0.1 * Math.sin(x * 0.05)) *
       (0.25 + 0.75 * RELIEF) *
       FAR_BANK;
+  }
+  if (SHAPE != null) {
+    y += shapeLateral(x, z - meander(x));
   }
   if (WILD != null) return wildTerrain(WILD, x, z, y, WILD_BANK_Y);
   // ── THE CHANNEL, CUT LAST ────────────────────────────────────────────
@@ -4694,6 +4755,26 @@ const terrainY = (x: number, z: number) => {
   return y;
 };
 
+/**
+ * The ground, levelled under and round any pond: the walls are a flat
+ * rectangle and the land rises towards the back, so left alone one wall
+ * would be buried and another would stand clear of the earth.
+ */
+const terrainY = (x: number, z: number): number => {
+  const y = terrainYBase(x, z);
+  for (const p of PONDS) {
+    const out = Math.max(
+      Math.abs(x - p.x) - p.s * POND_HW,
+      Math.abs(z - p.z) - p.s * POND_HD,
+    );
+    if (out > 4) continue;
+    p.g0 ??= terrainYBase(p.x, p.z);
+    const t = out <= 0 ? 1 : 1 - (3 * (out / 4) ** 2 - 2 * (out / 4) ** 3);
+    return y + (p.g0 - y) * t;
+  }
+  return y;
+};
+
 type DinoRig = {
   readonly wrap: THREE.Group;
   readonly mixer: THREE.AnimationMixer;
@@ -4702,9 +4783,6 @@ type DinoRig = {
    * A separate, slower gait. Null for the characters that ship one move clip
    * — they run or they stand, exactly as before.
    */
-  if (SHAPE != null) {
-    y += shapeLateral(x, z - meander(x));
-  }
   readonly walk: THREE.AnimationAction | null;
   /**
    * The calm loop CURRENTLY showing. Not readonly: a character with several
@@ -5142,6 +5220,23 @@ export function createKidsWorld(
   // helpers must all be built against the same relief.
   RELIEF = theme.relief ?? 1;
   FAR_BANK = theme.farBank ?? 1;
+  SHAPE =
+    theme.village != null
+      ? null
+      : land.heroScene != null
+        ? ((
+            {
+              hill: "hill",
+              sunken: "sunken",
+              ridge: "ridge",
+              gully: "gully",
+            } as Record<string, LandShape>
+          )[land.heroScene.terrain] ?? null)
+        : land.dinoScene != null
+          ? ((
+              { ridge: "ridge", hills: "hill" } as Record<string, LandShape>
+            )[land.dinoScene.shape] ?? null)
+          : (land.terrain ?? null);
   ROAD_SINK = land.path === "mud" ? 0.22 : 0;
   const trueNight = (theme.nightMode ?? "dusk") === "night";
 
@@ -5212,7 +5307,6 @@ export function createKidsWorld(
    * in the evening is "day" to every population rule there is, and the whole
    * village stands about in the fields and at the market under a night sky.
    * The window is small in clock terms and total in effect: it is hit whenever
-  SHAPE = theme.village != null ? null : (land.terrain ?? null);
    * the real time is between about ten past six and seven, morning or evening.
    *
    * Corrected here and NOT in the fold, because the fold also aims the sun and
@@ -5805,6 +5899,23 @@ export function createKidsWorld(
   }
 
   const V = theme.view ?? DEFAULT_VIEW;
+  PONDS = [];
+  if (CHAPTER != null) {
+    for (const l of LESSONS) {
+      for (const p of l.props ?? []) {
+        if (!/Kulappura_Pond$/.test(p.model)) continue;
+        const from = CHAPTER[l.n - 1]!;
+        const len = CHAPTER[l.n]! - from;
+        PONDS.push({
+          x: from + p.at * len,
+          z: p.z,
+          s: p.h * depthScale(p.z, V.camZ, theme.laneZ ?? 0),
+          flip: (p.turn ?? 0) !== 0,
+          g0: null,
+        });
+      }
+    }
+  }
   const cam = new THREE.OrthographicCamera();
   // A way in, for measuring. Off unless the URL asks for it, so it costs a
   // string compare once per world and nothing at all in normal play.
@@ -5823,6 +5934,7 @@ export function createKidsWorld(
       renderer,
       crossing: () => ({ island: WILD, decks: BRIDGES, waterY: RIVER_SURFACE }),
       walker: () => player?.wrap.position.toArray(),
+      bridgeFlex: () => BRIDGE_FLEX.map((m) => +m.d.toFixed(4)),
       passage: () => ({ text: wordText, index: wordIdx }),
       night: () => ({ blend: nightBlend, look: nightLook, now: nightNow }),
       // Skips his wait between appearances — up to a minute of game time,
@@ -7269,6 +7381,81 @@ export function createKidsWorld(
   const mistMats: THREE.ShaderMaterial[] = [];
   /** The river's ripple clock; advanced in the tick, read by the water. */
   const waterTime = { value: 0 };
+  /** The long bridge's springy sections (lessons 37-38) and their motion. */
+  const bridgeModules3d: {
+    readonly w: THREE.Object3D;
+    readonly flex: BridgeFlex;
+    readonly baseY: number;
+    v: number;
+    roll: number;
+    rollV: number;
+    readonly phase: number;
+    readonly anchored: boolean;
+  }[] = [];
+  const bridgeLastX = new WeakMap<object, number>();
+  let bridgeClock = 0;
+  /**
+   * Who is on the bridge, how fast, and where along each section; then a
+   * damped spring per section (about 3 Hz, lightly damped) pushed by their
+   * footfalls. Heave plus a hair of roll, so a run along it feels it more
+   * than a walk, a pause stills it, and neighbouring sections move a little
+   * differently at the joints. Peak sag is around 4 cm for a child.
+   */
+  function stepBridge(dt: number): void {
+    if (bridgeModules3d.length === 0 || dt <= 0) return;
+    bridgeClock += dt;
+    const movers: THREE.Object3D[] = [];
+    if (player != null) movers.push(player.wrap);
+    for (const f of followers) movers.push(f.rig.wrap);
+    for (const f of roadWalkers) if (f.wrap.visible) movers.push(f.wrap);
+    const load = bridgeModules3d.map(() => ({ f: 0, roll: 0 }));
+    for (const wrap of movers) {
+      const x = wrap.position.x;
+      const prev = bridgeLastX.get(wrap) ?? x;
+      bridgeLastX.set(wrap, x);
+      const speed = Math.min(1.5, Math.abs(x - prev) / dt / 3.4);
+      const cadence = 1.9 + 1.1 * Math.min(1, speed);
+      for (let i = 0; i < bridgeModules3d.length; i++) {
+        const m = bridgeModules3d[i]!;
+        if (x < m.flex.x0 - 0.5 || x > m.flex.x1 + 0.5) continue;
+        const u = (x - (m.flex.x0 + m.flex.x1) / 2) / ((m.flex.x1 - m.flex.x0) / 2);
+        const shape = Math.max(0, 1 - u * u * 0.8);
+        // ONLY MOVING FEET MOVE IT. Somebody standing still puts no force on
+        // the deck at all, so it settles within a second of the last step.
+        const drive = speed < 0.12 ? 0 : speed;
+        const step = Math.sin(bridgeClock * cadence * Math.PI * 2 + wrap.position.z + i * 0.6);
+        load[i]!.f += drive * shape * (0.55 + 0.45 * step);
+        const side = Math.sin(bridgeClock * cadence * Math.PI + i);
+        load[i]!.roll += speed * shape * side;
+        // The neighbours feel a quarter of it through the joint.
+        if (i > 0) load[i - 1]!.f += 0.25 * drive * shape * step;
+        if (i < bridgeModules3d.length - 1) load[i + 1]!.f += 0.25 * drive * shape * step;
+      }
+    }
+    const K = 150; // (2*pi*1.95 Hz)^2: about two vibrations a second
+    const C = 7.5; // well damped: a stop is a stop
+    for (let i = 0; i < bridgeModules3d.length; i++) {
+      const m = bridgeModules3d[i]!;
+      if (m.anchored) continue;
+      const force = Math.min(2.0, load[i]!.f);
+      // Heave: pushed down, springs back.
+      const acc = -K * m.flex.d - C * m.v - 5 * force;
+      m.v += acc * dt;
+      m.flex.d += m.v * dt;
+      m.flex.d = Math.max(-0.035, Math.min(0.01, m.flex.d));
+      const rollAcc = -K * 1.2 * m.roll - C * 1.4 * m.rollV + 0.6 * Math.max(-1.5, Math.min(1.5, load[i]!.roll));
+      m.rollV += rollAcc * dt;
+      m.roll += m.rollV * dt;
+      m.roll = Math.max(-0.004, Math.min(0.004, m.roll));
+      m.w.position.y = m.baseY + m.flex.d;
+      m.w.rotation.x = m.roll;
+    }
+  }
+  /** Draws the flipped scene for the water's mirror; called just before the frame. Null when this road has no river. */
+  let mirrorPass: (() => void) | null = null;
+  /** Village ponds' mirrors, one per pond built; run just before the frame. */
+  const pondMirrors: (() => void)[] = [];
+  const pondDisposers: (() => void)[] = [];
   const lanternMats: THREE.SpriteMaterial[] = [];
 
   /**
@@ -7330,8 +7517,6 @@ export function createKidsWorld(
    */
   const CLOUD_DRIFT = 0.18;
 
-  // ══ LAMPLIGHT ════════════════════════════════════════════════════════
-  //
   /**
    * THE DRAWN RANGES ON THE HORIZON, and what they need to stay there.
    *
@@ -7364,6 +7549,8 @@ export function createKidsWorld(
     }
   }
 
+  // ══ LAMPLIGHT ════════════════════════════════════════════════════════
+  //
   // The village after dark is lit by what the village owns: a wick in oil at
   // every doorway, a pressure lantern over the market stalls, and rows of
   // them at the temple. Nothing here is a "night effect" laid over the
@@ -8511,6 +8698,17 @@ export function createKidsWorld(
         if (src.color == null) {
           return m;
         }
+        // Stone, petals, hulls and flames are not foliage and are painted from
+        // a palette: a model says so with `extras.noTint`, and is left alone
+        // rather than being pulled toward the trunk colour.
+        if (
+          src.userData?.noTint === true ||
+          /rock|stone|bone|egg|tar_|smoke|steam|water|lava|sinter|basalt|mist|cliff/i.test(
+            src.name ?? "",
+          )
+        ) {
+          return m;
+        }
         const c = src.clone() as THREE.MeshStandardMaterial;
         const name = `${node.name} ${src.name ?? ""}`.toLowerCase();
         c.color.getHSL(hsl);
@@ -8674,23 +8872,6 @@ export function createKidsWorld(
     // matter: Chapter 2 has a thatched roof at the back road and an estate
     // house behind its wall, and a house standing on lawn is exactly what
     // this pass exists to prevent. The first list is Chapter 1's; the second
-        // Stone, petals, hulls and flames are not foliage and are painted from
-        // Stone, petals, hulls and flames are not foliage and are painted from
-        // a palette: a model says so with `extras.noTint`, and is left alone
-        // rather than being pulled toward the trunk colour.
-        if (
-          src.userData?.noTint === true ||
-          /rock|stone|bone|egg|tar_|smoke|steam|water|lava|sinter|basalt|mist|cliff/i.test(
-            src.name ?? "",
-          )
-        ) {
-          return m;
-        }
-        // a palette: a model says so with `extras.noTint`, and is left alone
-        // rather than being pulled toward the trunk colour.
-        if (src.userData?.noTint === true) {
-          return m;
-        }
     // follows the buildings.
     const yards = [
       ...(CHAPTER == null || CHAPTER_N !== 1
@@ -9222,6 +9403,21 @@ export function createKidsWorld(
         shader.uniforms.tRoad = { value: texRoad };
         shader.uniforms.tLitter = { value: texLitter };
         shader.uniforms.tDry = { value: texDry };
+        // The pond's inside: where the ground is not drawn at all. Inside the
+        // walls' thickness (a quarter metre in), so the cut edge is hidden in
+        // stone and the ground cannot show a seam beside the wall.
+        const holes = [0, 1, 2].map((i) => {
+          const d = PONDS[i];
+          return d == null
+            ? new THREE.Vector4(0, 0, 0, 0)
+            : new THREE.Vector4(
+                d.x,
+                d.z,
+                d.s * (POND_IN_HW + 0.25),
+                d.s * (POND_IN_HD + 0.25),
+              );
+        });
+        shader.uniforms.uHoles = { value: holes };
         shader.vertexShader = shader.vertexShader
           .replace(
             "#include <common>",
@@ -9249,6 +9445,7 @@ export function createKidsWorld(
              uniform sampler2D tDry;
              varying vec4 vMix;
              varying vec2 vGroundUv;
+             uniform vec4 uHoles[3];
              /**
               * One surface, sampled so it does not visibly repeat.
               *
@@ -9273,6 +9470,14 @@ export function createKidsWorld(
           .replace(
             "#include <color_fragment>",
             `#include <color_fragment>
+             for (int hi = 0; hi < 3; hi++) {
+               vec4 hole = uHoles[hi];
+               if (hole.z > 0.0 &&
+                   abs(vGroundUv.x - hole.x) < hole.z &&
+                   abs(vGroundUv.y - hole.y) < hole.w) {
+                 discard;
+               }
+             }
              {
                // Each surface at its own scale: grit is fine, a field is
                // broader. Sharing one scale made the road look like grass that
@@ -9336,7 +9541,7 @@ export function createKidsWorld(
           );
       };
       // Any change to a patched material needs a new program.
-      groundMat.customProgramCacheKey = () => `groundmix-${land.name}`;
+      groundMat.customProgramCacheKey = () => `groundmix-${land.name}-ponds`;
     }
     const ground = new THREE.Mesh(geo, groundMat);
     ground.receiveShadow = true;
@@ -9463,59 +9668,150 @@ export function createKidsWorld(
       // a puddle. Vertex colour multiplies the material colour, so the
       // material holds the pale bank tone and the centre is pulled down.
       const wpos = wgeo.attributes.position;
-      const shade = new Float32Array(wpos.count * 3);
+      // DEPTH, READ FROM THE GROUND ITSELF. The old shading was a stripe down
+      // the middle of the channel; this asks the terrain how far below the
+      // surface the bed really is at each vertex, so the shallow shelf under
+      // the mangroves and the drop to the deep middle come from the same
+      // numbers the walkers and the animals already obey.
+      const depthAttr = new Float32Array(wpos.count);
+      let deepest = 0.6;
       for (let i = 0; i < wpos.count; i++) {
-        const d = Math.min(
-          1,
-          Math.abs(wpos.getX(i) - RIVER.x) /
-            Math.max(0.01, riverHalfAt(wpos.getZ(i)) * wet),
-        );
-        const k = 0.55 + 0.45 * d * d; // 0.55 at the centre, 1 at the edge
-        shade[i * 3] = k;
-        shade[i * 3 + 1] = k;
-        shade[i * 3 + 2] = k;
+        const drop = RIVER_SURFACE - terrainY(wpos.getX(i), wpos.getZ(i));
+        depthAttr[i] = Math.max(0, drop);
+        if (drop > deepest) deepest = drop;
       }
-      wgeo.setAttribute("color", new THREE.BufferAttribute(shade, 3));
+      for (let i = 0; i < wpos.count; i++) {
+        depthAttr[i] = Math.min(1, depthAttr[i]! / deepest);
+      }
+      wgeo.setAttribute("aDepth", new THREE.BufferAttribute(depthAttr, 1));
+      wgeo.setAttribute(
+        "color",
+        new THREE.BufferAttribute(new Float32Array(wpos.count * 3).fill(1), 3),
+      );
       wgeo.setAttribute("aSide", new THREE.BufferAttribute(side, 1));
+      // ── A MIRROR, NOT A PAINTED SHEEN ────────────────────────────────
+      //
+      // The scene is drawn a second time, flipped about the water's surface,
+      // into a small target, and the water shows that image over its own
+      // colour. That is what puts the walkers, the palms and a carried lamp
+      // upside down in the river. Ortho camera, so the trick is the plain
+      // mirrored-view one, and a clipping plane at the surface keeps the
+      // bed and the banks under it out of the picture.
+      const reflRT = new THREE.WebGLRenderTarget(256, 96, {
+        type: THREE.HalfFloatType,
+      });
+      const reflCam = new THREE.OrthographicCamera();
+      const reflMat = new THREE.Matrix4();
+      let reflOff = false;
+      const reflUniforms = {
+        uReflect: { value: reflRT.texture },
+        uReflMat: { value: reflMat },
+        uReflAmt: { value: 0 },
+        uShallow: { value: new THREE.Color(0xb7c977) },
+        uMid: { value: new THREE.Color(0x227f7e) },
+        uDeep: { value: new THREE.Color(0x0a3846) },
+        uSky: { value: new THREE.Color(0xbcd8ea) },
+        uScale: {
+          value: WILD != null ? new THREE.Vector2(0.34, 0.15) : new THREE.Vector2(0.6, 0.26),
+        },
+        uRipple: { value: WILD != null ? 0.032 : 0.026 },
+      };
       const wmat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(0x3f8f92),
-        roughness: 0.14,
+        color: 0xffffff,
+        roughness: 0.1,
         metalness: 0,
         vertexColors: true,
         transparent: true,
-        opacity: 0.92,
+        opacity: 1,
       });
-      // Ripples: two crossing sine bands nudge the normal, so the sun's
-      // highlight breaks into moving sparkle rather than sitting as one
-      // still white bar. Small, because the surface is seen edge-on and a
-      // large wobble reads as boiling.
       wmat.onBeforeCompile = (sh) => {
         sh.uniforms.uWave = waterTime;
         sh.uniforms.uLakeUp = { value: new THREE.Vector2(upV.y, upV.z) };
         sh.uniforms.uLakeFrom = { value: lakeFrom };
         sh.uniforms.uLakeTo = { value: lakeTo };
         sh.uniforms.uLakeEdge = { value: -GROUND_DEPTH / 2 };
+        Object.assign(sh.uniforms, reflUniforms);
         sh.vertexShader = sh.vertexShader
           .replace(
             "#include <common>",
-            "#include <common>\nvarying vec2 vWave;\nvarying float vWaveY;\nattribute float aSide;\nvarying float vSide;",
+            "#include <common>\nvarying vec2 vWave;\nvarying float vWaveY;\nattribute float aSide;\nvarying float vSide;\nattribute float aDepth;\nvarying float vDepth;\nvarying vec4 vRefl;\nuniform mat4 uReflMat;",
           )
           .replace(
             "#include <begin_vertex>",
-            "#include <begin_vertex>\nvSide = aSide;",
+            "#include <begin_vertex>\nvSide = aSide;\nvDepth = aDepth;",
           )
           .replace(
             "#include <worldpos_vertex>",
-            "#include <worldpos_vertex>\nvWave = (modelMatrix * vec4(transformed, 1.0)).xz;\nvWaveY = (modelMatrix * vec4(transformed, 1.0)).y;",
+            "#include <worldpos_vertex>\nvWave = (modelMatrix * vec4(transformed, 1.0)).xz;\nvWaveY = (modelMatrix * vec4(transformed, 1.0)).y;\nvRefl = uReflMat * (modelMatrix * vec4(transformed, 1.0));",
           );
         sh.fragmentShader = sh.fragmentShader
           .replace(
             "#include <common>",
-            "#include <common>\nvarying vec2 vWave;\nvarying float vWaveY;\nuniform float uWave;\nuniform vec2 uLakeUp;\nuniform float uLakeFrom;\nuniform float uLakeTo;\nuniform float uLakeEdge;\nvarying float vSide;",
+            `#include <common>
+             varying vec2 vWave;
+             varying float vWaveY;
+             uniform float uWave;
+             uniform vec2 uLakeUp;
+             uniform float uLakeFrom;
+             uniform float uLakeTo;
+             uniform float uLakeEdge;
+             varying float vSide;
+             varying float vDepth;
+             varying vec4 vRefl;
+             uniform sampler2D uReflect;
+             uniform float uReflAmt;
+             uniform vec3 uShallow;
+             uniform vec3 uMid;
+             uniform vec3 uDeep;
+             uniform vec3 uSky;
+             uniform vec2 uScale;
+             uniform float uRipple;
+             float wHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+             float wNoise(vec2 p) {
+               vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+               return mix(mix(wHash(i), wHash(i + vec2(1.0, 0.0)), f.x),
+                          mix(wHash(i + vec2(0.0, 1.0)), wHash(i + vec2(1.0, 1.0)), f.x), f.y);
+             }
+             // Ripples stretched along the current: the water is never one
+             // sine, it is a broad swell with fine chop riding on it.
+             float wHeight(vec2 p) {
+               vec2 q = p * uScale;
+               float t = uWave * 0.3;
+               return wNoise(q + vec2(t * 0.25, t * 0.7)) * 0.7
+                    + wNoise(q * 2.1 - vec2(t * 0.4, t * 1.1)) * 0.3;
+             }
+             vec2 rippleG;`,
+          )
+          .replace(
+            "#include <color_fragment>",
+            `#include <color_fragment>
+             {
+               vec3 wc = mix(uShallow, uMid, smoothstep(0.0, 0.3, vDepth));
+               wc = mix(wc, uDeep, smoothstep(0.3, 0.9, vDepth));
+               // broad, slow light and dark across the surface, and soft
+               // caustic patches on the shallows: visible, never a flicker
+               wc *= 0.86 + 0.28 * wHeight(vWave);
+               float caus = smoothstep(0.58, 0.82, wNoise(vWave * 1.7 + vec2(uWave * 0.06, uWave * 0.1)));
+               wc += vec3(0.07, 0.09, 0.04) * caus * (1.0 - smoothstep(0.0, 0.4, vDepth));
+               diffuseColor.rgb = wc;
+               // The bed shows through the shallows and is lost in the deep.
+               diffuseColor.a = mix(0.45, 0.94, smoothstep(0.0, 0.5, vDepth));
+             }`,
+          )
+          .replace(
+            "#include <normal_fragment_begin>",
+            `#include <normal_fragment_begin>
+             {
+               float e = 0.06;
+               float gx = wHeight(vWave + vec2(e, 0.0)) - wHeight(vWave - vec2(e, 0.0));
+               float gz = wHeight(vWave + vec2(0.0, e)) - wHeight(vWave - vec2(0.0, e));
+               rippleG = vec2(gx, gz) / (2.0 * e) * uRipple;
+               normal = normalize(normal + vec3(rippleG.x, 0.0, rippleG.y));
+             }`,
           )
           .replace(
             "#include <opaque_fragment>",
-            lake
+            (lake
               ? `{
                    // Screen height, in the horizon's own terms; see the lake.
                    float lakeS = vWaveY * uLakeUp.x + vWave.y * uLakeUp.y;
@@ -9526,26 +9822,371 @@ export function createKidsWorld(
                    float open = smoothstep(uLakeEdge, uLakeEdge - 8.0, vWave.y);
                    diffuseColor.a *= mix(1.0, smoothstep(0.0, 0.35, vSide), open);
                  }
-                 #include <opaque_fragment>`
-              : "#include <opaque_fragment>",
-          )
-          .replace(
-            "#include <normal_fragment_begin>",
-            `#include <normal_fragment_begin>
-             {
-               float a = sin(vWave.y * 0.9 + uWave * 1.1) * 0.05;
-               float b = sin(vWave.x * 1.7 - uWave * 0.8 + vWave.y * 0.4) * 0.035;
-               normal = normalize(normal + vec3(b, 0.0, a));
-             }`,
+                 `
+              : "") +
+              `{
+                 // Reflection: the flipped scene, nudged by the ripples, mixed
+                 // in harder at a grazing angle and less over clear shallows.
+                 vec4 ruv = vRefl;
+                 // What stands at the water is mirrored from a target that
+                 // holds ONLY those things; the rest of the reflection is
+                 // the sky's tone, laid on by the viewing angle. A smear up
+                 // and down the picture, because that is what ripples do to
+                 // a reflection, and nothing else added.
+                 vec2 ruvp = ruv.xy / ruv.w + rippleG * 0.09;
+                 vec4 rc = texture2D(uReflect, ruvp) * 0.36
+                         + texture2D(uReflect, ruvp + vec2(0.0, 0.007)) * 0.20
+                         + texture2D(uReflect, ruvp - vec2(0.0, 0.007)) * 0.20
+                         + texture2D(uReflect, ruvp + vec2(0.0, 0.017)) * 0.12
+                         + texture2D(uReflect, ruvp - vec2(0.0, 0.017)) * 0.12;
+                 float fr = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 3.0);
+                 vec3 tint = mix(vec3(1.0), uMid * 2.6, 0.5);
+                 float kSky = mix(0.08, 0.30, fr) * mix(0.5, 1.0, smoothstep(0.0, 0.4, vDepth));
+                 outgoingLight = mix(outgoingLight, uSky * tint, kSky);
+                 float kObj = mix(0.42, 0.72, fr) * uReflAmt * rc.a;
+                 outgoingLight = mix(outgoingLight, min(rc.rgb / max(rc.a, 0.001), vec3(0.8)) * tint, kObj);
+                 diffuseColor.a = max(diffuseColor.a, max(kSky * 0.6, kObj * 0.9));
+               }
+               #include <opaque_fragment>`,
           );
       };
       wmat.customProgramCacheKey = () =>
-        lake ? "village-water-lake" : "village-water";
+        lake ? "village-water-lake-v2" : "village-water-v2";
       const water = new THREE.Mesh(wgeo, wmat);
       water.name = WILD != null ? "chapter4-wide-river" : "chapter2-river";
       water.position.y = RIVER_SURFACE;
       water.receiveShadow = true;
       scene.add(water);
+      {
+        const nUp = new THREE.Vector3(0, 1, 0);
+        const surfP = new THREE.Vector3(0, RIVER_SURFACE, 0);
+        const camP = new THREE.Vector3();
+        const view = new THREE.Vector3();
+        const look = new THREE.Vector3();
+        const target = new THREE.Vector3();
+        const rot = new THREE.Matrix4();
+        const sz = new THREE.Vector2();
+        const clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), -RIVER_SURFACE);
+        // Switches for finding out why a mirror is wrong, read only when the
+        // page was opened with ?perf.
+        const opts_ = { clip: true, shadowOff: true, keepOn: false };
+        if (typeof window !== "undefined" && window.location.search.includes("perf")) {
+          (window as unknown as Record<string, unknown>).__mirror = { opts: opts_, rt: reflRT };
+        }
+        let frameNo = 0;
+        let lastCall = 0;
+        let slowEma = 16;
+        let calls = 0;
+        const viewProj = new THREE.Matrix4();
+        const frustum = new THREE.Frustum();
+        // THE MIRROR DRAWS ONLY WHAT IS NEAR THE WATER. The whole scene is
+        // some 800 meshes; drawing it twice is what made the first mirror
+        // switch itself off on slower machines. The things that matter in a
+        // reflection (people, the bridge, rocks, plants, a lamp's glow) are a
+        // few dozen, and they are put on their own layer, which the mirror's
+        // camera alone looks at.
+        const REFLECT_LAYER = 5;
+        reflCam.layers.set(REFLECT_LAYER);
+        const skyDay = new THREE.Color(0xbcd8ea);
+        const skyNight = new THREE.Color(0x1c2c46);
+        const seenInstanced = new WeakSet<THREE.Object3D>();
+        const inRegion = (x: number, z: number): boolean =>
+          Math.abs(z) < 44 &&
+          (WILD != null
+            ? x > WILD.approach - 14 && x < WILD.exit + 14
+            : RIVER != null && Math.abs(x - RIVER.x) < riverHalfAt(z) + 16);
+        const markReflectables = () => {
+          scene.traverse((o) => {
+            if (o === water || o === ground) return;
+            if ((o as THREE.Light).isLight) {
+              o.layers.enable(REFLECT_LAYER);
+              return;
+            }
+            const m = o as THREE.Mesh;
+            if (!m.isMesh && !(o as THREE.Sprite).isSprite) return;
+            if (!o.visible) return;
+            const mat = m.material as THREE.Material | THREE.Material[] | undefined;
+            if (mat == null || Array.isArray(mat) || (mat as THREE.ShaderMaterial).isShaderMaterial) return;
+            if ((o as THREE.InstancedMesh).isInstancedMesh) {
+              if (seenInstanced.has(o)) return;
+              seenInstanced.add(o);
+              const im = o as THREE.InstancedMesh;
+              const e = im.instanceMatrix.array;
+              for (let i = 0; i < im.count; i++) {
+                if (inRegion(e[i * 16 + 12]!, e[i * 16 + 14]!)) {
+                  o.layers.enable(REFLECT_LAYER);
+                  return;
+                }
+              }
+              return;
+            }
+            const el = o.matrixWorld.elements;
+            if (inRegion(el[12]!, el[14]!)) o.layers.enable(REFLECT_LAYER);
+          });
+        };
+        let markTick = 0;
+        const clearKeep = new THREE.Color();
+        // RUN BEFORE THE FRAME, NOT FROM INSIDE THE WATER'S OWN DRAW. Drawn
+        // from the water's onBeforeRender it came out empty: only the
+        // shader-only sheets (haze) landed in the target and every ordinary
+        // mesh was missing. Beside the main render it draws the lot.
+        mirrorPass = () => {
+          const r = renderer;
+          reflUniforms.uSky.value.copy(skyDay).lerp(skyNight, nightBlend);
+          // Only when the water is actually on screen: the river exists for
+          // the whole chapter, and the other nine lessons must not pay.
+          cam.updateMatrixWorld();
+          viewProj.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+          frustum.setFromProjectionMatrix(viewProj);
+          if (!frustum.intersectsObject(water)) return;
+          // A mirror is a second drawing of the scene, so it pays its own
+          // way: it turns itself off, for good, if the frame rate falls
+          // under about 18 a second (after a settling period) while it is on, and there is a switch
+          // for measuring without it.
+          const now = performance.now();
+          if (lastCall > 0) {
+            slowEma = slowEma * 0.96 + Math.min(200, now - lastCall) * 0.04;
+            if (
+              ++calls > 300 &&
+              slowEma > 55 &&
+              !opts_.keepOn &&
+              !(window as unknown as Record<string, unknown>).__keepWaterRefl
+            ) {
+              reflOff = true;
+            }
+          }
+          lastCall = now;
+          if (
+            reflOff ||
+            (window as unknown as Record<string, unknown>).__noWaterRefl
+          ) {
+            reflUniforms.uReflAmt.value = 0;
+            return;
+          }
+          if (frameNo++ % 3 !== 0 && reflUniforms.uReflAmt.value > 0) return;
+          cam.updateMatrixWorld();
+          camP.setFromMatrixPosition(cam.matrixWorld);
+          view.subVectors(surfP, camP).reflect(nUp).negate().add(surfP);
+          rot.extractRotation(cam.matrixWorld);
+          look.set(0, 0, -1).applyMatrix4(rot).add(camP);
+          target.subVectors(surfP, look).reflect(nUp).negate().add(surfP);
+          reflCam.position.copy(view);
+          reflCam.up.set(0, 1, 0).applyMatrix4(rot).reflect(nUp);
+          reflCam.lookAt(target);
+          reflCam.near = cam.near;
+          reflCam.far = cam.far;
+          reflCam.updateMatrixWorld();
+          reflCam.projectionMatrix.copy(cam.projectionMatrix);
+          reflCam.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
+          reflMat.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1);
+          reflMat.multiply(reflCam.projectionMatrix);
+          reflMat.multiply(reflCam.matrixWorldInverse);
+          r.getDrawingBufferSize(sz);
+          const w = Math.max(64, Math.min(1024, Math.floor(sz.x * 0.45)));
+          const h = Math.max(32, Math.min(512, Math.floor(sz.y * 0.45)));
+          if (reflRT.width !== w || reflRT.height !== h) reflRT.setSize(w, h);
+          const prevRT = r.getRenderTarget();
+          const prevShadow = r.shadowMap.autoUpdate;
+          const prevClip = r.clippingPlanes;
+          water.visible = false;
+          if (opts_.shadowOff) r.shadowMap.autoUpdate = false;
+          if (opts_.clip) r.clippingPlanes = [clip];
+          if (markTick++ % 45 === 0) markReflectables();
+          const prevBackground = scene.background;
+          const prevClearAlpha = r.getClearAlpha();
+          r.getClearColor(clearKeep);
+          scene.background = null;
+          r.setClearColor(0x000000, 0);
+          const prevAutoClear = r.autoClear;
+          const prevXr = r.xr.enabled;
+          r.xr.enabled = false;
+          r.autoClear = true;
+          r.setRenderTarget(reflRT);
+          r.state.buffers.depth.setMask(true);
+          r.clear();
+          r.render(scene, reflCam);
+          scene.background = prevBackground;
+          r.setClearColor(clearKeep, prevClearAlpha);
+          r.autoClear = prevAutoClear;
+          r.xr.enabled = prevXr;
+          r.setRenderTarget(prevRT);
+          r.clippingPlanes = prevClip;
+          r.shadowMap.autoUpdate = prevShadow;
+          water.visible = true;
+          reflUniforms.uReflAmt.value = 1;
+        };
+        water.userData.disposeReflection = () => reflRT.dispose();
+      }
+
+      // ── LILIES, LESSON 16'S RIVER ONLY ──────────────────────────────────
+      //
+      // The crossing is the one still, shallow-edged river on the road, so it
+      // is the one that gets pads and lotus. The wide river of Chapter 4 has
+      // none (owner, 30 Sep 2026): it is open, moving water. Placed in
+      // patches on the shallows of the channel and never near the bridge or
+      // the road line, so nothing floats where a child walks. No emissive
+      // anything: at night they are as dark as the water round them.
+      if (WILD == null && RIVER != null) {
+        let seed = 1613;
+        const rnd = () => {
+          seed = (seed * 1664525 + 1013904223) >>> 0;
+          return seed / 4294967296;
+        };
+        const span = Math.max(0.6, RIVER_SURFACE - RIVER_BED);
+        const spots: { x: number; z: number; s: number; r: number; lotus: boolean }[] = [];
+        const centres: { x: number; z: number }[] = [];
+        for (let tries = 0; tries < 200 && centres.length < 6; tries++) {
+          const z = -26 + rnd() * 40;
+          if (Math.abs(z - meander(RIVER.x)) < 6) continue;
+          const x = RIVER.x + (rnd() * 2 - 1) * riverHalfAt(z) * 0.8;
+          const f = (RIVER_SURFACE - terrainY(x, z)) / span;
+          if (f > 0.1 && f < 0.7) centres.push({ x, z });
+        }
+        for (const c of centres) {
+          for (let k = 0, placed = 0; k < 60 && placed < 13; k++) {
+            const x = c.x + (rnd() - 0.5) * 3.4;
+            const z = c.z + (rnd() - 0.5) * 3.0;
+            if (Math.abs(z - meander(RIVER.x)) < 5) continue;
+            if (Math.abs(x - RIVER.x) > riverHalfAt(z) * 0.86) continue;
+            const f = (RIVER_SURFACE - terrainY(x, z)) / span;
+            if (f < 0.08 || f > 0.75) continue;
+            spots.push({
+              x,
+              z,
+              s: (0.34 + rnd() * 0.42) * perspective(z),
+              r: rnd() * Math.PI * 2,
+              lotus: rnd() < 0.18,
+            });
+            placed++;
+          }
+        }
+        // WATER GRASS AND REEDS in the shallows: tufts of tall blades standing
+        // in the water along both banks and round the pads. One clump is nine
+        // blades in a single geometry, so the whole fringe is one draw call.
+        {
+          const blades: number[] = [];
+          const cols: number[] = [];
+          const shade = new THREE.Color();
+          for (let b = 0; b < 9; b++) {
+            const a = rnd() * Math.PI * 2;
+            const rr = rnd() * 0.16;
+            const h = 0.75 + rnd() * 0.75;
+            const lean = 0.05 + rnd() * 0.22;
+            const bx = Math.cos(a) * rr;
+            const bz = Math.sin(a) * rr;
+            const w = 0.028;
+            const tipX = bx + Math.cos(a) * lean;
+            const tipZ = bz + Math.sin(a) * lean;
+            const midX = bx + Math.cos(a) * lean * 0.3;
+            const midZ = bz + Math.sin(a) * lean * 0.3;
+            const px = -Math.sin(a) * w;
+            const pz = Math.cos(a) * w;
+            blades.push(
+              bx - px, 0, bz - pz, bx + px, 0, bz + pz, midX + px * 0.8, h * 0.55, midZ + pz * 0.8,
+              bx - px, 0, bz - pz, midX + px * 0.8, h * 0.55, midZ + pz * 0.8, midX - px * 0.8, h * 0.55, midZ - pz * 0.8,
+              midX - px * 0.8, h * 0.55, midZ - pz * 0.8, midX + px * 0.8, h * 0.55, midZ + pz * 0.8, tipX, h, tipZ,
+            );
+            shade.setHex(rnd() < 0.5 ? 0x4f8a3a : 0x6aa044);
+            for (let v = 0; v < 9; v++) cols.push(shade.r, shade.g, shade.b);
+          }
+          const reedGeo = new THREE.BufferGeometry();
+          reedGeo.setAttribute("position", new THREE.Float32BufferAttribute(blades, 3));
+          reedGeo.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+          reedGeo.computeVertexNormals();
+          const reedSpots: { x: number; z: number; s: number; r: number }[] = [];
+          for (let tries = 0; tries < 500 && reedSpots.length < 70; tries++) {
+            const z = -27 + rnd() * 44;
+            if (Math.abs(z - meander(RIVER.x)) < 4.2) continue;
+            const side = rnd() < 0.5 ? -1 : 1;
+            const x = RIVER.x + side * riverHalfAt(z) * (0.62 + rnd() * 0.32);
+            const f = (RIVER_SURFACE - terrainY(x, z)) / span;
+            if (f < 0.02 || f > 0.4) continue;
+            reedSpots.push({ x, z, s: (0.8 + rnd() * 0.7) * perspective(z), r: rnd() * 6.28 });
+          }
+          if (reedSpots.length > 0) {
+            const reeds = new THREE.InstancedMesh(
+              reedGeo,
+              new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                roughness: 0.7,
+                side: THREE.DoubleSide,
+              }),
+              reedSpots.length,
+            );
+            const o = new THREE.Object3D();
+            reedSpots.forEach((p, i) => {
+              o.position.set(p.x, RIVER_SURFACE - 0.05, p.z);
+              o.rotation.set(0, p.r, 0);
+              o.scale.set(p.s, p.s, p.s);
+              o.updateMatrix();
+              reeds.setMatrixAt(i, o.matrix);
+            });
+            reeds.name = "lesson16-water-grass";
+            reeds.castShadow = false;
+            scene.add(reeds);
+          }
+        }
+        if (spots.length > 0) {
+          const padGeo = new THREE.CircleGeometry(1, 28, 0.35, Math.PI * 2 - 0.35);
+          padGeo.rotateX(-Math.PI / 2);
+          const pads = new THREE.InstancedMesh(
+            padGeo,
+            new THREE.MeshStandardMaterial({
+              color: 0xffffff,
+              roughness: 0.4,
+              side: THREE.DoubleSide,
+            }),
+            spots.length,
+          );
+          const pad = new THREE.Object3D();
+          const col = new THREE.Color();
+          spots.forEach((p, i) => {
+            pad.position.set(p.x, RIVER_SURFACE + 0.03, p.z);
+            pad.rotation.set(0, p.r, 0);
+            pad.scale.set(p.s, p.s, p.s * (0.9 + rnd() * 0.2));
+            pad.updateMatrix();
+            pads.setMatrixAt(i, pad.matrix);
+            pads.setColorAt(i, col.setHex(rnd() < 0.5 ? 0x2f7d34 : 0x4a9a3c));
+          });
+          pads.name = "lesson16-lily-pads";
+          pads.receiveShadow = true;
+          scene.add(pads);
+          const flowers = spots.filter((p) => p.lotus);
+          if (flowers.length > 0) {
+            const cup = new THREE.LatheGeometry(
+              [
+                new THREE.Vector2(0.0, 0.0),
+                new THREE.Vector2(0.07, 0.03),
+                new THREE.Vector2(0.15, 0.12),
+                new THREE.Vector2(0.19, 0.24),
+                new THREE.Vector2(0.13, 0.3),
+                new THREE.Vector2(0.06, 0.24),
+                new THREE.Vector2(0.0, 0.16),
+              ],
+              9,
+            );
+            const lotus = new THREE.InstancedMesh(
+              cup,
+              new THREE.MeshStandardMaterial({
+                color: 0xf0a3c4,
+                roughness: 0.55,
+                side: THREE.DoubleSide,
+              }),
+              flowers.length,
+            );
+            flowers.forEach((p, i) => {
+              pad.position.set(p.x + 0.05, RIVER_SURFACE + 0.03, p.z);
+              pad.rotation.set(0, p.r, 0);
+              const f = p.s * 1.1;
+              pad.scale.set(f, f, f);
+              pad.updateMatrix();
+              lotus.setMatrixAt(i, pad.matrix);
+            });
+            lotus.name = "lesson16-lotus";
+            scene.add(lotus);
+          }
+        }
+      }
     }
 
     // THE FAR SKIRT IS GONE. It was a flat plane carrying on past the
@@ -11669,6 +12310,24 @@ export function createKidsWorld(
    * small he is.
    */
   let playerWho = theme.defaultPlayer;
+  /**
+   * THE HERO TRAIL'S CAST GROWS WITH THE CHILD (owner, 1 Oct 2026).
+   *
+   * The player and the friend beside them are the same age, so one factor
+   * scales both, from the age band the page was opened with. Bands move on
+   * by themselves as the birth year does, so the pair get taller together
+   * without anything to update. Every other world keeps each character's
+   * own height.
+   */
+  const HERO_GROWTH: Readonly<Record<string, number>> = {
+    "5-6": 0.84,
+    "7-8": 0.92,
+    "9-10": 1,
+    "11+": 1.06,
+  };
+  const castHeightOf = (name: string): number =>
+    theme.playerHeight(name) *
+    (theme.modelDir === "hero" ? (HERO_GROWTH[opts.ageBand ?? ""] ?? 1) : 1);
   /** Little Drew is six. Dave and Peeli are nine. */
   const LITTLE = "Explorer6";
   const playerIsLittle = () => playerWho === LITTLE;
@@ -12612,8 +13271,53 @@ export function createKidsWorld(
    * either of them from a one-stride loop and the entry comes out again.
    */
   const WALK_STRIDES: Record<string, number> = {
-    Blacksmith: 3,
-    Headman: 3,
+    // NOT 3. Three strides are in the take, but they are SHORT ones: each
+    // covers 0.6 of the man's height, where `strideOf` assumes 0.86. Driven
+    // at three full strides, they walked 42-46 per cent faster than their
+    // own planted foot, and a foot that moves slower than the ground under
+    // it is a treadmill run backwards: the slide on the headman and the
+    // smith (owner, 30 Sep 2026).
+    //
+    // MEASURED, NOT ESTIMATED: the clip was played through the real loader
+    // in 1200 steps, the left foot's speed taken while it was planted, and
+    // the ground covered in one cycle worked out as a share of height.
+    // Headman 1.82 heights per cycle, smith 1.77, against 0.86 * 3 = 2.58
+    // assumed; divided by 0.86 that is the pair below. The farmer woman and
+    // the tea seller (one full stride, 0.86-0.89 of height) came out within
+    // 3 per cent of the old figure and are unchanged.
+    Blacksmith: 2.05,
+    Headman: 2.11,
+  };
+
+  /**
+   * THE HEADMAN AND THE SMITH WALK AT THEIR FEET'S OWN PACE, STEP BY STEP.
+   *
+   * A constant ground speed matched to the AVERAGE planted foot still skates:
+   * inside each step the planted foot moves 40 per cent faster at one moment
+   * and 40 per cent slower at another (owner, 1 Oct 2026: "treadmill"). These
+   * tables are that variation, measured by playing each clip through the real
+   * loader 720 times and taking the speed of whichever foot is on the ground:
+   * 32 samples across one cycle, mean 1, applied to the walker's speed from
+   * the clip's own time. Softened to 80 per cent and held to 0.7-1.35 so that
+   * a mismeasured step could not make anybody lurch.
+   */
+  const GAIT_PROFILE: Record<string, readonly number[]> = {
+    "Headman:Walking": [0.844, 0.898, 1.046, 1.163, 0.871, 0.699, 0.723, 0.809, 1.128, 1.016, 0.88, 0.908, 0.967, 1.201, 1.225, 0.939, 0.89, 0.941, 1.047, 1.209, 0.797, 0.751, 0.822, 0.897, 1.343, 1.314, 1.1, 1.13, 1.152, 1.188, 1.155, 0.944],
+    "Headman:Walk_Night": [1.02, 0.798, 0.72, 0.812, 0.699, 0.878, 0.959, 0.974, 1.113, 0.905, 1.034, 0.992, 0.925, 1.186, 1.003, 1.097, 1.201, 0.859, 1.025, 0.891, 0.904, 1.261, 1.01, 1.193, 1.078, 0.943, 1.22, 0.971, 1.109, 1.172, 0.989, 1.06],
+    "Blacksmith:Walking": [0.858, 0.894, 0.942, 1.037, 0.896, 0.774, 0.792, 0.854, 1.034, 0.997, 0.943, 0.952, 1.009, 1.134, 1.162, 1.07, 1.013, 1.041, 1.066, 1.074, 0.833, 0.788, 0.842, 0.907, 1.166, 1.207, 1.134, 1.163, 1.183, 1.16, 1.133, 0.94],
+  };
+  const gaitSpeedAt = (who: string, clip: string, fraction: number): number => {
+    const t = GAIT_PROFILE[`${who}:${clip}`];
+    if (t == null) return 1;
+    const x = (((fraction % 1) + 1) % 1) * t.length;
+    const i = Math.floor(x);
+    const f = x - i;
+    return t[i]! * (1 - f) + t[(i + 1) % t.length]! * f;
+  };
+
+  /** The headman's after-dark clip is a slower, stiffer gait: 2.2 heights per cycle. */
+  const NIGHT_WALK_STRIDES: Record<string, number> = {
+    Headman: 2.56,
   };
 
   // `MILESTONE_CLEAR` comes from the chapter, because the runs are laid out
@@ -17060,8 +17764,8 @@ export function createKidsWorld(
    * NOBODY MEETS THEMSELVES ON THE TRAIL.
    *
    * The Hero Trail's three main characters are also its friends and its
-   * bystanders: the Scout is the `Ranger` model, and a Ranger stands beside
-   * the road in the herd list. When the child plays as the Scout — or walks
+   * bystanders: the third is the `Rogue_Hooded` model, and a hooded rogue
+   * stands beside the road in the herd list. When the child plays as it — or walks
    * beside one — that bystander would be a twin standing a few strides away,
    * so anyone whose model is the player's or a companion's is stood down.
    * Only the hero world does this; nowhere else has a cast that overlaps.
@@ -17170,7 +17874,7 @@ export function createKidsWorld(
       // "the one you are not playing", which made a ten-year-old companion
       // shorter than a ten-year-old player — a size difference that meant
       // nothing about age, sitting right next to one that did.
-      const rig = rigOf(gltf, theme.playerHeight(name), name);
+      const rig = rigOf(gltf, castHeightOf(name), name);
       rig.wrap.rotation.y = Math.PI / 2;
       // A LINE, not a huddle. Each one walks a little further back and a
       // little further out than the one in front, so the three of them read
@@ -17316,7 +18020,7 @@ export function createKidsWorld(
     if (gltf == null) {
       return;
     }
-    playerH = theme.playerHeight(name);
+    playerH = castHeightOf(name);
     playerWho = name;
     hideCastTwins();
     const rig = rigOf(gltf, playerH, name);
@@ -19131,14 +19835,54 @@ export function createKidsWorld(
       opts.sceneIndex != null
         ? mulberry32(hashSeed("scatter", opts.sceneIndex, land.name))
         : Math.random;
+    // THE TREE MIX OF A SCENE. The scene record names one of five mixes (oak,
+    // birch, mixed, pine, sparse) and the mock drew each as a count of oaks,
+    // birches and pines; the same counts here, scaled to the length of the
+    // road, each kind drawn only from its own variants. Winter thins the
+    // broadleaves and plants pines.
+    const treeKinds: readonly (readonly [RegExp, number])[] | null =
+      land.heroScene != null
+        ? (() => {
+            const base = {
+              oak: [9, 2, 0],
+              birch: [2, 16, 0],
+              mixed: [5, 8, 3],
+              pine: [0, 3, 30],
+              sparse: [2, 2, 3],
+            }[land.heroScene.trees] as [number, number, number];
+            let [oak, birch, pine] = base;
+            if (land.heroScene.season === "winter") {
+              oak = Math.floor(oak / 2);
+              birch = Math.floor(birch / 2);
+              pine = Math.max(pine, 12);
+            }
+            const k = TRAIL_END / 130;
+            return [
+              [/^Oak/, Math.round(oak * k)],
+              [/^Birch/, Math.round(birch * k)],
+              [/^Pine/, Math.round(pine * k)],
+            ] as const;
+          })()
+        : null;
+    const groundOnly: (RegExp | null)[] = [];
     const groundSpecs = [
-      [
-        land.trees,
-        Math.round((theme.treeCount ?? 30) * spread),
-        6,
-        26,
-        "back",
-      ] as const,
+      ...(treeKinds != null
+        ? treeKinds.map(([only, count]) => {
+            groundOnly.push(only);
+            return [land.trees, count, 6, 26, "back"] as const;
+          })
+        : (() => {
+            groundOnly.push(null);
+            return [
+              [
+                land.trees,
+                Math.round((theme.treeCount ?? 30) * spread),
+                6,
+                26,
+                "back",
+              ] as const,
+            ];
+          })()),
       ...theme.ground.map(
         ([file, count, ...rest]) =>
           [
@@ -19148,6 +19892,9 @@ export function createKidsWorld(
           ] as (typeof theme.ground)[number],
       ),
     ];
+    while (groundOnly.length < groundSpecs.length) {
+      groundOnly.push(null);
+    }
     const groundGltfs = await Promise.all(
       groundSpecs.map(async ([file]) => {
         try {
@@ -19167,8 +19914,44 @@ export function createKidsWorld(
       if (gltf == null) {
         continue;
       }
-      const variants = [...gltf.scene.children];
+      // A scene from the kit names its own landmark and places it below.
+      if (
+        land.heroScene != null &&
+        (String(file) === "HeroBuildings" || String(file) === "HeroLandmarks")
+      ) {
+        continue;
+      }
+      const only = groundOnly[gi] ?? null;
+      const variants = [...gltf.scene.children].filter(
+        (c) => only == null || only.test(c.name),
+      );
+      if (variants.length === 0) {
+        continue;
+      }
       let lastPick = -1;
+      // LANDMARKS, NOT SCATTER. On the Hero Trail the buildings are the
+      // things a child walks TOWARDS: a tower on the skyline that is bigger
+      // every lesson, a windmill after it. So each is set at a fixed
+      // distance along the scene's road, the kind seeded from the scene, and
+      // not thrown down at random with the trees.
+      const landmarkRun =
+        (String(file) === "HeroBuildings" ||
+          String(file) === "HeroLandmarks" ||
+          String(file) === "dino/DinoLandmarks") &&
+        opts.sceneIndex != null &&
+        variants.length > 1;
+      const landmarkOrder = landmarkRun
+        ? variants
+            .map((_, vi) => vi)
+            // Spans and piers need water under them and are placed by the
+            // water code, not scattered on the grass.
+            .filter((vi) => !/bridge|dock|fence|wall|hedge|volcano|waterfall/i.test(variants[vi]!.name))
+            .sort(
+              (a, b) =>
+                hashSeed("landmark", opts.sceneIndex ?? 0, a) -
+                hashSeed("landmark", opts.sceneIndex ?? 0, b),
+            )
+        : [];
       for (let i = 0; i < count; i++) {
         // RANDOM, AND NOT THE ONE BEFORE IT.
         //
@@ -19183,6 +19966,9 @@ export function createKidsWorld(
           pick =
             (pick + 1 + Math.floor(rand() * (variants.length - 1))) %
             variants.length;
+        }
+        if (landmarkRun) {
+          pick = landmarkOrder[i % landmarkOrder.length]!;
         }
         lastPick = pick;
         const v = variants[pick]!.clone();
@@ -19213,6 +19999,17 @@ export function createKidsWorld(
         let z = 0;
         for (let attempt = 0; attempt < 8; attempt++) {
           x = -26 + rand() * (TRAIL_END + 26);
+          if (landmarkRun) {
+            // Evenly along the road, with a little give so they do not look
+            // surveyed.
+            // The two sets are interleaved: landmarks sit half a step off the
+            // buildings.
+            const offset = /Landmarks$/.test(String(file)) ? 0.5 : 0;
+            x =
+              30 +
+              (i + 0.5 + offset * 0.5 + (rand() - 0.5) * 0.3) *
+                ((TRAIL_END - 60) / count);
+          }
           const depth = minD + rand() * (maxD - minD);
           // NOTHING TALL BETWEEN THE CAMERA AND THE ROAD (owner rule). The
           // near verge is the bottom of the frame, and anything standing there
@@ -19353,6 +20150,126 @@ export function createKidsWorld(
           wrap.visible = !nightNow;
           moodScenery.push(wrap);
         }
+      }
+    }
+
+    // ── THE SCENE'S LANDMARK, and the things that go with its terrain ───────
+    //
+    // Each scene of the kit names what stands along its road: a tower, a
+    // windmill, an arch, ruins, a shrine, a campfire; and its terrain brings
+    // its own furniture: a dry-stone wall up a hillside, a hedge down a sunken
+    // lane, a fence along a ridge's edge. They are placed at fixed distances
+    // along the ten lessons, from the scene, so a child walks towards them.
+    if (land.heroScene != null && CHAPTER == null) {
+      const hs = land.heroScene;
+      const pieceRand = mulberry32(hashSeed("setpiece", opts.sceneIndex ?? 0));
+      const loaded = new Map<string, Awaited<ReturnType<typeof loadModel>>>();
+      const piece = async (
+        file: string,
+        node: RegExp,
+        x: number,
+        depth: number,
+        scale: number,
+        yaw = 0,
+      ) => {
+        let g = loaded.get(file);
+        if (g == null) {
+          try {
+            g = await loadModel(
+              `${ASSETS}/models/${theme.sceneryDir}/${file}.glb`,
+            );
+          } catch {
+            return;
+          }
+          loaded.set(file, g);
+        }
+        const src = g?.scene.children.find((c) => node.test(c.name));
+        if (src == null) {
+          return;
+        }
+        const v = src.clone();
+        const box = new THREE.Box3().setFromObject(v);
+        v.position.sub(
+          new THREE.Vector3(
+            (box.min.x + box.max.x) / 2,
+            box.min.y,
+            (box.min.z + box.max.z) / 2,
+          ),
+        );
+        const wrap = new THREE.Group();
+        wrap.add(v);
+        const z = meander(x) - depth;
+        wrap.position.set(x, surfaceY(x, z), z);
+        wrap.rotation.y = yaw;
+        const d = perspective(z);
+        wrap.scale.setScalar(scale * d * theme.sceneryScale);
+        tintFoliage(wrap);
+        scene.add(wrap);
+        characterRoots.add(wrap);
+      };
+      const at = (n: number) => 40 + ((n + 0.5) / 5) * (TRAIL_END - 80);
+      const along = (from: number, to: number, stride: number) => {
+        const xs: number[] = [];
+        for (let x = from; x < to; x += stride) {
+          xs.push(x);
+        }
+        return xs;
+      };
+      // WHAT THE SCENE IS KNOWN FOR, five times along its road.
+      const landmarks: Record<
+        string,
+        readonly [string, RegExp, number, number]
+      > = {
+        tower: ["HeroBuildings", /tower_A/, 14, 2.1],
+        windmill: ["HeroBuildings", /windmill/, 15, 2.0],
+        arch: ["HeroLandmarks", /^Arch/, 12, 1.0],
+        ruins: ["HeroLandmarks", /^Ruins/, 13, 1.1],
+        shrine: ["HeroLandmarks", /^Shrine/, 15, 1.3],
+        campfire: ["HeroLandmarks", /^Campfire/, 4.2, 1.0],
+      };
+      const lm = landmarks[hs.landmark];
+      if (lm != null) {
+        for (let n = 0; n < 5; n++) {
+          await piece(
+            lm[0],
+            lm[1],
+            at(n) + (pieceRand() - 0.5) * 12,
+            lm[2] + pieceRand() * 3,
+            lm[3],
+            (pieceRand() - 0.5) * 0.8,
+          );
+        }
+        if (hs.landmark === "campfire") {
+          for (let n = 0; n < 5; n++) {
+            await piece(
+              "HeroLandmarks",
+              /^FallenLog/,
+              at(n) + 7,
+              7 + pieceRand() * 3,
+              1,
+              pieceRand() * 3,
+            );
+          }
+        }
+      }
+      // THE TERRAIN'S OWN FURNITURE.
+      const furniture: Record<
+        string,
+        readonly [RegExp, number, number, number]
+      > = {
+        hill: [/^DryWall/, 4.2, 7, 1.1],
+        sunken: [/^Hedge/, 5.6, 5.6, 1.0],
+        ridge: [/^Fence/, 3.0, 4.8, 1.0],
+      };
+      const fu = furniture[hs.terrain];
+      if (fu != null) {
+        for (const x of along(24, TRAIL_END - 20, fu[2])) {
+          await piece("HeroLandmarks", fu[0], x, fu[1], fu[3]);
+        }
+      }
+      // A WAYMARKER every couple of lessons, at the path's edge.
+      for (let n = 0; n < 5; n++) {
+        await piece("HeroLandmarks", /^Waymarker/, at(n) + 18, 2.4, 1.2, 0.5);
       }
     }
 
@@ -19865,55 +20782,11 @@ export function createKidsWorld(
        * building stands. Most of the village is behind the road, so +z faces
        * it — but some houses are deliberately put on the far side and turned
        * round, and for those the front is -z. Lighting the geometric max in
-      // LANDMARKS, NOT SCATTER. On the Hero Trail the buildings are the
-      // things a child walks TOWARDS: a tower on the skyline that is bigger
-      // every lesson, a windmill after it. So each is set at a fixed
-      // distance along the scene's road, the kind seeded from the scene, and
-      // not thrown down at random with the trees.
-      const landmarkRun =
-        (String(file) === "HeroBuildings" ||
-          String(file) === "HeroLandmarks" ||
-          String(file) === "dino/DinoLandmarks") &&
-        opts.sceneIndex != null &&
-        variants.length > 1;
-      const landmarkOrder = landmarkRun
-        ? variants
-            .map((_, vi) => vi)
-            // Spans and piers need water under them and are placed by the
-            // water code, not scattered on the grass.
-            .filter((vi) => !/bridge|dock|fence|wall|hedge|volcano|waterfall/i.test(variants[vi]!.name))
-            .sort(
-              (a, b) =>
-                hashSeed("landmark", opts.sceneIndex ?? 0, a) -
-                hashSeed("landmark", opts.sceneIndex ?? 0, b),
-            )
-        : [];
        * every case would have hung a lamp on the back wall of every house
        * across the road, lighting nothing and visible to nobody.
        */
       async function lightBuilding(
         name: string,
-      // LANDMARKS, NOT SCATTER. On the Hero Trail the buildings are the
-      // things a child walks TOWARDS: a tower on the skyline that is bigger
-      // every lesson, a windmill after it. So each is set at a fixed
-      // distance along the scene's road, the kind seeded from the scene, and
-      // not thrown down at random with the trees.
-      const landmarkRun =
-        (String(file) === "HeroBuildings" || String(file) === "HeroLandmarks") &&
-        opts.sceneIndex != null &&
-        variants.length > 1;
-      const landmarkOrder = landmarkRun
-        ? variants
-            .map((_, vi) => vi)
-            // Spans and piers need water under them and are placed by the
-            // water code, not scattered on the grass.
-            .filter((vi) => !/bridge|dock|fence|wall|hedge/i.test(variants[vi]!.name))
-            .sort(
-              (a, b) =>
-                hashSeed("landmark", opts.sceneIndex ?? 0, a) -
-                hashSeed("landmark", opts.sceneIndex ?? 0, b),
-            )
-        : [];
         wrap: THREE.Object3D,
       ): Promise<void> {
         const box = measureBox(wrap);
@@ -19929,23 +20802,9 @@ export function createKidsWorld(
         const on = (across: number, up: number, out: number) =>
           [cx + across, foot + tall * up, front + faces * out] as const;
 
-        if (landmarkRun) {
-          pick = landmarkOrder[i % landmarkOrder.length]!;
-        }
         // THE EVENING PUJA, hoisted out of the temple's own block. The lamps
         // ON the temple and the standing lamp IN FRONT of it are lit by the
         // same people at the same hour, and two copies of that window are
-          if (landmarkRun) {
-            // Evenly along the road, with a little give so they do not look
-            // surveyed.
-            // The two sets are interleaved: landmarks sit half a step off the
-            // buildings.
-            const offset = /Landmarks$/.test(String(file)) ? 0.5 : 0;
-            x =
-              30 +
-              (i + 0.5 + offset * 0.5 + (rand() - 0.5) * 0.3) *
-                ((TRAIL_END - 60) / count);
-          }
         // two things to keep in step by hand.
         const PUJA = [17.5, 20.5] as const;
 
@@ -19972,17 +20831,6 @@ export function createKidsWorld(
           // a single lit line across it.
           for (let i = 0; i < 4; i++) {
             makeLamp(...on((i / 3 - 0.5) * wide * 0.52, 0.34, -0.2), {
-          if (landmarkRun) {
-            // Evenly along the road, with a little give so they do not look
-            // surveyed.
-            // The two sets are interleaved: landmarks sit half a step off the
-            // buildings.
-            const offset = String(file) === "HeroLandmarks" ? 0.5 : 0;
-            x =
-              30 +
-              (i + 0.5 + offset * 0.5 + (rand() - 0.5) * 0.3) *
-                ((TRAIL_END - 60) / count);
-          }
               size: 0.95,
               peak: 0.7,
               hours: PUJA,
@@ -20806,6 +21654,490 @@ export function createKidsWorld(
       // time it looks.
       /** Ground round a building claimed only once its people stand on it. */
       const forecourts: (typeof blockers)[number][] = [];
+      // ── THE VILLAGE POND ────────────────────────────────────────────────
+      //
+      // The asset, sunk so its wall tops stand a hand above the ground; green
+      // water at the level a still pond keeps, with lilies, reeds and a
+      // mirror; and the planting that makes it a place rather than a tank:
+      // grass and ferns on the wall tops, taro and reeds standing in the
+      // shallows, rocks, a banyan and palms round it. The ground inside is not
+      // drawn (see `PONDS`), so the basin shows. (Owner, 1 Oct 2026.)
+      const buildPond = async (p: { x: number; z: number; h: number }) => {
+        const def = PONDS.find(
+          (d) => Math.abs(d.x - p.x) < 0.01 && Math.abs(d.z - p.z) < 0.01,
+        );
+        if (def == null) return;
+        def.g0 ??= terrainYBase(def.x, def.z);
+        const g0 = def.g0;
+        const sc = def.s;
+        const fl = def.flip ? -1 : 1;
+        const src = await prop("village-util/Kulappura_Pond");
+        if (src == null) return;
+        const model = src.clone(true);
+        model.traverse((n) => {
+          const m = n as THREE.Mesh;
+          if (!m.isMesh) return;
+          m.geometry.computeBoundingSphere();
+          m.castShadow = true;
+          m.receiveShadow = true;
+          const mat = (m.material as THREE.MeshStandardMaterial).clone();
+          // The asset's atlas is a cool dark brown; the village's stone and
+          // tile are warm laterite, so it is warmed to sit with them.
+          mat.color.setRGB(1.35, 1.1, 0.95);
+          mat.roughness = 1;
+          m.material = mat;
+        });
+        const wrap = new THREE.Group();
+        model.scale.set(fl * sc, sc, sc);
+        wrap.add(model);
+        wrap.position.set(def.x, g0 + POND_LIFT * sc, def.z);
+        wrap.name = "village-pond";
+        builtGroup.add(wrap);
+        const hw = POND_HW * sc + 0.4;
+        const hd = POND_HD * sc + 0.4;
+        blockers.push({ x: def.x, z: def.z, r: 1.2, hw, hd });
+        forecourts.push({ x: def.x, z: def.z, r: 2.4, hw, hd });
+
+        // ── the water ──
+        const wl = g0 + (POND_WATER + POND_LIFT) * sc;
+        const LX0 = -2.35;
+        const LX1 = 7.1;
+        const LZ0 = -4.3;
+        const LZ1 = 4.3;
+        const wg = new THREE.PlaneGeometry(1, 1, 34, 22);
+        wg.rotateX(-Math.PI / 2);
+        const wp = wg.attributes.position as THREE.BufferAttribute;
+        const dep = new Float32Array(wp.count);
+        for (let i = 0; i < wp.count; i++) {
+          const lx = LX0 + (wp.getX(i) + 0.5) * (LX1 - LX0);
+          const lz = LZ0 + (wp.getZ(i) + 0.5) * (LZ1 - LZ0);
+          wp.setX(i, fl * lx * sc);
+          wp.setZ(i, lz * sc);
+          let d = Math.min(1, Math.min(lx - LX0, LX1 - lx, lz - LZ0, LZ1 - lz) / 1.7);
+          if (lx < -0.6 && lz > 1.7) d *= 0.35; // the flight of steps into it
+          dep[i] = d;
+        }
+        wg.setAttribute("aDepth", new THREE.BufferAttribute(dep, 1));
+        const pu = {
+          uReflect: { value: null as THREE.Texture | null },
+          uReflMat: { value: new THREE.Matrix4() },
+          uReflAmt: { value: 0 },
+          uSky: { value: new THREE.Color(0xbcd8ea) },
+          uShallow: { value: new THREE.Color(0x45702f) },
+          uMid: { value: new THREE.Color(0x1f4a28) },
+          uDeep: { value: new THREE.Color(0x0a2418) },
+        };
+        const pmat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 0.1,
+          metalness: 0,
+          transparent: true,
+          opacity: 1,
+        });
+        pmat.onBeforeCompile = (sh) => {
+          sh.uniforms.uWave = waterTime;
+          Object.assign(sh.uniforms, pu);
+          sh.vertexShader = sh.vertexShader
+            .replace(
+              "#include <common>",
+              "#include <common>\nvarying vec2 vWave;\nattribute float aDepth;\nvarying float vDepth;\nvarying vec4 vRefl;\nuniform mat4 uReflMat;",
+            )
+            .replace("#include <begin_vertex>", "#include <begin_vertex>\nvDepth = aDepth;")
+            .replace(
+              "#include <worldpos_vertex>",
+              "#include <worldpos_vertex>\nvWave = (modelMatrix * vec4(transformed, 1.0)).xz;\nvRefl = uReflMat * (modelMatrix * vec4(transformed, 1.0));",
+            );
+          sh.fragmentShader = sh.fragmentShader
+            .replace(
+              "#include <common>",
+              `#include <common>
+               varying vec2 vWave;
+               varying float vDepth;
+               varying vec4 vRefl;
+               uniform float uWave;
+               uniform sampler2D uReflect;
+               uniform float uReflAmt;
+               uniform vec3 uSky;
+               uniform vec3 uShallow;
+               uniform vec3 uMid;
+               uniform vec3 uDeep;
+               float pHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+               float pNoise(vec2 p) {
+                 vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+                 return mix(mix(pHash(i), pHash(i + vec2(1.0, 0.0)), f.x),
+                            mix(pHash(i + vec2(0.0, 1.0)), pHash(i + vec2(1.0, 1.0)), f.x), f.y);
+               }
+               float pHeight(vec2 p) {
+                 float t = uWave * 0.2;
+                 return pNoise(p * 0.9 + vec2(t * 0.3, t * 0.5)) * 0.65 +
+                        pNoise(p * 2.3 - vec2(t * 0.4, t * 0.7)) * 0.35;
+               }
+               vec2 pRipple;`,
+            )
+            .replace(
+              "#include <color_fragment>",
+              `#include <color_fragment>
+               {
+                 vec3 wc = mix(uShallow, uMid, smoothstep(0.0, 0.35, vDepth));
+                 wc = mix(wc, uDeep, smoothstep(0.35, 1.0, vDepth));
+                 // pond water is never one green: slow drifting patches, and a
+                 // fine scum of duckweed that gathers near the walls
+                 wc *= 0.88 + 0.24 * pHeight(vWave * 0.6);
+                 float scum = smoothstep(0.62, 0.8, pNoise(vWave * 1.3 + vec2(7.0, uWave * 0.02)));
+                 wc = mix(wc, vec3(0.42, 0.62, 0.2), scum * (1.0 - smoothstep(0.0, 0.8, vDepth)) * 0.55);
+                 diffuseColor.rgb = wc;
+                 diffuseColor.a = mix(0.94, 1.0, smoothstep(0.0, 0.4, vDepth));
+               }`,
+            )
+            .replace(
+              "#include <normal_fragment_begin>",
+              `#include <normal_fragment_begin>
+               {
+                 float e = 0.08;
+                 float gx = pHeight(vWave + vec2(e, 0.0)) - pHeight(vWave - vec2(e, 0.0));
+                 float gz = pHeight(vWave + vec2(0.0, e)) - pHeight(vWave - vec2(0.0, e));
+                 pRipple = vec2(gx, gz) / (2.0 * e) * 0.028;
+                 normal = normalize(normal + vec3(pRipple.x, 0.0, pRipple.y));
+               }`,
+            )
+            .replace(
+              "#include <opaque_fragment>",
+              `{
+                 vec4 ruv = vRefl;
+                 vec2 q = ruv.xy / ruv.w + pRipple * 0.1;
+                 float wob = (pNoise(vWave * vec2(1.6, 0.5) + vec2(uWave * 0.1, 0.0)) - 0.5) * 0.018;
+                 q.y += wob;
+                 vec4 rc = texture2D(uReflect, q) * 0.34
+                         + texture2D(uReflect, q + vec2(0.0, 0.007)) * 0.2
+                         + texture2D(uReflect, q - vec2(0.0, 0.007)) * 0.2
+                         + texture2D(uReflect, q + vec2(0.0, 0.017)) * 0.13
+                         + texture2D(uReflect, q - vec2(0.0, 0.017)) * 0.13;
+                 float fr = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 3.0);
+                 vec3 tint = mix(vec3(1.0), uMid * 2.4, 0.45);
+                 float kSky = mix(0.06, 0.26, fr);
+                 outgoingLight = mix(outgoingLight, uSky * tint, kSky);
+                 float kObj = mix(0.5, 0.78, fr) * uReflAmt * rc.a;
+                 outgoingLight = mix(outgoingLight, min(rc.rgb / max(rc.a, 0.001), vec3(0.85)) * tint, kObj);
+                 diffuseColor.a = max(diffuseColor.a, max(kSky * 0.6, kObj * 0.9));
+               }
+               #include <opaque_fragment>`,
+            );
+        };
+        pmat.customProgramCacheKey = () => "village-pond-water-v1";
+        const pwater = new THREE.Mesh(wg, pmat);
+        pwater.name = "village-pond-water";
+        pwater.position.set(def.x, wl, def.z);
+        pwater.receiveShadow = true;
+        builtGroup.add(pwater);
+
+        // ── the mirror: only what stands near the pond, on its own layer ──
+        const pRT = new THREE.WebGLRenderTarget(512, 192, { type: THREE.HalfFloatType });
+        pu.uReflect.value = pRT.texture;
+        const pCam = new THREE.OrthographicCamera();
+        const PLAYER = 5;
+        pCam.layers.set(PLAYER);
+        const pClip = new THREE.Plane(new THREE.Vector3(0, 1, 0), -wl);
+        const pUp = new THREE.Vector3(0, 1, 0);
+        const pSurf = new THREE.Vector3(0, wl, 0);
+        const v1 = new THREE.Vector3();
+        const v2 = new THREE.Vector3();
+        const v3 = new THREE.Vector3();
+        const v4 = new THREE.Vector3();
+        const rotM = new THREE.Matrix4();
+        const pVP = new THREE.Matrix4();
+        const pFr = new THREE.Frustum();
+        const pSz = new THREE.Vector2();
+        const keepCol = new THREE.Color();
+        const skyDay = new THREE.Color(0xbcd8ea);
+        const skyNight = new THREE.Color(0x1c2c46);
+        const near = (x: number, z: number) =>
+          Math.abs(x - def.x) < sc * (POND_HW + 16) &&
+          Math.abs(z - def.z) < sc * (POND_HD + 18);
+        let markN = 0;
+        let frameN = 0;
+        const markPond = () => {
+          scene.traverse((o) => {
+            if (o === pwater) return;
+            // not the ground: it carries the surface-mix attribute
+            if ((o as THREE.Mesh).geometry?.getAttribute?.("aMix") != null) return;
+            if ((o as THREE.Light).isLight) {
+              o.layers.enable(PLAYER);
+              return;
+            }
+            const m = o as THREE.Mesh;
+            if (!m.isMesh && !(o as THREE.Sprite).isSprite) return;
+            if (!o.visible) return;
+            const mat = m.material as THREE.Material | THREE.Material[] | undefined;
+            if (mat == null || Array.isArray(mat) || (mat as THREE.ShaderMaterial).isShaderMaterial) return;
+            if ((o as THREE.InstancedMesh).isInstancedMesh) {
+              const im = o as THREE.InstancedMesh;
+              const e = im.instanceMatrix.array;
+              for (let i = 0; i < im.count; i++) {
+                if (near(e[i * 16 + 12]!, e[i * 16 + 14]!)) {
+                  o.layers.enable(PLAYER);
+                  return;
+                }
+              }
+              return;
+            }
+            const el = o.matrixWorld.elements;
+            if (near(el[12]!, el[14]!)) o.layers.enable(PLAYER);
+          });
+        };
+        pondMirrors.push(() => {
+          const r = renderer;
+          pu.uSky.value.copy(skyDay).lerp(skyNight, nightBlend);
+          cam.updateMatrixWorld();
+          pVP.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+          pFr.setFromProjectionMatrix(pVP);
+          if (!pFr.intersectsObject(pwater)) return;
+          if ((window as unknown as Record<string, unknown>).__noWaterRefl) {
+            pu.uReflAmt.value = 0;
+            return;
+          }
+          if (frameN++ % 3 !== 0 && pu.uReflAmt.value > 0) return;
+          v1.setFromMatrixPosition(cam.matrixWorld);
+          v2.subVectors(pSurf, v1).reflect(pUp).negate().add(pSurf);
+          rotM.extractRotation(cam.matrixWorld);
+          v3.set(0, 0, -1).applyMatrix4(rotM).add(v1);
+          v4.subVectors(pSurf, v3).reflect(pUp).negate().add(pSurf);
+          pCam.position.copy(v2);
+          pCam.up.set(0, 1, 0).applyMatrix4(rotM).reflect(pUp);
+          pCam.lookAt(v4);
+          pCam.near = cam.near;
+          pCam.far = cam.far;
+          pCam.updateMatrixWorld();
+          pCam.projectionMatrix.copy(cam.projectionMatrix);
+          pCam.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
+          pu.uReflMat.value.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1);
+          pu.uReflMat.value.multiply(pCam.projectionMatrix);
+          pu.uReflMat.value.multiply(pCam.matrixWorldInverse);
+          r.getDrawingBufferSize(pSz);
+          const w = Math.max(64, Math.min(1024, Math.floor(pSz.x * 0.45)));
+          const h = Math.max(32, Math.min(512, Math.floor(pSz.y * 0.45)));
+          if (pRT.width !== w || pRT.height !== h) pRT.setSize(w, h);
+          if (markN++ % 45 === 0) markPond();
+          const prevRT = r.getRenderTarget();
+          const prevShadow = r.shadowMap.autoUpdate;
+          const prevClip = r.clippingPlanes;
+          const prevBg = scene.background;
+          const prevAlpha = r.getClearAlpha();
+          r.getClearColor(keepCol);
+          const prevAuto = r.autoClear;
+          const prevXr = r.xr.enabled;
+          pwater.visible = false;
+          r.shadowMap.autoUpdate = false;
+          r.clippingPlanes = [pClip];
+          scene.background = null;
+          r.setClearColor(0x000000, 0);
+          r.xr.enabled = false;
+          r.autoClear = true;
+          r.setRenderTarget(pRT);
+          r.state.buffers.depth.setMask(true);
+          r.clear();
+          r.render(scene, pCam);
+          scene.background = prevBg;
+          r.setClearColor(keepCol, prevAlpha);
+          r.autoClear = prevAuto;
+          r.xr.enabled = prevXr;
+          r.setRenderTarget(prevRT);
+          r.clippingPlanes = prevClip;
+          r.shadowMap.autoUpdate = prevShadow;
+          pwater.visible = true;
+          pu.uReflAmt.value = 1;
+        });
+        pondDisposers.push(() => pRT.dispose());
+
+        // ── lilies, lotus and reeds ──
+        let seed = 2026 + Math.round(def.x);
+        const rnd = () => {
+          seed = (seed * 1664525 + 1013904223) >>> 0;
+          return seed / 4294967296;
+        };
+        const padGeo = new THREE.CircleGeometry(1, 28, 0.35, Math.PI * 2 - 0.35);
+        padGeo.rotateX(-Math.PI / 2);
+        const padSpots: { x: number; z: number; s: number; r: number; lotus: boolean }[] = [];
+        for (let tries = 0; tries < 600 && padSpots.length < 64; tries++) {
+          const lx = LX0 + 0.6 + rnd() * (LX1 - LX0 - 1.2);
+          const lz = LZ0 + 0.6 + rnd() * (LZ1 - LZ0 - 1.2);
+          if (lx < -0.6 && lz > 1.5) continue;
+          // gather in drifts, not an even sprinkle
+          if (Math.sin(lx * 0.9 + 1.3) * Math.cos(lz * 0.8) < -0.15 && rnd() < 0.7) continue;
+          const wxz = pondWorldXZ(def, lx, lz);
+          padSpots.push({ x: wxz.x, z: wxz.z, s: (0.18 + rnd() * 0.3) * sc, r: rnd() * Math.PI * 2, lotus: rnd() < 0.16 });
+        }
+        const pads = new THREE.InstancedMesh(
+          padGeo,
+          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4, side: THREE.DoubleSide }),
+          padSpots.length,
+        );
+        const dm = new THREE.Object3D();
+        const pc = new THREE.Color();
+        padSpots.forEach((q, i) => {
+          dm.position.set(q.x, wl + 0.03, q.z);
+          dm.rotation.set(0, q.r, 0);
+          dm.scale.set(q.s, q.s, q.s * (0.9 + rnd() * 0.2));
+          dm.updateMatrix();
+          pads.setMatrixAt(i, dm.matrix);
+          pads.setColorAt(i, pc.setHex(rnd() < 0.5 ? 0x2f7d34 : 0x4a9a3c));
+        });
+        pads.name = "village-pond-pads";
+        builtGroup.add(pads);
+        const flowerSpots = padSpots.filter((q) => q.lotus);
+        if (flowerSpots.length > 0) {
+          const cup = new THREE.LatheGeometry(
+            [
+              new THREE.Vector2(0, 0),
+              new THREE.Vector2(0.07, 0.03),
+              new THREE.Vector2(0.15, 0.12),
+              new THREE.Vector2(0.19, 0.24),
+              new THREE.Vector2(0.13, 0.3),
+              new THREE.Vector2(0.06, 0.24),
+              new THREE.Vector2(0, 0.16),
+            ],
+            9,
+          );
+          const lotus = new THREE.InstancedMesh(
+            cup,
+            new THREE.MeshStandardMaterial({ color: 0xf0a3c4, roughness: 0.55, side: THREE.DoubleSide }),
+            flowerSpots.length,
+          );
+          flowerSpots.forEach((q, i) => {
+            dm.position.set(q.x + 0.05, wl + 0.03, q.z);
+            dm.rotation.set(0, q.r, 0);
+            const f = q.s * 1.6;
+            dm.scale.set(f, f, f);
+            dm.updateMatrix();
+            lotus.setMatrixAt(i, dm.matrix);
+          });
+          lotus.name = "village-pond-lotus";
+          builtGroup.add(lotus);
+        }
+        // reed clumps: nine blades each, standing in the shallows at the walls
+        const blades: number[] = [];
+        const cols: number[] = [];
+        const shade = new THREE.Color();
+        for (let b = 0; b < 9; b++) {
+          const a = rnd() * Math.PI * 2;
+          const rr = rnd() * 0.16;
+          const h = 0.8 + rnd() * 0.9;
+          const lean = 0.05 + rnd() * 0.22;
+          const bx = Math.cos(a) * rr;
+          const bz = Math.sin(a) * rr;
+          const w = 0.03;
+          const tipX = bx + Math.cos(a) * lean;
+          const tipZ = bz + Math.sin(a) * lean;
+          const midX = bx + Math.cos(a) * lean * 0.3;
+          const midZ = bz + Math.sin(a) * lean * 0.3;
+          const px = -Math.sin(a) * w;
+          const pz = Math.cos(a) * w;
+          blades.push(
+            bx - px, 0, bz - pz, bx + px, 0, bz + pz, midX + px * 0.8, h * 0.55, midZ + pz * 0.8,
+            bx - px, 0, bz - pz, midX + px * 0.8, h * 0.55, midZ + pz * 0.8, midX - px * 0.8, h * 0.55, midZ - pz * 0.8,
+            midX - px * 0.8, h * 0.55, midZ - pz * 0.8, midX + px * 0.8, h * 0.55, midZ + pz * 0.8, tipX, h, tipZ,
+          );
+          shade.setHex(rnd() < 0.5 ? 0x4f8a3a : 0x6aa044);
+          for (let v = 0; v < 9; v++) cols.push(shade.r, shade.g, shade.b);
+        }
+        const reedGeo = new THREE.BufferGeometry();
+        reedGeo.setAttribute("position", new THREE.Float32BufferAttribute(blades, 3));
+        reedGeo.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+        reedGeo.computeVertexNormals();
+        const reedSpots: { x: number; z: number; s: number; r: number }[] = [];
+        for (let tries = 0; tries < 400 && reedSpots.length < 56; tries++) {
+          // along the inner walls and the shed end, never mid-pond
+          const side = rnd();
+          let lx: number;
+          let lz: number;
+          if (side < 0.4) { lx = LX0 + 0.3 + rnd() * (LX1 - LX0 - 0.6); lz = LZ0 + 0.15 + rnd() * 0.7; }
+          else if (side < 0.7) { lx = LX0 + 0.3 + rnd() * (LX1 - LX0 - 0.6); lz = LZ1 - 0.15 - rnd() * 0.7; }
+          else { lx = LX1 - 0.2 - rnd() * 0.8; lz = LZ0 + 0.3 + rnd() * (LZ1 - LZ0 - 0.6); }
+          if (lx < -0.6 && lz > 1.5) continue;
+          const wxz = pondWorldXZ(def, lx, lz);
+          reedSpots.push({ x: wxz.x, z: wxz.z, s: (0.8 + rnd() * 0.8) * sc, r: rnd() * 6.28 });
+        }
+        const reeds = new THREE.InstancedMesh(
+          reedGeo,
+          new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, side: THREE.DoubleSide }),
+          reedSpots.length,
+        );
+        reedSpots.forEach((q, i) => {
+          dm.position.set(q.x, wl - 0.08, q.z);
+          dm.rotation.set(0, q.r, 0);
+          dm.scale.set(q.s, q.s, q.s);
+          dm.updateMatrix();
+          reeds.setMatrixAt(i, dm.matrix);
+        });
+        reeds.name = "village-pond-reeds";
+        builtGroup.add(reeds);
+
+        // ── planting: lots of it, round the pond and standing in it ──
+        const wallTop = g0 + (0.63 + POND_LIFT) * sc;
+        const put = async (
+          model: string,
+          lx: number,
+          lz: number,
+          hMetres: number,
+          mode: "ground" | "top" | "water",
+          units = false,
+        ) => {
+          const xz = pondWorldXZ(def, lx, lz);
+          const w = await stand(model, xz.x, xz.z, units ? hMetres : hMetres * p.h, rnd() * Math.PI * 2, 0);
+          if (w == null) return;
+          if (mode === "top") w.position.y = wallTop - 0.02;
+          if (mode === "water") w.position.y = wl - 0.12 * sc;
+          builtGroup.add(w);
+        };
+        const G = "village-plants/Kerala_Grass_Tuft";
+        const F = "village-plants/Kerala_Fern";
+        const T = "village-plants/Taro_Chembu";
+        const jobs: Promise<void>[] = [];
+        // the wall tops: grass and ferns growing out of the stone
+        for (let i = 0; i < 26; i++) {
+          const along = rnd();
+          const front = rnd() < 0.22;
+          const onEnd = rnd() < 0.18;
+          const lx = onEnd ? (rnd() < 0.5 ? -7.4 : 7.4) : -7.4 + along * 14.8;
+          const lz = onEnd ? -4.2 + rnd() * 8.4 : front ? 4.58 : -4.58;
+          jobs.push(put(rnd() < 0.55 ? G : F, lx, lz, 0.45 + rnd() * 0.4, "top"));
+        }
+        // standing in the water along the back wall and at the corners
+        for (let i = 0; i < 9; i++) jobs.push(put(T, -1.4 + i * 1.0 + rnd() * 0.4, -3.85 + rnd() * 0.3, 0.8 + rnd() * 0.5, "water"));
+        for (let i = 0; i < 6; i++) jobs.push(put(G, LX0 + 0.5 + rnd() * 9, 3.9 + rnd() * 0.3, 0.5 + rnd() * 0.4, "water"));
+        for (let i = 0; i < 5; i++) jobs.push(put(F, 5.5 + rnd() * 1.4, -3.4 + rnd() * 6.8, 0.6 + rnd() * 0.4, "water"));
+        // the ring round the outside
+        for (let i = 0; i < 80; i++) {
+          const r = rnd();
+          let lx: number;
+          let lz: number;
+          if (r < 0.1) { lx = -9 + rnd() * 18; lz = 5.8 + rnd() * 2.6; }
+          else if (r < 0.62) { lx = -9 + rnd() * 18; lz = -5.4 - rnd() * 3.6; }
+          else if (r < 0.85) { lx = -8.7 - rnd() * 2.6; lz = -5 + rnd() * 10; }
+          else { lx = 8.1 + rnd() * 2.8; lz = -5 + rnd() * 10; }
+          const k = rnd();
+          jobs.push(put(k < 0.42 ? G : k < 0.74 ? F : T, lx, lz, 0.4 + rnd() * (lz > 5 ? 0.35 : 0.9), "ground"));
+        }
+        for (let i = 0; i < 6; i++) jobs.push(put("village-plants/Hibiscus_Chemparathi", -8 + rnd() * 16, -6.3 - rnd() * 2.4, 1.2 + rnd() * 0.4, "ground"));
+        for (let i = 0; i < 4; i++) jobs.push(put("village-plants/Banana_Plant", -8 + rnd() * 16, -7.5 - rnd() * 2, 2.1 + rnd() * 0.5, "ground"));
+        // rocks
+        for (const [lx, lz, hm, name] of [
+          [-8.9, 6.1, 1.0, "village-stone/Granite_Boulder"],
+          [8.9, 5.9, 0.85, "village-stone/Granite_Boulder"],
+          [9.4, -5.6, 1.1, "village-stone/Mossy_Stone"],
+          [-9.6, -2.0, 0.8, "village-stone/Mossy_Stone"],
+          [-3.0, 5.6, 0.5, "village-stone/River_Stone"],
+          [2.6, 5.9, 0.45, "village-stone/River_Stone"],
+          [5.4, 6.3, 0.6, "village-stone/Mossy_Stone"],
+          [0.4, -6.2, 0.7, "village-stone/Granite_Boulder"],
+          [-5.8, -6.4, 0.55, "village-stone/River_Stone"],
+        ] as const) jobs.push(put(name, lx, lz, hm, "ground"));
+        // trees: a banyan nearby, palms at the corners
+        jobs.push(put("village-plants/Banyan_Almaram", 10.4, -4.6, 21, "ground", true));
+        jobs.push(put("village-plants/Coconut_Palm", -10.4, -6.0, 17, "ground", true));
+        jobs.push(put("village-plants/Coconut_Palm", 4.5, -9.6, 18, "ground", true));
+        jobs.push(put("village-plants/Arecanut_Palm", -3.0, -8.8, 15, "ground", true));
+        await Promise.all(jobs);
+      };
       if (CHAPTER != null) {
         // NEAREST LESSON FIRST. The props are the visible half of a lesson —
         // the well, the walls, the houses — so the ones the child opens
@@ -20825,6 +22157,10 @@ export function createKidsWorld(
             // than removed, because a prop authored into Lesson 5 by
             // mistake would otherwise stand in the middle of a village
             // arranged without it.
+            continue;
+          }
+          if (/Kulappura_Pond$/.test(p.model)) {
+            await buildPond(p);
             continue;
           }
           // ── THE GREAT HOUSE ─────────────────────────────────────────
@@ -21247,6 +22583,23 @@ export function createKidsWorld(
             w.name = `chapter4-bridge-${index + 1}`;
             w.userData.crossing = { ...span, moduleX: module.x, deckY: deck.y };
             builtGroup.add(w);
+            // One springy section of deck: see BRIDGE_FLEX.
+            const half = (module.length + 0.04) / 2;
+            const flex: BridgeFlex = { x0: module.x - half, x1: module.x + half, d: 0 };
+            BRIDGE_FLEX.push(flex);
+            bridgeModules3d.push({
+              w,
+              flex,
+              baseY: w.position.y,
+              v: 0,
+              roll: 0,
+              rollV: 0,
+              phase: BRIDGE_FLEX.length * 1.7,
+              // The section that rests on the bank (or the island) is part of
+              // the land: it does not give.
+              anchored:
+                flex.x0 <= span.from + 0.3 || flex.x1 >= span.to - 0.3,
+            });
           }
           BRIDGES.push(deck);
         }
@@ -22557,9 +23910,15 @@ export function createKidsWorld(
               // else is a treadmill in one direction or a skate in the other.
               const dur = gait.getClip().duration || 1;
               f.wrap.userData.walkHeight = FOLK_HEIGHT[who] ?? 5.2 * FOOT;
+              Object.assign(f.wrap.userData.roadWalker as object, {
+                gait,
+                gaitName: `${who}:${gait.getClip().name}`,
+              });
               (f.wrap.userData.roadWalker as { speed: number }).speed =
                 ((strideOf(FOLK_HEIGHT[who] ?? 5.2 * FOOT) *
-                  (WALK_STRIDES[who] ?? 1)) /
+                  ((gait === f.walk
+                    ? WALK_STRIDES[who]
+                    : NIGHT_WALK_STRIDES[who]) ?? 1)) /
                   dur) *
                 rate;
             }
@@ -24275,13 +25634,32 @@ export function createKidsWorld(
         // line, one drawn over the other, is one silhouette. The far one now
         // stands higher, which is also what distance does to a bigger range.
         const wantPeak = V.frustum * V.topF * peakAt;
+        // Solved at the camera's own x — it is the only x the walk starts
+        // from, and `followRidges` carries the answer along from there.
+        //
+        // THE SOLVE ASSUMES THE CAMERA STANDS WHERE IT WAS FIRST PLACED, and
+        // a road that opens part-way along (lesson five of a scene) has
+        // already moved it. So the ridge is solved for the camera's own
+        // starting place and then shifted by however far the camera is from
+        // that — in x, which the up vector turns into height, and in y.
+        const x0 = cam.position.x;
+        const baseX = -(V.camX ?? 10);
         const y =
-          (aimUp + wantPeak + dist * camUp.z - (TRAIL_END / 2) * camUp.x) /
-            camUp.y -
-          height;
-        mesh.position.set(TRAIL_END / 2, y, -dist);
+          (aimUp + wantPeak + dist * camUp.z - baseX * camUp.x) / camUp.y -
+          height +
+          (cam.position.y - V.camY);
+        mesh.position.set(x0, y, -dist);
         mesh.renderOrder = -10;
         scene.add(mesh);
+        ridgeLayers.push({
+          mesh,
+          x0,
+          y0: y,
+          camX0: cam.position.x,
+          camY0: cam.position.y,
+          upX: camUp.x,
+          upY: camUp.y,
+        });
         return mesh;
       };
       // Far range first so the near one draws over it, and higher, so it
@@ -24733,23 +26111,11 @@ export function createKidsWorld(
    * Real dust does the opposite of all of that. It is small, there is not much
    * of it, it goes sideways rather than up, it expands as it thins, and it is
    * gone almost at once. So: quarter the size, half the number, a fifth of the
-        // Solved at the camera's own x — it is the only x the walk starts
-        // from, and `followRidges` carries the answer along from there.
-        const x0 = cam.position.x;
    * lift, a third of the life — and it fades by going transparent and
    * spreading rather than by shrinking, because dust disperses, it does not
    * retract.
    */
   function dust(x: number, y: number, z: number, n = 3) {
-        ridgeLayers.push({
-          mesh,
-          x0,
-          y0: y,
-          camX0: cam.position.x,
-          camY0: cam.position.y,
-          upX: camUp.x,
-          upY: camUp.y,
-        });
     if (calmMode) {
       return;
     }
@@ -24764,16 +26130,6 @@ export function createKidsWorld(
       );
       m.position.set(
         x + (Math.random() - 0.5) * 0.12,
-        // Solved at the camera's own x — it is the only x the walk starts
-        // from, and `followRidges` carries the answer along from there.
-        //
-        // THE SOLVE ASSUMES THE CAMERA STANDS WHERE IT WAS FIRST PLACED, and
-        // a road that opens part-way along (lesson five of a scene) has
-        // already moved it. So the ridge is solved for the camera's own
-        // starting place and then shifted by however far the camera is from
-        // that — in x, which the up vector turns into height, and in y.
-        const x0 = cam.position.x;
-        const baseX = -(V.camX ?? 10);
         y,
         z + (Math.random() - 0.5) * 0.12,
       );
@@ -25198,12 +26554,12 @@ export function createKidsWorld(
       if (!nightNow) {
         nightSaid = false;
       }
+      waterTime.value = clock.elapsedTime;
       const on = nightBlend > 0.001;
       nightLayer.visible = on;
       if (on) {
         const calm = 0.25 + 0.75 * motionScale;
         const t = clock.elapsedTime * calm;
-        waterTime.value = clock.elapsedTime;
         for (const m of mistMats) {
           m.uniforms.uTime.value = t;
           m.uniforms.uOpacity.value =
@@ -25700,7 +27056,21 @@ export function createKidsWorld(
           f.wrap.visible = false;
           continue;
         }
-        const stride = rw.speed * dt * motionScale;
+        // Speed follows the planted foot step by step (see GAIT_PROFILE).
+        const gaitState = rw as unknown as {
+          gait?: THREE.AnimationAction;
+          gaitName?: string;
+        };
+        let pace = 1;
+        if (gaitState.gait != null && gaitState.gaitName != null) {
+          const [who, clip] = gaitState.gaitName.split(":");
+          pace = gaitSpeedAt(
+            who!,
+            clip!,
+            gaitState.gait.time / (gaitState.gait.getClip().duration || 1),
+          );
+        }
+        const stride = rw.speed * pace * dt * motionScale;
         let nx = crossLimitX(
           f.wrap.position.x,
           f.wrap.position.x + rw.dir * stride,
@@ -27723,6 +29093,7 @@ export function createKidsWorld(
         const dip = SHAPE === "hill" ? rel : Math.min(0, rel);
         cam.position.y += (V.camY + dip - cam.position.y) * 0.04;
       }
+      followRidges();
       // The sun sets and the moon rises, as one move. `SUN_AT` is eased
       // between the two rigs by the same blend that fades the rest of the
       // night, so the shadows swing round and shorten over the same second
@@ -28179,7 +29550,6 @@ export function createKidsWorld(
         // The herd lies down after dark and gets up at dawn, on the authored
         // `Rest` clip. Each animal has its own threshold, so the field goes
         // down one by one over the dusk rather than on a single frame, and
-      followRidges();
         // the gap between lying down and getting up keeps one sitting on
         // the line from bobbing. A buffalo coming over still gets her up —
         // `walking` wins — and she lies down again once it has gone.
@@ -29489,6 +30859,9 @@ export function createKidsWorld(
       guard.frameNo += 1;
       sun.shadow.needsUpdate = guard.frameNo % guard.shadowEvery === 0;
     }
+    stepBridge(dt);
+    mirrorPass?.();
+    for (const m of pondMirrors) m();
     renderer.render(scene, cam);
     // Time Keepers' title takes the same sun and moon as the road beneath it.
     if (theme.village != null) {
@@ -29926,6 +31299,13 @@ export function createKidsWorld(
         (texture.image as { close?: () => void } | undefined)?.close?.();
       }
       letterTexCache.clear();
+      for (const d of pondDisposers) d();
+      // The water's mirror is a render target, which a walk of the scene
+      // would never find.
+      (
+        scene.getObjectByName("chapter2-river") ??
+        scene.getObjectByName("chapter4-wide-river")
+      )?.userData.disposeReflection?.();
       // The scene first — the renderer's own dispose does not reach into it.
       disposeScene(scene);
       // Then the parsed models, which were never in it.
