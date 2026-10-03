@@ -11,28 +11,9 @@ First recorded 7 Sep 2026; updated 3 Oct 2026 with everything shipped since.
 
 ### Added since 7 Sep
 
-- **Time Keepers**, a new kids world: a Kerala village journey in four
-  authored chapters of ten lessons (village centre, farms and estate,
-  Temple Street and the market, the wide crossing), with milestones, a
-  narrated story panel, and lessons sized to each band's passage.
-- **A village with its own clock**: villagers' hours, shop lamps that
-  close one by one, houses that go to bed, temple puja lamps 18:00-20:00
-  and a shrine lamp that never goes out.
-- **The Kerala small temple** in every lesson that has one, with
-  kalvilakku, brass vilakku and kalmandapam.
-- **A living road**: cattle that graze and rest, a buffalo per lesson, the
-  blacksmith, a tea stall, river and bridge, mangroves, footprints and dust.
-- **Kuttichathan** at night on the crossing, in every chapter.
-- **Sky**: painted horizon, weather, moon and stars, cross-faded nightfall.
-- **Companions**: Dave, Little Drew, Peeli, the Robot and the Puppy.
-- **Letters on the trail** for every age, on by default.
-- **Hero Trail**: Knight, Skeleton and Scout as the mains with one
-  companion; upgraded cast; ten-lesson continuous scenes; horizon and
-  mountains; sight-line rule; Time Keepers' camera; letters on the ground.
-- **Dino Run**: upgraded dinosaurs; an 18-scene kit (terrain, palette,
-  vegetation, landmarks, weather, water); ten-lesson continuous scenes.
-- **A themed scoreboard** per game that fades while typing.
-- Classic practice moved to Play (ages 9-13), as the real practice page.
+- **Time Keepers**, a new world in the kids game.
+- **Hero Trail and Dino Run**: new characters and new places to explore.
+- Classic practice moved to Play in the kids settings (ages 9-13).
 - Kids assets content-addressed, compressed and kept on the device.
 - App language follows the account; every learner syncs, offline too.
 - Grown-up PIN before a kid switches to a grown-up profile.
@@ -59,8 +40,6 @@ First recorded 7 Sep 2026; updated 3 Oct 2026 with everything shipped since.
 - The keystroke that ends a typing test discarded its report.
 - Account export returned 500 for every account, and logged the ops key.
 - The keyboard died after a new letter was woken, until a reload.
-- Kids world: milestones ran ahead of the youngest children, buildings
-  were culled mid-lesson, cattle stood buried in the ground.
 
 A major version: support moved inside the app, every learner can have
 their own voice, what they set follows them between devices, and all 54

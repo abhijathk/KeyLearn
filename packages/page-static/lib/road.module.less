@@ -389,3 +389,16 @@
   border-color: rgba(255, 255, 255, 0.55);
   background: rgba(255, 255, 255, 0.5);
 }
+
+/*
+ * The one exception to the open-source paragraph above it (Time Keepers'
+ * art is commercially licensed), set apart just enough to be seen by a
+ * reader who is about to take the whole thing: a faint wash of the accent
+ * and a hairline, the same on every edge (owner, 3 Oct 2026).
+ */
+.paper .licenceNote {
+  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 22%, transparent);
+  border-radius: 0.8rem;
+  background: color-mix(in oklab, var(--accent) 7%, transparent);
+}
