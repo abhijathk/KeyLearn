@@ -5,7 +5,62 @@ document for the in-app release notes shown from the About page — keep
 `packages/page-static/lib/release-notes.ts` in sync whenever this file
 changes.
 
-## 02.00.00 — 2026-09-07 06:30 UTC
+## 02.00.00 — 2026-10-03 11:49 UTC
+
+First recorded 7 Sep 2026; updated 3 Oct 2026 with everything shipped since.
+
+### Added since 7 Sep
+
+- **Time Keepers**, a new kids world: a Kerala village journey in four
+  authored chapters of ten lessons (village centre, farms and estate,
+  Temple Street and the market, the wide crossing), with milestones, a
+  narrated story panel, and lessons sized to each band's passage.
+- **A village with its own clock**: villagers' hours, shop lamps that
+  close one by one, houses that go to bed, temple puja lamps 18:00-20:00
+  and a shrine lamp that never goes out.
+- **The Kerala small temple** in every lesson that has one, with
+  kalvilakku, brass vilakku and kalmandapam.
+- **A living road**: cattle that graze and rest, a buffalo per lesson, the
+  blacksmith, a tea stall, river and bridge, mangroves, footprints and dust.
+- **Kuttichathan** at night on the crossing, in every chapter.
+- **Sky**: painted horizon, weather, moon and stars, cross-faded nightfall.
+- **Companions**: Dave, Little Drew, Peeli, the Robot and the Puppy.
+- **Letters on the trail** for every age, on by default.
+- **Hero Trail**: Knight, Skeleton and Scout as the mains with one
+  companion; upgraded cast; ten-lesson continuous scenes; horizon and
+  mountains; sight-line rule; Time Keepers' camera; letters on the ground.
+- **Dino Run**: upgraded dinosaurs; an 18-scene kit (terrain, palette,
+  vegetation, landmarks, weather, water); ten-lesson continuous scenes.
+- **A themed scoreboard** per game that fades while typing.
+- Classic practice moved to Play (ages 9-13), as the real practice page.
+- Kids assets content-addressed, compressed and kept on the device.
+- App language follows the account; every learner syncs, offline too.
+- Grown-up PIN before a kid switches to a grown-up profile.
+- Reminder emails follow Preferences; guests can export kids' practice;
+  the importer takes KeyLearn exports and kid profiles.
+- Multiplayer shows words per minute.
+
+### Changed since 7 Sep
+
+- **Licensing**: Time Keepers' assets (models, textures, horizon, faces,
+  cards, sounds and logo) are the AK 3D Pack, commercially licensed and
+  not AGPL. They moved out of this repository into a private one and are
+  merged in for production by `scripts/ak-pack-merge.mjs`. The About page
+  says so. Hero Trail and Dino Run stay AGPL.
+- Screen readers: named inputs, switches, pickers and progress bars, and
+  the chosen option is announced.
+- Default themes meet WCAG AA text contrast.
+- Plain wording when a passkey prompt is cancelled.
+- The remaining UI strings are translated into all 54 locales.
+- HSTS at the reverse proxy; rate limits hold across workers.
+
+### Fixed since 7 Sep
+
+- The keystroke that ends a typing test discarded its report.
+- Account export returned 500 for every account, and logged the ops key.
+- The keyboard died after a new letter was woken, until a reload.
+- Kids world: milestones ran ahead of the youngest children, buildings
+  were culled mid-lesson, cattle stood buried in the ground.
 
 A major version: support moved inside the app, every learner can have
 their own voice, what they set follows them between devices, and all 54
