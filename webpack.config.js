@@ -184,7 +184,13 @@ export default [
     },
     output: {
       path: join(import.meta.dirname, "root", "public", "assets"),
-      clean: true,
+      // OLD CHUNKS STAY (owner, 1 Oct 2026). Cleaning the folder on every
+      // build deleted the files an already-open page was about to ask for, so
+      // any tab left open across a rebuild failed with a 404 served as HTML
+      // ("Refused to execute script ... MIME type text/html"). Old files are
+      // removed by scripts/prune-assets.mjs once they are days old instead;
+      // set CLEAN_ASSETS=1 for a deploy build that wants an empty folder.
+      clean: process.env.CLEAN_ASSETS === "1",
       publicPath: "/assets/",
       filename: `${filename}.js`,
       chunkFilename: `${chunkFilename}.js`,
