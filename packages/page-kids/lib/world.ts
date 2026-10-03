@@ -18960,6 +18960,10 @@ export function createKidsWorld(
       // nothing about age, sitting right next to one that did.
       const rig = rigOf(gltf, castHeightOf(name), name);
       rig.wrap.rotation.y = Math.PI / 2;
+      // Arrives at the player's age, not full grown (see the tick).
+      if (playerGrows && growsWithAge(name)) {
+        rig.wrap.scale.setScalar(growTarget);
+      }
       // A LINE, not a huddle. Each one walks a little further back and a
       // little further out than the one in front, so the three of them read
       // as a group going somewhere together rather than as a stack.
@@ -31203,6 +31207,15 @@ export function createKidsWorld(
 
       const cur = player.wrap.scale.x;
       player.wrap.scale.setScalar(cur + (growTarget - cur) * 0.06);
+      // THE COMPANION IS THE PLAYER'S AGE (owner, 3 Oct 2026). On the Hero
+      // Trail a Novice walks with a Novice and a Champion with a Champion:
+      // whoever walks alongside grows on the same curve, at the same pace.
+      // Characters who are their own fixed age (see `growsWithAge`) keep it.
+      for (const f of followers) {
+        if (f.guide || !playerGrows || !growsWithAge(f.name)) continue;
+        const fc = f.rig.wrap.scale.x;
+        f.rig.wrap.scale.setScalar(fc + (growTarget - fc) * 0.06);
+      }
       if (celebT > 0) {
         celebT -= celebRate;
         const t = 1 - Math.max(0, celebT); // 0 -> 1 across the celebration
