@@ -551,7 +551,17 @@ export namespace SupportService {
       .send();
   }
 
+  /** Why the account window's Support section is shut, in the admin's words. */
+  export type SupportClosure = {
+    readonly reason: "down" | "maintenance" | "backOn" | "other";
+    readonly note: string;
+    /** ISO instant in the future, or null. */
+    readonly backOn: string | null;
+  };
+
   export type SupportGate = {
+    /** Present and non-null while support is closed from the control centre. */
+    readonly closed?: SupportClosure | null;
     readonly required: boolean;
     readonly setupRequired: boolean;
     readonly proved: boolean;

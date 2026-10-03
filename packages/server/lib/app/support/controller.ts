@@ -67,7 +67,7 @@ import {
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
-import { threadLinkMs } from "../site-config/readers.ts";
+import { supportAccountClosure, threadLinkMs } from "../site-config/readers.ts";
 import { storeDeskAttachments } from "./desk-attachments.ts";
 import { matchAnswers } from "./matching.ts";
 import { priorTicketsFor } from "./prior-ticket.ts";
@@ -1310,7 +1310,12 @@ export class Controller {
    */
   @http.GET("/_/support/gate")
   async supportGate(ctx: Context<RouterState & SessionState & AuthState>) {
-    ctx.response.body = await supportGateStatus(ctx, ctx.state.user);
+    // `closed` rides along with the gate so the account window learns in
+    // the one request it already makes that support is shut, and why.
+    ctx.response.body = {
+      ...(await supportGateStatus(ctx, ctx.state.user)),
+      closed: supportAccountClosure(),
+    };
   }
 
   @http.GET("/_/support/help/articles")

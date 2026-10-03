@@ -31,6 +31,11 @@ export const WIRED_KEYS: ReadonlySet<string> = new Set([
   "pages.texts.state",
   "pages.highScores.state",
   "pages.support.state",
+  // 1 Oct 2026: the account window's own Support section can be closed.
+  "support.account.open",
+  "support.account.closedReason",
+  "support.account.backOn",
+  "support.account.note",
   "pages.helpCentre.state",
   "pages.forSchools.state",
   "pages.verify.state",

@@ -149,6 +149,37 @@ export function leaderboardOverrideUntil(): Date | null {
   return Number.isNaN(at.getTime()) ? null : at;
 }
 
+export type SupportClosureReason = "down" | "maintenance" | "backOn" | "other";
+
+export type SupportClosure = {
+  readonly reason: SupportClosureReason;
+  /** The admin's own sentence, trimmed; "" when there is none. */
+  readonly note: string;
+  /** An ISO instant still in the future, or null. A date already gone is not shown as a promise. */
+  readonly backOn: string | null;
+};
+
+/**
+ * Is the Support section in the account window closed, and what does the
+ * admin want people to read instead? Null while it is open.
+ */
+export function supportAccountClosure(): SupportClosure | null {
+  if (siteSwitch("support.account.open")) {
+    return null;
+  }
+  const raw = siteSetting("support.account.backOn");
+  const at = typeof raw === "string" ? new Date(raw) : null;
+  const backOn =
+    at != null && !Number.isNaN(at.getTime()) && at.getTime() > Date.now()
+      ? at.toISOString()
+      : null;
+  return {
+    reason: siteChoice("support.account.closedReason") as SupportClosureReason,
+    note: String(siteSetting("support.account.note") ?? "").trim(),
+    backOn,
+  };
+}
+
 export function showLastLoginLocation(): boolean {
   return siteSwitch("privacy.showLastLoginLocation");
 }

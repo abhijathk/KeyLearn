@@ -4,6 +4,7 @@ import { body, controller, http, pathParam } from "@fastr/controller";
 import { Context } from "@fastr/core";
 import {
   ForbiddenError,
+  HttpError,
   NotFoundError,
   ServiceUnavailableError,
 } from "@fastr/errors";
@@ -29,6 +30,7 @@ import { rateLimit } from "../auth/ratelimit.ts";
 import { requireCaptchaIfSuspicious } from "../auth/turnstile.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
+import { supportAccountClosure } from "../site-config/readers.ts";
 import { priorTicketsFor } from "./prior-ticket.ts";
 import {
   deskIsTyping,
@@ -153,6 +155,26 @@ type TPin = z.infer<typeof TPin>;
 const PPin = zod(TPin);
 
 const pId = zod(z.coerce.number().int().positive());
+
+/**
+ * Support in the account window can be closed from the control centre. The
+ * section stops offering itself, but a stale tab or a script would still
+ * reach these two routes, so they refuse too. Answered 423 (Locked) with the
+ * admin's own sentence; a 5xx would be masked as a server error.
+ * Reading what was already written stays open.
+ */
+function refuseWhileClosed(): void {
+  const closed = supportAccountClosure();
+  if (closed == null) {
+    return;
+  }
+  throw new HttpError(
+    423,
+    closed.note !== ""
+      ? closed.note
+      : "Support is closed for now. Please try again later.",
+  );
+}
 
 @injectable()
 @controller()
@@ -475,6 +497,7 @@ export class MyTicketsController {
     ctx: Context<RouterState & SessionState & AuthState>,
     @body.json(PNewTicket) input: TNewTicket,
   ) {
+    refuseWhileClosed();
     const user = ctx.state.requireUser();
     await requireParentPinForSupport(ctx, user);
     rateLimit(ctx, "support-my-ticket", 5, 60 * 60 * 1000);
@@ -589,6 +612,7 @@ export class MyTicketsController {
     //
     // Sixty an hour is far above anyone typing and far below anything
     // worth calling a flood.
+    refuseWhileClosed();
     rateLimit(ctx, "support-my-reply", 60, 60 * 60 * 1000);
     // Adaptive here, not mandatory. This person is signed in, past the
     // grown-up PIN and rate-limited, so the residual risk is a stolen

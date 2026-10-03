@@ -234,6 +234,13 @@ export function MySupportSection(): ReactNode {
     return <section className={styles.section} />;
   }
 
+  // Shut from the control centre. Before the PIN, not after it: there is
+  // nothing behind the lock to unlock, and a grown-up who has just been
+  // asked for a PIN should not then be told it was for nothing.
+  if (gate.closed != null) {
+    return <SupportClosed closure={gate.closed} />;
+  }
+
   if (gate.required && !gate.proved) {
     return promptOpen ? (
       <ParentPinGate
@@ -2685,6 +2692,77 @@ function ParentPinGate({
             onClick={onClose}
           />
         </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Support is closed, and this says why in the admin's words.
+ *
+ * The headline comes from the reason the admin picked; their own sentence, if
+ * they wrote one, sits under it; a date, if they gave one, is shown in the
+ * reader's own language and time zone.
+ */
+function SupportClosed({
+  closure,
+}: {
+  readonly closure: SupportService.SupportClosure;
+}): ReactNode {
+  const intl = useIntl();
+  const when =
+    closure.backOn == null
+      ? null
+      : intl.formatDate(new Date(closure.backOn), {
+          dateStyle: "long",
+          timeStyle: "short",
+        });
+  let headline: string;
+  if (closure.reason === "down") {
+    headline = intl.formatMessage({
+      id: "support.closed.down",
+      defaultMessage: "Support is down at the moment.",
+    });
+  } else if (closure.reason === "maintenance") {
+    headline = intl.formatMessage({
+      id: "support.closed.maintenance",
+      defaultMessage: "Support is down for maintenance.",
+    });
+  } else if (closure.reason === "backOn" && when != null) {
+    headline = intl.formatMessage(
+      {
+        id: "support.closed.backOn",
+        defaultMessage: "Support will be back on {date}.",
+      },
+      { date: when },
+    );
+  } else if (closure.note === "") {
+    headline = intl.formatMessage({
+      id: "support.closed.generic",
+      defaultMessage: "Support is closed for now.",
+    });
+  } else {
+    headline = "";
+  }
+  const expected =
+    when != null && closure.reason !== "backOn"
+      ? intl.formatMessage(
+          {
+            id: "support.closed.expected",
+            defaultMessage: "We expect to be back on {date}.",
+          },
+          { date: when },
+        )
+      : null;
+  return (
+    <section className={styles.section} aria-live="polite">
+      <div className={styles.centred}>
+        <Icon name="lock" size={26} />
+        {headline !== "" && <p className={styles.centredText}>{headline}</p>}
+        {closure.note !== "" && (
+          <p className={styles.centredText}>{closure.note}</p>
+        )}
+        {expected != null && <p className={styles.centredText}>{expected}</p>}
       </div>
     </section>
   );

@@ -105,6 +105,63 @@ const BASE_REGISTRY: readonly SettingDef[] = [
     warning: "The population rule still applies while the page is live.",
   }),
   page("support", "Support page", "/support"),
+  // The Support section INSIDE the account window, which is a different
+  // door from the public /support page above: signed-in people reach it
+  // through /account, and closing the public form must not be the only way to
+  // tell them the desk is away. The admin writes the reason; the account
+  // window shows it in place of the section (owner, 1 Oct 2026). ON = open,
+  // like the page switches (the owner asked for that polarity the same
+  // day; the row first shipped as "closed"). Plain
+  // `support.account.*` keys rather than `pages.*` because the control centre
+  // treats every `pages.*` string as a page state (live / 404 / soon).
+  {
+    key: "support.account.open",
+    section: "pages",
+    label: "Support in the account window",
+    type: "switch",
+    // ON is open, like every page switch above it. Off closes the section
+    // and shows the reason, date and note below instead.
+    default: true,
+    direction: "free",
+    protection: "free",
+    impact: "refuses",
+    warning:
+      "Off closes it: people see your note in place of the Support section and cannot open a request or reply until it is switched back on. What they already wrote is kept, and the desk is unaffected.",
+    enforcedAt:
+      "support/my-controller.ts createMine + replyMine; page-support MySupportSection via /_/support/gate",
+  },
+  {
+    key: "support.account.closedReason",
+    section: "pages",
+    label: "Why it is closed",
+    type: "choice",
+    default: "down",
+    choices: ["down", "maintenance", "backOn", "other"],
+    direction: "free",
+    protection: "free",
+    enforcedAt: "page-support MySupportSection via /_/support/gate",
+  },
+  {
+    key: "support.account.backOn",
+    section: "pages",
+    label: "Back on",
+    type: "datetime",
+    default: null,
+    direction: "free",
+    protection: "free",
+    enforcedAt: "page-support MySupportSection via /_/support/gate",
+  },
+  {
+    key: "support.account.note",
+    section: "pages",
+    label: "Note to show",
+    type: "text",
+    default: "",
+    maxLength: 280,
+    direction: "free",
+    protection: "free",
+    enforcedAt: "page-support MySupportSection via /_/support/gate",
+  },
   page("helpCentre", "Help centre", "/support/help"),
   // Off by default until the schools tier ships. The page, the enquiry form
   // and the signpost on the sign-in screen all hang off this one switch, so

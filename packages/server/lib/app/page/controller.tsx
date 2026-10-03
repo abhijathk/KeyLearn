@@ -648,6 +648,20 @@ export class Controller {
     }
   }
 
+  /**
+   * The page states as the router enforces them, for tabs that are already
+   * open. Page data is read once at load, so without this a page switched
+   * off in the control centre kept working in every open tab until a refresh.
+   * Public and uncacheable; it says nothing a visitor could not learn by
+   * asking for each page.
+   */
+  @http.GET("/_/pages/state")
+  async pagesState(ctx: Context<RouterState & AuthState>) {
+    ctx.response.headers.set("Cache-Control", "no-store");
+    ctx.response.type = "application/json";
+    ctx.response.body = { pages: pageStates() };
+  }
+
   async renderPage(
     ctx: Context<RouterState & AuthState>,
     page: PageInfo,

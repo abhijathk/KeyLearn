@@ -36,6 +36,14 @@ export const DESCRIPTIONS: Readonly<Record<string, string>> = {
     "The public leaderboard of the fastest ranked learners.",
   "pages.support.state":
     "The contact form a learner or a visitor writes to the support desk with.",
+  "support.account.open":
+    "The Support section inside every account window. Switch it off to close it and show your note there instead.",
+  "support.account.closedReason":
+    "The opening line people read: down, down for maintenance, back on a date, or only your own words.",
+  "support.account.backOn":
+    "The date and time support is expected back, shown with the note; leave it off if you do not know.",
+  "support.account.note":
+    "A sentence of your own shown under the opening line, such as what is being fixed.",
   "pages.helpCentre.state":
     "The self-service answers a learner reads before writing in.",
   "accounts.keyboardFinishes":

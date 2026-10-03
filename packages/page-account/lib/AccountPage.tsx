@@ -344,6 +344,25 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
         (railProfile?.kind === "kid" ? "kid" : "adult"))
       : "adult";
   const [supportUnread, setSupportUnread] = useState(0);
+  // IS SUPPORT CLOSED FROM THE CONTROL CENTRE? Asked whenever the Support
+  // pane is opened, because the answer decides whether the grown-up PIN
+  // is asked at all: a closed section has nothing behind the lock, and the
+  // admin's note ("down for maintenance", "back on Friday") is for exactly
+  // the person who is about to type a PIN to get in. null = not known yet.
+  const [supportClosed, setSupportClosed] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (pane !== "support") {
+      return;
+    }
+    let live = true;
+    setSupportClosed(null);
+    SupportService.getGate()
+      .then((g) => live && setSupportClosed(g.closed != null))
+      .catch(() => live && setSupportClosed(false));
+    return () => {
+      live = false;
+    };
+  }, [pane]);
   useEffect(() => {
     // Standing in the section clears the dot. It is an aggregate "there is
     // something to see", and once you are looking at the list — where each
@@ -483,84 +502,95 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [phone, phoneList, backToList]);
 
-  const paneBody = (
-    <AccountGate hasPin={user.parentPinSet} active={GATED_PANES.has(pane)}>
-      {pane === "account" && (
-        <AccountPane
-          user={user}
-          publicUser={publicUser}
-          onAnonymize={() =>
-            actions.patchAccount({ anonymized: !user.anonymized })
-          }
-          onPublicProfile={() =>
-            actions.patchAccount({ publicProfile: !user.publicProfile })
-          }
-          alsoEverywhere={alsoEverywhere}
-          onAlsoEverywhere={setAlsoEverywhere}
-          onLogout={() => setConfirm("logout")}
-          onDelete={() => setConfirm("delete")}
-          onRename={(name) => actions.patchAccount({ name })}
-        />
-      )}
-
-      {pane === "learners" && (
-        <div className={styles.paneScroll}>
-          <h2 className={styles.paneTitle}>
-            <FormattedMessage
-              id="account.section.profiles"
-              defaultMessage="Learner profiles"
-            />
-          </h2>
-          <p className={styles.cardNote}>
-            <FormattedMessage
-              id="account.profiles.note"
-              defaultMessage="Add a profile for each person in your household. Kids get a playful trail world; each profile keeps its own progress on this device."
-            />
-          </p>
-          <ProfilesManager />
-        </div>
-      )}
-
-      {pane === "security" && (
-        <div className={styles.paneScroll}>
-          <SecurityCard
+  const paneBody =
+    pane === "support" && supportClosed == null ? (
+      // Not known yet: nothing rather than a PIN prompt that may turn out
+      // not to apply.
+      <div className={styles.gateBox} />
+    ) : (
+      <AccountGate
+        hasPin={user.parentPinSet}
+        active={
+          GATED_PANES.has(pane) &&
+          !(pane === "support" && supportClosed === true)
+        }
+      >
+        {pane === "account" && (
+          <AccountPane
             user={user}
-            onChanged={() => {
-              // The 2FA and PIN flags live on the account record, so pull a
-              // fresh copy rather than guessing the new state client-side.
-              actions.patchAccount({});
-            }}
+            publicUser={publicUser}
+            onAnonymize={() =>
+              actions.patchAccount({ anonymized: !user.anonymized })
+            }
+            onPublicProfile={() =>
+              actions.patchAccount({ publicProfile: !user.publicProfile })
+            }
+            alsoEverywhere={alsoEverywhere}
+            onAlsoEverywhere={setAlsoEverywhere}
+            onLogout={() => setConfirm("logout")}
+            onDelete={() => setConfirm("delete")}
+            onRename={(name) => actions.patchAccount({ name })}
           />
-        </div>
-      )}
+        )}
 
-      {pane === "course" && (
-        <div className={styles.paneScroll}>
-          <CoursePane />
-        </div>
-      )}
+        {pane === "learners" && (
+          <div className={styles.paneScroll}>
+            <h2 className={styles.paneTitle}>
+              <FormattedMessage
+                id="account.section.profiles"
+                defaultMessage="Learner profiles"
+              />
+            </h2>
+            <p className={styles.cardNote}>
+              <FormattedMessage
+                id="account.profiles.note"
+                defaultMessage="Add a profile for each person in your household. Kids get a playful trail world; each profile keeps its own progress on this device."
+              />
+            </p>
+            <ProfilesManager />
+          </div>
+        )}
 
-      {pane === "appearance" && <AppearancePane />}
-      {pane === "accessibility" && <AccessibilityPane />}
+        {pane === "security" && (
+          <div className={styles.paneScroll}>
+            <SecurityCard
+              user={user}
+              onChanged={() => {
+                // The 2FA and PIN flags live on the account record, so pull a
+                // fresh copy rather than guessing the new state client-side.
+                actions.patchAccount({});
+              }}
+            />
+          </div>
+        )}
 
-      {pane === "prefs" && <PreferencesPane />}
+        {pane === "course" && (
+          <div className={styles.paneScroll}>
+            <CoursePane />
+          </div>
+        )}
 
-      {SUPPORT_VISIBLE && pane === "support" && (
-        <div className={styles.paneScroll}>
-          <MySupportSection />
-        </div>
-      )}
+        {pane === "appearance" && <AppearancePane />}
+        {pane === "accessibility" && <AccessibilityPane />}
 
-      {premiumVisible && pane === "premium" && (
-        <div className={styles.paneScroll}>
-          <PremiumPane
-            premium={premium}
-            onCheckout={() => actions.checkout()}
-          />
-        </div>
-      )}
-    </AccountGate>
-  );
+        {pane === "prefs" && <PreferencesPane />}
+
+        {SUPPORT_VISIBLE && pane === "support" && (
+          <div className={styles.paneScroll}>
+            <MySupportSection />
+          </div>
+        )}
+
+        {premiumVisible && pane === "premium" && (
+          <div className={styles.paneScroll}>
+            <PremiumPane
+              premium={premium}
+              onCheckout={() => actions.checkout()}
+            />
+          </div>
+        )}
+      </AccountGate>
+    );
 
   return (
     <FloatingShell

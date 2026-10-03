@@ -17,6 +17,8 @@ import {
   startLocalSync,
   usePageData,
   usePageOffered,
+  usePageRefused,
+  usePageStatesSync,
 } from "@keylearn/pages-shared";
 import { Settings } from "@keylearn/settings";
 import { SettingsLoader } from "@keylearn/settings-loader";
@@ -276,11 +278,57 @@ function KidAccountGuard(): ReactNode {
   return null;
 }
 
+/**
+ * Where an address with no route of its own ends up.
+ *
+ * Normally that is practice, as it always was. But an address that is a real
+ * page SWITCHED OFF (404) in the control centre has no route either, and
+ * landing on practice there drew the adult practice screen under the wrong
+ * address — most visibly for a kid profile, which is sent to the kids page
+ * and then found itself on adult practice. A page that is off must look off,
+ * so this asks the server for the page, and the server answers with the real
+ * 404 a refresh gives (owner, 1 Oct 2026).
+ */
+function CatchAll(): ReactNode {
+  const { pathname } = useLocation();
+  const refused = usePageRefused()(pathname);
+  useEffect(() => {
+    if (!refused) {
+      return;
+    }
+    // Once, however the server answers, so a mismatch can never loop.
+    const key = `keylearn.offPage.${pathname}`;
+    try {
+      if (window.sessionStorage.getItem(key) != null) {
+        return;
+      }
+      window.sessionStorage.setItem(key, String(Date.now()));
+    } catch {
+      // No storage: ask once per mount, which is still one request.
+    }
+    window.location.reload();
+  }, [refused, pathname]);
+  if (refused) {
+    return <LoadingProgress />;
+  }
+  return (
+    <Template path={Pages.practice.path}>
+      <Title page={Pages.practice} />
+      <Suspense fallback={<LoadingProgress />}>
+        <PracticePage />
+      </Suspense>
+    </Template>
+  );
+}
+
 function PageRoutes() {
   const { locale } = useIntl();
   // Control-centre page states: a page set to 404 gets no route at all; a
   // page set to coming soon keeps its route and shows the panel instead.
   const live = usePageOffered();
+  // Tabs that are already open learn about a switch in the control centre
+  // within half a minute, without a refresh.
+  usePageStatesSync();
   const { learnerDefaults, learnerOverrides, boardChoiceLocked } =
     usePageData();
   useEffect(() => {
@@ -297,18 +345,9 @@ function PageRoutes() {
       <KidAccountGuard />
       <ProfilePicker />
       <Routes>
-        <Route
-          index={true}
-          path={Pages.practice.path}
-          element={
-            <Template path={Pages.practice.path}>
-              <Title page={Pages.practice} />
-              <Suspense fallback={<LoadingProgress />}>
-                <PracticePage />
-              </Suspense>
-            </Template>
-          }
-        />
+        {/* The home route is also practice, so it answers to the practice
+            switch the same way the catch-all does. */}
+        <Route index={true} path={Pages.practice.path} element={<CatchAll />} />
         <Route
           path={Pages.org.path}
           element={
@@ -690,17 +729,7 @@ function PageRoutes() {
             }
           />
         )}
-        <Route
-          path="*"
-          element={
-            <Template path={Pages.practice.path}>
-              <Title page={Pages.practice} />
-              <Suspense fallback={<LoadingProgress />}>
-                <PracticePage />
-              </Suspense>
-            </Template>
-          }
-        />
+        <Route path="*" element={<CatchAll />} />
       </Routes>
     </BrowserRouter>
   );
