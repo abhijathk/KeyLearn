@@ -1,6 +1,7 @@
 import { equal, ok } from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { test } from "node:test";
+import { AK_PACK_MISSING } from "./ak-pack-present.ts";
 import {
   BLEED,
   MILESTONE_CLEAR,
@@ -111,7 +112,7 @@ test("anything with a footprint declares how much room it needs", () => {
   }
 });
 
-test("every model the chapter names is on disk", () => {
+test("every model the chapter names is on disk", { skip: AK_PACK_MISSING }, () => {
   for (const l of LESSONS_2) {
     const named = [
       ...l.canopy,

@@ -71,6 +71,104 @@ export const CHAPTER3_DIMENSIONS: Readonly<
     w: 1.161926091825308,
     d: 0.9776035834266518,
   },
+  "village-houses/01_large_nalukettu": {
+    w: 2.3231,
+    d: 1.7385,
+  },
+  "village-houses/02_long_veranda_house": {
+    w: 2.5926,
+    d: 1.4815,
+  },
+  "village-houses/03_two_storey_house": {
+    w: 1.4940,
+    d: 1.0482,
+  },
+  "village-houses/04_compact_tiled_house": {
+    w: 1.7037,
+    d: 1.4815,
+  },
+  "village-houses/05_wooden_laterite_house": {
+    w: 1.8182,
+    d: 1.6364,
+  },
+  "village-houses/06_simple_thatched_house": {
+    w: 1.8222,
+    d: 1.6000,
+  },
+  "village-houses/07_fisherman_coastal_house": {
+    w: 2.2174,
+    d: 1.5217,
+  },
+  "village-houses/08_workers_house_modest": {
+    w: 1.6042,
+    d: 1.3958,
+  },
+  "village-houses/09_storeroom_outbuilding": {
+    w: 1.3111,
+    d: 1.2667,
+  },
+  "village-houses/10_granary_vayalpura": {
+    w: 1.2083,
+    d: 1.1667,
+  },
+  "village-houses/11_ezhara_veedu_elite": {
+    w: 1.7600,
+    d: 1.5733,
+  },
+  "village-houses/12_courtyard_nadumuttam_house": {
+    w: 2.6250,
+    d: 2.3958,
+  },
+  "village-houses/13_hill_slope_house": {
+    w: 1.6176,
+    d: 1.6176,
+  },
+  "village-houses/14_farmers_house_rustic": {
+    w: 2.4528,
+    d: 1.4151,
+  },
+  "nature/KeralaBambooGroves": {
+    w: 0.9,
+    d: 0.6,
+  },
+  "village-plants/Coconut_Palm": {
+    w: 0.45,
+    d: 0.45,
+  },
+  // Varikkassery Mana (3 Oct 2026): 33.2 x 13.4 x 34.5 m, front toward -Z.
+  "village-houses/Mana": {
+    w: 2.474,
+    d: 2.574,
+  },
+  "village-plants/Arecanut_Palm": {
+    w: 0.3,
+    d: 0.3,
+  },
+  "village-plants/Papaya_Tree": {
+    w: 0.45,
+    d: 0.45,
+  },
+  // Per unit of `h`, which for the pond is units per metre.
+  "village-util/Kulappura_Pond": {
+    w: 15.2,
+    d: 9.6,
+  },
+  "village-plants/Kerala_Fern": {
+    w: 0.9,
+    d: 0.9,
+  },
+  "village-plants/Kerala_Grass_Tuft": {
+    w: 0.7,
+    d: 0.7,
+  },
+  "village-stone/River_Stone": {
+    w: 1.1,
+    d: 0.8,
+  },
+  "village-stone/Mossy_Stone": {
+    w: 1.3,
+    d: 1,
+  },
   "village-stone/Stepping_Stone": {
     w: 4.195217287150835,
     d: 3.079550966699213,
@@ -78,6 +176,10 @@ export const CHAPTER3_DIMENSIONS: Readonly<
   "village-util/Nilavilakku": {
     w: 0.6218439978086168,
     d: 0.5572565087486627,
+  },
+  "village-util/Kerala_Market_Row": {
+    w: 3.61,
+    d: 0.814,
   },
   "village-util/Village_Market": {
     w: 4.271409363094241,
@@ -91,9 +193,10 @@ export const CHAPTER3_DIMENSIONS: Readonly<
     w: 1.835723284502367,
     d: 1.7141797558595009,
   },
+  // The Kerala small temple: 6.37 x 6.38 x 5.61 m.
   "ak-3d-pack/Temple": {
-    w: 1.0467307716056085,
-    d: 1.3554732135975374,
+    w: 1.0,
+    d: 0.88,
   },
   "village-plants/Peepal_Arayal": {
     w: 0.8366678575681791,

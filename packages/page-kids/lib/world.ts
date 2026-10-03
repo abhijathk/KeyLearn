@@ -1,6 +1,7 @@
 import { motionStilled, profileStorageKey } from "@keylearn/pages-shared";
 import * as THREE from "three";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
@@ -30,15 +31,18 @@ import {
   villageDay,
 } from "./chapter1.ts";
 import {
+  CHAPTER3_LANES,
   WHISPER_NODES,
   WHISPER_SPACES,
   whisperFolkOut,
   whisperState,
 } from "./chapter3.ts";
+import { CHAPTER3_DIMENSIONS } from "./chapter3-dimensions.ts";
 import {
   reserveWhisperProps,
   resolveChapter3Layout,
   shopkeeperMarket,
+  villageFootprint,
 } from "./chapter3-layout.ts";
 import { wildState } from "./chapter4.ts";
 import {
@@ -89,6 +93,14 @@ import {
   runLengthFor,
 } from "./run-length.ts";
 import type { DinoScene, HeroScene } from "./scene-kit.ts";
+import {
+  dinoSceneClusters,
+  dinoSceneSets,
+  dinoWaterPlan,
+  heroSceneClusters,
+  heroWaterPlan,
+  type WaterPlan,
+} from "./scene-kit.ts";
 import { hashSeed, mulberry32, SCENE_LESSONS } from "./scene-order.ts";
 import { MIN_STONE_GAP, stoneXFor } from "./stone-x.ts";
 import { createWorldLogo } from "./world-logo.ts";
@@ -576,6 +588,7 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Washing_Stone", "a washing stone"],
   ["Petromax_Lamp", "a lamp"],
   ["Wooden_Bridge", "a wooden bridge"],
+  ["Kerala_Market_Row", "the market"],
   ["Kulappura_Pond", "the village pond"],
   ["Village_Cart", "a cart"],
   // ── THE OUTER FIELDS ─────────────────────────────────────────────────
@@ -1427,6 +1440,15 @@ export type Land = {
    */
   readonly heroScene?: HeroScene;
   readonly dinoScene?: DinoScene;
+  /** How cloudy this land is, 0..1, instead of the day's own weather. */
+  readonly cover?: number;
+  /** This land's own sky, top and at the horizon, over the theme's. */
+  readonly skyTop?: number;
+  readonly skyBottom?: number;
+  /** Where this land's haze starts and is complete. */
+  readonly fogRange?: readonly [number, number];
+  /** This land's own far ranges, over the theme's. */
+  readonly mountains?: { readonly colorNear: number; readonly colorFar: number };
 };
 
 /**
@@ -2541,6 +2563,12 @@ export type WorldTheme = {
      * the model's own colour. Instanced, so it costs nothing.
      */
     readonly tint?: readonly [number, number, number];
+    /**
+     * Recolour it for the land's season, as the scatter does (the land's
+     * foliage tint over leaf and trunk materials). An instanced planting
+     * shares one material and otherwise keeps the model's own colours.
+     */
+    readonly seasonal?: boolean;
     /** Clump size, drawn per verge per point. */
     readonly min: number;
     readonly max: number;
@@ -3082,7 +3110,7 @@ const DEFAULT_VIEW = {
 } as const;
 
 /** The perspective rig this world briefly used; kept, switched off. */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export const DINO_PERSPECTIVE: NonNullable<WorldTheme["perspective"]> = {
     fov: 34,
     shiftY: 0.7,
@@ -3134,7 +3162,7 @@ export const DINO_THEME: WorldTheme = {
     // redwoods whose crowns are high above the dinosaurs) and set pieces
     // (spires, arches, bones, nests, tar pits, crags), by full path.
     ["dino/DinoPlants", 36, 3, 18, "both"],
-    ["dino/DinoSets", 14, 5, 24, "both"],
+    ["dino/DinoSets", 14, 5, 24, "back"],
     // Placed by name along the road: see `landmarkRun`.
     ["dino/DinoLandmarks", 4, 8, 22, "back"],
   ],
@@ -3302,7 +3330,7 @@ export const DINO_THEME: WorldTheme = {
 // KayKit heroes share one rig, so their walk/run/idle clips are loaded from a
 // shared animation GLB and bound to every character by bone name.
 /** The perspective rig this world briefly used; kept, switched off. */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export const HERO_PERSPECTIVE: NonNullable<WorldTheme["perspective"]> = {
     fov: 34,
     shiftY: 0.6,
@@ -3379,10 +3407,10 @@ export const HERO_THEME: WorldTheme = {
     ["HeroBuildings", 4, 9, 18, "back", 2.6],
     // Set pieces along the road, by name: see `landmarkRun`.
     ["HeroLandmarks", 4, 8, 20, "back", 1],
-    ["HeroFlowers", 40, 2.2, 13, "both", 1],
-    ["HeroBushes", 54, 2.5, 15, "both"],
+    ["HeroFlowers", 40, 2.2, 13, "back", 1],
+    ["HeroBushes", 54, 2.5, 15, "back"],
     ["HeroRocks", 20, 3, 18, "both"],
-    ["HeroGrass", 96, 1.5, 14, "both"],
+    ["HeroGrass", 96, 1.5, 14, "back"],
   ],
   // THICK PLANTING ALONG THE ROAD, the way the approved scene has it: dark
   // grass tufts running right up to both edges of the path, wildflowers
@@ -3399,7 +3427,7 @@ export const HERO_THEME: WorldTheme = {
       near: 1.5,
       far: 9,
       stride: 3,
-      verge: "both",
+      verge: "far",
       roadRelative: true,
       lo: 1.1,
       hi: 2,
@@ -3413,7 +3441,7 @@ export const HERO_THEME: WorldTheme = {
       near: 2,
       far: 12,
       stride: 4,
-      verge: "both",
+      verge: "far",
       roadRelative: true,
       lo: 1,
       hi: 1.8,
@@ -3427,7 +3455,7 @@ export const HERO_THEME: WorldTheme = {
       near: 1.8,
       far: 10,
       stride: 5,
-      verge: "both",
+      verge: "far",
       roadRelative: true,
       lo: 1.2,
       hi: 2.2,
@@ -3441,7 +3469,7 @@ export const HERO_THEME: WorldTheme = {
       near: 2.2,
       far: 11,
       stride: 6,
-      verge: "both",
+      verge: "far",
       roadRelative: true,
       lo: 1.2,
       hi: 2.2,
@@ -3455,7 +3483,7 @@ export const HERO_THEME: WorldTheme = {
       near: 1.6,
       far: 8,
       stride: 7,
-      verge: "both",
+      verge: "far",
       roadRelative: true,
       lo: 1.4,
       hi: 2.4,
@@ -3469,10 +3497,40 @@ export const HERO_THEME: WorldTheme = {
       near: 3,
       far: 10,
       stride: 13,
-      verge: "both",
+      verge: "far",
       roadRelative: true,
       lo: 0.9,
       hi: 1.5,
+    },
+    // IN FRONT OF THE PATH only low cover: the characters stand there, and
+    // grass or flowers above their knees hide them.
+    {
+      file: "hero/HeroGrass",
+      node: "Grass_1_A",
+      min: 3,
+      max: 6,
+      spread: 4,
+      near: 1.5,
+      far: 8,
+      stride: 4,
+      verge: "near",
+      roadRelative: true,
+      lo: 0.3,
+      hi: 0.5,
+    },
+    {
+      file: "hero/HeroFlowers",
+      node: "Wildflower_1",
+      min: 1,
+      max: 2,
+      spread: 5,
+      near: 2,
+      far: 8,
+      stride: 8,
+      verge: "near",
+      roadRelative: true,
+      lo: 0.35,
+      hi: 0.55,
     },
   ],
   sceneryScale: 1.2,
@@ -3805,6 +3863,8 @@ export const VILLAGE_THEME: WorldTheme = {
       far: 37,
       stride: 9,
       verge: "near",
+      lo: 0.4,
+      hi: 0.8,
     },
     {
       file: "village-plants/Kerala_Fern",
@@ -3815,17 +3875,20 @@ export const VILLAGE_THEME: WorldTheme = {
       far: 38,
       stride: 11,
       verge: "near",
+      lo: 0.4,
+      hi: 0.8,
     },
     // SPREAD, NOT CLUMPED. One plant at a time and often, rather than a pair
     // every sixteen units -- taro along the bottom of the frame is a margin
     // of planting, and a margin that gathers into knots reads as a hedge with
     // gaps in it. The wide `spread` against the short `stride` is what keeps
     // them irregular without letting them bunch.
-    // BIG ENOUGH TO READ. The taro model is a metre tall, so at the shared
-    // 0.7-1.4 it came out barely taller than the grass beside it and was lost
-    // in the band. 1.2-2.2 puts it at 1.4 to 2.5 units -- the broad leaves
-    // that make the bottom of the frame look like wet Kerala ground rather
-    // than the edge of a lawn.
+    // SMALL, BECAUSE THIS IS THE CAMERA'S SIDE. At z 31-39 the depth falloff
+    // magnifies a plant five or six times, so the old 1.2-2.2 put leaves the
+    // size of the pane across the road and the children (owner, 2 Oct 2026:
+    // "make the plants near user side small, they should not obstruct the
+    // road and the characters"). 0.4-0.75 keeps a low margin of growth under
+    // the word ribbon and nothing taller than the ribbon itself.
     {
       file: "village-plants/Taro_Chembu",
       min: 1,
@@ -3835,8 +3898,8 @@ export const VILLAGE_THEME: WorldTheme = {
       far: 39,
       stride: 6,
       verge: "near",
-      lo: 1.2,
-      hi: 2.2,
+      lo: 0.4,
+      hi: 0.75,
     },
     {
       file: "village-plants/Kerala_Grass_Tuft",
@@ -3847,6 +3910,8 @@ export const VILLAGE_THEME: WorldTheme = {
       far: 26.5,
       stride: 11,
       verge: "near",
+      lo: 0.4,
+      hi: 0.8,
     },
     // ── smallholdings ─────────────────────────────────────────────────
     //
@@ -4132,17 +4197,8 @@ export const VILLAGE_THEME: WorldTheme = {
       // and not in front of it. Five units nearer the road on top of that,
       // so it is met rather than glimpsed.
       { model: "Temple", dx: -1, dz: -19, h: 9, turn: 0.08 },
-      // AND A NILAVILAKKU IN FRONT OF IT, the same lamp that stands at the
-      // shrine in Lesson 14 — which is the point. A village temple and a
-      // roadside god-stone are the same practice at two sizes, and using one
-      // lamp for both says so without a word.
-      //
-      // Bigger here: 2.6 against the shrine's 1.5. A temple's lamp is one
-      // somebody has to bend to light rather than crouch to.
-      //
-      // Five units in front of the building, clear of the steps, on the
-      // temple's own centre line.
-      { model: "village-util/Nilavilakku", dx: -1, dz: -13.5, h: 2.6 },
+      // The lamps in front of it — the stone kalvilakku and the brass vilakku —
+      // come with the temple model itself: see `dressTemple`.
     ],
     houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
     cottages: ["CottageTiled", "CottageBell", "CottageVeranda"],
@@ -4506,6 +4562,38 @@ const shapeLateral = (x: number, off: number): number => {
       return 0;
   }
 };
+/** Where this scene's water is, or null. Set every build. */
+let WATER: WaterPlan | null = null;
+/** The surface of the water in a stream, a lake or a pool, below the road. */
+const WATER_DROP = 0.42;
+/**
+ * HOW FAR THE GROUND IS CUT DOWN FOR WATER at a point.
+ *
+ * A stream is a channel across the road that does NOT cut the road itself:
+ * under the road's own width the ground is left as a causeway, so the
+ * children stay at path level and the bridge sits on it; a lake or a pool is
+ * a basin whose shoreline is where it falls below the water's surface.
+ */
+const waterCarve = (x: number, z: number): number => {
+  if (WATER == null) return 0;
+  let d = 0;
+  for (const sx of WATER.streams) {
+    const half = 4.2 * 1.7;
+    const dx = Math.abs(x - sx);
+    if (dx < half) {
+      const fade = smooth01((Math.abs(z - meander(x)) - 1.7) / 1.4);
+      d = Math.max(d, 1.6 * smooth01(1 - dx / half) * fade);
+    }
+  }
+  for (const pool of [...WATER.lakes, ...WATER.pools]) {
+    const q =
+      ((x - pool.x) / pool.rx) ** 2 + ((z - pool.z) / pool.rz) ** 2;
+    if (q < 1.15) {
+      d = Math.max(d, 2.4 * smooth01((1.15 - q) / 0.6));
+    }
+  }
+  return d;
+};
 const groundY = (x: number) =>
   (Math.sin(x * 0.045) * 1.6 + Math.sin(x * 0.011 + 1.7) * 2.4) * RELIEF +
   shapeRise(x);
@@ -4655,6 +4743,9 @@ function villageHouses(
     cottage: cottage === 1,
   }));
 }
+
+/** When a temple's lamps are lit, besides the sanctum's (owner, 3 Oct 2026). */
+const TEMPLE_HOURS = [18, 20] as const;
 
 const GROUND_DEPTH = 76;
 const GROUND_BACK = -GROUND_DEPTH / 2;
@@ -4968,6 +5059,7 @@ const terrainYBase = (x: number, z: number) => {
   if (SHAPE != null) {
     y += shapeLateral(x, z - meander(x));
   }
+  y -= waterCarve(x, z);
   if (WILD != null) return wildTerrain(WILD, x, z, y, WILD_BANK_Y);
   // ── THE CHANNEL, CUT LAST ────────────────────────────────────────────
   //
@@ -5475,6 +5567,12 @@ export function createKidsWorld(
   // helpers must all be built against the same relief.
   RELIEF = theme.relief ?? 1;
   FAR_BANK = theme.perspective?.farBank ?? theme.farBank ?? 1;
+  WATER =
+    theme.village == null && land.heroScene != null
+      ? heroWaterPlan(land.heroScene.terrain, SCENE_LESSONS * RUN_LEN + 40)
+      : theme.village == null && land.dinoScene != null
+        ? dinoWaterPlan(land.dinoScene, SCENE_LESSONS * RUN_LEN + 40)
+        : null;
   SHAPE =
     theme.village != null
       ? null
@@ -5862,7 +5960,7 @@ export function createKidsWorld(
       const x = Math.sin(day * 12.9898 + n * 78.233) * 43758.5453;
       return x - Math.floor(x);
     };
-    return (h(1) + h(2)) / 2;
+    return land.cover ?? (h(1) + h(2)) / 2;
   })();
   /**
    * How grey the day is, 0..1 — cover past the point where it starts to
@@ -6085,7 +6183,7 @@ export function createKidsWorld(
           // and fog does that regardless of which way it runs. Saturating at 100
           // instead of 120 hides it before it can be seen, which is what lets
           // the camera pitch down far enough to see the children on the road.
-          new THREE.Fog(land.fog, 38, 96)
+          new THREE.Fog(land.fog, ...(land.fogRange ?? [38, 96]))
         : new THREE.Fog(land.fog, 60, 160);
 
   /**
@@ -6853,6 +6951,8 @@ export function createKidsWorld(
   /** And at the top of the arc: haze back in, contrast off. */
   const SKY_NOON_TOP = new THREE.Color(0xa8d8f5);
   const SKY_NOON_LOW = new THREE.Color(0xeaf3e2);
+  // A land with its own sky keeps it: the noon blend would wash it to mint.
+  const ownSky = land.skyTop != null ? 0.12 : 1;
   /** A full moon's milk, and the silver it puts on the light. */
   const SKY_MOONHAZE = new THREE.Color(0x54648f);
   const SKY_MOON_SILVER = new THREE.Color(0xb9c2e0);
@@ -7496,9 +7596,9 @@ export function createKidsWorld(
         // is where you are looking through the least air and so where the
         // cloud has the most to hide.
         flatSky.top
-          .set(PERSP?.skyTop ?? 0x7ec5f2)
+          .set(land.skyTop ?? PERSP?.skyTop ?? 0x7ec5f2)
           .lerp(SKY_DAWN_TOP, warm * 0.8)
-          .lerp(SKY_NOON_TOP, dreamy * 0.3)
+          .lerp(SKY_NOON_TOP, dreamy * 0.3 * ownSky)
           .lerp(HAZE_OVERCAST, overcast * 0.82);
         // A PALE BLUE, NOT A PALE GREEN. This stop used to be 0xd7f0d2, a
         // washed green chosen so the ground could fade into the sky before
@@ -7507,9 +7607,9 @@ export function createKidsWorld(
         // The painted treeline does that job now, so the sky is allowed to
         // be sky all the way down to it.
         flatSky.bottom
-          .set(PERSP?.skyBottom ?? 0xbcdcf0)
+          .set(land.skyBottom ?? PERSP?.skyBottom ?? 0xbcdcf0)
           .lerp(SKY_DAWN_LOW, warm)
-          .lerp(SKY_NOON_LOW, dreamy * 0.34)
+          .lerp(SKY_NOON_LOW, dreamy * 0.34 * ownSky)
           .lerp(HAZE_OVERCAST, overcast * 0.7);
       }
       // The stars, and the two things that put them out: twilight still in
@@ -7558,11 +7658,19 @@ export function createKidsWorld(
       // again at dusk — exactly when someone is most likely to be watching
       // the light change.
       (scene.fog as THREE.Fog).near =
-        FOG_NEAR_DAY + (FOG_NEAR_NIGHT - FOG_NEAR_DAY) * nightLook;
+        land.fogRange != null && !night
+          ? land.fogRange[0]
+          : FOG_NEAR_DAY + (FOG_NEAR_NIGHT - FOG_NEAR_DAY) * nightLook;
       if (night || PERSP != null) {
         // On a perspective camera the ground's far edge, the ranges and the
         // sky all meet at ONE horizon, so the haze IS the sky's bottom stop.
         (scene.fog as THREE.Fog).color.copy(flatSky.bottom);
+      } else if (land.fogRange != null) {
+        // A land with its own haze: its colour, not the day's mint, warmed a
+        // little by a low sun.
+        (scene.fog as THREE.Fog).color
+          .set(land.fog)
+          .lerp(HAZE_LOW_SUN, warm * 0.25);
       } else {
         (scene.fog as THREE.Fog).color
           .copy(FOG_HAZE_DAY)
@@ -7711,7 +7819,12 @@ export function createKidsWorld(
           ? 0x6a7396
           : new THREE.Color(land.fog)
               .lerp(new THREE.Color(0xf6d9a6), warm)
-              .lerp(new THREE.Color(0xe8eeda), dreamy * 0.3),
+              // A land that sets its own haze keeps it: the noon green-white
+              // would turn a dusk's rose haze to mint.
+              .lerp(
+                new THREE.Color(0xe8eeda),
+                dreamy * 0.3 * (land.fogRange != null ? 0.15 : 1),
+              ),
     );
     sun.intensity = dark ? (night ? 1.25 * moonGrade : 1.9) : 2.4;
     sunBase = sun.intensity;
@@ -7754,6 +7867,37 @@ export function createKidsWorld(
   // seconds so nightfall is an event rather than a switch.
   const nightLayer = new THREE.Group();
   nightLayer.visible = false;
+  /**
+   * THE TEMPLE'S OWN FLAMES, the meshes in the temple set. Shown by the
+   * world's hour, not by night: the evening ones from six to eight, the
+   * sanctum's always. See `dressTemple`.
+   */
+  const templeFlames: {
+    node: THREE.Object3D;
+    always: boolean;
+    scale: THREE.Vector3;
+    phase: number;
+  }[] = [];
+  /** A flame: a teardrop standing on its base, one unit across. */
+  const templeFlameGeo = (() => {
+    const g = new THREE.SphereGeometry(0.5, 10, 8);
+    const pos = g.getAttribute("position") as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i);
+      // Narrow to a point at the top.
+      const k = y > 0 ? 1 - y * 1.4 : 1;
+      pos.setX(i, pos.getX(i) * k);
+      pos.setZ(i, pos.getZ(i) * k);
+      pos.setY(i, y + 0.5);
+    }
+    g.computeVertexNormals();
+    return g;
+  })();
+  const templeFlameMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(1.0, 0.62, 0.18).multiplyScalar(1.6),
+    toneMapped: false,
+    fog: false,
+  });
   scene.add(nightLayer);
   let nightBlend = 0; // 0 = day, 1 = full night; eased in tick()
   /**
@@ -9179,9 +9323,47 @@ export function createKidsWorld(
    * alone cannot see that; testing the footprint can.
    */
   const onRoad = (x: number, z: number, file = "", reach = 0) =>
-    roadClear > 0 &&
-    !ROAD_OK.test(file) &&
-    Math.abs(z - meander(x)) < roadClear + reach;
+    (roadClear > 0 &&
+      !ROAD_OK.test(file) &&
+      Math.abs(z - meander(x)) < roadClear + reach) ||
+    inManaApproach(x, z, reach);
+
+  /**
+   * THE WAY INTO THE MANA (owner, 3 Oct 2026): "the road to the gate should be
+   * clear and show a worn laterite path". From the road's edge, through the
+   * gate, to the poomukham steps, nothing is planted - not the scatter, not
+   * the thickets, not the chapter's own props. Taken from the RESOLVED
+   * placements, because the gate is moved to line up with the house.
+   * A function declaration, so `onRoad` (written far above) can call it.
+   */
+  function manaApproach(): { x: number; z0: number; z1: number } | null {
+    const self = manaApproach as unknown as {
+      c?: { x: number; z0: number; z1: number } | null;
+    };
+    if (self.c !== undefined) return self.c;
+    self.c = null;
+    if (CHAPTER == null || CHAPTER_N !== 3) return null;
+    const ps = chapterPlacements();
+    const mana = ps.find((p) => /village-houses\/Mana$/.test(p.model));
+    if (mana == null) return null;
+    const n = lessonAt(mana.x, CHAPTER).n;
+    const gate = ps.find(
+      (p) => /Estate_Gate$/.test(p.model) && lessonAt(p.x, CHAPTER).n === n,
+    );
+    const fp = villageFootprint(mana, perspective);
+    self.c = { x: gate?.x ?? mana.x, z0: fp.z + fp.d / 2, z1: -5 };
+    return self.c;
+  }
+  function inManaApproach(x: number, z: number, reach = 0): boolean {
+    if (CHAPTER_N !== 3) return false;
+    const a = manaApproach();
+    return (
+      a != null &&
+      Math.abs(x - a.x) < 5 + reach &&
+      z > a.z0 - 0.5 &&
+      z < a.z1 + reach
+    );
+  }
 
   /**
    * Pulls a scattered plant's colours toward this land's foliage.
@@ -9461,7 +9643,7 @@ export function createKidsWorld(
       ...(CHAPTER == null
         ? []
         : chapterPlacements()
-            .filter((p) => /House|Cottage/i.test(p.model))
+            .filter((p) => /House|Cottage|village-houses\//i.test(p.model))
             .map((p) => ({ x: p.x, z: p.z + 9, rx: 13, rz: 7.5 }))),
     ];
     // ── AND THE GROUND IN FRONT OF A SHRINE ──────────────────────────
@@ -9536,7 +9718,12 @@ export function createKidsWorld(
         // Half the model's depth forward of its centre. Measured off the
         // file: 1.74 deep for 1.08 tall, so half-depth is 0.806 of the
         // height, and the depth falloff scales it like everything else.
-        const front = m.z + 0.806 * m.h * perspective(m.z);
+        // 1.287 for the Varikkassery Mana (34.5 m deep, 13.4 m tall).
+        const front =
+          m.z +
+          (/village-houses\/Mana$/.test(m.model) ? 1.287 : 0.806) *
+            m.h *
+            perspective(m.z);
         yards.push({
           x: gx,
           z: (-12 + front) / 2,
@@ -9573,7 +9760,9 @@ export function createKidsWorld(
         });
       }
     }
-    const yardAt = (x: number, z: number): number => {
+    const yardAt = (x: number, z: number): number =>
+      Math.max(yardAt0(x, z), villageWaysAt(x, z));
+    const yardAt0 = (x: number, z: number): number => {
       let w = 0;
       for (const y of yards) {
         const d = Math.hypot((x - y.x) / y.rx, (z - y.z) / y.rz);
@@ -9638,6 +9827,121 @@ export function createKidsWorld(
         best = Math.max(best, edge * Math.min(1, fade * 1.4));
       }
       return best;
+    };
+    // ── THE VILLAGE'S CROSS ROADS, DOOR PATHS AND THE MANA'S WORN FORECOURT ──
+    //
+    // (Chapter 3, owner 2-3 Oct 2026, from the approved village mock.) Painted
+    // into the same road weight the main road uses, through the ground mix:
+    // a ribbon laid over this ground would have its own edge, and the ground
+    // mix is built so that nothing here has one. Returns 0..1 of "road".
+    //
+    // The ground is a real plane under an orthographic camera and does not
+    // shrink with distance by itself, so each lane's width follows
+    // `perspective(z)` (full at the depth its houses stand, z -22): wide at
+    // its mouth, narrowing as it runs back, and fading out well short of the
+    // ground's end so it dissolves into the fields rather than stopping.
+    const ss01 = (e0: number, e1: number, v: number) => {
+      const t = Math.max(0, Math.min(1, (v - e0) / Math.max(1e-6, e1 - e0)));
+      return t * t * (3 - 2 * t);
+    };
+    type Way = { x: number; z0: number; z1: number; hw: number; alongZ: boolean };
+    let ways: Way[] | null = null;
+    let manas: { x: number; zFront: number }[] = [];
+    const buildWays = () => {
+      ways = [];
+      manas = [];
+      if (CHAPTER == null || CHAPTER_N !== 3) return;
+      for (const p of placements(CHAPTER, perspective)) {
+        if (!p.model.startsWith("village-houses/")) continue;
+        const fp = villageFootprint(p, perspective);
+        const turn = p.turn ?? 0;
+        if (Math.abs(turn) < 0.1 || Math.abs(Math.abs(turn) - Math.PI) < 0.1) {
+          const grand = /\/Mana$/.test(p.model);
+          const zFront = fp.z + fp.d / 2;
+          ways.push({
+            x: p.x,
+            z0: zFront,
+            z1: -6,
+            hw: grand ? 3.4 : 1.7,
+            alongZ: true,
+          });
+          if (grand) manas.push({ x: p.x, zFront });
+        } else {
+          const toRight = turn < 0;
+          const lane = CHAPTER3_LANES.reduce((u, v) =>
+            Math.abs(v.x - p.x) < Math.abs(u.x - p.x) ? v : u,
+          );
+          const laneEdge =
+            lane.x +
+            ((toRight ? -1 : 1) * (lane.hw * perspective(p.z))) /
+              perspective(-22);
+          const edge = p.x + (toRight ? fp.w / 2 : -fp.w / 2);
+          ways.push({
+            x: Math.min(laneEdge, edge),
+            z0: Math.max(laneEdge, edge), // reused as the far x
+            z1: p.z,
+            hw: 1.7,
+            alongZ: false,
+          });
+        }
+      }
+    };
+    /** Wear: 0..1 trodden bare earth in front of the Mana's steps. */
+    const manaWearAt = (x: number, z: number): number => {
+      if (ways == null) buildWays();
+      let w = 0;
+      for (const m of manas) {
+        const d = Math.hypot((x - m.x) / 9.5, (z - (m.zFront - 1.2)) / 3.2);
+        w = Math.max(w, 1 - ss01(0.5, 1, d));
+      }
+      const ap = manaApproach();
+      if (ap != null && z < ap.z1 && z > ap.z0) {
+        w = Math.max(w, 0.6 * (1 - ss01(1.2, 2.8, Math.abs(x - ap.x))));
+      }
+      return w;
+    };
+    const villageWaysAt = (x: number, z: number): number => {
+      if (CHAPTER_N !== 3 || z > -3.5) return 0;
+      if (ways == null) buildWays();
+      let best = 0;
+      for (const lane of CHAPTER3_LANES) {
+        const back = -z - 5;
+        if (back < 0) continue;
+        const f = back / 33;
+        if (f > 1) continue;
+        // A ragged verge, not a ruled one: grass creeps in and out of an
+        // unmade lane, and the cart ruts wear it barest down the middle.
+        const hw =
+          ((lane.hw * perspective(z)) / perspective(-22)) *
+          (1 + 0.16 * groundNoise(z * 0.37 + lane.x, x * 0.11));
+        const cx = lane.x + Math.sin(back * 0.21 + lane.x) * 0.5;
+        // The lane's mouth flares into the main road rather than butting it.
+        const hwm = hw * (1 + 0.9 * (1 - ss01(0, 5, back)));
+        const edge = 1 - ss01(hwm * 0.7, hwm + 1.6, Math.abs(x - cx));
+        best = Math.max(best, edge * (1 - ss01(0.5, 0.97, f)));
+      }
+      for (const w of ways!) {
+        if (w.alongZ) {
+          if (z > w.z1 + 1 || z < w.z0 - 1) continue;
+          const hw = w.hw * (1 - 0.3 * Math.max(0, Math.min(1, (z - w.z1) / (w.z0 - w.z1 || 1))));
+          best = Math.max(best, 1 - ss01(hw * 0.5, hw + 1.1, Math.abs(x - w.x)));
+        } else {
+          if (x < w.x - 1 || x > w.z0 + 1) continue;
+          best = Math.max(best, 1 - ss01(w.hw * 0.5, w.hw + 1.1, Math.abs(z - w.z1)));
+        }
+      }
+      const ap = manaApproach();
+      if (ap != null && z > ap.z0 - 1) {
+        // The worn laterite way: full road where the feet go, ragged edge,
+        // and a MOUTH where it leaves the road - it flares out over the
+        // verge the way a much-used turning does, so the two surfaces run
+        // into each other instead of meeting at a line (owner, 3 Oct 2026).
+        const mouth = ss01(-10.5, -5.5, z);
+        const hwp =
+          (2.6 + groundNoise(z * 0.7, 4.2) * 0.45) * (1 + 1.4 * mouth);
+        best = Math.max(best, 1 - ss01(hwp * 0.55, hwp + 1.6, Math.abs(x - ap.x)));
+      }
+      return Math.max(best, manaWearAt(x, z));
     };
     const tmp = new THREE.Color();
     const noise2 = groundNoise;
@@ -9840,7 +10144,12 @@ export function createKidsWorld(
         // read as a rug thrown on the grass, and what this is meant to be is
         // ground that simply stopped growing.
         const worn2 = yardAt(x, z);
-        const roadOrYard = Math.max(road, worn2, trackAt(x, z));
+        const roadOrYard = Math.max(
+          road,
+          worn2,
+          trackAt(x, z),
+          villageWaysAt(x, z),
+        );
         const field = Math.max(0, 1 - roadOrYard - litter - dry);
         const sum = roadOrYard + litter + dry + field || 1;
         mix[i * 4] = field / sum;
@@ -9849,6 +10158,11 @@ export function createKidsWorld(
         mix[i * 4 + 3] = dry / sum;
         // See `bareHue`: the bare maps keep their own colour. Written into
         // the colour array before it is uploaded, so it costs nothing.
+        // The Mana's forecourt is not just bare: it is scuffed dark by feet.
+        const scuff = CHAPTER_N === 3 ? manaWearAt(x, z) : 0;
+        if (scuff > 0) {
+          for (let c = 0; c < 3; c++) colors[i * 3 + c] *= 1 - 0.22 * scuff;
+        }
         const keep = (1 - field / sum) * bareHue;
         if (keep > 0) {
           for (let c = 0; c < 3; c++) {
@@ -10416,8 +10730,8 @@ export function createKidsWorld(
         }
         let frameNo = 0;
         let lastCall = 0;
-        let slowEma = 16;
-        let calls = 0;
+        let slowRun = 0;
+        let reflBackAt = 0;
         const viewProj = new THREE.Matrix4();
         const frustum = new THREE.Frustum();
         // THE MIRROR DRAWS ONLY WHAT IS NEAR THE WATER. The whole scene is
@@ -10475,6 +10789,14 @@ export function createKidsWorld(
         };
         let markTick = 0;
         const clearKeep = new THREE.Color();
+        // People move in and out of the mirror's region between full scans, so
+        // they are put on its layer every time it draws.
+        const markMovers = () => {
+          const on = (o: THREE.Object3D) => o.layers.enable(REFLECT_LAYER);
+          if (player != null) player.wrap.traverse(on);
+          for (const f of followers) f.rig.wrap.traverse(on);
+          for (const f of roadWalkers) if (f.wrap.visible) f.wrap.traverse(on);
+        };
         // RUN BEFORE THE FRAME, NOT FROM INSIDE THE WATER'S OWN DRAW. Drawn
         // from the water's onBeforeRender it came out empty: only the
         // shader-only sheets (haze) landed in the target and every ordinary
@@ -10496,18 +10818,27 @@ export function createKidsWorld(
           // under about 18 a second (after a settling period) while it is on, and there is a switch
           // for measuring without it.
           const now = performance.now();
+          // NEVER OFF FOR GOOD. A hitch (a lesson building, a tab coming back,
+          // the machine busy for a moment) used to count against the mirror
+          // and switch it off until the page was reloaded, which is why the
+          // reflection seemed to come and go (owner, 1 Oct 2026). Now it needs
+          // a long run of genuinely slow frames to step aside, and it comes
+          // back by itself after twenty seconds.
           if (lastCall > 0) {
-            slowEma = slowEma * 0.96 + Math.min(200, now - lastCall) * 0.04;
+            const gap = now - lastCall;
+            slowRun = gap > 70 && gap < 400 ? slowRun + 1 : Math.max(0, slowRun - 2);
             if (
-              ++calls > 300 &&
-              slowEma > 55 &&
+              slowRun > 90 &&
               !opts_.keepOn &&
               !(window as unknown as Record<string, unknown>).__keepWaterRefl
             ) {
               reflOff = true;
+              slowRun = 0;
+              reflBackAt = now + 20000;
             }
           }
           lastCall = now;
+          if (reflOff && now > reflBackAt) reflOff = false;
           if (
             reflOff ||
             (window as unknown as Record<string, unknown>).__noWaterRefl
@@ -10561,6 +10892,7 @@ export function createKidsWorld(
           if (opts_.shadowOff) r.shadowMap.autoUpdate = false;
           if (opts_.clip) r.clippingPlanes = [clip];
           if (markTick++ % 45 === 0) markReflectables();
+          markMovers();
           const prevBackground = scene.background;
           const prevClearAlpha = r.getClearAlpha();
           r.getClearColor(clearKeep);
@@ -11008,6 +11340,17 @@ export function createKidsWorld(
     .detectSupport(renderer);
   serveTranscoderFromUrl(ktx2);
   loader.setKTX2Loader(ktx2);
+  /**
+   * Draco geometry, for the Varikkassery Mana (3 Oct 2026): 180 KB as shipped
+   * against 442 KB re-encoded as meshopt. The decoder is the wasm build from
+   * three itself, served from our own origin (`/kids-assets/draco/`) so the
+   * page never fetches code from a third party, and it runs as a blob worker
+   * under the existing `worker-src 'self' blob:` and `wasm-unsafe-eval`
+   * grants - no new CSP permission. The wasm decoder is the one used (the JS fallback would
+   * need eval).
+   */
+  const draco = new DRACOLoader().setDecoderPath(`${ASSETS}/draco/`);
+  loader.setDRACOLoader(draco);
   // The title sign in the top-right corner — see `world-logo.ts`. Drawn by
   // this renderer as a second pass, so it costs no context of its own.
   // Two thirds the size on the short, wide hero and dino panes.
@@ -11147,7 +11490,8 @@ export function createKidsWorld(
         // The mangrove ships its own normals, and its leaf cards' are bent
         // out from each lobe so the canopy shades as one mass; recomputing
         // them from the cards turns it back into a pile of flat quads.
-        if (!/\/Mangrove_(?:Kandal|Large)\.glb$/.test(url)) {
+        const isVillageHouse = /\/village-houses\/[^/]+\.glb(?:[?#].*)?$/.test(url);
+        if (!isVillageHouse && !/\/Mangrove_(?:Kandal|Large)\.glb$/.test(url)) {
           try {
             weldAndShade(m);
           } catch {
@@ -11155,7 +11499,9 @@ export function createKidsWorld(
           }
         }
         const mat = m.material as THREE.MeshStandardMaterial;
-        if (mat) {
+        // Building exports carry intentional hard edges and material finishes.
+        // Preserve those instead of applying the organic-model shading treatment.
+        if (mat && !isVillageHouse) {
           mat.metalness = 0.05;
           mat.roughness = Math.max(0.65, mat.roughness ?? 0.8);
         }
@@ -13645,6 +13991,24 @@ export function createKidsWorld(
 
   /** Mixers for props that are alive — see `stand`. Driven by the tick. */
   const propMixers: THREE.AnimationMixer[] = [];
+  /**
+   * THE MANA'S DOORS KEEP THE VILLAGE'S HOURS (owner, 3 Oct 2026).
+   *
+   * The Varikkassery Mana ships four one-second clips, an open and a close for
+   * each of its front and back door pairs. They are driven from the world's
+   * own clock, the one the population uses, so the "Night" button shuts them
+   * too: the front doors stand open through the day and are closed at dusk,
+   * the back doors a little narrower. A building seen mid-lesson is put
+   * straight into the state its hour calls for rather than swinging as the
+   * child arrives.
+   */
+  const doorRigs: {
+    mixer: THREE.AnimationMixer;
+    clips: Map<string, THREE.AnimationClip>;
+    open: { Front: boolean | null; Back: boolean | null };
+  }[] = [];
+  const DOOR_HOURS = { Front: [6.5, 19], Back: [7, 17.5] } as const;
+  let doorCheck = 0;
 
   /**
    * WHAT STANDS IN THE WAY, so that what moves can go round it.
@@ -14130,6 +14494,28 @@ export function createKidsWorld(
     }
   };
 
+  /** The sacred grove's ground, from its own placed trees, padded a little. */
+  let kavuCache: { x0: number; x1: number; z0: number; z1: number } | null | undefined;
+  const kavuBounds = () => {
+    if (kavuCache !== undefined) return kavuCache;
+    const g = CHAPTER == null ? [] : chapterPlacements().filter((p) => p.grove);
+    kavuCache =
+      g.length === 0
+        ? null
+        : {
+            x0: Math.min(...g.map((p) => p.x)) - 1.5,
+            x1: Math.max(...g.map((p) => p.x)) + 1.5,
+            z0: Math.min(...g.map((p) => p.z)) - 1,
+            z1: Math.min(-11.5, Math.max(...g.map((p) => p.z)) + 1.5),
+          };
+    return kavuCache;
+  };
+  /** A wander target inside the kavu is pushed out to its nearer side. */
+  const kavuOut = (x: number, z: number): number => {
+    const k = kavuBounds();
+    if (k == null || x < k.x0 - 2 || x > k.x1 + 2 || z < k.z0 - 2 || z > k.z1 + 2) return x;
+    return x - k.x0 < k.x1 - x ? k.x0 - 3 : k.x1 + 3;
+  };
   /** Is this spot clear of everything built? */
   const isClear = (x: number, z: number, need = 1.5): boolean => {
     // Nothing is planted in the river. The channel is a strip, not a disc,
@@ -15434,6 +15820,23 @@ export function createKidsWorld(
    * the lessons those glimpses were allowed in — never Temple Street — and
    * the crossing (Chapter 4's 7 and 8) is `tickStay`'s, not the routines'.
    */
+  /**
+   * A HOUSE HAUNT STANDS AT THE HOUSE'S FRONT, not a fixed step from its
+   * centre. Chapter 3's resolver records each building's drawn depth; the
+   * other chapters do not, and the Varikkassery Mana is so deep that 5.4 in
+   * front of its centre is inside it (lesson 17, 3 Oct 2026). So the new
+   * houses get their depth from the measured table here.
+   */
+  const withHouseDepth = <T extends { model: string; z: number; h: number; depth?: number; turn?: number }>(
+    ps: readonly T[],
+  ): T[] =>
+    ps.map((p) => {
+      const dim = CHAPTER3_DIMENSIONS[p.model];
+      if (p.depth != null || dim == null || !/village-houses\//.test(p.model))
+        return p;
+      const side = Math.abs(Math.sin(p.turn ?? 0)) > 0.5;
+      return { ...p, depth: (side ? dim.w : dim.d) * p.h * perspective(p.z) };
+    });
   const kuttiArea = (n: number): boolean => {
     if (CHAPTER_N === 3) return n === 4 || n === 7 || n === 8;
     if (CHAPTER_N === 4) return n === 2 || n === 5 || n === 6;
@@ -15456,7 +15859,9 @@ export function createKidsWorld(
     const rimR = a.h != null ? a.h * WELL_RIM_R : 2.2;
     const step =
       a.haunt === "house"
-        ? 5.4
+        ? a.depth != null
+          ? a.depth * 0.5 + 1.4
+          : 5.4
         : a.haunt === "tree"
           ? 2.2
           : a.haunt === "well"
@@ -17682,7 +18087,7 @@ export function createKidsWorld(
       // A charge is deliberately exempt — that is aimed at the child, it
       // stops short of them anyway, and an animal that broke off a charge to
       // avoid a stone would look like it had changed its mind.
-      w.tx = clearOfMarkers(w.tx, nz);
+      w.tx = kavuOut(clearOfMarkers(w.tx, nz), nz);
       // NOT INTO THE RIVER. Chapter 4's river opens behind the road, and a
       // wander target out there walked a buffalo off the bank to hang over
       // the water (seen in Lesson 36). A wet target is drawn back toward the
@@ -20189,7 +20594,7 @@ export function createKidsWorld(
 
     // A real little flock grazing off the trail (Dino Run). White, brown and
     // black sheep in a few clusters plus the odd loner, heads down eating.
-    if (theme.sheep) {
+    if (theme.sheep && land.dinoScene == null) {
       let sheepGltf: Awaited<ReturnType<typeof loadModel>> | null = null;
       try {
         sheepGltf = await loadModel(
@@ -20507,11 +20912,10 @@ export function createKidsWorld(
         : null;
     const groundOnly: (RegExp | null)[] = [];
     const groundSpecs = [
+      // A hero scene's forest is planted as instanced clusters (see
+      // `sceneClusters`), so there is no scatter of whole trees for it.
       ...(treeKinds != null
-        ? treeKinds.map(([only, count]) => {
-            groundOnly.push(only);
-            return [land.trees, count, 6, 26, "back"] as const;
-          })
+        ? []
         : (() => {
             groundOnly.push(null);
             return [
@@ -20532,7 +20936,16 @@ export function createKidsWorld(
               ] as const,
             ];
           })()),
-      ...theme.ground.map(
+      ...theme.ground
+        // A Dino Run scene plants its own vegetation (dinoSceneClusters); the
+        // old bushes, rocks, flowers and plant scatter would sit over it.
+        .filter(
+          ([file]) =>
+            land.dinoScene == null ||
+            String(file) === "dino/DinoSets" ||
+            String(file) === "dino/DinoLandmarks",
+        )
+        .map(
         ([file, count, ...rest]) =>
           [
             file,
@@ -20543,6 +20956,16 @@ export function createKidsWorld(
     ];
     while (groundOnly.length < groundSpecs.length) {
       groundOnly.push(null);
+    }
+    // A Dino Run scene sets out only the rocks and landmarks its record names:
+    // an arch in a river valley, or bones in a canyon of arches, is a different
+    // scene.
+    if (land.dinoScene != null) {
+      const only = dinoSceneSets(land.dinoScene);
+      groundSpecs.forEach(([file], gi) => {
+        if (String(file) === "dino/DinoSets") groundOnly[gi] = only.sets;
+        if (String(file) === "dino/DinoLandmarks") groundOnly[gi] = only.landmarks;
+      });
     }
     const groundGltfs = await Promise.all(
       groundSpecs.map(async ([file]) => {
@@ -20850,6 +21273,104 @@ export function createKidsWorld(
     // its own furniture: a dry-stone wall up a hillside, a hedge down a sunken
     // lane, a fence along a ridge's edge. They are placed at fixed distances
     // along the ten lessons, from the scene, so a child walks towards them.
+    // THE WATER OF A DINO RUN SCENE: a river behind the road, a lake, the sea.
+    // The ground is cut for it (`waterCarve`); this is only its surface.
+    if (land.dinoScene != null && CHAPTER == null && WATER != null) {
+      const waterMat = new THREE.MeshStandardMaterial({
+        color: WATER.color ?? 0x3f9ed8,
+        transparent: true,
+        opacity: 0.86,
+        roughness: 0.12,
+        metalness: 0,
+        emissive: 0x1a5a88,
+        emissiveIntensity: 0.25,
+      });
+      for (const pl of WATER.lakes) {
+        let low = Infinity;
+        for (let k = 0; k < 16; k++) {
+          const a = (k / 16) * Math.PI * 2;
+          const bx = pl.x + Math.cos(a) * pl.rx * 1.12;
+          const bz = pl.z + Math.sin(a) * pl.rz * 1.12;
+          low = Math.min(low, terrainY(bx, bz) + waterCarve(bx, bz));
+        }
+        const geo = new THREE.CircleGeometry(1, 48);
+        geo.scale(pl.rx * 1.12, pl.rz * 1.12, 1);
+        geo.rotateX(-Math.PI / 2);
+        const m = new THREE.Mesh(geo, waterMat);
+        m.position.set(pl.x, low - 0.06, pl.z);
+        m.renderOrder = -1;
+        scene.add(m);
+      }
+    }
+    // THE BIG SET PIECES OF A DINO RUN SCENE: the volcano behind an ash scene's
+    // road, the geysers of a geyser scene. Both are in DinoLandmarks, and both
+    // stand well back so the road stays clear.
+    if (land.dinoScene != null && CHAPTER == null) {
+      const ds = land.dinoScene;
+      const wants: [RegExp, number, number, number, number][] = [];
+      // node, spacing along the road, depth behind it, scale, stagger
+      if (ds.shape === "ash" || ds.landmarks.includes("lava")) {
+        wants.push([/^Volcano/, 130, 24, 0.15, -38]);
+      }
+      if (ds.landmarks.includes("geyser")) {
+        wants.push([/^Geyser/, 55, 15, 1.2, 20]);
+      }
+      if (wants.length > 0) {
+        let g: Awaited<ReturnType<typeof loadModel>> | null = null;
+        try {
+          g = await loadModel(`${ASSETS}/models/dino/DinoLandmarks.glb`);
+        } catch {
+          g = null;
+        }
+        const rnd = mulberry32(hashSeed("dino-setpiece", opts.sceneIndex ?? 0));
+        for (const [node, gap, depth, scale, stagger] of wants) {
+          const src = g?.scene.children.find((c) => node.test(c.name));
+          if (src == null) {
+            continue;
+          }
+          for (let x = 60 + stagger; x < TRAIL_END - 20; x += gap) {
+            const v = src.clone();
+            const box = new THREE.Box3().setFromObject(v);
+            v.position.sub(
+              new THREE.Vector3(
+                (box.min.x + box.max.x) / 2,
+                box.min.y,
+                (box.min.z + box.max.z) / 2,
+              ),
+            );
+            // The haze would swallow a mountain this far back, and the
+            // mock's volcano is a plain dark cone: it takes the haze colour
+            // itself, only a little.
+            if (node.source.includes("Volcano")) {
+              v.traverse((o) => {
+                const m = o as THREE.Mesh;
+                if (m.isMesh && m.material != null) {
+                  const mat = (m.material as THREE.MeshStandardMaterial).clone();
+                  mat.fog = false;
+                  mat.color.lerp(new THREE.Color(land.fog), 0.18);
+                  m.material = mat;
+                }
+              });
+            }
+            const wrap = new THREE.Group();
+            wrap.add(v);
+            const px = x + (rnd() - 0.5) * 20;
+            const z = meander(px) - (depth + rnd() * 6);
+            wrap.position.set(
+              px,
+              surfaceY(px, z) - (node.source.includes("Volcano") ? 2.2 : 0.3),
+              z,
+            );
+            wrap.rotation.y = rnd() * Math.PI * 2;
+            wrap.scale.setScalar(
+              scale * perspective(z) * theme.sceneryScale,
+            );
+            scene.add(wrap);
+            characterRoots.add(wrap);
+          }
+        }
+      }
+    }
     if (land.heroScene != null && CHAPTER == null) {
       const hs = land.heroScene;
       const pieceRand = mulberry32(hashSeed("setpiece", opts.sceneIndex ?? 0));
@@ -20861,6 +21382,10 @@ export function createKidsWorld(
         depth: number,
         scale: number,
         yaw = 0,
+        /** An absolute height, for things that stand on water, not ground. */
+        absY: number | null = null,
+        /** Sunk into the ground by this much, for a deck flush with the road. */
+        sink = 0,
       ) => {
         let g = loaded.get(file);
         if (g == null) {
@@ -20889,7 +21414,7 @@ export function createKidsWorld(
         const wrap = new THREE.Group();
         wrap.add(v);
         const z = meander(x) - depth;
-        wrap.position.set(x, surfaceY(x, z), z);
+        wrap.position.set(x, (absY ?? surfaceY(x, z)) - sink, z);
         wrap.rotation.y = yaw;
         const d = perspective(z);
         wrap.scale.setScalar(scale * d * theme.sceneryScale);
@@ -20897,7 +21422,9 @@ export function createKidsWorld(
         scene.add(wrap);
         characterRoots.add(wrap);
       };
-      const at = (n: number) => 40 + ((n + 0.5) / 5) * (TRAIL_END - 80);
+      const SPOTS = 11;
+      const at = (n: number) =>
+        40 + ((n + 0.5) / SPOTS) * (TRAIL_END - 80);
       const along = (from: number, to: number, stride: number) => {
         const xs: number[] = [];
         for (let x = from; x < to; x += stride) {
@@ -20905,7 +21432,8 @@ export function createKidsWorld(
         }
         return xs;
       };
-      // WHAT THE SCENE IS KNOWN FOR, five times along its road.
+      // WHAT THE SCENE IS KNOWN FOR, eleven times along its road: one in every
+      // stretch of about sixty units, so one is almost always in the frame.
       const landmarks: Record<
         string,
         readonly [string, RegExp, number, number]
@@ -20919,7 +21447,7 @@ export function createKidsWorld(
       };
       const lm = landmarks[hs.landmark];
       if (lm != null) {
-        for (let n = 0; n < 5; n++) {
+        for (let n = 0; n < SPOTS; n++) {
           await piece(
             lm[0],
             lm[1],
@@ -20930,7 +21458,7 @@ export function createKidsWorld(
           );
         }
         if (hs.landmark === "campfire") {
-          for (let n = 0; n < 5; n++) {
+          for (let n = 0; n < SPOTS; n++) {
             await piece(
               "HeroLandmarks",
               /^FallenLog/,
@@ -20957,8 +21485,79 @@ export function createKidsWorld(
           await piece("HeroLandmarks", fu[0], x, fu[1], fu[3]);
         }
       }
+      // ── THE WATER ──────────────────────────────────────────────────────
+      //
+      // The ground is already cut for it (`waterCarve`); here is its surface,
+      // and what stands in or over it: the bridge on a meadow's causeway, the
+      // dock and boats on a lake, reeds and lily pads at the shore.
+      if (WATER != null) {
+        const ice = hs.season === "winter";
+        const waterMat = new THREE.MeshStandardMaterial({
+          color: ice ? 0xcfe6f2 : (WATER.color ?? 0x3f9ed8),
+          transparent: !ice,
+          opacity: ice ? 1 : 0.84,
+          roughness: ice ? 0.35 : 0.12,
+          metalness: 0,
+          emissive: ice ? 0x000000 : 0x1a5a88,
+          emissiveIntensity: ice ? 0 : 0.28,
+        });
+        const sheet = (geo: THREE.BufferGeometry, x: number, y: number, z: number) => {
+          geo.rotateX(-Math.PI / 2);
+          const m = new THREE.Mesh(geo, waterMat);
+          m.position.set(x, y, z);
+          m.receiveShadow = true;
+          m.renderOrder = -1;
+          scene.add(m);
+        };
+        /** The level a basin's water stands at: its lowest shore, less a hair. */
+        const levelOf = (pl: { x: number; z: number; rx: number; rz: number }) => {
+          let low = Infinity;
+          for (let k = 0; k < 16; k++) {
+            const a = (k / 16) * Math.PI * 2;
+            const bx = pl.x + Math.cos(a) * pl.rx * 1.12;
+            const bz = pl.z + Math.sin(a) * pl.rz * 1.12;
+            low = Math.min(low, terrainY(bx, bz) + waterCarve(bx, bz));
+          }
+          return low - 0.06;
+        };
+        for (const sx of WATER.streams) {
+          const level = terrainY(sx, meander(sx)) - WATER_DROP;
+          sheet(new THREE.PlaneGeometry(4.2 * 3.4, 70), sx, level, -10.5);
+          // The bridge on its causeway, its deck flush with the path.
+          await piece("HeroLandmarks", /^Bridge/, sx, 0, 1.0, 0, null, 1.3);
+        }
+        for (const [i, pl] of [...WATER.lakes, ...WATER.pools].entries()) {
+          const level = levelOf(pl);
+          const geo = new THREE.CircleGeometry(1, 48);
+          geo.scale(pl.rx * 1.12, pl.rz * 1.12, 1);
+          sheet(geo, pl.x, level, pl.z);
+          const isLake = i < WATER.lakes.length;
+          // Reeds along the shore, lily pads in the shallows.
+          for (let k = 0; k < (isLake ? 14 : 5); k++) {
+            const a = pieceRand() * Math.PI * 2;
+            const rx = pl.x + Math.cos(a) * pl.rx * (0.98 + pieceRand() * 0.1);
+            const rz = pl.z + Math.sin(a) * pl.rz * (0.98 + pieceRand() * 0.1);
+            if (rz > meander(rx) - 3) continue;
+            await piece("HeroWater", /^Reeds_/, rx, meander(rx) - rz, 1.0 + pieceRand() * 0.5, pieceRand() * 6, level - 0.25);
+          }
+          for (let k = 0; k < (isLake ? 8 : 3); k++) {
+            const px = pl.x + (pieceRand() - 0.5) * pl.rx * 1.4;
+            const pz = pl.z + (pieceRand() - 0.5) * pl.rz * 1.1;
+            await piece("HeroWater", /^LilyPads_/, px, meander(px) - pz, 1.2, pieceRand() * 6, level + 0.03);
+          }
+          if (isLake) {
+            // The dock runs out from the near shore into the lake, with a
+            // couple of rowboats tied up beside it.
+            const nearShoreDepth = -(pl.z + pl.rz * 1.05) ;
+            const pierLen = 22 * 1.2;
+            await piece("HeroWater", /^Dock/, pl.x + 6, nearShoreDepth + pierLen / 2 - 1, 1.0, Math.PI / 2, level - 0.7);
+            await piece("HeroWater", /^Rowboat_1/, pl.x + 10.5, nearShoreDepth + 9, 1.0, 1.6, level - 0.08);
+            await piece("HeroWater", /^Rowboat_2/, pl.x + 1.5, nearShoreDepth + 14, 1.0, 1.4, level - 0.08);
+          }
+        }
+      }
       // A WAYMARKER every couple of lessons, at the path's edge.
-      for (let n = 0; n < 5; n++) {
+      for (let n = 0; n < SPOTS; n++) {
         await piece("HeroLandmarks", /^Waymarker/, at(n) + 18, 2.4, 1.2, 0.5);
       }
     }
@@ -20997,7 +21596,20 @@ export function createKidsWorld(
         return [];
       }
     })();
-    const clusterSpecs = [...(theme.groundClusters ?? []), ...reviewClusters];
+    // THE FOREST AND SHRUBS OF A HERO TRAIL SCENE, from its record.
+    const sceneClusters: NonNullable<WorldTheme["groundClusters"]> =
+      CHAPTER != null
+        ? []
+        : land.heroScene != null
+          ? heroSceneClusters(land.heroScene)
+          : land.dinoScene != null
+            ? dinoSceneClusters(land.dinoScene)
+            : [];
+    const clusterSpecs = [
+      ...(land.dinoScene != null ? [] : (theme.groundClusters ?? [])),
+      ...sceneClusters,
+      ...reviewClusters,
+    ];
     const clusterGltfs = await Promise.all(
       clusterSpecs.map(async (spec) => {
         try {
@@ -21027,36 +21639,85 @@ export function createKidsWorld(
       // stones are already drawn this way. Per-instance colour survives it
       // (`setColorAt`), and so do the lean and the stretch, because both are
       // in the matrix.
-      let src: THREE.Mesh | null = null;
+      // THE MODEL TO PLANT: the first node named for it, and EVERY mesh under
+      // that node. A tree is a leaf mesh and a bark mesh; planting only the
+      // first gave a bare trunk or a floating crown.
+      let srcNode: THREE.Object3D | null = null;
       gltf.scene.traverse((n) => {
         if (
-          src == null &&
-          (n as THREE.Mesh).isMesh &&
-          (spec.node == null || n.name.includes(spec.node))
+          srcNode == null &&
+          (spec.node == null
+            ? (n as THREE.Mesh).isMesh
+            : n.name.includes(spec.node))
         ) {
-          src = n as THREE.Mesh;
+          srcNode = n;
         }
       });
-      if (src == null) {
+      if (srcNode == null) {
         continue;
       }
-      const proto = src as THREE.Mesh;
+      const protoMeshes: THREE.Mesh[] = [];
+      (srcNode as THREE.Object3D).traverse((n) => {
+        if ((n as THREE.Mesh).isMesh) {
+          protoMeshes.push(n as THREE.Mesh);
+        }
+      });
+      if (protoMeshes.length === 0) {
+        continue;
+      }
       // Baked into the geometry: the mesh may sit under a transform of its
       // own inside the file, and an InstancedMesh has no parent chain to
       // inherit it from.
       gltf.scene.updateMatrixWorld(true);
-      const geo = proto.geometry.clone().applyMatrix4(proto.matrixWorld);
-      geo.computeBoundingBox();
-      const gb = geo.boundingBox!;
-      geo.translate(
-        -(gb.min.x + gb.max.x) / 2,
-        -gb.min.y,
-        -(gb.min.z + gb.max.z) / 2,
-      );
+      // A MODEL WITH QUANTISED POSITIONS (int16, normalised) cannot take a
+      // matrix in place: the product is clamped back into the attribute's own
+      // -1..1 range and the tree comes out two units across. Widen them to
+      // floats first.
+      const partGeos = protoMeshes.map((m) => {
+        const g = m.geometry.clone();
+        for (const name of ["position", "normal"] as const) {
+          const at = g.getAttribute(name);
+          if (at != null && !(at.array instanceof Float32Array)) {
+            const f = new Float32Array(at.count * 3);
+            for (let k = 0; k < at.count; k++) {
+              f[k * 3] = at.getX(k);
+              f[k * 3 + 1] = at.getY(k);
+              f[k * 3 + 2] = at.getZ(k);
+            }
+            g.setAttribute(name, new THREE.BufferAttribute(f, 3));
+          }
+        }
+        g.applyMatrix4(m.matrixWorld);
+        return g;
+      });
+      const gb = new THREE.Box3();
+      for (const g of partGeos) {
+        g.computeBoundingBox();
+        gb.union(g.boundingBox!);
+      }
+      for (const g of partGeos) {
+        g.translate(
+          -(gb.min.x + gb.max.x) / 2,
+          -gb.min.y,
+          -(gb.min.z + gb.max.z) / 2,
+        );
+      }
       const half = Math.max(gb.max.x - gb.min.x, gb.max.z - gb.min.z) / 2;
-      const mat = (
-        Array.isArray(proto.material) ? proto.material[0] : proto.material
-      ) as THREE.MeshStandardMaterial;
+      // Each part keeps its own material, recoloured for the land's season
+      // when the planting asks, on a throwaway copy before it is instanced.
+      const partMats = protoMeshes.map((m, i) => {
+        const base = (
+          Array.isArray(m.material) ? m.material[0] : m.material
+        ) as THREE.MeshStandardMaterial;
+        if (spec.seasonal !== true) {
+          return base;
+        }
+        const carrier = new THREE.Group();
+        carrier.add(new THREE.Mesh(partGeos[i]!, base));
+        tintFoliage(carrier);
+        return (carrier.children[0] as THREE.Mesh)
+          .material as THREE.MeshStandardMaterial;
+      });
 
       const mats: THREE.Matrix4[] = [];
       const tints: THREE.Color[] = [];
@@ -21214,6 +21875,15 @@ export function createKidsWorld(
               const cap = behind ? Infinity : sideSign > 0 ? 0.5 : 1.6;
               scl = Math.min(scl, cap / (tall * 1.3));
             }
+            if (PERSP == null && sideSign > 0 && z > 12) {
+              // THE CAMERA'S SIDE STAYS LOW. The depth falloff magnifies
+              // anything this near five or six times, so a taro leaf grew to
+              // the size of the pane across the road and the children (owner,
+              // 2 Oct 2026). A plant here may stand no taller than the word
+              // ribbon's letters.
+              const tallN = gb.max.y - gb.min.y;
+              scl = Math.min(scl, 1.1 / Math.max(0.2, tallN));
+            }
             if (onRoad(x, z, spec.file, half * scl * 0.66)) {
               rejected += 1;
               continue;
@@ -21276,39 +21946,51 @@ export function createKidsWorld(
           }
         }
         for (const [key, ids] of lengths) {
-          const part = new THREE.InstancedMesh(geo, mat, ids.length);
-          ids.forEach((k, j) => {
-            part.setMatrixAt(j, mats[k]!);
-            part.setColorAt(j, tints[k]!);
-          });
-          part.instanceMatrix.needsUpdate = true;
-          if (part.instanceColor != null) {
-            part.instanceColor.needsUpdate = true;
+          for (let pi = 0; pi < partGeos.length; pi++) {
+            const part = new THREE.InstancedMesh(
+              partGeos[pi]!,
+              partMats[pi]!,
+              ids.length,
+            );
+            ids.forEach((k, j) => {
+              part.setMatrixAt(j, mats[k]!);
+              part.setColorAt(j, tints[k]!);
+            });
+            part.instanceMatrix.needsUpdate = true;
+            if (part.instanceColor != null) {
+              part.instanceColor.needsUpdate = true;
+            }
+            part.castShadow = false;
+            part.receiveShadow = true;
+            part.computeBoundingSphere();
+            scene.add(part);
+            clusterLengths.push({ mesh: part, cx: (key + 0.5) * CH });
           }
-          part.castShadow = false;
-          part.receiveShadow = true;
-          part.computeBoundingSphere();
-          scene.add(part);
-          clusterLengths.push({ mesh: part, cx: (key + 0.5) * CH });
         }
         continue;
       }
-      const inst = new THREE.InstancedMesh(geo, mat, mats.length);
-      for (let k = 0; k < mats.length; k++) {
-        inst.setMatrixAt(k, mats[k]!);
-        inst.setColorAt(k, tints[k]!);
+      for (let pi = 0; pi < partGeos.length; pi++) {
+        const inst = new THREE.InstancedMesh(
+          partGeos[pi]!,
+          partMats[pi]!,
+          mats.length,
+        );
+        for (let k = 0; k < mats.length; k++) {
+          inst.setMatrixAt(k, mats[k]!);
+          inst.setColorAt(k, tints[k]!);
+        }
+        inst.instanceMatrix.needsUpdate = true;
+        if (inst.instanceColor != null) {
+          inst.instanceColor.needsUpdate = true;
+        }
+        inst.castShadow = false; // ground clutter, as above
+        inst.receiveShadow = true;
+        // Its instances span the whole trail, so the default bounds (taken
+        // from the geometry alone) would cull the lot the moment the origin
+        // left the frustum.
+        inst.frustumCulled = false;
+        scene.add(inst);
       }
-      inst.instanceMatrix.needsUpdate = true;
-      if (inst.instanceColor != null) {
-        inst.instanceColor.needsUpdate = true;
-      }
-      inst.castShadow = false; // ground clutter, as above
-      inst.receiveShadow = true;
-      // Its instances span the whole trail, so the default bounds (taken from
-      // the geometry alone) would cull the lot the moment the origin left the
-      // frustum.
-      inst.frustumCulled = false;
-      scene.add(inst);
     }
 
     // ── the village ─────────────────────────────────────────────────────
@@ -21378,6 +22060,8 @@ export function createKidsWorld(
           (w.wrap.userData as { wildBaseY?: number }).wildBaseY = p.y;
         }
       }
+      /** The temple, by its bare name or its pack path. */
+      const TEMPLE_RE = /(?:^|\/)Temple$/;
       const propCache = new Map<string, THREE.Object3D | null>();
       const prop = async (name: string) => {
         if (!propCache.has(name)) {
@@ -21385,10 +22069,15 @@ export function createKidsWorld(
             // A name with a "/" is a full path under models/, the same rule
             // the scatter uses — the stone set lives in its own folder
             // rather than in the licensed character pack.
+            // THE TEMPLE IS THE KERALA SMALL TEMPLE, in every lesson that has
+            // one: the village centre's and Temple Street's.
+            const file = TEMPLE_RE.test(name)
+              ? "village-temple/Kerala_SmallTemple_GAME"
+              : name;
             const g = await loadModel(
-              name.includes("/")
-                ? `${ASSETS}/models/${name}.glb`
-                : `${ASSETS}/models/${V.dir}/${name}.glb`,
+              file.includes("/")
+                ? `${ASSETS}/models/${file}.glb`
+                : `${ASSETS}/models/${V.dir}/${file}.glb`,
             );
             // THE CLIPS ARE KEPT WITH THE SCENE. `prop` cached only the
             // scene, and a glTF carries its animations on the FILE rather
@@ -21417,6 +22106,8 @@ export function createKidsWorld(
         }
         return propCache.get(name) ?? null;
       };
+      // Set just before a `stand` call to mirror that one model (see Placed.mirror).
+      let mirrorNext = false;
       const stand = async (
         name: string,
         x: number,
@@ -21480,7 +22171,10 @@ export function createKidsWorld(
         // falloff, so a tree standing on a platform stays standing on it
         // however far back the pair are placed.
         wrap.position.set(x, surfaceY(x, z) + lift * perspective(z), z);
-        wrap.rotation.y = turn;
+        // The Kerala temple's front faces -Z; everything else here faces +Z.
+        wrap.rotation.y = turn + (TEMPLE_RE.test(name) ? Math.PI : 0);
+        if (mirrorNext) wrap.scale.x *= -1;
+        mirrorNext = false;
         // NO TWO ROCKS THE SAME WAY UP. A loose rock placed without a heading
         // stood at 0 like every other one, so the same boulder turned up
         // again and again in the same pose (owner, 25 Sep 2026). Hashed on
@@ -21532,13 +22226,172 @@ export function createKidsWorld(
           a.play();
           propMixers.push(mixer);
         }
+        if (clips.some((c) => /^(Front|Back)_Doors_(Open|Close)$/.test(c.name))) {
+          doorRigs.push({
+            mixer: new THREE.AnimationMixer(wrap),
+            clips: new Map(clips.map((c) => [c.name, c])),
+            open: { Front: null, Back: null },
+          });
+        }
         scene.add(wrap);
         characterRoots.add(wrap);
         applyEyeGlow(wrap, nightNow);
         if (trueNight) {
           await lightBuilding(name, wrap);
         }
+        if (TEMPLE_RE.test(name)) {
+          await dressTemple(wrap, x, z, turn + Math.PI);
+        }
         return wrap;
+      };
+
+      /**
+       * WHAT STANDS WITH THE TEMPLE: the stone lamp tower (kalvilakku)
+       * centred in front of it, a brass lamp (vilakku) beside the steps and
+       * the stone shelter (kalmandapam) to one side, each where the set's own
+       * layout puts it (metres, in the temple's frame; its front is -Z) and
+       * scaled with the temple. They turn with it, and stand on the ground
+       * where they land.
+       *
+       * The flames in these files carry a schedule ("evening" for the puja,
+       * "night" for the one in the sanctum). They are drawn by the game's
+       * own lamps, at the flame nodes' places: the evening ones keep the
+       * puja's hours, the sanctum's burns all night. None on Chapter 3's
+       * temples (owner, 2 Oct 2026).
+       */
+      const dressTemple = async (
+        temple: THREE.Group,
+        x: number,
+        z: number,
+        rot: number,
+      ) => {
+        const s0 = (temple.children[0] as THREE.Object3D).scale.x;
+        const per0 = perspective(z) || 1;
+        // EVERY TEMPLE IS LIT THE SAME WAY (owner, 3 Oct 2026): every lamp
+        // in the set burns from six to eight in the evening, and the lamp
+        // in the sanctum burns day and night.
+        //
+        // Two halves. The model's own flame meshes are switched by the hour
+        // every frame (see `templeFlames`), so they burn in daylight too;
+        // after dark the game's lamp sprites add the glow around them.
+        const lampsFor = (root: THREE.Object3D, s: number) => {
+          root.updateMatrixWorld(true);
+          const at = new THREE.Vector3();
+          root.traverse((o) => {
+            const sched = o.userData?.lampSchedule as string | undefined;
+            if (sched == null) return;
+            const always = sched === "night";
+            // THE FLAMES ARE THE GAME'S OWN. The set's flame meshes come out
+            // of its exporter with a zero scale on the mesh node (the
+            // quantisation transform was lost), so they can never be seen.
+            // A small flame of our own stands at each flame node instead:
+            // a teardrop of unlit warm colour, past tone mapping and haze so
+            // it reads as fire in a dark doorway. The sanctum's is the one
+            // seen from the road by day, so it is drawn a little larger.
+            o.getWorldPosition(at);
+            const fl = new THREE.Mesh(templeFlameGeo, templeFlameMat);
+            fl.position.copy(at);
+            const r = s * (always ? 0.09 : 0.06);
+            fl.visible = false;
+            scene.add(fl);
+            templeFlames.push({
+              node: fl,
+              always,
+              scale: new THREE.Vector3(r, r * 2.1, r),
+              phase: Math.random() * Math.PI * 2,
+            });
+            o.visible = false;
+            if (!trueNight) return;
+            o.getWorldPosition(at);
+            if (always) {
+              makeLamp(at.x, at.y, at.z, {
+                size: 2.2 * s,
+                peak: 0.92,
+                lit: 5.5,
+              });
+            } else {
+              makeLamp(at.x, at.y, at.z, {
+                size: 0.6 * s,
+                peak: 0.9,
+                hours: TEMPLE_HOURS,
+              });
+            }
+          });
+        };
+        // THE SANCTUM IS DIM (owner, 3 Oct 2026): a room lit by one wick,
+        // not by the sun through the door, so the lamp inside reads as lit.
+        // Everything inside the shrine room's walls is drawn darker; the
+        // flames are left as they are. The room's box is in the model's own
+        // metres (scene root, front at -Z), from the set's build script.
+        {
+          const root = temple.children[0] as THREE.Object3D;
+          temple.updateMatrixWorld(true);
+          const toModel = new THREE.Matrix4().copy(root.matrixWorld).invert();
+          root.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (!m.isMesh) return;
+            const src = m.material as THREE.MeshStandardMaterial;
+            if (/flame/i.test(src.name)) return;
+            const mat = src.clone();
+            mat.onBeforeCompile = (sh) => {
+              sh.uniforms.uToModel = { value: toModel };
+              sh.vertexShader = sh.vertexShader
+                .replace(
+                  "#include <common>",
+                  "#include <common>\nuniform mat4 uToModel;\nvarying vec3 vSanctum;",
+                )
+                .replace(
+                  "#include <begin_vertex>",
+                  "#include <begin_vertex>\nvSanctum = (uToModel * modelMatrix * vec4(transformed, 1.0)).xyz;",
+                );
+              sh.fragmentShader = sh.fragmentShader
+                .replace(
+                  "#include <common>",
+                  "#include <common>\nvarying vec3 vSanctum;",
+                )
+                .replace(
+                  "#include <map_fragment>",
+                  `#include <map_fragment>
+                  {
+                    vec3 lo = vec3(-1.74, 0.6, -1.15);
+                    vec3 hi = vec3(1.74, 3.1, 1.69);
+                    vec3 inA = smoothstep(lo, lo + 0.12, vSanctum);
+                    vec3 inB = 1.0 - smoothstep(hi - 0.12, hi, vSanctum);
+                    float w = inA.x * inA.y * inA.z * inB.x * inB.y * inB.z;
+                    diffuseColor.rgb *= mix(1.0, 0.14, w);
+                  }`,
+                );
+            };
+            mat.customProgramCacheKey = () => "temple-sanctum";
+            m.material = mat;
+          });
+        }
+        lampsFor(temple, s0);
+        const pieces: readonly (readonly [string, number, number])[] = [
+          ["Kerala_Kalvilakku_GAME", 0, -4.8],
+          ["Kerala_BrassVilakku_GAME", -3.3, -2.6],
+          ["Kerala_Kalmandapam_GAME", 6.5, 1.8],
+        ];
+        for (const [file, lx, lz] of pieces) {
+          const src = await prop(`village-temple/${file}`);
+          if (src == null) continue;
+          const wx0 = x + (lx * Math.cos(rot) + lz * Math.sin(rot)) * s0;
+          const wz0 = z + (-lx * Math.sin(rot) + lz * Math.cos(rot)) * s0;
+          const s = (s0 * (perspective(wz0) || 1)) / per0;
+          const wx = x + (wx0 - x) * (s / s0);
+          const wz = z + (wz0 - z) * (s / s0);
+          const obj = src.clone(true);
+          obj.scale.setScalar(s);
+          obj.position.set(wx, surfaceY(wx, wz), wz);
+          obj.rotation.y = rot;
+          obj.traverse((n) => {
+            const m = n as THREE.Mesh;
+            if (m.isMesh) m.geometry.computeBoundingSphere();
+          });
+          scene.add(obj);
+          characterRoots.add(obj);
+          lampsFor(obj, s);
+        }
       };
 
       /**
@@ -21581,56 +22434,8 @@ export function createKidsWorld(
         // two things to keep in step by hand.
         const PUJA = [17.5, 20.5] as const;
 
+        // The temple's own lamps come with the temple (see `dressTemple`).
         if (/^Temple$/i.test(name)) {
-          // ── THE PUJA, AND THE LAMP THAT NEVER GOES OUT ─────────────────
-          //
-          // A temple is not lit all night. It is lit for the evening puja —
-          // roughly half past five to half past eight — and afterwards the
-          // lamps on the plinth are put out and one is left burning in the
-          // sanctum, which is the point of that one: it is not lighting
-          // anything, it is being kept.
-          //
-          // So the front row is on a WINDOW rather than on darkness. The
-          // first of them is lit while the sun is still up, which is what
-          // actually happens and is why these ignore `dark` where a shop's
-          // lamp cannot.
-          //
-          // THE ROW OF SEVEN ALONG THE STEP IS GONE. Seven evenly spaced
-          // flames across a frontage read as a string of festival lights
-          // rather than as lamps somebody set down, and at this distance
-          // they merged into one bright bar and flattened the building they
-          // were supposed to describe.
-          // A short row up on the plinth, so the front has depth rather than
-          // a single lit line across it.
-          for (let i = 0; i < 4; i++) {
-            makeLamp(...on((i / 3 - 0.5) * wide * 0.52, 0.34, -0.2), {
-              size: 0.95,
-              peak: 0.7,
-              hours: PUJA,
-            });
-          }
-          // INSIDE, AND ALWAYS. Set back behind the front face and low, so
-          // what escapes is a doorway full of light rather than a lamp you
-          // can see. This is the one that carries a real light and the one
-          // that stays: the inside of a temple spilling onto its own steps
-          // is the whole picture, and at two in the morning it is the only
-          // thing still burning in the village.
-          makeLamp(...on(0, 0.3, -2.6), { size: 3.4, peak: 0.92, lit: 5.5 });
-          // THE MIRROR. Kerala temples keep a polished metal mirror by the
-          // sanctum, and what you actually see from outside is the lamps
-          // caught in it — a tall warm smear that moves when they move, not
-          // a light of its own. Hence the stretched sprite, and a wick value
-          // between the flame and the mantle: a reflection inherits some of
-          // the flicker and averages away the rest.
-          //
-          // It keeps the puja's hours, because what it reflects does.
-          makeLamp(...on(wide * 0.16, 0.42, -1.1), {
-            kind: "mirror",
-            size: 0.8,
-            aspect: 2.6,
-            peak: 0.75,
-            hours: PUJA,
-          });
           return;
         }
 
@@ -21670,7 +22475,61 @@ export function createKidsWorld(
           // the overhang. Raman Stores has the taller front of the two.
           /** How tall a hung pressure lantern is, in world units. */
           const LANTERN = 1.7;
-          const SHOPS = [
+          // THE SEVEN-SHOP ROW (owner, 1 Oct 2026) carries its own lamp
+          // positions, taken from the asset's night-lamp nodes (metres, in
+          // the model's space) and turned into world positions from the
+          // building's measured box. Its own lights are removed — nine point
+          // lights would cost the whole scene — and the game's lamps stand
+          // in their places so they keep each shop's closing hour.
+          const ROW = /Kerala_Market_Row/i.test(name);
+          const MS = wide / 27.26; // world units per metre of the row
+          const rowAt = (xl: number, yl: number, zl: number) =>
+            [
+              cx + (wrap.scale.x < 0 ? -1 : 1) * (xl + 1.703) * MS,
+              foot + (yl + 0.2856) * MS,
+              front + (zl - 3.2496) * MS,
+            ] as const;
+          if (ROW) {
+            const gone: THREE.Object3D[] = [];
+            wrap.traverse((o) => {
+              const m = o as THREE.Mesh;
+              if ((o as THREE.Light).isLight) gone.push(o);
+              else if (
+                m.isMesh &&
+                (m.material as THREE.Material | undefined)?.name ===
+                  "NightLamp_Glow"
+              )
+                m.visible = false;
+            });
+            for (const o of gone) o.removeFromParent();
+          }
+          const SHOPS = (ROW
+            ? [
+                { at: 0, closes: 21, kind: "petromax", spot: rowAt(-9.86, 2.63, 0.7) },
+                { at: 0, closes: 20, kind: "petromax", spot: rowAt(-6.68, 2.61, 0.7) },
+                { at: 0, closes: 21, kind: "oil", spot: rowAt(-3.62, 2.52, 0.7) },
+                { at: 0, closes: 21, kind: "oil", spot: rowAt(-0.53, 2.45, 0.7) },
+                { at: 0, closes: 19, kind: "oil", spot: rowAt(2.62, 2.24, 0.7) },
+                { at: 0, closes: 20, kind: "petromax", spot: rowAt(6.11, 2.23, 0.7) },
+                { at: 0, closes: 18, kind: "oil", spot: rowAt(9.71, 2.17, 0.7) },
+                // THE TWO LAMPS ABOVE THE SHOPS (owner, 1 Oct 2026): the
+                // landing at the top of the stair and the balcony. They are
+                // the household's, not a trader's, so they burn until the
+                // house goes to bed rather than at a shop's closing hour.
+                {
+                  at: 0,
+                  closes: 22,
+                  kind: "oil",
+                  spot: rowAt(-13.52, 3.96, -0.35),
+                },
+                {
+                  at: 0,
+                  closes: 22,
+                  kind: "oil",
+                  spot: rowAt(0.11, 5.11, 1.9),
+                },
+              ]
+            : [
             // C.K. Nair's hangs from the shop's own wall rather than out
             // over the middle of his frontage, and his eave is the lower of
             // the two.
@@ -21682,11 +22541,12 @@ export function createKidsWorld(
             // rather than a counter, which stands taller.
             { at: 0.13, closes: 21, kind: "oil" as const, up: 0.235 },
             { at: 0.24, closes: 19, kind: "oil" as const, up: 0.225 },
-          ] as {
+          ]) as {
             at: number;
             closes: number;
             kind: "petromax" | "oil";
             up?: number;
+            spot?: readonly [number, number, number];
           }[];
           for (const shop of SHOPS) {
             // EVERY shop's lamp is built; whether it BURNS is decided in the
@@ -21735,10 +22595,12 @@ export function createKidsWorld(
             // the way up and set back behind the shutters, so what reaches
             // the road from it is the doorway rather than the flame.
             const spot =
-              shop.kind === "petromax"
+              shop.spot ??
+              (shop.kind === "petromax"
                 ? on(shop.at * wide, shop.up ?? 0.5, -0.12)
-                : on(shop.at * wide, shop.up ?? 0.19, -0.32);
-            if (shop.kind === "petromax") {
+                : on(shop.at * wide, shop.up ?? 0.19, -0.32));
+            // The row's lanterns are modelled into the building already.
+            if (shop.kind === "petromax" && !ROW) {
               const lampSrc = await prop("village-util/Petromax_Lamp");
               if (lampSrc != null) {
                 // About half a metre at this world's scale, which is what a
@@ -21774,8 +22636,15 @@ export function createKidsWorld(
             // A petromax's mantle sits a little under half way up its body,
             // so the glow drops by the rest. The oil lamps are unaffected —
             // they stand on a counter and their flame IS where they are put.
+            //
+            // NOT IN THE ROW (owner, 1 Oct 2026). Its lanterns are modelled
+            // into the building and its lamp nodes already sit at each
+            // lantern's mantle, so `spot` IS the middle of the glass. Dropping
+            // it by half a lantern, which is right for the lamp hung here
+            // from an eave, put the light under the real lantern instead of
+            // inside it.
             const glow: readonly [number, number, number] =
-              shop.kind === "petromax"
+              shop.kind === "petromax" && !ROW
                 ? [spot[0], spot[1] - LANTERN * 0.55, spot[2]]
                 : spot;
             makeLamp(
@@ -21876,7 +22745,12 @@ export function createKidsWorld(
             // to the right puts him in the gap his customers see him
             // through. The lamp keeps its own number; they are two
             // different things that happen to belong to one business.
-            const counter = on(-0.19 * wide, 0, -2.1);
+            // THE ROW: IN FRONT OF THE TEA SHOP, on the plinth at its open
+            // front (owner, 1 Oct 2026), a little right of its lamp so he
+            // stands in the doorway's opening and not behind a shutter.
+            const counter = ROW
+              ? ([rowAt(6.11, 0, 0)[0] + 0.5 * MS, 0, front + 0.35] as const)
+              : on(-0.19 * wide, 0, -2.1);
             await spawnCompanion(
               "TeaStall",
               counter[0],
@@ -21915,7 +22789,9 @@ export function createKidsWorld(
             // his heels, which reads as a man waiting for a bus rather than
             // one sitting at his work. A quarter of a unit tucks him under
             // his own eave, where the light from his lamp falls.
-            const seat = on(0.13 * wide, 0, 0.25);
+            const seat = ROW
+              ? ([rowAt(-0.53, 0, 0)[0], 0, front - 0.8] as const)
+              : on(0.13 * wide, 0, 0.25);
             await spawnCompanion(
               "Blacksmith",
               seat[0],
@@ -21945,7 +22821,7 @@ export function createKidsWorld(
           return; // a platform, not a dwelling: nothing to light
         }
 
-        if (/^House/i.test(name)) {
+        if (/^House|^(0[1-9]|1[0-4])_/i.test(name)) {
           // NOT EVERY HOUSE IS AWAKE AT EIGHT.
           //
           // A lamp at every single door is a village where nobody has gone to
@@ -22499,9 +23375,9 @@ export function createKidsWorld(
           uReflMat: { value: new THREE.Matrix4() },
           uReflAmt: { value: 0 },
           uSky: { value: new THREE.Color(0xbcd8ea) },
-          uShallow: { value: new THREE.Color(0x45702f) },
-          uMid: { value: new THREE.Color(0x1f4a28) },
-          uDeep: { value: new THREE.Color(0x0a2418) },
+          uShallow: { value: new THREE.Color(0x6fae80) },
+          uMid: { value: new THREE.Color(0x3b8a68) },
+          uDeep: { value: new THREE.Color(0x1d5c4a) },
         };
         const pmat = new THREE.MeshStandardMaterial({
           color: 0xffffff,
@@ -22563,9 +23439,10 @@ export function createKidsWorld(
                  // fine scum of duckweed that gathers near the walls
                  wc *= 0.88 + 0.24 * pHeight(vWave * 0.6);
                  float scum = smoothstep(0.62, 0.8, pNoise(vWave * 1.3 + vec2(7.0, uWave * 0.02)));
-                 wc = mix(wc, vec3(0.42, 0.62, 0.2), scum * (1.0 - smoothstep(0.0, 0.8, vDepth)) * 0.55);
+                 wc = mix(wc, vec3(0.42, 0.62, 0.2), scum * (1.0 - smoothstep(0.0, 0.8, vDepth)) * 0.12);
                  diffuseColor.rgb = wc;
-                 diffuseColor.a = mix(0.94, 1.0, smoothstep(0.0, 0.4, vDepth));
+                 // CLEAR: the stone floor and steps show through, more of them near the walls
+                 diffuseColor.a = mix(0.38, 0.78, smoothstep(0.0, 0.7, vDepth));
                }`,
             )
             .replace(
@@ -22593,9 +23470,9 @@ export function createKidsWorld(
                          + texture2D(uReflect, q - vec2(0.0, 0.017)) * 0.13;
                  float fr = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 3.0);
                  vec3 tint = mix(vec3(1.0), uMid * 2.4, 0.45);
-                 float kSky = mix(0.06, 0.26, fr);
+                 float kSky = mix(0.1, 0.32, fr);
                  outgoingLight = mix(outgoingLight, uSky * tint, kSky);
-                 float kObj = mix(0.5, 0.78, fr) * uReflAmt * rc.a;
+                 float kObj = mix(0.6, 0.85, fr) * uReflAmt * rc.a;
                  outgoingLight = mix(outgoingLight, min(rc.rgb / max(rc.a, 0.001), vec3(0.85)) * tint, kObj);
                  diffuseColor.a = max(diffuseColor.a, max(kSky * 0.6, kObj * 0.9));
                }
@@ -22724,6 +23601,12 @@ export function createKidsWorld(
           const h = Math.max(32, Math.min(512, Math.floor(pSz.y * 0.45)));
           if (pRT.width !== w || pRT.height !== h) pRT.setSize(w, h);
           if (markN++ % 45 === 0) markPond();
+          {
+            const on = (o: THREE.Object3D) => o.layers.enable(PLAYER);
+            if (player != null) player.wrap.traverse(on);
+            for (const f of followers) f.rig.wrap.traverse(on);
+            for (const f of roadWalkers) if (f.wrap.visible) f.wrap.traverse(on);
+          }
           const prevRT = r.getRenderTarget();
           const prevShadow = r.shadowMap.autoUpdate;
           const prevClip = r.clippingPlanes;
@@ -23100,6 +23983,69 @@ export function createKidsWorld(
         );
         await Promise.all(jobs);
       };
+      /**
+       * THE KAVU'S FLOOR (owner, 3 Oct 2026): "more dense and more grass on
+       * the floor". Several hundred grass tufts and ferns across the grove's
+       * own ground, as instanced meshes - one draw call per mesh of each
+       * plant rather than one per plant. The grove's ground is also claimed
+       * as a blocker, so no villager or animal is placed in it, and the
+       * herd's wander steers round it (see `kavuOut`).
+       */
+      const plantKavuFloor = async () => {
+        const k = kavuBounds();
+        if (k == null) return;
+        blockers.push({
+          x: (k.x0 + k.x1) / 2,
+          z: (k.z0 + k.z1) / 2,
+          r: 0,
+          hw: (k.x1 - k.x0) / 2,
+          hd: (k.z1 - k.z0) / 2,
+        });
+        const floor: [string, number, number, number][] = [
+          ["village-plants/Kerala_Grass_Tuft", 620, 0.9, 1.8],
+          ["village-plants/Kerala_Fern", 300, 0.8, 1.6],
+        ];
+        const m4 = new THREE.Matrix4();
+        const q = new THREE.Quaternion();
+        const e = new THREE.Euler();
+        const v = new THREE.Vector3();
+        const sc = new THREE.Vector3();
+        for (const [file, n, lo, hi] of floor) {
+          const src = await prop(file);
+          if (src == null) continue;
+          src.updateMatrixWorld(true);
+          const box = measureBox(src);
+          const tall = Math.max(0.05, box.max.y - box.min.y);
+          const meshes: THREE.Mesh[] = [];
+          src.traverse((o) => {
+            if ((o as THREE.Mesh).isMesh) meshes.push(o as THREE.Mesh);
+          });
+          const place: THREE.Matrix4[] = [];
+          for (let i = 0; i < n; i++) {
+            const x = k.x0 + Math.random() * (k.x1 - k.x0);
+            const z = k.z0 + Math.random() * (k.z1 - k.z0);
+            if (inManaApproach(x, z, 0.5)) continue;
+            const s1 = ((lo + Math.random() * (hi - lo)) / tall) * perspective(z);
+            e.set((Math.random() - 0.5) * 0.2, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.2);
+            q.setFromEuler(e);
+            v.set(x, surfaceY(x, z) - box.min.y * s1 - 0.04, z);
+            sc.set(s1, s1 * (0.85 + Math.random() * 0.35), s1);
+            place.push(new THREE.Matrix4().compose(v, q, sc));
+          }
+          for (const mesh of meshes) {
+            const im = new THREE.InstancedMesh(
+              mesh.geometry,
+              mesh.material,
+              place.length,
+            );
+            place.forEach((P, i) => im.setMatrixAt(i, m4.multiplyMatrices(P, mesh.matrixWorld)));
+            im.instanceMatrix.needsUpdate = true;
+            im.frustumCulled = false;
+            im.receiveShadow = true;
+            builtGroup.add(im);
+          }
+        }
+      };
       if (CHAPTER != null) {
         // NEAREST LESSON FIRST. The props are the visible half of a lesson —
         // the well, the walls, the houses — so the ones the child opens
@@ -23113,6 +24059,12 @@ export function createKidsWorld(
             Math.abs(lessonAt(b.x, CHAPTER).n - opensAt),
         );
         for (const p of queue) {
+          if (
+            /village-plants\/|nature\//.test(p.model) &&
+            inManaApproach(p.x, p.z, 1)
+          ) {
+            continue;
+          }
           if (CHAPTER_N === 1 && lessonAt(p.x, CHAPTER).n === 5) {
             // The village centre is built above from `heart`; the table
             // places nothing here and says why. Kept as a guard rather
@@ -23180,6 +24132,11 @@ export function createKidsWorld(
               const cx = (b.min.x + b.max.x) / 2;
               const cz = (b.min.z + b.max.z) / 2;
               blockers.push({ x: cx, z: cz, r: 1, hw, hd });
+              if (/village-houses\/Mana$/.test(p.model)) {
+                // THE MANA'S FORECOURT IS SWEPT (owner, 3 Oct 2026): nothing
+                // grows between its gate and its poomukham.
+                blockers.push({ x: cx, z: -14, r: 0, hw: 11, hd: 6.5 });
+              }
               if ((p.clear ?? 0) > 0) {
                 forecourts.push({ x: cx, z: cz, r: p.clear!, hw, hd });
               }
@@ -23244,8 +24201,12 @@ export function createKidsWorld(
               //
               // Both are fractions of the house's own measurements, so they
               // hold if it is resized.
-              const lampZ = porch - hd * 0.3;
-              const lampLift = (b.max.y - b.min.y) * 0.135;
+              // The Varikkassery Mana (3 Oct 2026) stands on a 0.68 m plinth
+              // of a 13.4 m house: its poomukham floor is 0.051 of its height,
+              // not the old house's 0.135, and its colonnade is level with it.
+              const newMana = /village-houses\/Mana$/.test(p.model);
+              const lampZ = porch - hd * (newMana ? 0.22 : 0.3);
+              const lampLift = (b.max.y - b.min.y) * (newMana ? 0.051 : 0.135);
               // AND IT IS AN OIL LAMP, WHICH LIGHTS THE ROOM IT IS IN.
               //
               // A wick in a brass bowl throws enough to cross a veranda and
@@ -23286,23 +24247,66 @@ export function createKidsWorld(
               //
               // Each lamp carries its own depth and lift now rather than
               // three sharing one of each.
-              for (const [lx, lz, llift, lh, peak, reach] of [
-                [cx, lampZ, lampLift, tall * 0.13, 0.94, 0.8],
+              // THE NEW MANA'S LAMPS STAND ON ITS POOMUKHAM (owner, 3 Oct
+              // 2026): one in the middle of it, one at each front corner,
+              // all on the floor. Measured off the model, in its own metres:
+              // the poomukham floor is the polished black-oxide slab at
+              // 0.71 m, x -6.55..6.55, running 11.3..16.15 m forward of the
+              // centre; its corner pillars stand at x +-5.9, z 15.6, so the
+              // corner lamps go just inside them. The wrap is fitted about its box centre and turned to
+              // face the road, which brings the model's own axes back to the
+              // world's, so a model point is the centre plus `ms` times it.
+              // `stand` scales height and lift by the depth falloff itself,
+              // so both are handed over divided by it.
+              const ms = tall / 13.42;
+              // The side lamps stand at the house's own front corners, on
+              // the veranda floor (0.68 m), outside its end pillars at x
+              // +-12.28 m, where the old Mana's colonnade lamps were.
+              // ON THE FLOOR, NOT THE YARD: the lift is measured from the
+              // ground under each lamp up to the house's own floor (its base
+              // plus the plinth), because the yard in front falls away below
+              // the base and a lift from the yard left them standing against
+              // the plinth on the muttam (owner, 3 Oct 2026).
+              const onFloor = (mx: number, mz: number, h: number, fy = 0.71) => {
+                const z = cz + ms * (mz - 0.12);
+                const x = cx + ms * (mx - 0.05);
+                return [
+                  x,
+                  z,
+                  (w2.position.y + ms * fy - surfaceY(x, z)) / perspective(z),
+                  (ms * h) / perspective(z),
+                ] as const;
+              };
+              const manaLamps = newMana
+                ? ([
+                    // The reach multiplies the lamp's own height into the
+                    // light's strength: the poomukham's is the household's
+                    // welcome and lights the whole porch and its steps.
+                    [...onFloor(0, 13.7, 1.25), 1, 4.5],
+                    [...onFloor(-13.7, 14.6, 1.1, 0.68), 1, 2.4],
+                    [...onFloor(13.7, 14.6, 1.1, 0.68), 1, 2.4],
+                  ] as const)
+                : null;
+              for (const [lx, lz, llift, lh, peak, reach] of manaLamps ?? [
+                // BRIGHTER ON THE NEW MANA (owner, 3 Oct 2026), the poomukham's
+                // most of all: a wider pool of light that reaches the steps,
+                // and the colonnade lamps now light their own stretch too.
+                [cx, lampZ, lampLift, tall * 0.13, 1, newMana ? 1.6 : 0.8],
                 [
                   cx - hw * 0.82,
                   lampZ - hd * 0.1,
-                  lampLift + tall * 0.045,
+                  lampLift + (newMana ? 0 : tall * 0.045),
                   tall * 0.1,
-                  0.82,
-                  0,
+                  newMana ? 0.95 : 0.82,
+                  newMana ? 0.7 : 0,
                 ],
                 [
                   cx + hw * 0.82,
                   lampZ - hd * 0.1,
-                  lampLift + tall * 0.045,
+                  lampLift + (newMana ? 0 : tall * 0.045),
                   tall * 0.1,
-                  0.82,
-                  0,
+                  newMana ? 0.95 : 0.82,
+                  newMana ? 0.7 : 0,
                 ],
               ] as const) {
                 const v = await stand(
@@ -23327,7 +24331,9 @@ export function createKidsWorld(
                   (vb.min.z + vb.max.z) / 2,
                   {
                     kind: "oil",
-                    size: (vb.max.y - vb.min.y) * 0.34,
+                    size:
+                      (vb.max.y - vb.min.y) *
+                      (newMana ? (reach > 4 ? 0.95 : 0.7) : 0.34),
                     peak,
                     // Nothing asked for is nothing granted: a reach of zero
                     // leaves the flame as a flame and lights no geometry.
@@ -23341,6 +24347,7 @@ export function createKidsWorld(
             }
             continue;
           }
+          mirrorNext = p.mirror === true;
           const w = await stand(
             p.model,
             p.x,
@@ -23349,6 +24356,7 @@ export function createKidsWorld(
             p.turn ?? 0,
             p.lift ?? 0,
           );
+          mirrorNext = false;
           if (w != null) {
             // A structure, so it stays: see `builtGroup`.
             builtGroup.add(w);
@@ -23365,7 +24373,9 @@ export function createKidsWorld(
             if (
               p.box != null ||
               (CHAPTER_N === 3 &&
-                /House|Cottage|Mana$|Temple$|Market$/.test(p.model))
+                /House|Cottage|Mana$|Temple$|Market$|village-houses\//.test(
+                  p.model,
+                ))
             ) {
               // A BUILDING IS BLOCKED AS ITS FOOTPRINT — see `Placed.box`
               // and the blocker type. Measured off the standing model
@@ -23387,6 +24397,11 @@ export function createKidsWorld(
               const cx = (b.min.x + b.max.x) / 2;
               const cz = (b.min.z + b.max.z) / 2;
               blockers.push({ x: cx, z: cz, r: 1, hw, hd });
+              if (/village-houses\/Mana$/.test(p.model)) {
+                // THE MANA'S FORECOURT IS SWEPT (owner, 3 Oct 2026): nothing
+                // grows between its gate and its poomukham.
+                blockers.push({ x: cx, z: -14, r: 0, hw: 11, hd: 6.5 });
+              }
               if ((p.clear ?? 0) > 0) {
                 forecourts.push({ x: cx, z: cz, r: p.clear!, hw, hd });
               }
@@ -23473,6 +24488,7 @@ export function createKidsWorld(
             }
           }
         }
+        await plantKavuFloor();
       }
 
       // ── THE NEXT CHAPTER, SEEN FROM THE END OF THIS ONE ─────────────
@@ -24795,6 +25811,18 @@ export function createKidsWorld(
             // four, which put two people on a dark road an hour before
             // sunrise — inside the Kuttichathan window as far as anybody
             // watching is concerned. They start when the light does.
+            // THE BOY LIVES IN THE MANA (owner, 3 Oct 2026): in Chapter 3 his
+            // round is the road between the market's middle (Lesson 25) and
+            // the Mana's gate (Lesson 28), there and back.
+            if (CHAPTER_N === 3 && who === "VillageBoy" && CHAPTER != null) {
+              const gate = manaApproach();
+              if (gate != null) {
+                f.wrap.userData.beat = [
+                  CHAPTER[4]! + (CHAPTER[5]! - CHAPTER[4]!) * 0.5,
+                  gate.x,
+                ];
+              }
+            }
             f.wrap.userData.shift = HOURS[who] ?? (i < 2 ? [6, 22] : [7, 19]);
             f.wrap.userData.isChild = isChild(who);
             f.wrap.userData.roadWalker = {
@@ -25096,6 +26124,10 @@ export function createKidsWorld(
             deckY(spot.x, spot.z) != null ||
             inWater(spot.x, spot.z, layer.key === "ground" ? 0.6 : 1.4)
           ) {
+            refused++;
+            continue;
+          }
+          if (inManaApproach(spot.x, spot.z, 1)) {
             refused++;
             continue;
           }
@@ -25419,7 +26451,7 @@ export function createKidsWorld(
           const clearOfTemples = (x: number) =>
             temples.every((tx) => Math.abs(tx - x) > 25);
           const anchorSpots = thinAnchors(
-            anchorsFrom(chapterPlacements()).filter(
+            anchorsFrom(withHouseDepth(chapterPlacements())).filter(
               (a) =>
                 kuttiArea(lessonAt(a.x, bounds).n) &&
                 a.haunt !== "lamp" &&
@@ -25516,7 +26548,7 @@ export function createKidsWorld(
             .map((x) => x.n),
         );
         const fixedSpots: KuttiSpot[] = thinAnchors(
-          anchorsFrom(chapterPlacements()).filter((a) =>
+          anchorsFrom(withHouseDepth(chapterPlacements())).filter((a) =>
             corridorLessons.has(lessonAt(a.x, CHAPTER).n),
           ),
         ).map((a) => {
@@ -25544,7 +26576,9 @@ export function createKidsWorld(
           const rimR = a.h != null ? a.h * WELL_RIM_R : 2.2;
           const step =
             a.haunt === "house"
-              ? 5.4
+              ? a.depth != null
+                ? a.depth * 0.5 + 1.4
+                : 5.4
               : a.haunt === "tree"
                 ? 2.2
                 : a.haunt === "well"
@@ -26523,7 +27557,8 @@ export function createKidsWorld(
     //
     // They sit BEHIND the fog's far plane deliberately, so the land dissolves
     // into them instead of ending at a line.
-    if (theme.mountains != null) {
+    const mtns = land.mountains ?? theme.mountains;
+    if (mtns != null) {
       const ridge = (
         dist: number,
         height: number,
@@ -26708,7 +27743,7 @@ export function createKidsWorld(
             peakNdc: rg.peak,
             peakLocal: rg.height * 0.7,
             base: new THREE.Color(
-              rg.far ? theme.mountains.colorFar : theme.mountains.colorNear,
+              rg.far ? mtns.colorFar : mtns.colorNear,
             ),
             haze: rg.haze,
             camX0: cam.position.x,
@@ -26716,8 +27751,8 @@ export function createKidsWorld(
           });
         }
       } else if (theme.horizon == null) {
-        ridge(150, 15, theme.mountains.colorFar, 1.7, 0.5, 0.94);
-        ridge(120, 11, theme.mountains.colorNear, 4.2, 0.75, 0.74);
+        ridge(150, 15, mtns.colorFar, 1.7, 0.5, 0.94);
+        ridge(120, 11, mtns.colorNear, 4.2, 0.75, 0.74);
       }
     }
 
@@ -27586,6 +28621,17 @@ export function createKidsWorld(
     // eyes — so nightfall arrives over a couple of seconds as the cast
     // cross-fades, instead of everything snapping at once.
     stepFades(dt);
+    if (templeFlames.length > 0) {
+      const hr = worldHour();
+      const evening = hr >= TEMPLE_HOURS[0] && hr < TEMPLE_HOURS[1];
+      const t = clock.elapsedTime;
+      for (const f of templeFlames) {
+        const on = f.always || evening;
+        f.node.visible = on;
+        const k = on ? 1 + 0.06 * Math.sin(t * 7.1 + f.phase) : 0;
+        f.node.scale.set(f.scale.x * k, f.scale.y * k, f.scale.z * k);
+      }
+    }
     if (trueNight) {
       const target = nightNow ? 1 : 0;
       nightBlend +=
@@ -30232,10 +31278,28 @@ export function createKidsWorld(
           // which is the line the decks either side of it are already on.
           const onCrossing =
             WILD != null && tileX > WILD.approach - 2 && tileX < WILD.exit + 2;
+          // HERO TRAIL AND DINO RUN: A STEADY ROW. The letters follow the
+          // ROAD's height, smoothed over sixteen units, not the ground in
+          // front of it: that ground dips into a pond's carved bank or rides
+          // up a hillside, and the row went down into the water or up over
+          // the hill with it. Along the road line the ground is already
+          // level through a stream (the causeway), so this is a gentle line.
+          const steady =
+            land.heroScene != null || land.dinoScene != null
+              ? (() => {
+                  let sum = 0;
+                  for (let k = -4; k <= 4; k++) {
+                    const sx2 = tileX + k * 2;
+                    sum += terrainY(sx2, meander(sx2));
+                  }
+                  return sum / 9;
+                })()
+              : null;
           const groundH =
-            onCrossing || bridgeAt(tileX) != null
+            steady ??
+            (onCrossing || bridgeAt(tileX) != null
               ? roadTopY(tileX)
-              : terrainY(tileX, gz);
+              : terrainY(tileX, gz));
           g.position.y += (groundH + WORD_REST_Y + lift - g.position.y) * 0.25;
           // PIN THE PAINTED SHADOW TO THE GROUND, AND THROW IT FROM THE SUN.
           //
@@ -30381,6 +31445,37 @@ export function createKidsWorld(
     }
     for (const m of propMixers) {
       m.update(dt * motionScale);
+    }
+    if (doorRigs.length > 0) {
+      doorCheck -= dt;
+      const check = doorCheck <= 0;
+      if (check) doorCheck = 0.5;
+      const hour = populationHour();
+      for (const r of doorRigs) {
+        if (check) {
+          for (const side of ["Front", "Back"] as const) {
+            const [a, b] = DOOR_HOURS[side];
+            const want = hour >= a && hour < b;
+            if (r.open[side] === want) continue;
+            const first = r.open[side] == null;
+            r.open[side] = want;
+            const on = r.clips.get(`${side}_Doors_${want ? "Open" : "Close"}`);
+            const off = r.clips.get(`${side}_Doors_${want ? "Close" : "Open"}`);
+            if (off != null) r.mixer.clipAction(off).stop();
+            if (on == null) continue;
+            const act = r.mixer.clipAction(on);
+            act.reset();
+            act.setLoop(THREE.LoopOnce, 1);
+            act.clampWhenFinished = true;
+            act.play();
+            if (first || motionScale === 0) {
+              act.time = on.duration;
+              r.mixer.update(0);
+            }
+          }
+        }
+        r.mixer.update(dt * Math.max(motionScale, 0));
+      }
     }
     for (const w of wilds) {
       w.mixer.update(dt * motionScale);

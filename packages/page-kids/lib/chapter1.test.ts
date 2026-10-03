@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { equal, isTrue } from "rich-assert";
+import { AK_PACK_MISSING } from "./ak-pack-present.ts";
 import {
   activityAt,
   BAND_CHARS,
@@ -542,7 +543,7 @@ test("props that block the way declare how much room they need", () => {
  * skip — so a typo does not throw, it silently empties a lesson. This is the
  * cheapest place to catch that.
  */
-test("every model named by the chapter is on disk", () => {
+test("every model named by the chapter is on disk", { skip: AK_PACK_MISSING }, () => {
   const root = join(
     dirname(fileURLToPath(import.meta.url)),
     "../../../root/public/kids-assets/models",

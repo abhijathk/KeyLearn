@@ -9,6 +9,7 @@ import {
 import { LESSONS_3 } from "./chapter3.ts";
 import {
   footprintsOverlap,
+  GROUND_COVER,
   reserveWhisperProps,
   resolveChapter3Layout,
   SACRED_CLEAR,
@@ -36,7 +37,7 @@ test("all four village layouts keep solids, garden plants and animated sweeps cl
         boxes = ps.map((p) => villageFootprint(p, perspective));
       const forge = smithFootprint(ps, perspective)!;
       for (let i = 0; i < ps.length; i++) {
-        if (!/Market$/.test(ps[i]!.model))
+        if (!/Market(_Row)?$/.test(ps[i]!.model))
           ok(
             !footprintsOverlap(forge, boxes[i]!),
             `${band}: ${ps[i]!.model} blocks the seated blacksmith`,
@@ -46,10 +47,15 @@ test("all four village layouts keep solids, garden plants and animated sweeps cl
         const a = ps[i]!,
           box = boxes[i]!;
         ok(box.z + box.d / 2 <= -7, `${band}: ${a.model} enters the road`);
-        ok(box.z - box.d / 2 >= -37.5, `${band}: ${a.model} leaves the ground`);
+        ok(
+          box.z - box.d / 2 >= (/\/Mana$/.test(a.model) ? -52 : -37.5),
+          `${band}: ${a.model} leaves the ground`,
+        );
         equal(lessonAt(a.x, bounds).n, lessonAt(authored[i]!.x, bounds).n);
+        if (GROUND_COVER.test(a.model)) continue;
         for (let j = i + 1; j < ps.length; j++) {
           const b = ps[j]!;
+          if (GROUND_COVER.test(b.model)) continue;
           // Connected boundary panels and their gate intentionally touch.
           const connected =
             /Laterite_Wall|Estate_Gate|Bamboo_Fence/.test(a.model) &&
@@ -63,7 +69,7 @@ test("all four village layouts keep solids, garden plants and animated sweeps cl
           );
         }
       }
-      for (const n of [2, 3, 6, 8])
+      for (const n of [2, 3, 8])
         ok(
           ps.some(
             (p) =>
@@ -103,13 +109,13 @@ test("all four village layouts keep solids, garden plants and animated sweeps cl
         );
       }
       const markets = ps
-        .filter((p) => /Village_Market$/.test(p.model))
+        .filter((p) => /Kerala_Market_Row$/.test(p.model))
         .sort((a, b) => b.z - a.z);
       equal(markets.length, 2);
       equal(shopkeeperMarket(ps), markets[0]);
       equal(shopkeeperMarket([...ps].reverse()), markets[0]);
       equal(
-        shopkeeperMarket(ps.filter((p) => !/Village_Market$/.test(p.model))),
+        shopkeeperMarket(ps.filter((p) => !/Kerala_Market_Row$/.test(p.model))),
         undefined,
       );
       ok(

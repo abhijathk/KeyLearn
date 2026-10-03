@@ -425,7 +425,7 @@ export function AboutPage() {
       <p>
         <FormattedMessage
           id="about.oss.art"
-          defaultMessage="One exception: the 3-D characters in the children’s game are the AK 3D Pack, a KeyLearn product licensed separately from this code, not under the AGPL. It sits in a folder of its own — if you fork KeyLearn, either delete that folder or contact support to license the pack. Everything else, code included, is free to reuse."
+          defaultMessage="One exception: Time Keepers, the village world in the children’s game, is not covered by the AGPL. Its characters, models, artwork, sounds and logo are the AK 3D Pack, a KeyLearn product sold under a commercial licence. They are not in the public source, and copying or reusing any of them needs a commercial licence — contact support. The other two children’s games, Hero Trail and Dino Run, are AGPL-licensed like the rest of KeyLearn, and everything else, code included, is free to reuse."
         />
       </p>
 

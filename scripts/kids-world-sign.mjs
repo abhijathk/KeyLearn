@@ -46,6 +46,16 @@ execFileSync("cwebp", [
   "-o",
   tmp,
 ]);
+// TIME KEEPERS' SIGN IS AK 3D PACK ART: commercially licensed, not AGPL, so
+// it is not inlined into this public source. It is written as a file into
+// kids-assets/signs/ (ignored here, kept in the private ak-3d-pack
+// repository) and the module only names its URL.
+if (world === "village") {
+  const file = join(REPO, "root/public/kids-assets/signs/village.webp");
+  writeFileSync(file, readFileSync(tmp));
+  console.log(`kids-world-sign: village -> ${file} (copy it into ak-3d-pack)`);
+  process.exit(0);
+}
 const b64 = readFileSync(tmp).toString("base64");
 const out = join(REPO, `packages/page-kids/lib/world-signs/${world}.ts`);
 writeFileSync(

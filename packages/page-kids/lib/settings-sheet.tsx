@@ -107,6 +107,7 @@ const FACE_TINT: Readonly<Record<string, string>> = {
   Knight: "#9fb0c8",
   Skeleton_Warrior: "#c8b89f",
   Ranger: "#8fbf7a",
+  Rogue_Hooded: "#6fae6a",
 };
 
 type Section = "play" | "scene" | "typing" | "sound" | "session";

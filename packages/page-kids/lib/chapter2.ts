@@ -611,7 +611,18 @@ export const LESSONS_2: readonly Lesson[] = [
       // its measured footprint as a blocker, and the drive from the gate to
       // the porch is held clear separately. 4 is a skirt of open ground at
       // the walls, which is what a swept house has — not a field.
-      { model: "ak-3d-pack/Mana", at: 0.48, z: -31, h: 16, clear: 4 },
+      // THE VARIKKASSERY MANA (owner, 3 Oct 2026), the same house as Chapter
+      // 3's. Its proportions are wider and deeper than the old one's (2.47 and
+      // 2.57 of its height against 1.76 and 1.61), so it is drawn 13 tall, a
+      // touch over the old frontage (owner, 3 Oct 2026); turned, because the file faces -Z.
+      {
+        model: "village-houses/Mana",
+        at: 0.48,
+        z: -31,
+        h: 13,
+        turn: Math.PI,
+        clear: 4,
+      },
       // ── MATURE TREES ALONG THE WALL, IN FRONT OF THE HOUSE ──────────
       //
       // "Place tall mature trees BEHIND THE WALL so their canopies rise
@@ -751,6 +762,12 @@ export const LESSONS_2: readonly Lesson[] = [
     props: [
       { model: `${STONE}/Mossy_Stone`, at: 0.44, z: -8, h: 0.85 },
       { model: `${STONE}/Laterite_Rock`, at: 0.76, z: -9.5, h: 0.7 },
+      // THE VILLAGE POND (owner, 1 Oct 2026): a sunk stone tank with a roofed
+      // bathing shed, green water, lilies and a ring of planting. `h` is the
+      // asset's units per metre; the ground inside it is cut away and the land
+      // round it levelled (see `PONDS` in world.ts). The only large landmark
+      // this meadow has, and it replaces none of what stood here.
+      { model: `${UTIL}/Kulappura_Pond`, at: 0.5, z: -17, h: 2.4, clear: 2 },
       // A third palmyra for the chapter (owner, 25 Sep 2026: two or three
       // karimpana in every chapter), standing alone the way they do at a
       // field's edge.

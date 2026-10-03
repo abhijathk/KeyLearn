@@ -1,6 +1,7 @@
 import { deepEqual, equal, ok } from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { test } from "node:test";
+import { AK_PACK_MISSING } from "./ak-pack-present.ts";
 import {
   BLEED,
   boundsForBand,
@@ -20,7 +21,7 @@ const root = new URL(
   "../../../root/public/kids-assets/models/",
   import.meta.url,
 );
-test("all ten lessons use shipped assets, continuous local stones, and clear road space", () => {
+test("all ten lessons use shipped assets, continuous local stones, and clear road space", { skip: AK_PACK_MISSING }, () => {
   equal(LESSONS_3.length, 10);
   LESSONS_3.forEach((l, i) => {
     ok(
@@ -101,18 +102,20 @@ test("market closes progressively while deep night is empty", () => {
 
 test("the great market keeps Chapter 1's full-size shop contract", () => {
   const original = LESSONS.flatMap((l) => l.props).find((p) =>
-    p.model.endsWith("/Village_Market"),
+    p.model.endsWith("/Kerala_Market_Row"),
   )!;
   const rows = LESSONS_3[4]!.props.filter((p) =>
-    p.model.endsWith("/Village_Market"),
+    p.model.endsWith("/Kerala_Market_Row"),
   );
   equal(rows.length, 2);
   for (const row of rows) {
-    equal(row.h, original.h);
+    // The back row is drawn smaller than the front one; both keep the shop box.
+    ok(row.h <= original.h);
     const { referenceZ, ...dimensions } = row.box!;
     deepEqual(dimensions, original.box);
-    equal(referenceZ, -17.5);
+    equal(referenceZ, -20);
   }
+  equal(Math.max(...rows.map((r) => r.h)), original.h);
 });
 
 test("fitting market rows never cancels their distance scaling", () => {
@@ -121,10 +124,10 @@ test("fitting market rows never cancels their distance scaling", () => {
     for (const band of ["5-6", "7-8", "9-10", "11+"]) {
       const perspective = (z: number) => depthScale(z, 33);
       const rows = placements(boundsForBand(band), perspective)
-        .filter((p) => p.model.endsWith("/Village_Market"))
+        .filter((p) => p.model.endsWith("/Kerala_Market_Row"))
         .sort((a, b) => b.z - a.z);
       equal(rows.length, 2);
-      equal(rows[0]!.h, rows[1]!.h);
+      ok(rows[1]!.h <= rows[0]!.h);
       ok(
         rows[1]!.h * perspective(rows[1]!.z) <
           rows[0]!.h * perspective(rows[0]!.z),
@@ -135,22 +138,22 @@ test("fitting market rows never cancels their distance scaling", () => {
   }
 });
 
-test("the larger village uses all house families, real gates, banyan and peepal assets", () => {
+test("the larger village uses all house families, real gates, banyan and peepal assets", { skip: AK_PACK_MISSING }, () => {
   const props = LESSONS_3.flatMap((l) => l.props);
   for (const name of [
-    "HouseMoss",
-    "HouseHearth",
-    "HouseThatch",
-    "CottageTiled",
-    "CottageVeranda",
-    "CottageBell",
+    // 11 (ezhara) stood behind milestone 27 until the owner swapped it for a kavu.
+    ...Array.from({ length: 14 }, (_, i) => String(i + 1).padStart(2, "0") + "_").filter((n) => n !== "11_"),
     "Mana",
     "Temple",
     "Banyan_Almaram",
     "Peepal_Arayal",
   ]) {
     ok(
-      props.some((p) => p.model.endsWith("/" + name)),
+      props.some((p) =>
+        /^\d\d_$/.test(name)
+          ? p.model.startsWith("village-houses/" + name)
+          : p.model.endsWith("/" + name),
+      ),
       name,
     );
   }

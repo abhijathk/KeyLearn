@@ -62,3 +62,48 @@ meshy_output/
 # own vendored three.js out of the repo too.
 docs/chapter*-qa/*.png
 docs/cattle-review/vendor/
+
+# AK 3D Pack: Time Keepers' commercially licensed assets (not AGPL).
+# They live in the private repository abhijathk/ak-3d-pack and are merged
+# in for production builds by scripts/ak-pack-merge.mjs.
+/root/public/kids-assets/horizon
+/root/public/kids-assets/models/abee
+/root/public/kids-assets/models/ak-3d-pack
+/root/public/kids-assets/models/kuttichathan
+/root/public/kids-assets/models/loader
+/root/public/kids-assets/models/nature/paddy-modular
+/root/public/kids-assets/models/village-folk
+/root/public/kids-assets/models/village-houses
+/root/public/kids-assets/models/village-plants
+/root/public/kids-assets/models/village-sign
+/root/public/kids-assets/models/village-stone
+/root/public/kids-assets/models/village-temple
+/root/public/kids-assets/models/village-util
+/root/public/kids-assets/audio/creatures/buffalo_vocal_01.mp3
+/root/public/kids-assets/audio/creatures/buffalo_vocal_02.mp3
+/root/public/kids-assets/audio/creatures/buffalo_vocal_03.mp3
+/root/public/kids-assets/cards/CottageBell.webp
+/root/public/kids-assets/cards/CottageThatch.webp
+/root/public/kids-assets/cards/CottageTiled.webp
+/root/public/kids-assets/cards/CottageVeranda.webp
+/root/public/kids-assets/cards/world-village.webp
+/root/public/kids-assets/faces/Abee.webp
+/root/public/kids-assets/faces/Buffalo.webp
+/root/public/kids-assets/faces/Explorer.webp
+/root/public/kids-assets/faces/Explorer6.webp
+/root/public/kids-assets/faces/Peeli.webp
+/root/public/kids-assets/faces/Puppy.webp
+/root/public/kids-assets/faces/Robot.webp
+/root/public/kids-assets/models/KeralaGrassTufts.glb
+/root/public/kids-assets/models/KeralaGroundCover.glb
+/root/public/kids-assets/models/KeralaLeafShrubs.glb
+/root/public/kids-assets/models/nature/KeralaBambooGroves.glb
+/root/public/kids-assets/textures/brown_mud_leaves_01_diff.jpg
+/root/public/kids-assets/textures/brown_mud_leaves_01_nor.jpg
+/root/public/kids-assets/textures/coconut_grove_diff.jpg
+/root/public/kids-assets/textures/coconut_grove_nor.jpg
+/root/public/kids-assets/textures/forest_floor_diff.jpg
+/root/public/kids-assets/textures/forest_floor_nor.jpg
+/root/public/kids-assets/textures/laterite_mud_diff.jpg
+/root/public/kids-assets/textures/laterite_mud_nor.jpg
+/root/public/kids-assets/signs

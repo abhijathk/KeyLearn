@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "11c4494b9426";
+export const ASSET_VERSION = "24171cf49666";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -351,6 +351,16 @@ export const ASSET_MAP: Readonly<
     "u": "vc6317a0c/cards/world-village.webp",
     "b": 15924,
     "g": "village"
+  },
+  "draco/draco_decoder.wasm": {
+    "u": "va680d927/draco/draco_decoder.wasm",
+    "b": 192420,
+    "g": "shared"
+  },
+  "draco/draco_wasm_wrapper.js": {
+    "u": "v8bb2952d/draco/draco_wasm_wrapper.js",
+    "b": 58456,
+    "g": "shared"
   },
   "env/day.hdr": {
     "u": "vfd94c849/env/day.hdr",
@@ -942,6 +952,81 @@ export const ASSET_MAP: Readonly<
     "b": 1277640,
     "g": "village"
   },
+  "models/village-houses/01_large_nalukettu.glb": {
+    "u": "vf1d99f25/models/village-houses/01_large_nalukettu.glb",
+    "b": 98868,
+    "g": "village"
+  },
+  "models/village-houses/02_long_veranda_house.glb": {
+    "u": "vd1f89b5c/models/village-houses/02_long_veranda_house.glb",
+    "b": 90512,
+    "g": "village"
+  },
+  "models/village-houses/03_two_storey_house.glb": {
+    "u": "v0a7d5176/models/village-houses/03_two_storey_house.glb",
+    "b": 95868,
+    "g": "village"
+  },
+  "models/village-houses/04_compact_tiled_house.glb": {
+    "u": "v5b6769b8/models/village-houses/04_compact_tiled_house.glb",
+    "b": 89016,
+    "g": "village"
+  },
+  "models/village-houses/05_wooden_laterite_house.glb": {
+    "u": "v69fe5f78/models/village-houses/05_wooden_laterite_house.glb",
+    "b": 97612,
+    "g": "village"
+  },
+  "models/village-houses/06_simple_thatched_house.glb": {
+    "u": "v5f32543c/models/village-houses/06_simple_thatched_house.glb",
+    "b": 84016,
+    "g": "village"
+  },
+  "models/village-houses/07_fisherman_coastal_house.glb": {
+    "u": "v4d8e42ff/models/village-houses/07_fisherman_coastal_house.glb",
+    "b": 84456,
+    "g": "village"
+  },
+  "models/village-houses/08_workers_house_modest.glb": {
+    "u": "vf6b2adda/models/village-houses/08_workers_house_modest.glb",
+    "b": 83740,
+    "g": "village"
+  },
+  "models/village-houses/09_storeroom_outbuilding.glb": {
+    "u": "vce009bc5/models/village-houses/09_storeroom_outbuilding.glb",
+    "b": 81072,
+    "g": "village"
+  },
+  "models/village-houses/10_granary_vayalpura.glb": {
+    "u": "v97a25415/models/village-houses/10_granary_vayalpura.glb",
+    "b": 81344,
+    "g": "village"
+  },
+  "models/village-houses/11_ezhara_veedu_elite.glb": {
+    "u": "v13126ca1/models/village-houses/11_ezhara_veedu_elite.glb",
+    "b": 99516,
+    "g": "village"
+  },
+  "models/village-houses/12_courtyard_nadumuttam_house.glb": {
+    "u": "v6fae8b02/models/village-houses/12_courtyard_nadumuttam_house.glb",
+    "b": 96868,
+    "g": "village"
+  },
+  "models/village-houses/13_hill_slope_house.glb": {
+    "u": "v549a4ff7/models/village-houses/13_hill_slope_house.glb",
+    "b": 96304,
+    "g": "village"
+  },
+  "models/village-houses/14_farmers_house_rustic.glb": {
+    "u": "v547e1bc7/models/village-houses/14_farmers_house_rustic.glb",
+    "b": 90548,
+    "g": "village"
+  },
+  "models/village-houses/Mana.glb": {
+    "u": "v9b2ecc04/models/village-houses/Mana.glb",
+    "b": 183728,
+    "g": "village"
+  },
   "models/village-plants/Arecanut_Palm.glb": {
     "u": "v04d2b290/models/village-plants/Arecanut_Palm.glb",
     "b": 43496,
@@ -1082,6 +1167,26 @@ export const ASSET_MAP: Readonly<
     "b": 258652,
     "g": "village"
   },
+  "models/village-temple/Kerala_BrassVilakku_GAME.glb": {
+    "u": "ve972e845/models/village-temple/Kerala_BrassVilakku_GAME.glb",
+    "b": 12496,
+    "g": "village"
+  },
+  "models/village-temple/Kerala_Kalmandapam_GAME.glb": {
+    "u": "vc0463d6f/models/village-temple/Kerala_Kalmandapam_GAME.glb",
+    "b": 25364,
+    "g": "village"
+  },
+  "models/village-temple/Kerala_Kalvilakku_GAME.glb": {
+    "u": "v98445fed/models/village-temple/Kerala_Kalvilakku_GAME.glb",
+    "b": 15904,
+    "g": "village"
+  },
+  "models/village-temple/Kerala_SmallTemple_GAME.glb": {
+    "u": "v77c52fa0/models/village-temple/Kerala_SmallTemple_GAME.glb",
+    "b": 183420,
+    "g": "village"
+  },
   "models/village-util/Bamboo_Fence.glb": {
     "u": "v2fad716c/models/village-util/Bamboo_Fence.glb",
     "b": 66416,
@@ -1100,6 +1205,11 @@ export const ASSET_MAP: Readonly<
   "models/village-util/Haystack.glb": {
     "u": "v654b05fe/models/village-util/Haystack.glb",
     "b": 235428,
+    "g": "village"
+  },
+  "models/village-util/Kerala_Market_Row.glb": {
+    "u": "vfe52aee1/models/village-util/Kerala_Market_Row.glb",
+    "b": 223800,
     "g": "village"
   },
   "models/village-util/Kulappura_Pond.glb": {
@@ -1151,6 +1261,11 @@ export const ASSET_MAP: Readonly<
     "u": "vd90ca6c3/models/village-util/Wooden_Bridge.glb",
     "b": 69760,
     "g": "village"
+  },
+  "signs/village.webp": {
+    "u": "vcce832a0/signs/village.webp",
+    "b": 16956,
+    "g": "shared"
   },
   "textures/brown_mud_leaves_01_diff.jpg": {
     "u": "v3e3e1fbe/textures/brown_mud_leaves_01_diff.jpg",

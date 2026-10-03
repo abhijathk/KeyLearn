@@ -1,6 +1,7 @@
 import { equal, ok } from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { test } from "node:test";
+import { AK_PACK_MISSING } from "./ak-pack-present.ts";
 import { boundsForBand } from "./chapter1.ts";
 import { LESSONS_4, wildState } from "./chapter4.ts";
 import {
@@ -26,7 +27,7 @@ import {
   wildToLand,
 } from "./chapter4-crossing.ts";
 
-test("all authored Chapter 4 assets exist, without market or shop occupants", () => {
+test("all authored Chapter 4 assets exist, without market or shop occupants", { skip: AK_PACK_MISSING }, () => {
   for (const l of LESSONS_4) {
     equal(l.corridor, false);
     ok(!l.folk.includes("Blacksmith"));
@@ -228,7 +229,8 @@ for (const band of ["5-6", "7-8", "9-10", "11+"]) {
 test("one buffalo to every Chapter 3 and 4 lesson with open ground", async () => {
   const { LESSONS_3 } = await import("./chapter3.ts");
   const with3 = LESSONS_3.filter((l) => l.buffalo === true).map((l) => l.n);
-  equal(with3.join(","), "1,2,3,8,9,10");
+  // Not lesson 8 either: the Mana and its kavu (owner, 3 Oct 2026).
+  equal(with3.join(","), "1,2,3,9,10");
   const with4 = LESSONS_4.filter((l) => l.buffalo === true).map((l) => l.n);
   equal(with4.join(","), "1,2,3,4,5,6,8,9,10");
 });

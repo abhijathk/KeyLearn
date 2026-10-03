@@ -400,6 +400,10 @@ export type Placed = {
   readonly h: number;
   /** Heading, radians. */
   readonly turn?: number;
+  /** Mirror the model left-to-right (a negative x scale), e.g. to put a building's tall end on the other side. */
+  readonly mirror?: boolean;
+  /** Part of a sacred grove (kavu): its ground is kept free of people and animals. */
+  readonly grove?: boolean;
   /**
    * How much room this thing needs around it. Animals and walkers keep out
    * of this circle; 0 means it is not an obstruction — grass, ground cover,
@@ -1002,6 +1006,12 @@ export const LESSONS: readonly Lesson[] = [
       },
       { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.72, z: -11, h: 0.95 },
       { model: `${PLANTS}/Kerala_Fern`, at: 0.73, z: -13.2, h: 0.8 },
+      // A SHRUB AT THE HOUSE'S RIGHT-HAND EDGE, AS TALL AS ITS EAVES (owner, 1 Oct 2026). The
+      // scatter drops a plant here that is far enough away for the texture
+      // compression to eat it, leaving a column of grey specks against the
+      // wall. A real shrub of the same height, placed on purpose, reads as a
+      // plant and fills the gap.
+      { model: `${PLANTS}/Hibiscus_Chemparathi`, at: 0.675, z: -16, h: 4.5, clear: 1.5 },
       {
         model: `${UTIL}/Cattle_Tether_Post`,
         at: 0.3,
@@ -1326,9 +1336,24 @@ export const LESSONS: readonly Lesson[] = [
       // what keeps the half-a-building of clearance the bamboo needs: the
       // market could not come left on its own without growing out of the
       // grove again.
+      // SCALED TO 75 PER CENT OF LIFE (owner, 1 Oct 2026: "too big" at full
+      // size, which ran 70 units along a 64-unit lesson). 19.4 tall, about 52
+      // units of frontage, so it fits its lesson as the old market did.
+      // THE MARKET ROW AT ITS REAL SIZE (owner, 1 Oct 2026): the seven-shop
+      // Kerala row replaces the old market in the same place, front face still
+      // at about z -10.9. It is 7.55 m tall, 27.3 m long and 6.15 m deep; the
+      // game draws a 5.2 ft person as 5.4 units, so a metre is 3.43 units and
+      // the row is 25.9 tall before the depth falloff shrinks it exactly as it
+      // shrinks a villager at the same depth. `box` is the model's width and
+      // depth per unit of height, used to block the ground and keep the front
+      // where it was. The comments below describe the market this replaced.
       {
-        model: `${UTIL}/Village_Market`,
-        at: 0.56,
+        model: `${UTIL}/Kerala_Market_Row`,
+        // A LITTLE LEFT of where it first stood (owner, 1 Oct 2026), and its
+        // foundation lowered into the ground (`lift`): the plinth should read
+        // as set into the earth, not placed on it.
+        at: 0.5,
+        lift: -1.8,
         // 17.5 tall, which at 4.27:1 is a 75-unit frontage. Its DEPTH grows
         // with it — about eighteen units now — so the centre goes back to
         // -18 to keep the front face where it belongs, just behind the
@@ -1364,8 +1389,8 @@ export const LESSONS: readonly Lesson[] = [
         // -38. The smith on his plinth needs no change: he is placed off
         // the building's own measured front face, so he comes forward with
         // the shop he is sitting at.
-        z: -17.5,
-        h: 17.5,
+        z: -20,
+        h: 19.4,
         // A FOOTPRINT, NOT A DISC — see `box`. `clear` is now the margin of
         // trading ground kept bare of planting round the building; the
         // building's own extent comes from its measured proportions. Forty
@@ -1407,45 +1432,9 @@ export const LESSONS: readonly Lesson[] = [
         // 1.6 rather than something rounder because that is where the
         // youngest band stops gaining: past it the frontage grows into
         // Lesson 8's grazing land faster than it grows on screen.
-        box: { w: 4.27, d: 1.02, span: 1.6, want: 55 },
+        box: { w: 3.61, d: 0.814, span: 1.3, want: 56 },
       },
-      // A COW LYING IN FRONT OF THE MARKET, by the bamboo. Cattle settle
-      // exactly here in a Kerala market town — in the shade, on the bare
-      // ground, out of the way of the stalls but not out of the way of
-      // anybody — and an animal at REST is the clearest thing you can put in
-      // a busy place to say it is an ordinary afternoon rather than a set.
-      //
-      // Placed as a prop rather than as livestock on purpose: the herd code
-      // would give it a grazing loop and walk it away from the buffalo,
-      // which is the opposite of lying down.
-      {
-        model: "village-folk/Cow",
-        // Between the gate grove and the well, and broadside to the road so
-        // its whole length reads rather than its nose. Forward with the rest
-        // of the forecourt when the row came nearer the road — at -9.5 she
-        // was standing against the shop fronts rather than out in the open
-        // ground in front of them.
-        at: 0.14,
-        z: -7,
-        h: 5.2,
-        // ON THE GROUND, NOT IN IT. The sinking trick is abandoned: it was
-        // a way to fake a resting cow without a resting clip, and it does
-        // not work. At 2.3 only the back showed, at 1.7 it was a shape in
-        // the earth, at 1.1 the legs were still half buried — because the
-        // thing that says "lying down" is the FOLD of the legs, and no
-        // amount of hiding them supplies it. Hiding a leg reads as a hole,
-        // not as a knee.
-        //
-        // So it stands, which is at least true, and it stands where a cow
-        // stands in a market town: on the bare ground outside the stalls, in
-        // everybody's way and nobody's. A resting animal here needs a
-        // resting clip, and that is an animation job rather than a placement
-        // one — the buffalo has thirteen clips and not one of them is lying
-        // down either.
-        lift: 0,
-        turn: 1.45,
-        clear: 3,
-      },
+      // (The cow that lay in front of the market is gone, owner 1 Oct 2026.)
       // BETWEEN THE BAMBOO AND THE MARKET, which is where a village well
       // belongs on a trade road: the traders draw from it and so does
       // anyone walking in, so it sits on the way rather than behind the
@@ -1608,6 +1597,10 @@ export const LESSONS: readonly Lesson[] = [
     depth: [11, 30],
     props: [
       { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.58, z: -19, h: 27 },
+      // THE VILLAGE POND again, mirrored (turn = flip), on the far side of the
+      // pasture from the cow (owner, 1 Oct 2026: "the same pond in some other
+      // lessons"). See `PONDS` in world.ts.
+      { model: `${UTIL}/Kulappura_Pond`, at: 0.8, z: -17, h: 2.4, turn: Math.PI, clear: 2 },
       {
         model: `${UTIL}/Cattle_Tether_Post`,
         at: 0.36,

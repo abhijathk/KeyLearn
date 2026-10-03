@@ -1,4 +1,4 @@
-import type { Land } from "./world.ts";
+import type { Land, WorldTheme } from "./world.ts";
 
 /**
  * THE SCENE KIT: what each scene of the Hero Trail and of Dino Run is made of.
@@ -1438,15 +1438,86 @@ const DINO_GROUND: Record<
 
 const DINO_LIGHT: Record<
   DinoWeather,
-  { sun: number; fog: number; mood: "day" | "overcast" }
+  {
+    sun: number;
+    fog: number;
+    mood: "day" | "overcast";
+    cover: number;
+    skyTop: number;
+    skyBottom: number;
+    fogRange: readonly [number, number];
+  }
 > = {
-  noon: { sun: 0xfff4dc, fog: 0xcdeec0, mood: "day" },
-  golden: { sun: 0xffc080, fog: 0xf2d6a8, mood: "day" },
-  overcast: { sun: 0xe6ecf2, fog: 0xcdd6dc, mood: "overcast" },
-  fog: { sun: 0xe8eef2, fog: 0xd6dfe4, mood: "overcast" },
-  dusk: { sun: 0xff9a64, fog: 0xe6b0a0, mood: "day" },
-  storm: { sun: 0xa8b4c4, fog: 0x7a828c, mood: "overcast" },
-  night: { sun: 0x7088c0, fog: 0x2a3a62, mood: "overcast" },
+  noon: {
+    sun: 0xfff4dc,
+    fog: 0xcfe6c8,
+    mood: "day",
+    cover: 0.3,
+    skyTop: 0x7ab4dc,
+    skyBottom: 0xc4dcd8,
+    fogRange: [50, 96],
+  },
+  golden: {
+    sun: 0xffc080,
+    fog: 0xf0d2a4,
+    mood: "day",
+    cover: 0.3,
+    skyTop: 0x9cb4c8,
+    skyBottom: 0xf2d2a2,
+    fogRange: [44, 96],
+  },
+  overcast: {
+    sun: 0xe6ecf2,
+    fog: 0xc4ccd0,
+    mood: "overcast",
+    cover: 0.9,
+    skyTop: 0x9aa6ae,
+    skyBottom: 0xc8d0d2,
+    fogRange: [26, 80],
+  },
+  fog: {
+    sun: 0xe8eef2,
+    fog: 0xd2dcd8,
+    mood: "overcast",
+    cover: 0.85,
+    skyTop: 0xb4c0c0,
+    skyBottom: 0xd4dcd6,
+    fogRange: [22, 84],
+  },
+  dusk: {
+    sun: 0xff9a64,
+    fog: 0xe0a890,
+    mood: "day",
+    cover: 0.45,
+    skyTop: 0xb8785c,
+    skyBottom: 0xf0b490,
+    fogRange: [24, 80],
+  },
+  storm: {
+    sun: 0xa8b4c4,
+    fog: 0x6e7a82,
+    mood: "overcast",
+    cover: 1,
+    skyTop: 0x4e5a64,
+    skyBottom: 0x7e8a90,
+    fogRange: [26, 88],
+  },
+  night: {
+    sun: 0x7088c0,
+    fog: 0x2a3a62,
+    mood: "overcast",
+    cover: 0.5,
+    skyTop: 0x1a2448,
+    skyBottom: 0x3a4a78,
+    fogRange: [22, 80],
+  },
+};
+
+/** Two colours mixed, `t` of the way from a to b. */
+const blendHex = (a: number, b: number, t: number): number => {
+  const ch = (shift: number) =>
+    Math.round(((a >> shift) & 255) * (1 - t) + ((b >> shift) & 255) * t);
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
 };
 
 /** The Dino Run land a scene is set in. */
@@ -1464,6 +1535,30 @@ export function dinoLand(scene: number): Land {
     dirt: ground.dirt,
     sun: light.sun,
     fog: light.fog,
+    // Green palettes are green all over; the arid ones keep their dry earth.
+    mix: ["lush", "moss", "lilac", "mud_olive", "mud_peat"].includes(s.palette)
+      ? {
+          field: "dino_fern",
+          road: "dino_trail",
+          litter: "dino_fern",
+          dry: "dino_fern",
+          bareHue: 0,
+        }
+      : {
+          field: "dino_drygrass",
+          road: "dino_trail",
+          litter: "dino_drygrass",
+          dry: "dino_soil",
+          bareHue: 0.3,
+        },
+    cover: light.cover,
+    mountains: {
+      colorNear: blendHex(ground.grass, light.fog, 0.5),
+      colorFar: blendHex(light.fog, light.skyBottom, 0.5),
+    },
+    skyTop: light.skyTop,
+    skyBottom: light.skyBottom,
+    fogRange: light.fogRange,
     path: beach ? "sand" : "stones",
     trees: beach ? "PalmTrees" : "dino/DinoPlants",
     friend: s.dinos[1] ?? "Triceratops",
@@ -1484,3 +1579,289 @@ export const dinoSceneName = (scene: number): string => {
   const s = dinoSceneAt(scene);
   return `${cap(s.shape)}, ${s.weather}`;
 };
+
+// ── the forest and shrubs of a Hero Trail scene ────────────────────────────
+
+type GroundCluster = NonNullable<WorldTheme["groundClusters"]>[number];
+
+/** Oaks, birches and pines per window of the mock, for each tree mix. */
+const TREE_COUNTS: Record<HeroTrees, readonly [number, number, number]> = {
+  oak: [9, 2, 0],
+  birch: [2, 16, 0],
+  mixed: [5, 8, 3],
+  pine: [0, 3, 30],
+  sparse: [2, 2, 3],
+};
+
+/**
+ * What a flowering shrub is tinted, by season: the bushes' own leaf green
+ * multiplied toward blossom, berry, turned leaf or frost.
+ */
+const SHRUB_TINT: Record<HeroSeason, readonly [number, number, number]> = {
+  spring: [2.8, 1.0, 1.7],
+  summer: [2.6, 0.75, 0.95],
+  autumn: [2.8, 1.25, 0.4],
+  winter: [2.3, 2.7, 2.9],
+};
+
+/**
+ * The planting of a scene as instanced clusters: the forest behind the road
+ * (each tree kind from its own variants, in the numbers the mock drew), and
+ * flowering shrubs along it. Tall things are on the far verge only.
+ */
+export function heroSceneClusters(s: HeroScene): GroundCluster[] {
+  let [oak, birch, pine] = TREE_COUNTS[s.trees];
+  if (s.season === "winter") {
+    oak = Math.floor(oak / 2);
+    birch = Math.floor(birch / 2);
+    pine = Math.max(pine, 12);
+  }
+  const out: GroundCluster[] = [];
+  const kind = (nodes: readonly string[], total: number, lo: number, hi: number) => {
+    if (total <= 0) {
+      return;
+    }
+    // Per variant, per stride point.
+    const lambda = (total / nodes.length) * 0.2;
+    for (const node of nodes) {
+      out.push({
+        file: "hero/HeroTreesV2",
+        node,
+        seasonal: true,
+        min: Math.max(0, Math.floor(lambda)),
+        max: Math.max(1, Math.ceil(lambda * 1.5)),
+        spread: 11,
+        near: 6,
+        far: 26,
+        stride: 14,
+        verge: "far",
+        roadRelative: true,
+        lo,
+        hi,
+      });
+    }
+  };
+  kind(["Oak_1", "Oak_2", "Oak_3"], oak, 0.85, 1.25);
+  kind(["Birch_1", "Birch_2", "Birch_3"], birch, 0.9, 1.3);
+  kind(["Pine_1", "Pine_2", "Pine_3"], pine, 0.85, 1.35);
+  // FLOWERING SHRUBS behind the path, in the season's colours.
+  for (const [node, stride] of [
+    ["Bush_2_A", 9],
+    ["Bush_1_A", 13],
+  ] as const) {
+    out.push({
+      file: "hero/HeroBushes",
+      node,
+      tint: SHRUB_TINT[s.season],
+      min: 0,
+      max: 2,
+      spread: 6,
+      near: 2.6,
+      far: 9,
+      stride,
+      verge: "far",
+      roadRelative: true,
+      lo: 1.0,
+      hi: 1.6,
+    });
+  }
+  return out;
+}
+
+// ── water ──────────────────────────────────────────────────────────────────
+
+/** An ellipse of water: a lake, or one of a bog's pools. */
+export type Pool = {
+  readonly x: number;
+  readonly z: number;
+  readonly rx: number;
+  readonly rz: number;
+};
+export type WaterPlan = {
+  /** The water's colour, where the scene wants one other than river blue. */
+  readonly color?: number;
+  /** x of each stream running across the road (the road bridges it). */
+  readonly streams: readonly number[];
+  readonly lakes: readonly Pool[];
+  readonly pools: readonly Pool[];
+};
+
+/**
+ * Where a scene's water is, from its terrain: streams across a meadow, a
+ * lake behind a lakeside road, pools in a bog. Fixed distances along the ten
+ * lessons, so the same scene has water in the same places every time.
+ */
+export function heroWaterPlan(terrain: HeroTerrain, trailEnd: number): WaterPlan {
+  const streams: number[] = [];
+  const lakes: Pool[] = [];
+  const pools: Pool[] = [];
+  if (terrain === "meadow") {
+    for (let x = 95; x < trailEnd - 60; x += 165) {
+      streams.push(x);
+    }
+  } else if (terrain === "lake") {
+    for (let x = 120; x < trailEnd - 50; x += 220) {
+      lakes.push({ x, z: -21, rx: 62, rz: 13 });
+    }
+  } else if (terrain === "boggy") {
+    let k = 0;
+    for (let x = 40; x < trailEnd - 30; x += 38) {
+      const side = k % 2 === 0 ? -1 : 1;
+      pools.push({
+        x: x + (k % 3) * 6,
+        z: side === -1 ? -7 - (k % 4) * 2.2 : 6.5 + (k % 3),
+        rx: 7 + (k % 3) * 1.8,
+        rz: 3.6 + (k % 2) * 1.2,
+      });
+      k++;
+    }
+  }
+  return { streams, lakes, pools };
+}
+
+// ── Dino Run: the planting, water and set pieces of a scene ───────────────
+
+/** What the dino mock's `VEG` says each vegetation mix keeps and adds. */
+const DINO_VEG: Record<
+  string,
+  {
+    keep: Readonly<Record<string, number>>;
+    boost: readonly (readonly [string, number])[];
+  }
+> = {
+  ferns: { keep: { redwood: 0.25 }, boost: [["tree fern", 30], ["ground fern", 40]] },
+  redwood: { keep: { redwood: 1 }, boost: [["redwood", 8], ["ground fern", 22]] },
+  cycad: { keep: { redwood: 0.3 }, boost: [["cycad", 34], ["broadleaf", 24]] },
+  meadow: { keep: { redwood: 0.12, "tree fern": 0.5 }, boost: [["grass", 70]] },
+  scrub: {
+    keep: { cycad: 0.3, broadleaf: 0.12, "ground fern": 0.1, grass: 0.4 },
+    boost: [],
+  },
+  bare: { keep: { cycad: 0.05, grass: 0.05 }, boost: [] },
+  swamp: { keep: { grass: 0.3 }, boost: [["cycad", 26], ["broadleaf", 20]] },
+  beach: { keep: { broadleaf: 0.3, grass: 0.3 }, boost: [] },
+};
+/** The base count of each plant in a window of the mock, before the mix. */
+const DINO_BASE: Record<string, number> = {
+  redwood: 10,
+  "tree fern": 10,
+  cycad: 8,
+  broadleaf: 14,
+  "ground fern": 22,
+  grass: 40,
+};
+/** Which nodes of DinoPlants a plant is, how tall it is, and its size range. */
+const DINO_PLANT: Record<
+  string,
+  { nodes: readonly string[]; tall: boolean; lo: number; hi: number }
+> = {
+  redwood: { nodes: ["Redwood_1", "Redwood_2", "Redwood_3"], tall: true, lo: 0.9, hi: 1.25 },
+  "tree fern": { nodes: ["TreeFern_1", "TreeFern_2", "TreeFern_3"], tall: true, lo: 0.9, hi: 1.3 },
+  cycad: { nodes: ["Cycad_1", "Cycad_2", "Cycad_3"], tall: true, lo: 0.9, hi: 1.5 },
+  broadleaf: { nodes: ["LargeLeaf_1", "LargeLeaf_2", "LargeLeaf_3"], tall: false, lo: 0.6, hi: 1.1 },
+  "ground fern": { nodes: ["GroundFern_1", "GroundFern_2", "GroundFern_3", "GroundFern_4"], tall: false, lo: 0.7, hi: 1.2 },
+  grass: { nodes: ["Horsetail_1", "Horsetail_2"], tall: false, lo: 0.4, hi: 0.8 },
+};
+
+export function dinoSceneClusters(s: DinoScene): GroundCluster[] {
+  const veg = DINO_VEG[s.veg];
+  const totals = new Map<string, number>();
+  if (veg != null) {
+    for (const [type, keep] of Object.entries(veg.keep)) {
+      totals.set(type, (DINO_BASE[type] ?? 0) * keep);
+    }
+    for (const [type, n] of veg.boost) {
+      totals.set(type, (totals.get(type) ?? 0) + n);
+    }
+  }
+  const out: GroundCluster[] = [];
+  const STRIDE = 12;
+  const WINDOW = 45;
+  for (const [type, total] of totals) {
+    const plant = DINO_PLANT[type];
+    if (plant == null || total <= 0) {
+      continue;
+    }
+    // Per variant, per stride point, per verge.
+    const lambda =
+      ((total * STRIDE) / WINDOW / plant.nodes.length) * (plant.tall ? 1 : 0.5);
+    for (const node of plant.nodes) {
+      out.push({
+        file: "dino/DinoPlants",
+        node,
+        min: Math.max(0, Math.floor(lambda)),
+        max: Math.max(1, Math.ceil(lambda * 1.5)),
+        spread: 9,
+        near: plant.tall ? 6 : 2,
+        far: plant.tall ? 30 : 16,
+        stride: STRIDE,
+        verge: "far",
+        roadRelative: true,
+        lo: plant.lo,
+        hi: plant.hi,
+      });
+    }
+  }
+  // In front of the path only low cover: the runner is there, and growth
+  // above its knees hides it.
+  out.push({
+    file: "dino/DinoPlants",
+    node: "Horsetail_1",
+    min: 2,
+    max: 4,
+    spread: 5,
+    near: 1.5,
+    far: 8,
+    stride: 6,
+    verge: "near",
+    roadRelative: true,
+    lo: 0.2,
+    hi: 0.35,
+  });
+  return out;
+}
+
+/** Water in a dino scene: a river behind the road, a lake, or the sea. */
+export function dinoWaterPlan(s: DinoScene, trailEnd: number): WaterPlan | null {
+  const lakes: Pool[] = [];
+  if (s.shape === "coast") {
+    lakes.push({ x: trailEnd / 2, z: -34, rx: trailEnd, rz: 22 });
+  } else {
+    if (s.river === true || s.landmarks.includes("river")) {
+      lakes.push({ x: trailEnd / 2, z: -13, rx: trailEnd * 0.6, rz: 4.6 });
+    }
+    if (s.landmarks.includes("lake")) {
+      lakes.push({ x: 220, z: -22, rx: 60, rz: 14 });
+    }
+  }
+  return lakes.length > 0
+    ? { streams: [], lakes, pools: [], color: s.shape === "coast" ? 0x2fb8c8 : 0x3f9ed8 }
+    : null;
+}
+
+/**
+ * Which rocks (DinoSets) and landmarks (DinoLandmarks) a scene sets out, from
+ * what its record names. `landmarks` is null when nothing there suits.
+ */
+export function dinoSceneSets(s: DinoScene): {
+  sets: RegExp;
+  landmarks: RegExp;
+} {
+  const sets = ["Boulder_", "Slab_"];
+  const has = (name: string) => s.landmarks.includes(name);
+  if (has("arches")) sets.push("Arch_");
+  if (has("bones")) sets.push("Bones_", "Fossil_");
+  if (has("nest")) sets.push("EggNest_");
+  if (has("tar")) sets.push("TarPit_");
+  if (has("edge")) sets.push("Crag_");
+  if (s.shape === "canyon" || s.shape === "ash") sets.push("Spire_", "Stack_");
+  const marks: string[] = [];
+  if (has("geyser")) marks.push("Geyser_");
+  if (s.shape === "coast") marks.push("Driftwood_");
+  if (s.veg === "swamp") marks.push("Snag_");
+  return {
+    sets: new RegExp(`^(${sets.join("|")})`),
+    // Matches nothing when the scene names no landmark.
+    landmarks: new RegExp(marks.length > 0 ? `^(${marks.join("|")})` : "^$^"),
+  };
+}

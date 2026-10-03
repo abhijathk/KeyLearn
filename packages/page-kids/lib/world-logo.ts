@@ -288,8 +288,9 @@ export function createWorldLogo(scale = 1): WorldLogo {
       // Eased in, so dusk only hints at it and full night has all of it.
       const g = THREE.MathUtils.smoothstep(l.glow ?? 0, 0.2, 1);
       for (const m of glowMats) m.emissiveIntensity = 0.42 * g;
-      (halo.material as THREE.MeshBasicMaterial).opacity = 0.5 * g;
-      halo.visible = g > 0.01;
+      // The glow stays ON the sign. The soft halo that used to spill past its
+      // edge is never shown (owner, 1 Oct 2026).
+      halo.visible = false;
     },
 
     dispose() {

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { deepEqual, equal, isTrue } from "rich-assert";
+import { AK_PACK_MISSING } from "./ak-pack-present.ts";
 import {
   channelOf,
   CLOTHING_REGIONS,
@@ -61,7 +62,7 @@ function mappingFromModel(): Record<string, string> {
   return {};
 }
 
-test("the code's mapping is the one the model ships with", (t) => {
+test("the code's mapping is the one the model ships with", { skip: AK_PACK_MISSING }, (t) => {
   const model = mappingFromModel();
   // The shipped character was replaced on 7 Sep 2026 with the 20-animation
   // export, which carries no `extras.tintMasks` at all — so there is no

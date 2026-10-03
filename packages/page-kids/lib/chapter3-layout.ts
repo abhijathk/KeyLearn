@@ -10,7 +10,7 @@ export type Footprint = { x: number; z: number; w: number; d: number };
 /** One shopkeeper belongs to the roadside market row, never its distant copy. */
 export function shopkeeperMarket(placements: readonly VillagePlacement[]) {
   return placements
-    .filter((p) => p.model.endsWith("/Village_Market"))
+    .filter((p) => p.model.endsWith("/Kerala_Market_Row"))
     .sort((a, b) => b.z - a.z)[0];
 }
 /** Space in front of the forge for the seated smith and his legs. */
@@ -21,11 +21,16 @@ export function smithFootprint(
   const market = shopkeeperMarket(placements);
   if (!market) return null;
   const b = villageFootprint(market, perspective);
-  return { x: b.x + b.w * 0.13, z: b.z + b.d / 2 + 0.25, w: 2.4, d: 2 };
+  // The seven-shop row: the smith sits at its fourth shop, 0.043 of the
+  // frontage right of centre, on the plinth edge (0.8 inside the front).
+  return { x: b.x + b.w * 0.043, z: b.z + b.d / 2 - 0.8, w: 2.4, d: 2 };
 }
-const building = /House|Cottage|Mana$|Market$|Temple$/;
+const building =
+  /House|Cottage|Mana$|Market(_Row)?$|Temple$|village-houses\/|Kulappura_Pond$/;
 const boundary = /Laterite_Wall|Estate_Gate|Bamboo_Fence/;
-const tree = /Banyan|Peepal|Mango_Tree|Jackfruit_Tree/;
+const tree = /Banyan|Peepal|Mango_Tree|Jackfruit_Tree|Coconut_Palm|Arecanut_Palm|Palmyra|Papaya_Tree/;
+/** Fern and grass are a floor, not a solid: they may overlap each other. */
+export const GROUND_COVER = /Kerala_Fern|Kerala_Grass_Tuft/;
 
 export function villageFootprint(
   p: VillagePlacement,
@@ -72,7 +77,7 @@ export function resolveChapter3Layout(
   const placed: Footprint[] = [],
     unresolved: string[] = [];
   const priority = (p: VillagePlacement) =>
-    p.model.endsWith("/Village_Market")
+    p.model.endsWith("/Kerala_Market_Row")
       ? 0
       : /Temple$/.test(p.model)
         ? 1
@@ -107,6 +112,7 @@ export function resolveChapter3Layout(
   for (const group of groups) {
     const first = group[0]!,
       source = first.p;
+    if (GROUND_COVER.test(source.model)) continue;
     if (!reservedSmith && priority(source) >= 4) {
       const forge = smithFootprint(
         entries.map((e) => e.p),
@@ -149,11 +155,14 @@ export function resolveChapter3Layout(
       }));
       if (next.some((p) => p.x < from + 0.5 || p.x > end - 0.5)) continue;
       const boxes = next.map((p) => villageFootprint(p, perspective));
-      const frontLimit = source.model.endsWith("/Village_Market") ? -11.5 : -7;
+      const frontLimit = source.model.endsWith("/Kerala_Market_Row") ? -11.5 : -7;
+      // The Mana's back wall is never seen and may overhang the ground's far
+      // edge by a few units (owner asked for it bigger and further back).
+      const backLimit = /\/Mana$/.test(source.model) ? -52 : -37.5;
       if (
         boxes.some(
           (b) =>
-            b.z - b.d / 2 < -37.5 ||
+            b.z - b.d / 2 < backLimit ||
             b.z + b.d / 2 > frontLimit ||
             placed.some((a) => footprintsOverlap(a, b)),
         )

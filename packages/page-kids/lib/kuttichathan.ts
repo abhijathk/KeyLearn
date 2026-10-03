@@ -220,6 +220,9 @@ export const HAUNT_MODELS: ReadonlyMap<Haunt, readonly RegExp[]> = new Map([
     [
       /(?:^|\/)Mana$/i,
       /ManaPortico/i,
+      // Chapter 3's village houses (owner, 2 Oct 2026), which replaced the
+      // thatch and hearth cottages his house haunts used to anchor on.
+      /village-houses\/\d\d_/i,
       /HouseThatch/i,
       /HouseHearth/i,
       /HouseMoss/i,
