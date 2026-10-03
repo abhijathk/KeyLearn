@@ -11524,6 +11524,21 @@ export function createKidsWorld(
         const mat = m.material as THREE.MeshStandardMaterial;
         // Building exports carry intentional hard edges and material finishes.
         // Preserve those instead of applying the organic-model shading treatment.
+        if (isVillageHouse) {
+          const materials = Array.isArray(m.material)
+            ? m.material
+            : [m.material];
+          for (const material of materials) {
+            const map = (material as THREE.MeshStandardMaterial).map;
+            if (map) {
+              map.anisotropy = Math.min(
+                8,
+                renderer.capabilities.getMaxAnisotropy(),
+              );
+              map.needsUpdate = true;
+            }
+          }
+        }
         if (mat && !isVillageHouse) {
           mat.metalness = 0.05;
           mat.roughness = Math.max(0.65, mat.roughness ?? 0.8);
@@ -21352,73 +21367,292 @@ export function createKidsWorld(
         scene.add(m);
       }
     }
-    // THE BIG SET PIECES OF A DINO RUN SCENE: the volcano behind an ash scene's
-    // road, the geysers of a geyser scene. Both are in DinoLandmarks, and both
-    // stand well back so the road stays clear.
+    // THE SET PIECES OF A DINO RUN SCENE, from what its record names: the
+    // volcano and lava of an ash scene, geysers, arches, tar pits, nests,
+    // bones, the crags of a ridge's edge, the spires of a canyon. Each is set
+    // at a fixed spacing along the ten lessons, seeded from the scene, and
+    // sized by its largest side. All stand BEHIND the road (the camera looks
+    // across it from the front), and the first of each is in the opening
+    // frame.
     if (land.dinoScene != null && CHAPTER == null) {
       const ds = land.dinoScene;
-      const wants: [RegExp, number, number, number, number][] = [];
-      // node, spacing along the road, depth behind it, scale, stagger
-      if (ds.shape === "ash" || ds.landmarks.includes("lava")) {
-        wants.push([/^Volcano/, 130, 24, 0.15, -38]);
+      // Each terrain carries its own landmark as well as the record's (the
+      // sheet's "flat / tar", "ridge / edge", "canyon / arches"...).
+      const shapeMark: Record<string, string> = {
+        ridge: "edge",
+        ash: "lava",
+        flat: "tar",
+        canyon: "arches",
+        coast: "sea",
+      };
+      const has = (n: string) =>
+        ds.landmarks.includes(n) || shapeMark[ds.shape] === n;
+      type Want = {
+        file: "DinoLandmarks" | "DinoSets";
+        node: RegExp;
+        gap: number;
+        near: number;
+        far: number;
+        size: number;
+        start: number;
+        sink?: number;
+        unfogged?: boolean;
+      };
+      const wants: Want[] = [];
+      const ashy = ds.shape === "ash" || has("lava");
+      if (ashy) {
+        wants.push({
+          file: "DinoLandmarks",
+          node: /^Volcano/,
+          gap: 150,
+          near: 19,
+          far: 21,
+          size: 22,
+          start: 6,
+          sink: 1.5,
+          unfogged: true,
+        });
       }
-      if (ds.landmarks.includes("geyser")) {
-        wants.push([/^Geyser/, 55, 15, 1.2, 20]);
+      if (has("geyser")) {
+        wants.push({
+          file: "DinoLandmarks",
+          node: /^Geyser/,
+          gap: 26,
+          near: 9,
+          far: 15,
+          size: 5,
+          start: 10,
+        });
       }
-      if (wants.length > 0) {
-        let g: Awaited<ReturnType<typeof loadModel>> | null = null;
-        try {
-          g = await loadModel(`${ASSETS}/models/dino/DinoLandmarks.glb`);
-        } catch {
-          g = null;
-        }
-        const rnd = mulberry32(hashSeed("dino-setpiece", opts.sceneIndex ?? 0));
-        for (const [node, gap, depth, scale, stagger] of wants) {
-          const src = g?.scene.children.find((c) => node.test(c.name));
-          if (src == null) {
-            continue;
-          }
-          for (let x = 60 + stagger; x < TRAIL_END - 20; x += gap) {
-            const v = src.clone();
-            const box = new THREE.Box3().setFromObject(v);
-            v.position.sub(
-              new THREE.Vector3(
-                (box.min.x + box.max.x) / 2,
-                box.min.y,
-                (box.min.z + box.max.z) / 2,
-              ),
+      if (has("arches")) {
+        wants.push({
+          file: "DinoSets",
+          node: /^Arch_/,
+          gap: 44,
+          near: 16,
+          far: 24,
+          size: 13,
+          start: 14,
+        });
+      }
+      if (has("tar")) {
+        wants.push({
+          file: "DinoSets",
+          node: /^TarPit_/,
+          gap: 30,
+          near: 5,
+          far: 10,
+          size: 10,
+          start: 6,
+          sink: 0.1,
+        });
+      }
+      if (has("nest")) {
+        wants.push({
+          file: "DinoSets",
+          node: /^EggNest_/,
+          gap: 48,
+          near: 5,
+          far: 9,
+          size: 3,
+          start: 22,
+        });
+      }
+      if (has("bones")) {
+        wants.push({
+          file: "DinoSets",
+          node: /^(Bones_|Fossil_)/,
+          gap: 36,
+          near: 7,
+          far: 12,
+          size: 6,
+          start: 2,
+        });
+      }
+      if (has("edge")) {
+        wants.push({
+          file: "DinoSets",
+          node: /^Crag_/,
+          gap: 30,
+          near: 20,
+          far: 26,
+          size: 14,
+          start: -4,
+        });
+      }
+      if (ds.shape === "canyon") {
+        wants.push({
+          file: "DinoSets",
+          node: /^(Spire_|Stack_)/,
+          gap: 24,
+          near: 17,
+          far: 27,
+          size: 12,
+          start: 8,
+        });
+      }
+      const rnd = mulberry32(hashSeed("dino-setpiece", opts.sceneIndex ?? 0));
+      const files = new Map<string, THREE.Object3D | null>();
+      for (const w of wants) {
+        if (!files.has(w.file)) {
+          try {
+            files.set(
+              w.file,
+              (await loadModel(`${ASSETS}/models/dino/${w.file}.glb`))?.scene ??
+                null,
             );
-            // The haze would swallow a mountain this far back, and the
-            // mock's volcano is a plain dark cone: it takes the haze colour
-            // itself, only a little.
-            if (node.source.includes("Volcano")) {
-              v.traverse((o) => {
-                const m = o as THREE.Mesh;
-                if (m.isMesh && m.material != null) {
-                  const mat = (
-                    m.material as THREE.MeshStandardMaterial
-                  ).clone();
-                  mat.fog = false;
-                  mat.color.lerp(new THREE.Color(land.fog), 0.18);
-                  m.material = mat;
-                }
-              });
+          } catch {
+            files.set(w.file, null);
+          }
+        }
+        const variants =
+          files.get(w.file)?.children.filter((c) => w.node.test(c.name)) ?? [];
+        if (variants.length === 0) continue;
+        for (let x = w.start; x < TRAIL_END - 10; x += w.gap) {
+          const src = variants[Math.floor(rnd() * variants.length)]!;
+          const v = src.clone(true);
+          v.position.set(0, 0, 0);
+          v.rotation.set(0, 0, 0);
+          v.scale.set(1, 1, 1);
+          const box = measureBox(v);
+          const sz = box.getSize(new THREE.Vector3());
+          const k = w.size / (Math.max(sz.x, sz.y, sz.z) || 1);
+          v.position.set(
+            (-(box.min.x + box.max.x) / 2) * k,
+            -box.min.y * k,
+            (-(box.min.z + box.max.z) / 2) * k,
+          );
+          v.scale.setScalar(k);
+          v.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (!m.isMesh) return;
+            m.geometry.computeBoundingSphere();
+            m.castShadow = !w.unfogged;
+            if (w.unfogged && m.material != null) {
+              // A mountain this far back would be all haze; the mock's
+              // volcano is a plain dark cone, so it takes a little of the
+              // haze's colour and no more.
+              const mat = (m.material as THREE.MeshStandardMaterial).clone();
+              mat.fog = false;
+              mat.color.lerp(new THREE.Color(land.fog), 0.18);
+              m.material = mat;
             }
-            const wrap = new THREE.Group();
-            wrap.add(v);
-            const px = x + (rnd() - 0.5) * 20;
-            const z = meander(px) - (depth + rnd() * 6);
-            wrap.position.set(
-              px,
-              surfaceY(px, z) - (node.source.includes("Volcano") ? 2.2 : 0.3),
-              z,
+          });
+          const wrap = new THREE.Group();
+          wrap.add(v);
+          const px = x + (rnd() - 0.5) * w.gap * 0.3;
+          const z = meander(px) - (w.near + rnd() * (w.far - w.near));
+          wrap.position.set(px, surfaceY(px, z) - (w.sink ?? 0.05), z);
+          wrap.rotation.y = (rnd() - 0.5) * 1.2;
+          wrap.scale.setScalar(perspective(z));
+          scene.add(wrap);
+          characterRoots.add(wrap);
+        }
+      }
+
+      // LAVA, for the ash scenes: glowing runnels across the dark ground,
+      // flat on it, so they can lie in front of the road as well as behind
+      // without hiding anything. Drawn past tone mapping so they glow.
+      if (ashy) {
+        const lavaMat = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(1.0, 0.36, 0.08).multiplyScalar(1.8),
+          toneMapped: false,
+          side: THREE.DoubleSide,
+        });
+        const pos: number[] = [];
+        const idx: number[] = [];
+        for (let x0 = -20; x0 < TRAIL_END; x0 += 9 + rnd() * 9) {
+          // Mostly behind the road, one in four in front of it.
+          const front = rnd() < 0.25;
+          let z = meander(x0) + (front ? 4 + rnd() * 6 : -(4 + rnd() * 22));
+          let x = x0;
+          let dir = (rnd() - 0.5) * 0.9;
+          const n = 6 + Math.floor(rnd() * 8);
+          const base = pos.length / 3;
+          for (let k = 0; k <= n; k++) {
+            const wdt = 0.18 + 0.22 * Math.sin((k / n) * Math.PI);
+            const y = surfaceY(x, z) + 0.06;
+            const nx = -Math.sin(dir);
+            const nz = Math.cos(dir);
+            pos.push(
+              x + nx * wdt,
+              y,
+              z + nz * wdt,
+              x - nx * wdt,
+              y,
+              z - nz * wdt,
             );
-            wrap.rotation.y = rnd() * Math.PI * 2;
-            wrap.scale.setScalar(scale * perspective(z) * theme.sceneryScale);
-            scene.add(wrap);
-            characterRoots.add(wrap);
+            if (k < n) {
+              const a = base + k * 2;
+              idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+            }
+            dir += (rnd() - 0.5) * 0.7;
+            x += Math.cos(dir) * 1.1;
+            z += Math.sin(dir) * 1.1;
+            // Never across the road itself.
+            if (Math.abs(z - meander(x)) < 2.6) {
+              z = meander(x) + (front ? 2.6 : -2.6);
+            }
           }
         }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+        geo.setIndex(idx);
+        const lava = new THREE.Mesh(geo, lavaMat);
+        lava.renderOrder = 1;
+        scene.add(lava);
+      }
+
+      // THE CANYON'S WALLS: a long cliff of banded rock behind the road, its
+      // top ragged, in the scene's own earth colours. One mesh.
+      if (ds.shape === "canyon") {
+        const len = TRAIL_END + 200;
+        const tall = 10;
+        const geo = new THREE.PlaneGeometry(len, tall, Math.round(len / 2), 14);
+        const p = geo.getAttribute("position") as THREE.BufferAttribute;
+        const cols = new Float32Array(p.count * 3);
+        const dirt = new THREE.Color(land.dirt);
+        const rock = new THREE.Color(land.grassVar);
+        const tmp = new THREE.Color();
+        const z0 = -27;
+        for (let k = 0; k < p.count; k++) {
+          const lx = p.getX(k) + (TRAIL_END - 60) / 2;
+          const ly = p.getY(k) + tall / 2; // 0 at the foot
+          const top = ly >= tall - 0.01;
+          const ragged = top
+            ? -3.5 * (0.5 + 0.5 * groundNoise(lx * 0.07, 3.1)) -
+              2 * (0.5 + 0.5 * groundNoise(lx * 0.23, 7.7))
+            : 0;
+          const yy = Math.max(0, ly + ragged);
+          const bump =
+            groundNoise(lx * 0.11, yy * 0.3) * 1.6 +
+            groundNoise(lx * 0.37, yy * 0.9) * 0.5;
+          const gy = surfaceY(lx, meander(lx) + z0);
+          p.setXYZ(k, lx, gy - 0.5 + yy, meander(lx) + z0 + bump);
+          // Strata: bands of the two earths, darker toward the foot.
+          const band =
+            0.5 + 0.5 * Math.sin(yy * 1.7 + groundNoise(lx * 0.05, 1.3) * 2);
+          tmp
+            .copy(dirt)
+            .lerp(rock, band)
+            .multiplyScalar(0.8 + 0.25 * (yy / tall));
+          cols[k * 3] = tmp.r;
+          cols[k * 3 + 1] = tmp.g;
+          cols[k * 3 + 2] = tmp.b;
+        }
+        geo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
+        geo.computeVertexNormals();
+        const wall = new THREE.Mesh(
+          geo,
+          new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            roughness: 1,
+            flatShading: true,
+            side: THREE.DoubleSide,
+          }),
+        );
+        wall.receiveShadow = true;
+        scene.add(wall);
       }
     }
     if (land.heroScene != null && CHAPTER == null) {
