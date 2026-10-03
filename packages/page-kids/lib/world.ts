@@ -1448,7 +1448,10 @@ export type Land = {
   /** Where this land's haze starts and is complete. */
   readonly fogRange?: readonly [number, number];
   /** This land's own far ranges, over the theme's. */
-  readonly mountains?: { readonly colorNear: number; readonly colorFar: number };
+  readonly mountains?: {
+    readonly colorNear: number;
+    readonly colorFar: number;
+  };
 };
 
 /**
@@ -3110,33 +3113,33 @@ const DEFAULT_VIEW = {
 } as const;
 
 /** The perspective rig this world briefly used; kept, switched off. */
- 
+
 export const DINO_PERSPECTIVE: NonNullable<WorldTheme["perspective"]> = {
-    fov: 34,
-    shiftY: 0.7,
-    near: 2,
-    far: 640,
-    followDx: 8.5,
-    fogNear: 22,
-    fogFar: 105,
-    groundBack: 90,
-    farBank: 0.5,
-    scatterDepth: 2.4,
-    scatterCount: 1.8,
-    treeScatter: 0.9,
-    sightClear: 12,
-    clusterNear: 2.2,
-    clusterDensity: 1,
-    dryShare: 0.25,
-    wordZ: 6,
-    wordY: 0,
-    skyTop: 0x8fb0c8,
-    skyBottom: 0xb5c9c0,
-    ranges: [
-      { dist: 380, height: 90, peak: 0.84, haze: 0.3, seed: 1.7, far: true },
-      { dist: 300, height: 60, peak: 0.74, haze: 0.12, seed: 4.2, far: false },
-    ],
-  };
+  fov: 34,
+  shiftY: 0.7,
+  near: 2,
+  far: 640,
+  followDx: 8.5,
+  fogNear: 22,
+  fogFar: 105,
+  groundBack: 90,
+  farBank: 0.5,
+  scatterDepth: 2.4,
+  scatterCount: 1.8,
+  treeScatter: 0.9,
+  sightClear: 12,
+  clusterNear: 2.2,
+  clusterDensity: 1,
+  dryShare: 0.25,
+  wordZ: 6,
+  wordY: 0,
+  skyTop: 0x8fb0c8,
+  skyBottom: 0xb5c9c0,
+  ranges: [
+    { dist: 380, height: 90, peak: 0.84, haze: 0.3, seed: 1.7, far: true },
+    { dist: 300, height: 60, peak: 0.74, haze: 0.12, seed: 4.2, far: false },
+  ],
+};
 
 export const DINO_THEME: WorldTheme = {
   modelDir: "dino",
@@ -3330,33 +3333,33 @@ export const DINO_THEME: WorldTheme = {
 // KayKit heroes share one rig, so their walk/run/idle clips are loaded from a
 // shared animation GLB and bound to every character by bone name.
 /** The perspective rig this world briefly used; kept, switched off. */
- 
+
 export const HERO_PERSPECTIVE: NonNullable<WorldTheme["perspective"]> = {
-    fov: 34,
-    shiftY: 0.6,
-    near: 2,
-    far: 640,
-    followDx: 11,
-    fogNear: 55,
-    fogFar: 140,
-    groundBack: 120,
-    farBank: 0.35,
-    scatterDepth: 2.4,
-    scatterCount: 1.8,
-    treeScatter: 1.8,
-    sightClear: 12,
-    clusterNear: 2.2,
-    clusterDensity: 2.2,
-    dryShare: 0.6,
-    wordZ: 4,
-    wordY: 0,
-    skyTop: 0x9ec3de,
-    skyBottom: 0xe9dcc8,
-    ranges: [
-      { dist: 380, height: 70, peak: 0.74, haze: 0.16, seed: 1.7, far: true },
-      { dist: 300, height: 46, peak: 0.68, haze: 0.0, seed: 4.2, far: false },
-    ],
-  };
+  fov: 34,
+  shiftY: 0.6,
+  near: 2,
+  far: 640,
+  followDx: 11,
+  fogNear: 55,
+  fogFar: 140,
+  groundBack: 120,
+  farBank: 0.35,
+  scatterDepth: 2.4,
+  scatterCount: 1.8,
+  treeScatter: 1.8,
+  sightClear: 12,
+  clusterNear: 2.2,
+  clusterDensity: 2.2,
+  dryShare: 0.6,
+  wordZ: 4,
+  wordY: 0,
+  skyTop: 0x9ec3de,
+  skyBottom: 0xe9dcc8,
+  ranges: [
+    { dist: 380, height: 70, peak: 0.74, haze: 0.16, seed: 1.7, far: true },
+    { dist: 300, height: 46, peak: 0.68, haze: 0.0, seed: 4.2, far: false },
+  ],
+};
 
 export const HERO_THEME: WorldTheme = {
   modelDir: "hero",
@@ -4586,8 +4589,7 @@ const waterCarve = (x: number, z: number): number => {
     }
   }
   for (const pool of [...WATER.lakes, ...WATER.pools]) {
-    const q =
-      ((x - pool.x) / pool.rx) ** 2 + ((z - pool.z) / pool.rz) ** 2;
+    const q = ((x - pool.x) / pool.rx) ** 2 + ((z - pool.z) / pool.rz) ** 2;
     if (q < 1.15) {
       d = Math.max(d, 2.4 * smooth01((1.15 - q) / 0.6));
     }
@@ -9844,7 +9846,13 @@ export function createKidsWorld(
       const t = Math.max(0, Math.min(1, (v - e0) / Math.max(1e-6, e1 - e0)));
       return t * t * (3 - 2 * t);
     };
-    type Way = { x: number; z0: number; z1: number; hw: number; alongZ: boolean };
+    type Way = {
+      x: number;
+      z0: number;
+      z1: number;
+      hw: number;
+      alongZ: boolean;
+    };
     let ways: Way[] | null = null;
     let manas: { x: number; zFront: number }[] = [];
     const buildWays = () => {
@@ -9923,11 +9931,20 @@ export function createKidsWorld(
       for (const w of ways!) {
         if (w.alongZ) {
           if (z > w.z1 + 1 || z < w.z0 - 1) continue;
-          const hw = w.hw * (1 - 0.3 * Math.max(0, Math.min(1, (z - w.z1) / (w.z0 - w.z1 || 1))));
-          best = Math.max(best, 1 - ss01(hw * 0.5, hw + 1.1, Math.abs(x - w.x)));
+          const hw =
+            w.hw *
+            (1 -
+              0.3 * Math.max(0, Math.min(1, (z - w.z1) / (w.z0 - w.z1 || 1))));
+          best = Math.max(
+            best,
+            1 - ss01(hw * 0.5, hw + 1.1, Math.abs(x - w.x)),
+          );
         } else {
           if (x < w.x - 1 || x > w.z0 + 1) continue;
-          best = Math.max(best, 1 - ss01(w.hw * 0.5, w.hw + 1.1, Math.abs(z - w.z1)));
+          best = Math.max(
+            best,
+            1 - ss01(w.hw * 0.5, w.hw + 1.1, Math.abs(z - w.z1)),
+          );
         }
       }
       const ap = manaApproach();
@@ -9939,7 +9956,10 @@ export function createKidsWorld(
         const mouth = ss01(-10.5, -5.5, z);
         const hwp =
           (2.6 + groundNoise(z * 0.7, 4.2) * 0.45) * (1 + 1.4 * mouth);
-        best = Math.max(best, 1 - ss01(hwp * 0.55, hwp + 1.6, Math.abs(x - ap.x)));
+        best = Math.max(
+          best,
+          1 - ss01(hwp * 0.55, hwp + 1.6, Math.abs(x - ap.x)),
+        );
       }
       return Math.max(best, manaWearAt(x, z));
     };
@@ -10826,7 +10846,8 @@ export function createKidsWorld(
           // back by itself after twenty seconds.
           if (lastCall > 0) {
             const gap = now - lastCall;
-            slowRun = gap > 70 && gap < 400 ? slowRun + 1 : Math.max(0, slowRun - 2);
+            slowRun =
+              gap > 70 && gap < 400 ? slowRun + 1 : Math.max(0, slowRun - 2);
             if (
               slowRun > 90 &&
               !opts_.keepOn &&
@@ -11490,7 +11511,9 @@ export function createKidsWorld(
         // The mangrove ships its own normals, and its leaf cards' are bent
         // out from each lobe so the canopy shades as one mass; recomputing
         // them from the cards turns it back into a pile of flat quads.
-        const isVillageHouse = /\/village-houses\/[^/]+\.glb(?:[?#].*)?$/.test(url);
+        const isVillageHouse = /\/village-houses\/[^/]+\.glb(?:[?#].*)?$/.test(
+          url,
+        );
         if (!isVillageHouse && !/\/Mangrove_(?:Kandal|Large)\.glb$/.test(url)) {
           try {
             weldAndShade(m);
@@ -14068,8 +14091,12 @@ export function createKidsWorld(
    * Checked by eye at 2x on the Lesson 7 road, and by the foot check, which
    * is now silent.
    */
+  // BUFFALO 0.95 (3 Oct 2026), MEASURED: the lowest skinned vertex of every
+  // buffalo on the road stood 0.71-0.77 above the drawn ground (raycast),
+  // standing or walking, at 0.12 — the owner saw it floating. 0.95 brings
+  // the hoof to within a tenth of the ground at the depths it grazes.
   const WILD_SINK: Record<string, number> = {
-    Buffalo: 0.12,
+    Buffalo: 0.95,
     Cow: 0.1,
     Cow_Calf: 0.06,
   };
@@ -14495,7 +14522,10 @@ export function createKidsWorld(
   };
 
   /** The sacred grove's ground, from its own placed trees, padded a little. */
-  let kavuCache: { x0: number; x1: number; z0: number; z1: number } | null | undefined;
+  let kavuCache:
+    | { x0: number; x1: number; z0: number; z1: number }
+    | null
+    | undefined;
   const kavuBounds = () => {
     if (kavuCache !== undefined) return kavuCache;
     const g = CHAPTER == null ? [] : chapterPlacements().filter((p) => p.grove);
@@ -14513,7 +14543,14 @@ export function createKidsWorld(
   /** A wander target inside the kavu is pushed out to its nearer side. */
   const kavuOut = (x: number, z: number): number => {
     const k = kavuBounds();
-    if (k == null || x < k.x0 - 2 || x > k.x1 + 2 || z < k.z0 - 2 || z > k.z1 + 2) return x;
+    if (
+      k == null ||
+      x < k.x0 - 2 ||
+      x > k.x1 + 2 ||
+      z < k.z0 - 2 ||
+      z > k.z1 + 2
+    )
+      return x;
     return x - k.x0 < k.x1 - x ? k.x0 - 3 : k.x1 + 3;
   };
   /** Is this spot clear of everything built? */
@@ -15827,7 +15864,15 @@ export function createKidsWorld(
    * front of its centre is inside it (lesson 17, 3 Oct 2026). So the new
    * houses get their depth from the measured table here.
    */
-  const withHouseDepth = <T extends { model: string; z: number; h: number; depth?: number; turn?: number }>(
+  const withHouseDepth = <
+    T extends {
+      model: string;
+      z: number;
+      h: number;
+      depth?: number;
+      turn?: number;
+    },
+  >(
     ps: readonly T[],
   ): T[] =>
     ps.map((p) => {
@@ -20946,13 +20991,13 @@ export function createKidsWorld(
             String(file) === "dino/DinoLandmarks",
         )
         .map(
-        ([file, count, ...rest]) =>
-          [
-            file,
-            Math.round(count * spread),
-            ...rest,
-          ] as (typeof theme.ground)[number],
-      ),
+          ([file, count, ...rest]) =>
+            [
+              file,
+              Math.round(count * spread),
+              ...rest,
+            ] as (typeof theme.ground)[number],
+        ),
     ];
     while (groundOnly.length < groundSpecs.length) {
       groundOnly.push(null);
@@ -20964,7 +21009,8 @@ export function createKidsWorld(
       const only = dinoSceneSets(land.dinoScene);
       groundSpecs.forEach(([file], gi) => {
         if (String(file) === "dino/DinoSets") groundOnly[gi] = only.sets;
-        if (String(file) === "dino/DinoLandmarks") groundOnly[gi] = only.landmarks;
+        if (String(file) === "dino/DinoLandmarks")
+          groundOnly[gi] = only.landmarks;
       });
     }
     const groundGltfs = await Promise.all(
@@ -21345,7 +21391,9 @@ export function createKidsWorld(
               v.traverse((o) => {
                 const m = o as THREE.Mesh;
                 if (m.isMesh && m.material != null) {
-                  const mat = (m.material as THREE.MeshStandardMaterial).clone();
+                  const mat = (
+                    m.material as THREE.MeshStandardMaterial
+                  ).clone();
                   mat.fog = false;
                   mat.color.lerp(new THREE.Color(land.fog), 0.18);
                   m.material = mat;
@@ -21362,9 +21410,7 @@ export function createKidsWorld(
               z,
             );
             wrap.rotation.y = rnd() * Math.PI * 2;
-            wrap.scale.setScalar(
-              scale * perspective(z) * theme.sceneryScale,
-            );
+            wrap.scale.setScalar(scale * perspective(z) * theme.sceneryScale);
             scene.add(wrap);
             characterRoots.add(wrap);
           }
@@ -21423,8 +21469,7 @@ export function createKidsWorld(
         characterRoots.add(wrap);
       };
       const SPOTS = 11;
-      const at = (n: number) =>
-        40 + ((n + 0.5) / SPOTS) * (TRAIL_END - 80);
+      const at = (n: number) => 40 + ((n + 0.5) / SPOTS) * (TRAIL_END - 80);
       const along = (from: number, to: number, stride: number) => {
         const xs: number[] = [];
         for (let x = from; x < to; x += stride) {
@@ -21501,7 +21546,12 @@ export function createKidsWorld(
           emissive: ice ? 0x000000 : 0x1a5a88,
           emissiveIntensity: ice ? 0 : 0.28,
         });
-        const sheet = (geo: THREE.BufferGeometry, x: number, y: number, z: number) => {
+        const sheet = (
+          geo: THREE.BufferGeometry,
+          x: number,
+          y: number,
+          z: number,
+        ) => {
           geo.rotateX(-Math.PI / 2);
           const m = new THREE.Mesh(geo, waterMat);
           m.position.set(x, y, z);
@@ -21510,7 +21560,12 @@ export function createKidsWorld(
           scene.add(m);
         };
         /** The level a basin's water stands at: its lowest shore, less a hair. */
-        const levelOf = (pl: { x: number; z: number; rx: number; rz: number }) => {
+        const levelOf = (pl: {
+          x: number;
+          z: number;
+          rx: number;
+          rz: number;
+        }) => {
           let low = Infinity;
           for (let k = 0; k < 16; k++) {
             const a = (k / 16) * Math.PI * 2;
@@ -21538,21 +21593,61 @@ export function createKidsWorld(
             const rx = pl.x + Math.cos(a) * pl.rx * (0.98 + pieceRand() * 0.1);
             const rz = pl.z + Math.sin(a) * pl.rz * (0.98 + pieceRand() * 0.1);
             if (rz > meander(rx) - 3) continue;
-            await piece("HeroWater", /^Reeds_/, rx, meander(rx) - rz, 1.0 + pieceRand() * 0.5, pieceRand() * 6, level - 0.25);
+            await piece(
+              "HeroWater",
+              /^Reeds_/,
+              rx,
+              meander(rx) - rz,
+              1.0 + pieceRand() * 0.5,
+              pieceRand() * 6,
+              level - 0.25,
+            );
           }
           for (let k = 0; k < (isLake ? 8 : 3); k++) {
             const px = pl.x + (pieceRand() - 0.5) * pl.rx * 1.4;
             const pz = pl.z + (pieceRand() - 0.5) * pl.rz * 1.1;
-            await piece("HeroWater", /^LilyPads_/, px, meander(px) - pz, 1.2, pieceRand() * 6, level + 0.03);
+            await piece(
+              "HeroWater",
+              /^LilyPads_/,
+              px,
+              meander(px) - pz,
+              1.2,
+              pieceRand() * 6,
+              level + 0.03,
+            );
           }
           if (isLake) {
             // The dock runs out from the near shore into the lake, with a
             // couple of rowboats tied up beside it.
-            const nearShoreDepth = -(pl.z + pl.rz * 1.05) ;
+            const nearShoreDepth = -(pl.z + pl.rz * 1.05);
             const pierLen = 22 * 1.2;
-            await piece("HeroWater", /^Dock/, pl.x + 6, nearShoreDepth + pierLen / 2 - 1, 1.0, Math.PI / 2, level - 0.7);
-            await piece("HeroWater", /^Rowboat_1/, pl.x + 10.5, nearShoreDepth + 9, 1.0, 1.6, level - 0.08);
-            await piece("HeroWater", /^Rowboat_2/, pl.x + 1.5, nearShoreDepth + 14, 1.0, 1.4, level - 0.08);
+            await piece(
+              "HeroWater",
+              /^Dock/,
+              pl.x + 6,
+              nearShoreDepth + pierLen / 2 - 1,
+              1.0,
+              Math.PI / 2,
+              level - 0.7,
+            );
+            await piece(
+              "HeroWater",
+              /^Rowboat_1/,
+              pl.x + 10.5,
+              nearShoreDepth + 9,
+              1.0,
+              1.6,
+              level - 0.08,
+            );
+            await piece(
+              "HeroWater",
+              /^Rowboat_2/,
+              pl.x + 1.5,
+              nearShoreDepth + 14,
+              1.0,
+              1.4,
+              level - 0.08,
+            );
           }
         }
       }
@@ -22226,7 +22321,9 @@ export function createKidsWorld(
           a.play();
           propMixers.push(mixer);
         }
-        if (clips.some((c) => /^(Front|Back)_Doors_(Open|Close)$/.test(c.name))) {
+        if (
+          clips.some((c) => /^(Front|Back)_Doors_(Open|Close)$/.test(c.name))
+        ) {
           doorRigs.push({
             mixer: new THREE.AnimationMixer(wrap),
             clips: new Map(clips.map((c) => [c.name, c])),
@@ -22503,45 +22600,92 @@ export function createKidsWorld(
             });
             for (const o of gone) o.removeFromParent();
           }
-          const SHOPS = (ROW
-            ? [
-                { at: 0, closes: 21, kind: "petromax", spot: rowAt(-9.86, 2.63, 0.7) },
-                { at: 0, closes: 20, kind: "petromax", spot: rowAt(-6.68, 2.61, 0.7) },
-                { at: 0, closes: 21, kind: "oil", spot: rowAt(-3.62, 2.52, 0.7) },
-                { at: 0, closes: 21, kind: "oil", spot: rowAt(-0.53, 2.45, 0.7) },
-                { at: 0, closes: 19, kind: "oil", spot: rowAt(2.62, 2.24, 0.7) },
-                { at: 0, closes: 20, kind: "petromax", spot: rowAt(6.11, 2.23, 0.7) },
-                { at: 0, closes: 18, kind: "oil", spot: rowAt(9.71, 2.17, 0.7) },
-                // THE TWO LAMPS ABOVE THE SHOPS (owner, 1 Oct 2026): the
-                // landing at the top of the stair and the balcony. They are
-                // the household's, not a trader's, so they burn until the
-                // house goes to bed rather than at a shop's closing hour.
-                {
-                  at: 0,
-                  closes: 22,
-                  kind: "oil",
-                  spot: rowAt(-13.52, 3.96, -0.35),
-                },
-                {
-                  at: 0,
-                  closes: 22,
-                  kind: "oil",
-                  spot: rowAt(0.11, 5.11, 1.9),
-                },
-              ]
-            : [
-            // C.K. Nair's hangs from the shop's own wall rather than out
-            // over the middle of his frontage, and his eave is the lower of
-            // the two.
-            { at: -0.34, closes: 21, kind: "petromax" as const, up: 0.43 },
-            { at: -0.24, closes: 20, kind: "oil" as const },
-            { at: -0.08, closes: 21, kind: "petromax" as const, up: 0.515 },
-            // The blacksmith's counter sits further along his front and a
-            // little higher than the others; the tailor works at a table
-            // rather than a counter, which stands taller.
-            { at: 0.13, closes: 21, kind: "oil" as const, up: 0.235 },
-            { at: 0.24, closes: 19, kind: "oil" as const, up: 0.225 },
-          ]) as {
+          const SHOPS = (
+            ROW
+              ? [
+                  {
+                    at: 0,
+                    closes: 21,
+                    kind: "petromax",
+                    spot: rowAt(-9.86, 2.63, 0.7),
+                  },
+                  {
+                    at: 0,
+                    closes: 20,
+                    kind: "petromax",
+                    spot: rowAt(-6.68, 2.61, 0.7),
+                  },
+                  {
+                    at: 0,
+                    closes: 21,
+                    kind: "oil",
+                    spot: rowAt(-3.62, 2.52, 0.7),
+                  },
+                  {
+                    at: 0,
+                    closes: 21,
+                    kind: "oil",
+                    spot: rowAt(-0.53, 2.45, 0.7),
+                  },
+                  {
+                    at: 0,
+                    closes: 19,
+                    kind: "oil",
+                    spot: rowAt(2.62, 2.24, 0.7),
+                  },
+                  {
+                    at: 0,
+                    closes: 20,
+                    kind: "petromax",
+                    spot: rowAt(6.11, 2.23, 0.7),
+                  },
+                  {
+                    at: 0,
+                    closes: 18,
+                    kind: "oil",
+                    spot: rowAt(9.71, 2.17, 0.7),
+                  },
+                  // THE TWO LAMPS ABOVE THE SHOPS (owner, 1 Oct 2026): the
+                  // landing at the top of the stair and the balcony. They are
+                  // the household's, not a trader's, so they burn until the
+                  // house goes to bed rather than at a shop's closing hour.
+                  {
+                    at: 0,
+                    closes: 22,
+                    kind: "oil",
+                    spot: rowAt(-13.52, 3.96, -0.35),
+                  },
+                  {
+                    at: 0,
+                    closes: 22,
+                    kind: "oil",
+                    spot: rowAt(0.11, 5.11, 1.9),
+                  },
+                ]
+              : [
+                  // C.K. Nair's hangs from the shop's own wall rather than out
+                  // over the middle of his frontage, and his eave is the lower of
+                  // the two.
+                  {
+                    at: -0.34,
+                    closes: 21,
+                    kind: "petromax" as const,
+                    up: 0.43,
+                  },
+                  { at: -0.24, closes: 20, kind: "oil" as const },
+                  {
+                    at: -0.08,
+                    closes: 21,
+                    kind: "petromax" as const,
+                    up: 0.515,
+                  },
+                  // The blacksmith's counter sits further along his front and a
+                  // little higher than the others; the tailor works at a table
+                  // rather than a counter, which stands taller.
+                  { at: 0.13, closes: 21, kind: "oil" as const, up: 0.235 },
+                  { at: 0.24, closes: 19, kind: "oil" as const, up: 0.225 },
+                ]
+          ) as {
             at: number;
             closes: number;
             kind: "petromax" | "oil";
@@ -23605,7 +23749,8 @@ export function createKidsWorld(
             const on = (o: THREE.Object3D) => o.layers.enable(PLAYER);
             if (player != null) player.wrap.traverse(on);
             for (const f of followers) f.rig.wrap.traverse(on);
-            for (const f of roadWalkers) if (f.wrap.visible) f.wrap.traverse(on);
+            for (const f of roadWalkers)
+              if (f.wrap.visible) f.wrap.traverse(on);
           }
           const prevRT = r.getRenderTarget();
           const prevShadow = r.shadowMap.autoUpdate;
@@ -24025,8 +24170,13 @@ export function createKidsWorld(
             const x = k.x0 + Math.random() * (k.x1 - k.x0);
             const z = k.z0 + Math.random() * (k.z1 - k.z0);
             if (inManaApproach(x, z, 0.5)) continue;
-            const s1 = ((lo + Math.random() * (hi - lo)) / tall) * perspective(z);
-            e.set((Math.random() - 0.5) * 0.2, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.2);
+            const s1 =
+              ((lo + Math.random() * (hi - lo)) / tall) * perspective(z);
+            e.set(
+              (Math.random() - 0.5) * 0.2,
+              Math.random() * Math.PI * 2,
+              (Math.random() - 0.5) * 0.2,
+            );
             q.setFromEuler(e);
             v.set(x, surfaceY(x, z) - box.min.y * s1 - 0.04, z);
             sc.set(s1, s1 * (0.85 + Math.random() * 0.35), s1);
@@ -24038,7 +24188,9 @@ export function createKidsWorld(
               mesh.material,
               place.length,
             );
-            place.forEach((P, i) => im.setMatrixAt(i, m4.multiplyMatrices(P, mesh.matrixWorld)));
+            place.forEach((P, i) =>
+              im.setMatrixAt(i, m4.multiplyMatrices(P, mesh.matrixWorld)),
+            );
             im.instanceMatrix.needsUpdate = true;
             im.frustumCulled = false;
             im.receiveShadow = true;
@@ -24267,7 +24419,12 @@ export function createKidsWorld(
               // plus the plinth), because the yard in front falls away below
               // the base and a lift from the yard left them standing against
               // the plinth on the muttam (owner, 3 Oct 2026).
-              const onFloor = (mx: number, mz: number, h: number, fy = 0.71) => {
+              const onFloor = (
+                mx: number,
+                mz: number,
+                h: number,
+                fy = 0.71,
+              ) => {
                 const z = cz + ms * (mz - 0.12);
                 const x = cx + ms * (mx - 0.05);
                 return [
@@ -24287,28 +24444,29 @@ export function createKidsWorld(
                     [...onFloor(13.7, 14.6, 1.1, 0.68), 1, 2.4],
                   ] as const)
                 : null;
-              for (const [lx, lz, llift, lh, peak, reach] of manaLamps ?? [
-                // BRIGHTER ON THE NEW MANA (owner, 3 Oct 2026), the poomukham's
-                // most of all: a wider pool of light that reaches the steps,
-                // and the colonnade lamps now light their own stretch too.
-                [cx, lampZ, lampLift, tall * 0.13, 1, newMana ? 1.6 : 0.8],
-                [
-                  cx - hw * 0.82,
-                  lampZ - hd * 0.1,
-                  lampLift + (newMana ? 0 : tall * 0.045),
-                  tall * 0.1,
-                  newMana ? 0.95 : 0.82,
-                  newMana ? 0.7 : 0,
-                ],
-                [
-                  cx + hw * 0.82,
-                  lampZ - hd * 0.1,
-                  lampLift + (newMana ? 0 : tall * 0.045),
-                  tall * 0.1,
-                  newMana ? 0.95 : 0.82,
-                  newMana ? 0.7 : 0,
-                ],
-              ] as const) {
+              for (const [lx, lz, llift, lh, peak, reach] of manaLamps ??
+                ([
+                  // BRIGHTER ON THE NEW MANA (owner, 3 Oct 2026), the poomukham's
+                  // most of all: a wider pool of light that reaches the steps,
+                  // and the colonnade lamps now light their own stretch too.
+                  [cx, lampZ, lampLift, tall * 0.13, 1, newMana ? 1.6 : 0.8],
+                  [
+                    cx - hw * 0.82,
+                    lampZ - hd * 0.1,
+                    lampLift + (newMana ? 0 : tall * 0.045),
+                    tall * 0.1,
+                    newMana ? 0.95 : 0.82,
+                    newMana ? 0.7 : 0,
+                  ],
+                  [
+                    cx + hw * 0.82,
+                    lampZ - hd * 0.1,
+                    lampLift + (newMana ? 0 : tall * 0.045),
+                    tall * 0.1,
+                    newMana ? 0.95 : 0.82,
+                    newMana ? 0.7 : 0,
+                  ],
+                ] as const)) {
                 const v = await stand(
                   "village-util/Nilavilakku",
                   lx,
@@ -26074,7 +26232,17 @@ export function createKidsWorld(
           // Behind the road only. The near verge is the child's side and
           // stays clear, which is the rule the village already follows.
           const z = -hashRange(x, 4, 15, from.depth[0], from.depth[1]);
-          const spot = clearSpot(x, z, Math.max(0.8, layer.clear));
+          let spot = clearSpot(x, z, Math.max(0.8, layer.clear));
+          // THE TREE AT MILESTONE 0 STANDS TO ITS LEFT (owner, 3 Oct 2026).
+          // A canopy tree drawn just after the first milestone rose straight
+          // up behind it; it is mirrored to the far side of the stone, onto
+          // the ground before the road begins.
+          if (spot != null && CHAPTER_N === 1 && layer.key === "canopy") {
+            const m0 = milestoneX(0, CHAPTER);
+            if (spot.x > m0 - 2 && spot.x < m0 + 14) {
+              spot = { x: m0 - (spot.x - m0) - 5, z: spot.z };
+            }
+          }
           if (
             spot == null ||
             (WILD != null &&
@@ -27742,9 +27910,7 @@ export function createKidsWorld(
             dist: rg.dist,
             peakNdc: rg.peak,
             peakLocal: rg.height * 0.7,
-            base: new THREE.Color(
-              rg.far ? mtns.colorFar : mtns.colorNear,
-            ),
+            base: new THREE.Color(rg.far ? mtns.colorFar : mtns.colorNear),
             haze: rg.haze,
             camX0: cam.position.x,
             y: 0,

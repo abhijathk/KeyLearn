@@ -117,12 +117,13 @@ import { paceTarget } from "./pace.ts";
 import { configurePicker, Picker } from "./picker.tsx";
 import { RoadCard } from "./road-card.tsx";
 import { fitPassageToRoad, RUN_LEN } from "./run-length.ts";
-import { dinoLand, dinoSceneName, heroLand, heroSceneName } from "./scene-kit.ts";
 import {
-  SCENE_LESSONS,
-  sceneIndexOf,
-  sceneJustEnded,
-} from "./scene-order.ts";
+  dinoLand,
+  dinoSceneName,
+  heroLand,
+  heroSceneName,
+} from "./scene-kit.ts";
+import { SCENE_LESSONS, sceneIndexOf, sceneJustEnded } from "./scene-order.ts";
 import { Scoreboard, useTypingFade } from "./scoreboard.tsx";
 import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
 import { STORY, type StoryPart } from "./story.ts";
@@ -5173,6 +5174,20 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
 
   useEffect(() => {
     const onKeyDown = (ev: KeyboardEvent) => {
+      // A KEY TYPED INTO A FIELD IS NOT PRACTICE. The grown-up PIN prompt
+      // (profile switch) is drawn by the shell, outside this page, so none
+      // of the blocked states below know it is open — and this handler's
+      // preventDefault swallowed every digit, so the PIN never filled while
+      // the game ran behind it (owner, 3 Oct 2026). Any input, textarea,
+      // select or editable element keeps its own keys.
+      const target = ev.target as HTMLElement | null;
+      if (
+        target != null &&
+        (target.isContentEditable ||
+          /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+      ) {
+        return;
+      }
       // Enter, Backspace and Tab are named keys, so a plain "one character
       // only" test throws them away before anything downstream can act on
       // them — which is why the board's own Backspace typed a "b".
