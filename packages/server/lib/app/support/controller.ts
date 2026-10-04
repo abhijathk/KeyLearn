@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import {
   body,
@@ -69,6 +70,15 @@ import { zod } from "../auth/zod.ts";
 import { Mailer } from "../mail/index.ts";
 import { supportAccountClosure, threadLinkMs } from "../site-config/readers.ts";
 import { storeDeskAttachments } from "./desk-attachments.ts";
+import {
+  assertThreadReplyQuota,
+  assertTicketQuota,
+  ingestLevel,
+  peekGuestMail,
+  refuseWhenSaturated,
+  stripUrlsFromName,
+  takeGuestMail,
+} from "./limits.ts";
 import { matchAnswers } from "./matching.ts";
 import { priorTicketsFor } from "./prior-ticket.ts";
 import {
@@ -83,7 +93,14 @@ import {
 } from "./qdesk-forward.ts";
 import { digestHour } from "./sweep.ts";
 
-const jsonOpts = { maxLength: 4096 };
+/**
+ * The most any non-upload support request may weigh. Was 4096, which
+ * refused real submissions: a 2000-character message in Malayalam or
+ * Devanagari is ~6 KB of UTF-8 before the Turnstile token and the JSON
+ * around it, and the desk's 4000-character replies more than that. Still
+ * three orders of magnitude under the app-wide 16 MB ceiling.
+ */
+const jsonOpts = { maxLength: 16 * 1024 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** How long a closed thread's guest link keeps working. */
@@ -915,6 +932,19 @@ export class Controller {
       5,
       60 * 60 * 1000,
     );
+    // The per-IP buckets above bound one machine. A swarm spread over many
+    // addresses passes them all, so the anonymous form also answers to the
+    // deployment's total intake: past the ceiling it stops taking new
+    // tickets from strangers for a few minutes. (Turnstile is already
+    // mandatory here, so "pressure" asks nothing more of this door.)
+    if (ctx.state.user == null) {
+      refuseWhenSaturated(await ingestLevel());
+    }
+    // The name is quoted back in mail we send ("Hi {name}") — to the
+    // address on the form and to the support inbox. Anything a mail client
+    // would make a link of is taken out, so the form cannot be used to put
+    // a link of a stranger's choosing into an email from our domain.
+    input = { ...input, name: stripUrlsFromName(input.name) };
     if (await SupportBlock.isBlocked(input.email)) {
       throw new HttpError(
         429,
@@ -991,10 +1021,41 @@ export class Controller {
       return;
     }
 
-    // Business enquiries and anything from a signed-in account are "never
-    // queued" — only a signed-out "support" submission needs the
-    // email-confirmation holding queue.
+    // Per account, or for a guest per address, per day — counted from the
+    // rows, so it holds across every worker and every IP. After the
+    // duplicate fold above: resubmitting the same words is not a new ticket.
+    await assertTicketQuota({
+      userId: ctx.state.user?.id ?? null,
+      email: input.email,
+    });
+
+    // Anything from a signed-in account is "never queued". A signed-out
+    // "support" submission waits in the email-confirmation holding queue.
+    // A signed-out business enquiry goes live at once — a partner should
+    // not wait on a click to be seen — but its address is unproven until
+    // the same confirmation link is clicked, and nothing is emailed to it
+    // until then except that link (see #notifyReply and
+    // #addressUnverified). It used to be trusted outright, which made the
+    // desk's replies a way to mail any address on the internet.
     const confirmed = ctx.state.user != null || input.kind === "business";
+    const needsAddressCheck = ctx.state.user == null;
+    if (needsAddressCheck) {
+      // Refused before anything is written: a ticket whose confirmation
+      // could not be sent is a ticket nobody can ever confirm.
+      const verdict = peekGuestMail(input.email);
+      if (verdict === "cooldown") {
+        throw new HttpError(
+          429,
+          "We've just emailed this address. Please use the link in that email, or try again in a few minutes.",
+        );
+      }
+      if (verdict === "budget") {
+        throw new HttpError(
+          429,
+          "We're receiving an unusual number of requests right now. Please try again in a few minutes.",
+        );
+      }
+    }
     const status: SupportTicketStatus = confirmed
       ? suspicious
         ? "flagged"
@@ -1079,7 +1140,12 @@ export class Controller {
       if (input.kind === "support" && !qdeskConfigured()) {
         await this.#tryAutoReply(ticket.id!, input.message);
       }
-    } else {
+    }
+    if (needsAddressCheck) {
+      // Holding tickets wait on this link to go live; a guest business
+      // enquiry is live already and waits on it only to be written back
+      // to. Either way the token's presence on the row is what says the
+      // address is unproven.
       const confirmToken = await SupportTicket.issueConfirmToken(ticket.id!);
       this.#sendConfirmEmail(ticket, confirmToken, threadToken);
     }
@@ -1124,6 +1190,14 @@ export class Controller {
     confirmToken: string,
     threadToken: string,
   ): void {
+    // Enforced HERE, where the mail is issued, so no path — a new ticket,
+    // a duplicate resubmission, anything added later — can mail an address
+    // without passing it. Keyed on the address, never the IP: the old
+    // IP-keyed bucket let anyone with a few addresses mail a victim as
+    // often as they liked.
+    if (takeGuestMail(ticket.email!) !== "ok") {
+      return;
+    }
     void (async () => {
       try {
         await this.mailer.sendMail(
@@ -1244,6 +1318,18 @@ export class Controller {
   }
 
   async #confirm(token: string): Promise<boolean> {
+    // A live ticket with a token is a guest business enquiry proving its
+    // address (see createTicket). Redeeming it the holding-queue way would
+    // reset its status and post its first message a second time, so it
+    // only has the token cleared. The hash is the model's own (sha256 hex
+    // of the token); looked up here because the model has no finder for it.
+    const live = await SupportTicket.query().findOne({
+      confirmTokenHash: createHash("sha256").update(token).digest("hex"),
+    });
+    if (live != null && Boolean(live.confirmed)) {
+      await live.$query().patch({ confirmTokenHash: null });
+      return true;
+    }
     const ticket = await SupportTicket.redeemConfirmToken(token);
     if (ticket == null) {
       return false;
@@ -1391,6 +1477,10 @@ export class Controller {
       };
       return;
     }
+    // This route had no limit at all: anyone holding a thread link could
+    // fill the conversation, and the desk's queue, as fast as the network
+    // allowed. Per thread, so it holds however many IPs the writes use.
+    await assertThreadReplyQuota(ticket.id!);
     const guestReply = await SupportMessage.create({
       ticketId: ticket.id!,
       sender: "them",
@@ -1591,7 +1681,7 @@ export class Controller {
   async putLearnerResponse(
     ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("id", pId) id: number,
-    @body.json(PLearnerResponse) input: TLearnerResponse,
+    @body.json(PLearnerResponse, jsonOpts) input: TLearnerResponse,
   ) {
     const user = ctx.state.requireUser();
     rateLimit(ctx, "learner-response", 30, 60 * 60 * 1000);
@@ -1673,7 +1763,7 @@ export class Controller {
       return;
     }
     const notifiedVia =
-      input.kind === "crisis"
+      input.kind === "crisis" || this.#addressUnverified(ticket)
         ? "none"
         : ticket.userId != null
           ? "app"
@@ -1855,6 +1945,16 @@ export class Controller {
    * conversation at all. Best-effort either way: neither path may fail
    * the reply itself, which is already saved by the time this runs.
    */
+  /**
+   * A guest ticket whose address has not been proven: a confirmation token
+   * is still outstanding. True for a guest business enquiry until its link
+   * is clicked. (Business tickets filed before this check carry no token
+   * and are treated as proven — there is no record to tell otherwise.)
+   */
+  #addressUnverified(ticket: SupportTicket): boolean {
+    return ticket.userId == null && ticket.confirmTokenHash != null;
+  }
+
   async #notifyReply(
     ticket: SupportTicket,
     body: string,
@@ -1878,6 +1978,11 @@ export class Controller {
       } catch {
         // Best-effort — see doc comment.
       }
+      return;
+    }
+    // Never to an address nobody has proven. The reply is on the thread;
+    // the confirmation mail already carries the link to it.
+    if (this.#addressUnverified(ticket)) {
       return;
     }
     try {

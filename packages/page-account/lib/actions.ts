@@ -7,6 +7,7 @@ import {
 } from "@keylearn/pages-shared";
 import { useState } from "react";
 import { checkoutProduct } from "./checkout.ts";
+import { useParentPinGate } from "./pin-gate.tsx";
 import {
   AccountService,
   type DeleteMethods,
@@ -32,6 +33,9 @@ export function useAccountActions(props: {
   publicUser: AnyUser;
 }) {
   const [{ user, publicUser }, setState] = useState(props);
+  // Renaming the account or changing what is public sits behind the
+  // grown-up PIN on the server (428); this asks for it and replays.
+  const pinGate = useParentPinGate();
 
   /**
    * Returns its promise so a caller can say what went wrong.
@@ -43,7 +47,11 @@ export function useAccountActions(props: {
    * exactly how it was reported.
    */
   const patchAccount = (request: PatchAccountRequest) => {
-    return AccountService.patchAccount(request)
+    // An empty patch is only a re-read after another card changed the
+    // account. It is not worth a PIN prompt nobody asked for.
+    const refreshOnly = Object.keys(request).length === 0;
+    const run = () => AccountService.patchAccount(request);
+    return (refreshOnly ? run() : pinGate.gated(run))
       .then(({ user, publicUser }) => {
         setState({ user, publicUser });
       })
@@ -83,6 +91,8 @@ export function useAccountActions(props: {
   return {
     user,
     publicUser,
+    /** The grown-up PIN prompt, while a change waits on it. Render it. */
+    pinPrompt: pinGate.prompt,
     actions: {
       patchAccount,
       sendDeleteAccountCode,

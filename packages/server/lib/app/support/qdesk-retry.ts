@@ -4,10 +4,12 @@ import { SupportMessage, SupportTicket } from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
 import { siteNumber } from "@keylearn/site-config";
 import {
+  deskBackoffUntil,
   forwardReplyToQdesk,
   forwardTicketToQdesk,
   qdeskConfigured,
 } from "./qdesk-forward.ts";
+import { drainOutbox } from "./qdesk-outbox.ts";
 
 /**
  * Delivers what the first attempt could not.
@@ -97,6 +99,21 @@ export class QdeskRetrySweep {
       return 0;
     }
     const now = Date.now();
+    // The desk said "not now" (429/503 with Retry-After). A whole pass
+    // against it would only extend the overload it is reporting.
+    if (now < deskBackoffUntil()) {
+      Logger.info("QDesk retry sweep skipped: desk asked to back off", {
+        untilMs: deskBackoffUntil() - now,
+      });
+      return 0;
+    }
+    // The non-message forwards (ratings, resolutions, archives) — their
+    // own durable queue, drained with the same fairness rule.
+    try {
+      await drainOutbox(retryBatchSize());
+    } catch (err: any) {
+      Logger.warn(err, "QDesk outbox drain failed");
+    }
     const stale = new Date(now - retryAfterMs());
     const tooOld = new Date(now - retryGiveUpMs());
 
@@ -104,22 +121,54 @@ export class QdeskRetrySweep {
     // other way, and a system note never leaves this repo at all.
     //
     // The confirmed-ticket filter is in the query rather than the loop
-    // below, and that is not a tidiness point. The batch takes the oldest
-    // rows first, so anything skipped after being selected still consumes
-    // a slot — a backlog of rows that can never be sent would take the
-    // whole batch every pass and starve every message behind it. Filtered
-    // here, they are never selected at all.
-    const pending = await SupportMessage.query()
-      .whereNull("deliveredAt")
-      .andWhere("sender", "them")
-      .andWhere("createdAt", "<", stale)
-      .andWhere("createdAt", ">", tooOld)
-      .whereIn(
-        "ticketId",
-        SupportTicket.query().select("id").where("confirmed", true),
-      )
-      .orderBy("id", "asc")
-      .limit(retryBatchSize());
+    // below, and that is not a tidiness point. Anything skipped after being
+    // selected still consumes a slot — a backlog of rows that can never be
+    // sent would take the whole batch every pass and starve every message
+    // behind it. Filtered here, they are never selected at all.
+    const eligible = () =>
+      SupportMessage.query()
+        .whereNull("deliveredAt")
+        .andWhere("sender", "them")
+        .andWhere("createdAt", "<", stale)
+        .andWhere("createdAt", ">", tooOld)
+        .whereIn(
+          "ticketId",
+          SupportTicket.query().select("id").where("confirmed", true),
+        );
+
+    // Fair, not strictly oldest-first. Round one is the oldest waiting
+    // message of each account (or, for a guest, each address); only the
+    // room left after that goes to further messages in age order. Strictly
+    // oldest-first let one swarm's backlog take every slot of every pass
+    // while a real customer's message waited behind it until it was too
+    // old to send at all.
+    const batch = retryBatchSize();
+    const firstPerAccount = (await SupportMessage.knex()("support_message as m")
+      .join("support_ticket as t", "t.id", "m.ticket_id")
+      .whereNull("m.delivered_at")
+      .andWhere("m.sender", "them")
+      .andWhere("m.created_at", "<", stale)
+      .andWhere("m.created_at", ">", tooOld)
+      .andWhere("t.confirmed", true)
+      .groupBy("t.user_id", "t.email")
+      .select(SupportMessage.knex().raw("min(m.id) as id"))
+      .orderByRaw("min(m.id) asc")
+      .limit(batch)) as { id: number | string }[];
+    const chosen = firstPerAccount.map((r) => Number(r.id));
+    const firstRound =
+      chosen.length === 0 ? [] : await eligible().whereIn("id", chosen);
+    const rest =
+      chosen.length >= batch
+        ? []
+        : await eligible()
+            .modify((q) => {
+              if (chosen.length > 0) {
+                q.whereNotIn("id", chosen);
+              }
+            })
+            .orderBy("id", "asc")
+            .limit(batch - chosen.length);
+    const pending = [...firstRound.sort((a, b) => a.id! - b.id!), ...rest];
 
     if (pending.length === 0) {
       return 0;

@@ -14,7 +14,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { FormattedMessage, type IntlShape, useIntl } from "react-intl";
+import {
+  defineMessage,
+  FormattedMessage,
+  type IntlShape,
+  useIntl,
+} from "react-intl";
 import { Icon } from "./icons.tsx";
 import {
   type AttachFailure,
@@ -31,6 +36,7 @@ import {
 import { ReplyBody } from "./ReplyBody.tsx";
 import { SupportService } from "./service.ts";
 import * as styles from "./SupportPage.module.less";
+import { isCaptchaRequired, useCaptcha } from "./turnstile.tsx";
 
 /**
  * The account holder's own support section.
@@ -117,14 +123,44 @@ const TYPING_PING_MS = 4_000;
  */
 const MAX_SUBJECT = 128;
 
-/** The server's way of saying the grown-up PIN needs entering again. */
+/**
+ * The server's way of saying the grown-up PIN needs entering again.
+ *
+ * By its `parentPin` marker, not by the 428 alone: under intake pressure a
+ * 428 with `captcha` asks for a Turnstile check instead, and treating that
+ * as a lapse put up a PIN prompt that could never satisfy it.
+ */
 const isPinLapse = (err: unknown): boolean =>
-  (err as { status?: number })?.status === 428 ||
   (err as { body?: { error?: { parentPin?: boolean } } })?.body?.error
     ?.parentPin === true;
 
 const isRateLimited = (err: unknown): boolean =>
   (err as { status?: number })?.status === 429;
+
+/** 503: the human check could not be reached. Nothing to fix but waiting. */
+const isUnavailable = (err: unknown): boolean =>
+  (err as { status?: number })?.status === 503;
+
+/** The server's own sentence, when it sent one. */
+const serverMessage = (err: unknown): string | null =>
+  (err as { body?: { error?: { message?: string } } })?.body?.error?.message ??
+  null;
+
+const captchaToSend = defineMessage({
+  id: "support.my.captchaToSend",
+  defaultMessage: "Please complete the check below, then send again.",
+});
+
+const captchaToReply = defineMessage({
+  id: "support.my.captchaToReply",
+  defaultMessage: "Please complete the check below and we’ll send it.",
+});
+
+const checkUnavailable = defineMessage({
+  id: "support.my.checkUnavailable",
+  defaultMessage:
+    "We couldn’t check you’re human just now. Please try again shortly.",
+});
 
 export function MySupportSection(): ReactNode {
   const { formatMessage } = useIntl();
@@ -162,7 +198,10 @@ export function MySupportSection(): ReactNode {
   const [deleting, setDeleting] = useState<SupportService.MyTicket | null>(
     null,
   );
-  const [rateLimited, setRateLimited] = useState(false);
+  /** Set by a 429 on a new message; carries the server's reason if any. */
+  const [rateLimited, setRateLimited] = useState<{
+    readonly message: string | null;
+  } | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -273,7 +312,7 @@ export function MySupportSection(): ReactNode {
     />
   ) : null;
 
-  if (rateLimited) {
+  if (rateLimited != null) {
     return (
       <section className={styles.section}>
         <h1 className={styles.sectionTitle}>
@@ -281,19 +320,26 @@ export function MySupportSection(): ReactNode {
         </h1>
         <div className={styles.centred}>
           <Icon name="alert" size={26} />
-          <p className={styles.centredText}>
-            <FormattedMessage
-              id="support.my.rateLimited"
-              defaultMessage="That’s five new messages in an hour, which is as many as we can take at once. Add anything else to one of your open conversations, or try again in a little while."
-            />
-          </p>
+          {/* The server says which limit it was — there are several now,
+              per hour and per day — so its sentence beats a guess here. */}
+          {rateLimited.message != null && (
+            <p className={styles.centredText}>{rateLimited.message}</p>
+          )}
+          {rateLimited.message == null && (
+            <p className={styles.centredText}>
+              <FormattedMessage
+                id="support.my.rateLimited"
+                defaultMessage="That’s five new messages in an hour, which is as many as we can take at once. Add anything else to one of your open conversations, or try again in a little while."
+              />
+            </p>
+          )}
           <Button
             label={formatMessage({
               id: "support.my.backToList",
               defaultMessage: "Back to my messages",
             })}
             onClick={() => {
-              setRateLimited(false);
+              setRateLimited(null);
               setView({ kind: "list" });
             }}
           />
@@ -308,7 +354,7 @@ export function MySupportSection(): ReactNode {
         {overlay}
         <NewTicket
           onLapse={onLapse}
-          onRateLimited={() => setRateLimited(true)}
+          onRateLimited={(message) => setRateLimited({ message })}
           onCancel={() => setView({ kind: "list" })}
           onSent={async (id) => {
             await refresh();
@@ -718,10 +764,13 @@ function NewTicket({
   readonly onCancel: () => void;
   readonly onSent: (id: number) => Promise<void>;
   readonly onLapse: (retry?: () => void) => void;
-  readonly onRateLimited: () => void;
+  readonly onRateLimited: (message: string | null) => void;
 }): ReactNode {
   const intl = useIntl();
   const { formatMessage } = intl;
+  // Hidden unless the server asks (428 with `captcha`), which it does for
+  // everybody while the desk's intake is under pressure.
+  const captcha = useCaptcha();
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [who, setWho] = useState<{
@@ -847,13 +896,19 @@ function NewTicket({
         subject,
         message,
         attachmentIds: pending.map((f) => f.id),
+        turnstileToken: captcha.token || undefined,
       });
       await onSent(id);
     } catch (e: any) {
       if (isPinLapse(e)) {
         onLapse();
+      } else if (isCaptchaRequired(e)) {
+        captcha.require();
+        setError(formatMessage(captchaToSend));
       } else if (isRateLimited(e)) {
-        onRateLimited();
+        onRateLimited(serverMessage(e));
+      } else if (isUnavailable(e)) {
+        setError(serverMessage(e) ?? formatMessage(checkUnavailable));
       } else {
         setError(e?.body?.error?.message ?? e?.message ?? "That didn't send.");
       }
@@ -972,13 +1027,20 @@ function NewTicket({
 
       {error != null && <p className={styles.error}>{error}</p>}
 
+      {captcha.widget}
+
       <div className={styles.actionsRow}>
         <Button
           label={formatMessage({
             id: "support.my.send",
             defaultMessage: "Send",
           })}
-          disabled={busy || subject.trim() === "" || message.trim() === ""}
+          disabled={
+            busy ||
+            subject.trim() === "" ||
+            message.trim() === "" ||
+            (captcha.needed && !captcha.token)
+          }
           onClick={() => void send()}
         />
         <Button
@@ -1010,6 +1072,17 @@ function Thread({
   const { formatMessage } = intl;
   const [thread, setThread] = useState<SupportService.MyThread | null>(null);
   const [reply, setReply] = useState("");
+  /**
+   * Under intake pressure a reply needs a Turnstile check (428 with
+   * `captcha`). The message waits in the outbox, the widget appears, and
+   * the solved token sends it — once: tokens are single-use, so it is
+   * taken from the ref by the send that spends it.
+   */
+  const captcha = useCaptcha();
+  const unspentToken = useRef<string | undefined>(undefined);
+  const heldForCheck = useRef<string | null>(null);
+  /** Why the last send did not land, when the server said (429/503/428). */
+  const [sendNote, setSendNote] = useState<string | null>(null);
   /**
    * The last time the desk was told this person is writing.
    *
@@ -1208,12 +1281,16 @@ function Thread({
   const send = useCallback(
     async (body: string, clientId: string) => {
       setBusy(true);
+      const turnstileToken = unspentToken.current;
+      unspentToken.current = undefined;
       try {
         await SupportService.replyToMyTicket(id, {
           message: body,
           clientId,
           attachmentIds: pendingIds.current,
+          turnstileToken,
         });
+        setSendNote(null);
         setOutbox((o) => o.filter((m) => m.clientId !== clientId));
         await load(showAll);
         // The hand-off to the desk finishes after the send returns, so
@@ -1223,6 +1300,15 @@ function Thread({
       } catch (err) {
         if (isPinLapse(err)) {
           onLapse();
+        } else if (isCaptchaRequired(err)) {
+          heldForCheck.current = clientId;
+          captcha.require();
+          setSendNote(formatMessage(captchaToReply));
+        } else if (isRateLimited(err) || isUnavailable(err)) {
+          setSendNote(
+            serverMessage(err) ??
+              (isUnavailable(err) ? formatMessage(checkUnavailable) : null),
+          );
         }
         setOutbox((o) =>
           o.map((m) => (m.clientId === clientId ? { ...m, failed: true } : m)),
@@ -1231,8 +1317,27 @@ function Thread({
         setBusy(false);
       }
     },
-    [id, load, showAll, onLapse],
+    // `captcha.require` is a fresh function each render but only sets
+    // state; listing it would re-create `send` every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [id, load, showAll, onLapse, formatMessage],
   );
+
+  // The check was solved: send the message that was waiting on it.
+  useEffect(() => {
+    const held = heldForCheck.current;
+    if (!captcha.token || held == null) {
+      return;
+    }
+    heldForCheck.current = null;
+    unspentToken.current = captcha.token;
+    const m = outbox.find((o) => o.clientId === held);
+    if (m != null) {
+      void send(m.body, m.clientId);
+    }
+    // Only a new token should fire this, not every outbox change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [captcha.token]);
 
   /** Whatever could not be sent goes out again the moment we are back. */
   const flush = useCallback(() => {
@@ -1846,49 +1951,56 @@ function Thread({
             />
           </div>
         ) : (
-          <Composer
-            value={reply}
-            onChange={(next) => {
-              setReply(next);
-              const now = Date.now();
-              if (next !== "" && now - typingSentAt.current > TYPING_PING_MS) {
-                typingSentAt.current = now;
-                SupportService.typing(id);
+          <>
+            {sendNote != null && <p className={styles.error}>{sendNote}</p>}
+            {captcha.widget}
+            <Composer
+              value={reply}
+              onChange={(next) => {
+                setReply(next);
+                const now = Date.now();
+                if (
+                  next !== "" &&
+                  now - typingSentAt.current > TYPING_PING_MS
+                ) {
+                  typingSentAt.current = now;
+                  SupportService.typing(id);
+                }
+              }}
+              focusSignal={focusReply}
+              pending={thread.pending}
+              uploading={uploading}
+              errors={attachErrors}
+              onDismissError={(name) =>
+                setAttachErrors((e) => e.filter((x) => x.name !== name))
               }
-            }}
-            focusSignal={focusReply}
-            pending={thread.pending}
-            uploading={uploading}
-            errors={attachErrors}
-            onDismissError={(name) =>
-              setAttachErrors((e) => e.filter((x) => x.name !== name))
-            }
-            onRetry={(file) => {
-              setAttachErrors((e) => e.filter((x) => x.name !== file.name));
-              void retryOne(file);
-            }}
-            onAttach={(files) => void attach(files)}
-            onRemoveAttachment={(attachmentId) => {
-              void SupportService.removeAttachment(attachmentId)
-                .then(() => load(showAll))
-                .catch((err) => isPinLapse(err) && onLapse());
-            }}
-            onSend={() => {
-              const clientId = newClientId();
-              const body = reply;
-              // Cleared here, not on success: leaving it in the box while
-              // the pending bubble also shows it puts the same message on
-              // screen twice.
-              setReply("");
-              setOutbox((o) => [...o, { clientId, body, failed: false }]);
-              void send(body, clientId);
-            }}
-            busy={busy}
-            placeholder={formatMessage({
-              id: "support.my.reply",
-              defaultMessage: "Write a reply…",
-            })}
-          />
+              onRetry={(file) => {
+                setAttachErrors((e) => e.filter((x) => x.name !== file.name));
+                void retryOne(file);
+              }}
+              onAttach={(files) => void attach(files)}
+              onRemoveAttachment={(attachmentId) => {
+                void SupportService.removeAttachment(attachmentId)
+                  .then(() => load(showAll))
+                  .catch((err) => isPinLapse(err) && onLapse());
+              }}
+              onSend={() => {
+                const clientId = newClientId();
+                const body = reply;
+                // Cleared here, not on success: leaving it in the box while
+                // the pending bubble also shows it puts the same message on
+                // screen twice.
+                setReply("");
+                setOutbox((o) => [...o, { clientId, body, failed: false }]);
+                void send(body, clientId);
+              }}
+              busy={busy}
+              placeholder={formatMessage({
+                id: "support.my.reply",
+                defaultMessage: "Write a reply…",
+              })}
+            />
+          </>
         )}
       </div>
     </section>

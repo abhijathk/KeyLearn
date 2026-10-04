@@ -45,7 +45,6 @@ import {
   SupportTicket,
   User,
   UserExternalId,
-  verifyTotp,
 } from "@keylearn/database";
 import { UserDataFactory } from "@keylearn/result-userdata";
 import {
@@ -428,11 +427,15 @@ export class Controller {
       ctx.response.body = { ok: false, reason: "needs-2fa" };
       return;
     }
+    // acceptTotp, not verifyTotp: it refuses a code whose time-step was
+    // already used and counts failures per account, so a code seen over a
+    // shoulder (or replayed by anything between the desk and here) cannot
+    // be spent twice (pre-release audit, 4 Oct 2026).
     if (
-      !verifyTotp(
+      !(await user.acceptTotp(
         resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
         input.totp,
-      )
+      ))
     ) {
       void StaffAuditEvent.record({
         userId: user.id,
@@ -506,10 +509,10 @@ export class Controller {
     }
     const valid =
       user.totpSecret != null &&
-      verifyTotp(
+      (await user.acceptTotp(
         resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
         input.totp,
-      );
+      ));
     if (!valid) {
       ctx.response.body = { ok: false, reason: "invalid" };
       return;

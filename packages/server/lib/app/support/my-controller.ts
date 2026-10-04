@@ -27,10 +27,19 @@ import {
   revokeSupportPin,
 } from "../auth/parent-pin.ts";
 import { rateLimit } from "../auth/ratelimit.ts";
-import { requireCaptchaIfSuspicious } from "../auth/turnstile.ts";
+import {
+  requireCaptcha,
+  requireCaptchaIfSuspicious,
+} from "../auth/turnstile.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import { supportAccountClosure } from "../site-config/readers.ts";
+import { assertDiskRoom, assertWithinQuota } from "./attachment-quota.ts";
+import {
+  assertThreadReplyQuota,
+  assertTicketQuota,
+  ingestLevel,
+} from "./limits.ts";
 import { priorTicketsFor } from "./prior-ticket.ts";
 import {
   deskIsTyping,
@@ -68,6 +77,15 @@ import { ScannerDown, scanningRequired, scanUpload } from "./virus-scan.ts";
  * a direct call can exceed it, and neither should lose the message over it.
  */
 const SUBJECT_MAX = 128;
+
+/**
+ * The most any non-upload request here may weigh. Without it each of these
+ * routes read up to the app-wide 16 MB ceiling before zod saw a single
+ * field. The largest legitimate body is a 2000-character message (up to
+ * ~8 KB as UTF-8 in a script outside Latin) plus a Turnstile token, ids and
+ * the JSON around them.
+ */
+const smallJson = { maxLength: 16 * 1024 };
 const clipSubject = (s: string) => s.slice(0, SUBJECT_MAX).trim();
 
 const TNewTicket = z.object({
@@ -214,7 +232,7 @@ export class MyTicketsController {
   @http.POST("/_/support/my/pin")
   async provePin(
     ctx: Context<RouterState & SessionState & AuthState>,
-    @body.json(PPin) input: TPin,
+    @body.json(PPin, smallJson) input: TPin,
   ) {
     // A four-digit PIN is 10^4, so the limiter is what makes it mean
     // anything. Same budget as the account route it mirrors.
@@ -495,13 +513,23 @@ export class MyTicketsController {
   @http.POST("/_/support/my/tickets")
   async createMine(
     ctx: Context<RouterState & SessionState & AuthState>,
-    @body.json(PNewTicket) input: TNewTicket,
+    @body.json(PNewTicket, smallJson) input: TNewTicket,
   ) {
     refuseWhileClosed();
     const user = ctx.state.requireUser();
     await requireParentPinForSupport(ctx, user);
     rateLimit(ctx, "support-my-ticket", 5, 60 * 60 * 1000);
-    await requireCaptchaIfSuspicious(ctx, input.turnstileToken);
+    // Per account, not per address: a script with a session and a pool of
+    // IPs passed the bucket above as often as it had addresses.
+    await assertTicketQuota({ userId: user.id!, email: user.email ?? "" });
+    // Adaptive normally; mandatory while the whole intake is under
+    // pressure, when "is this a person" is worth one more second of
+    // everybody's time.
+    if ((await ingestLevel()) === "normal") {
+      await requireCaptchaIfSuspicious(ctx, input.turnstileToken);
+    } else {
+      await requireCaptcha(ctx, input.turnstileToken);
+    }
 
     // The account holder's own name and address. Nobody signed in is asked
     // to type an address we already have, and nobody can put somebody
@@ -603,7 +631,7 @@ export class MyTicketsController {
   async replyMine(
     ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("id", pId) id: number,
-    @body.json(PReply) input: TReply,
+    @body.json(PReply, smallJson) input: TReply,
   ) {
     // This route had neither a limiter nor a check, while the route beside
     // it that opens a ticket had both. Replying is the cheaper thing to
@@ -619,8 +647,13 @@ export class MyTicketsController {
     // session rather than a bot filling in a form — and a hard challenge
     // mid-conversation, in a support thread somebody may be upset in, is
     // its own harm. The streak only builds if something already looks
-    // wrong.
-    await requireCaptchaIfSuspicious(ctx, input.turnstileToken);
+    // wrong. Under global intake pressure it becomes mandatory, as on
+    // opening a ticket.
+    if ((await ingestLevel()) === "normal") {
+      await requireCaptchaIfSuspicious(ctx, input.turnstileToken);
+    } else {
+      await requireCaptcha(ctx, input.turnstileToken);
+    }
     const user = ctx.state.requireUser();
     const ticket = await this.#mine(ctx, id);
 
@@ -659,6 +692,9 @@ export class MyTicketsController {
       );
     }
 
+    // Per thread, after the replay check so a resend of something already
+    // counted is never refused.
+    await assertThreadReplyQuota(id);
     const message = await SupportMessage.create({
       ticketId: id,
       sender: "them",
@@ -708,7 +744,7 @@ export class MyTicketsController {
   @http.PUT("/_/support/my/draft")
   async putDraft(
     ctx: Context<RouterState & SessionState & AuthState>,
-    @body.json(PDraft) input: TDraft,
+    @body.json(PDraft, smallJson) input: TDraft,
   ) {
     const user = ctx.state.requireUser();
     await requireParentPinForSupport(ctx, user);
@@ -806,6 +842,10 @@ export class MyTicketsController {
         );
       }
     }
+    // What this ticket and this account already hold, and whether the disk
+    // can take it — before the scan, which is the expensive part.
+    await assertWithinQuota({ userId, ticketId, size: bytes.length });
+    await assertDiskRoom(this.dataDir, bytes.length);
 
     // Before the row, before the write, before anything about this file
     // is remembered anywhere. A scan that runs afterwards has already
@@ -1071,7 +1111,7 @@ export class MyTicketsController {
     ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("id", pId) id: number,
     @pathParam("messageId", pId) messageId: number,
-    @body.json(PReplyFeedback) input: TReplyFeedback,
+    @body.json(PReplyFeedback, smallJson) input: TReplyFeedback,
   ) {
     await this.#mine(ctx, id);
     // Scoped to the ticket so nobody can rate a message out of someone
@@ -1094,7 +1134,7 @@ export class MyTicketsController {
   async rate(
     ctx: Context<RouterState & SessionState & AuthState>,
     @pathParam("id", pId) id: number,
-    @body.json(PCsat) input: TCsat,
+    @body.json(PCsat, smallJson) input: TCsat,
   ) {
     const ticket = await this.#mine(ctx, id);
     await ticket.$query().patch({

@@ -15,8 +15,10 @@ import {
 import { PublicId } from "@keylearn/publicid";
 import { type Knex } from "knex";
 import { type JSONSchema, Model, type Pojo, snakeCaseMappers } from "objection";
+import { AuthThrottle } from "./auth-throttle.ts";
 import { anonymousName } from "./name.ts";
 import { hashPassword, needsRehash, verifyPassword } from "./password.ts";
+import { matchTotpStep } from "./totp.ts";
 import { Random } from "./util.ts";
 
 /**
@@ -35,6 +37,16 @@ export type SsoResult =
   | { readonly kind: "link-required"; readonly email: string };
 
 /** Thrown when a registration email is already in use. */
+/**
+ * The one spelling of an address this app stores and looks up: trimmed and
+ * lower-cased. Mailbox local parts are case-sensitive in theory and never in
+ * practice, and two accounts for `Ann@x.org` and `ann@x.org` is a takeover
+ * waiting to happen on the database (SQLite) whose `=` is case-sensitive.
+ */
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export class UserExistsError extends Error {
   constructor() {
     super("A user with this email address already exists");
@@ -145,6 +157,11 @@ export class User extends TimestampMixin(Model) {
   sessionEpoch?: number;
   totpSecret?: string | null;
   totpEnabled?: number | boolean;
+  /**
+   * The 30-second step of the last authenticator code accepted, so the same
+   * code cannot be spent twice. Bolt-on: `addColumn` migration only.
+   */
+  totpLastStep?: number | string | null;
   recoveryCodes?: string | null;
   parentPinHash?: string | null;
   parentPinLength?: number | null;
@@ -204,12 +221,23 @@ export class User extends TimestampMixin(Model) {
   }
 
   static async findByEmail(email: string): Promise<User | null> {
-    return (
+    const find = async (address: string) =>
       (await User.query() //
         .withGraphFetched("externalIds")
         .withGraphFetched("order")
-        .findOne({ email })) ?? null
-    );
+        .findOne({ email: address })) ?? null;
+    // The stored spelling is normalised (see normalizeEmail), but rows
+    // written before that may hold the address as it was typed — so the
+    // trimmed input is tried as given first, then in its normal form. Two
+    // indexed lookups rather than `lower(email) = ?`, which scans the table
+    // on every sign-in attempt for an unknown address.
+    const trimmed = email.trim();
+    const exact = await find(trimmed);
+    if (exact != null) {
+      return exact;
+    }
+    const normal = normalizeEmail(email);
+    return normal === trimmed ? null : await find(normal);
   }
 
   static async loadAll(id: number[]): Promise<Map<number, User>> {
@@ -225,7 +253,15 @@ export class User extends TimestampMixin(Model) {
 
   static async login(email: string): Promise<User> {
     let user = await User.findByEmail(email);
+    if (user != null && !user.emailVerified) {
+      // The magic link just proved the mailbox, so whatever was set up on
+      // this account BEFORE anybody proved it — a password, a provider link
+      // — may belong to somebody else entirely. See claimVerifiedEmail.
+      await user.claimVerifiedEmail();
+      user = (await User.findById(user.id!))!;
+    }
     if (user == null) {
+      email = normalizeEmail(email);
       const name = await User.findUniqueName(email, email);
       // Reaching this path means the visitor proved control of the address
       // (a magic-login link), so the email counts as verified.
@@ -246,6 +282,7 @@ export class User extends TimestampMixin(Model) {
     lastName: string,
     dateOfBirth: string | null = null,
   ): Promise<User> {
+    email = normalizeEmail(email);
     const existing = await User.findByEmail(email);
     if (existing != null) {
       throw new UserExistsError();
@@ -275,14 +312,27 @@ export class User extends TimestampMixin(Model) {
 
   // Verifies an email+password pair. Returns null on any mismatch — the
   // caller must not reveal which half was wrong.
+  //
+  // Every caller gets the per-address lockout (auth-throttle.ts): 10 wrong
+  // passwords for one address in 15 minutes, from however many IPs, locks
+  // that address for 15 minutes, doubling. While locked the answer is the
+  // same null as a wrong password — even for the right one — and no hash is
+  // computed. The subject is the address, not the account, so an address
+  // with no account locks exactly the same way and the lock says nothing
+  // about whether it exists.
   static async loginWithPassword(
     email: string,
     password: string,
   ): Promise<User | null> {
+    const subject = AuthThrottle.forEmail(email);
+    if ((await AuthThrottle.lockedFor("password", subject)) > 0) {
+      return null;
+    }
     const user = await User.findByEmail(email);
     if (user == null) {
       // Compare against a dummy hash anyway to keep the timing uniform.
       await verifyPassword(password, null);
+      await AuthThrottle.recordFailure("password", subject);
       return null;
     }
     if (await verifyPassword(password, user.passwordHash)) {
@@ -291,8 +341,10 @@ export class User extends TimestampMixin(Model) {
       if (needsRehash(user.passwordHash)) {
         await user.setPassword(password);
       }
+      await AuthThrottle.clear("password", subject);
       return user;
     }
+    await AuthThrottle.recordFailure("password", subject);
     return null;
   }
 
@@ -364,7 +416,20 @@ export class User extends TimestampMixin(Model) {
   }
 
   async verifyParentPin(pin: string): Promise<boolean> {
+    // Per ACCOUNT, not per IP: a 4-digit PIN is 10^4, and the route limiter
+    // is keyed by address, so a few hundred IPs would otherwise have it in
+    // minutes. Here, in the model, every route that checks the PIN —
+    // account, profiles, support — shares the one count.
+    const subject = AuthThrottle.forUser(this.id!);
+    if ((await AuthThrottle.lockedFor("pin", subject)) > 0) {
+      return false;
+    }
     const ok = await verifyPassword(pin, this.parentPinHash);
+    if (ok) {
+      await AuthThrottle.clear("pin", subject);
+    } else if (this.parentPinHash != null) {
+      await AuthThrottle.recordFailure("pin", subject);
+    }
     // A PIN set before the length was recorded has no length, and the
     // entry screen cannot draw the right number of boxes for it. A
     // correct PIN is the one moment we know how long it is, so it is
@@ -378,6 +443,100 @@ export class User extends TimestampMixin(Model) {
 
   async setPassword(password: string): Promise<void> {
     await this.$query().patch({ passwordHash: await hashPassword(password) });
+  }
+
+  /**
+   * Checks an authenticator code AND spends it.
+   *
+   * A code is accepted only if its 30-second step is later than the last
+   * one this account accepted, and the step is recorded in the same
+   * conditional UPDATE that decides it — so two requests racing with the
+   * same code cannot both win: exactly one of them changes the row.
+   *
+   * `secret` is the decrypted base32 secret (the server holds the key).
+   */
+  async acceptTotp(
+    secret: string,
+    code: string,
+    now: number = Date.now(),
+  ): Promise<boolean> {
+    // Per-account lockout, as for passwords: six digits is 10^6, and
+    // without a count that follows the account a botnet grinds it down.
+    const subject = AuthThrottle.forUser(this.id!);
+    if ((await AuthThrottle.lockedFor("totp", subject, now)) > 0) {
+      return false;
+    }
+    const step = matchTotpStep(secret, code, now);
+    if (step == null) {
+      // Not six digits is not a guess at the code — it is usually a
+      // recovery code, which the caller tries next.
+      if (/^\d{6}$/.test(code.replace(/\s+/g, ""))) {
+        await AuthThrottle.recordFailure("totp", subject);
+      }
+      return false;
+    }
+    const changed = await User.query()
+      .patch({ totpLastStep: step })
+      .where("id", this.id!)
+      .where((q) =>
+        q.whereNull("totpLastStep").orWhere("totpLastStep", "<", step),
+      );
+    if (changed !== 1) {
+      // A replay: right code, already spent.
+      await AuthThrottle.recordFailure("totp", subject);
+      return false;
+    }
+    this.totpLastStep = step;
+    await AuthThrottle.clear("totp", subject);
+    return true;
+  }
+
+  /**
+   * The account's address has just been proved for the first time — by a
+   * provider that verified it, or by a magic link — so anything attached to
+   * the account while it was UNPROVED is evidence of nobody in particular.
+   *
+   * That is the pre-account-takeover: an attacker registers a password
+   * account for an address they do not own and never verifies it; months
+   * later the real owner signs in with Google, the account is "theirs", and
+   * the attacker's password still opens it. So on the transition every
+   * credential is dropped — the password, passkeys, two-step, recovery codes,
+   * the grown-up PIN, any OTHER provider link — and the session epoch is
+   * bumped so any session already issued dies on its next request.
+   *
+   * `keepProvider` is the provider identity doing the proving, which stays.
+   * A no-op on an account that is already verified.
+   */
+  async claimVerifiedEmail(keepProvider: string | null = null): Promise<void> {
+    if (this.emailVerified) {
+      return;
+    }
+    const links = UserExternalId.query().delete().where("userId", this.id!);
+    if (keepProvider != null) {
+      links.whereNot("provider", keepProvider);
+    }
+    await links;
+    await Credential.query().delete().where("userId", this.id!);
+    const sessionEpoch = (this.sessionEpoch ?? 0) + 1;
+    await this.$query().patch({
+      emailVerified: true,
+      passwordHash: null,
+      totpEnabled: false,
+      totpSecret: null,
+      totpLastStep: null,
+      recoveryCodes: null,
+      parentPinHash: null,
+      parentPinLength: null,
+      sessionEpoch,
+    });
+    this.emailVerified = true;
+    this.passwordHash = null;
+    this.totpEnabled = false;
+    this.totpSecret = null;
+    this.recoveryCodes = null;
+    this.parentPinHash = null;
+    this.parentPinLength = null;
+    this.sessionEpoch = sessionEpoch;
   }
 
   static async findUniqueName(
@@ -435,7 +594,8 @@ export class User extends TimestampMixin(Model) {
    */
   static async ensure(ro: ResourceOwner): Promise<SsoResult> {
     ro = User.parseResourceOwner(ro);
-    const { provider, id: externalId, email } = ro;
+    const { provider, id: externalId } = ro;
+    const email = ro.email == null ? null : normalizeEmail(ro.email);
     if (email == null) {
       throw new Error("No email address");
     }
@@ -483,7 +643,9 @@ export class User extends TimestampMixin(Model) {
           .insert({ provider, ...fields } as UserExternalId);
       }
       if (!existing.emailVerified) {
-        await existing.$query().patch({ emailVerified: true });
+        // Not just a flag flip: see claimVerifiedEmail. Keeps the identity
+        // that just proved the address, drops everything set up before.
+        await existing.claimVerifiedEmail(provider);
       }
       return { kind: "ok", user: (await User.findById(existing.id!))! };
     }
@@ -1236,6 +1398,34 @@ export class UserLoginRequest extends TimestampMixin(Model) {
     purpose: TokenPurpose = "login",
   ): Promise<string> {
     await this.deleteExpired();
+    // Per-address resend cooldown, with no IP in it: the callers' own
+    // limits are per IP, so anyone with a few addresses could have this
+    // address mailed as often as they liked. The live row's age is the
+    // clock — it is replaced on every issue and removed on redemption.
+    // EMAIL_RESEND_COOLDOWN_MS overrides; off outside production so tests
+    // and local dev can issue back to back. 429 + expose reach the client
+    // as a plain "wait" (ASCII: it lands in the HTTP status line).
+    {
+      const cooldownMs = Number(
+        process.env["EMAIL_RESEND_COOLDOWN_MS"] ??
+          (process.env["NODE_ENV"] === "production" ? 60_000 : 0),
+      );
+      const prior =
+        cooldownMs > 0
+          ? await UserLoginRequest.query().findOne({ email, purpose })
+          : undefined;
+      if (
+        prior?.createdAt != null &&
+        Date.now() - new Date(prior.createdAt).getTime() < cooldownMs
+      ) {
+        throw Object.assign(
+          new Error(
+            "An email was sent to this address moments ago. Please wait a minute before asking again.",
+          ),
+          { status: 429, expose: true, code: "EMAIL_COOLDOWN" },
+        );
+      }
+    }
     await UserLoginRequest.query().where({ email, purpose }).delete();
     const token = Random.string(20);
     await UserLoginRequest.query().insert({
@@ -1453,6 +1643,9 @@ export class EmailVerification extends TimestampMixin(Model) {
     email: string,
     purpose: VerificationPurpose = "verify-email",
   ): Promise<string> {
+    // One spelling per address, so a code issued to "Ann@x.org" is the one
+    // checked when the form sends "ann@x.org".
+    email = normalizeEmail(email);
     await this.deleteExpired();
     const code = String(randomInt(0, 1_000_000)).padStart(
       EmailVerification.codeLength,
@@ -1463,6 +1656,27 @@ export class EmailVerification extends TimestampMixin(Model) {
       email,
       purpose,
     });
+    // Per-address resend cooldown — same rule and same switch as
+    // UserLoginRequest.init. The existing row's createdAt is when the
+    // last code was sent.
+    {
+      const cooldownMs = Number(
+        process.env["EMAIL_RESEND_COOLDOWN_MS"] ??
+          (process.env["NODE_ENV"] === "production" ? 60_000 : 0),
+      );
+      if (
+        cooldownMs > 0 &&
+        existing?.createdAt != null &&
+        Date.now() - new Date(existing.createdAt).getTime() < cooldownMs
+      ) {
+        throw Object.assign(
+          new Error(
+            "A code was sent to this address moments ago. Please wait a minute before asking again.",
+          ),
+          { status: 429, expose: true, code: "EMAIL_COOLDOWN" },
+        );
+      }
+    }
     if (existing != null) {
       await existing.$query().patch({ codeHash, createdAt: new Date() });
     } else {
@@ -1489,6 +1703,7 @@ export class EmailVerification extends TimestampMixin(Model) {
     purpose: VerificationPurpose,
     code: string,
   ): Promise<boolean> {
+    email = normalizeEmail(email);
     await this.deleteExpired();
     const rec = await EmailVerification.query().findOne({ email, purpose });
     if (rec == null) {

@@ -85,13 +85,35 @@ export class CaptchaRequiredError extends ApplicationError {
   }
 }
 
+/**
+ * Thrown by {@link requireCaptcha} when Cloudflare could not be asked at all.
+ * A 503, not a 428: the visitor did nothing wrong and re-solving the widget
+ * will not help — trying again in a few minutes will.
+ */
+export class CaptchaUnavailableError extends ApplicationError {
+  constructor() {
+    const message =
+      "We can't verify submissions right now. Please try again in a few minutes.";
+    super(message, {
+      status: 503,
+      body: { error: { message, captcha: false } },
+    });
+  }
+}
+
+/**
+ * The siteverify answer, with an outage kept apart from a rejection so each
+ * caller can decide what an outage means for its own door.
+ */
+type Verdict = "pass" | "fail" | "unreachable";
+
 async function verifyToken(
   token: string | undefined,
   ctx: Context,
-): Promise<boolean> {
+): Promise<Verdict> {
   const secret = turnstileSecret();
   if (secret == null || !token) {
-    return false;
+    return "fail";
   }
   const body = new URLSearchParams({ secret, response: token });
   const ip = clientIp(ctx);
@@ -109,11 +131,14 @@ async function verifyToken(
       signal: AbortSignal.timeout(Env.getNumber("TURNSTILE_TIMEOUT_MS", 5000)),
     });
   } catch (err: any) {
-    // Only a genuine transport failure (DNS, connection, timeout) fails open, so
-    // a Cloudflare outage cannot lock everyone out. The IP rate limit is the
-    // backstop, and it is now keyed on an address the client cannot forge.
-    Logger.warn(err, "Turnstile siteverify unreachable, allowing request");
-    return true;
+    // A genuine transport failure (DNS, connection, timeout). Reported as
+    // such rather than decided here: the adaptive sign-in gate lets it
+    // through so a Cloudflare outage cannot lock everyone out of their
+    // account, while the always-on gate on the anonymous support form
+    // refuses — an attacker who can slow siteverify must not thereby turn
+    // the challenge off for the one door that needs no account.
+    Logger.warn(err, "Turnstile siteverify unreachable");
+    return "unreachable";
   }
 
   // A response that arrived but is not a well-formed success is a REJECTION, not
@@ -121,14 +146,14 @@ async function verifyToken(
   // captive portal or HTML error page into a silent pass.
   if (!res.ok) {
     Logger.warn("Turnstile siteverify returned HTTP %d", res.status);
-    return false;
+    return "fail";
   }
   try {
     const data = (await res.json()) as { success?: boolean };
-    return data.success === true;
+    return data.success === true ? "pass" : "fail";
   } catch (err: any) {
     Logger.warn(err, "Turnstile siteverify returned an unreadable body");
-    return false;
+    return "fail";
   }
 }
 
@@ -157,7 +182,13 @@ async function verifyToken(
  * browser engine per request, which is the whole point.
  *
  * Unset keys still disable the feature entirely, so local dev and any
- * self-hoster without a Cloudflare account are unaffected.
+ * self-hoster without a Cloudflare account are unaffected (production
+ * refuses to boot without them — see config-check.ts).
+ *
+ * Fails CLOSED when siteverify cannot be reached, with
+ * {@link CaptchaUnavailableError}: this gate guards doors a stranger can
+ * walk through, and an outage (or an attacker slowing Cloudflare down) must
+ * not quietly switch the challenge off for exactly them.
  */
 export async function requireCaptcha(
   ctx: Context,
@@ -166,7 +197,12 @@ export async function requireCaptcha(
   if (!turnstileEnabled()) {
     return;
   }
-  if (!(await verifyToken(token, ctx))) {
+  // No token is not an outage: ask for one, without a round trip.
+  const verdict = !token ? "fail" : await verifyToken(token, ctx);
+  if (verdict === "unreachable") {
+    throw new CaptchaUnavailableError();
+  }
+  if (verdict !== "pass") {
     recordFailure(ctx);
     throw new CaptchaRequiredError();
   }
@@ -180,8 +216,11 @@ export async function requireCaptchaIfSuspicious(
   if (!turnstileEnabled() || !tooManyFailures(ctx)) {
     return;
   }
-  const ok = await verifyToken(token, ctx);
-  if (!ok) {
+  // An unreachable siteverify still passes here, as it always has: this is
+  // the sign-in gate, and a Cloudflare outage must not lock people out of
+  // their accounts. The per-IP rate limits remain the backstop.
+  const verdict = await verifyToken(token, ctx);
+  if (verdict === "fail") {
     throw new CaptchaRequiredError();
   }
   // A solved challenge clears the streak so the user isn't re-challenged on the

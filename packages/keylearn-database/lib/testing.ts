@@ -131,6 +131,9 @@ export async function clearTables() {
   // invites, plans and grants in one delete.
   await clearTable("org_access_event");
   await clearTable("organization");
+  // Per-account lockouts outlive the users they name (they are keyed by a
+  // hashed address), so a test that trips one must not lock the next out.
+  await clearTable("auth_throttle");
   await clearTable(UserLoginRequest.tableName);
   await clearTable(Order.tableName);
   await clearTable(UserExternalId.tableName);

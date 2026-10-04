@@ -2,6 +2,7 @@ import { Env } from "@keylearn/config";
 import { SupportAttachment, SupportMessage } from "@keylearn/database";
 import { reference } from "./my-controller.ts";
 import { type PriorTicket } from "./prior-ticket.ts";
+import { enqueueForward } from "./qdesk-outbox.ts";
 
 /**
  * Forwarding bridge to QDesk, the ops app — plain HTTP against its
@@ -18,14 +19,120 @@ import { type PriorTicket } from "./prior-ticket.ts";
  * auto-reply steps aside (see the call sites in controller.ts).
  */
 
-function config(): { url: string; key: string } | null {
+export type DeskConfig = { readonly url: string; readonly key: string };
+
+function config(): DeskConfig | null {
   const url = Env.getString("QDESK_URL", "");
   const key = Env.getString("QDESK_APP_KEY", "");
   return url !== "" && key !== "" ? { url, key } : null;
 }
 
+/** The bridge configuration in force right now, or null when it is off. */
+export function deskConfig(): DeskConfig | null {
+  return config();
+}
+
 export function qdeskConfigured(): boolean {
   return config() != null;
+}
+
+/**
+ * Every request to the desk carries the app key, so none of them may follow
+ * a redirect: a 30x from a compromised or misconfigured desk (or anything
+ * sitting in front of it) would otherwise replay `x-qdesk-app-key` to
+ * whatever host it names. `redirect: "error"` turns that into a failed
+ * request, which every caller here already treats as "the desk is down".
+ */
+const NO_REDIRECT = { redirect: "error" } as const;
+
+/** Default bound on any desk call that does not state its own. */
+const DESK_TIMEOUT_MS = 15_000;
+
+/**
+ * When the desk last asked us to back off (429/503 with Retry-After), and
+ * until when. The retry sweep and the outbox drain read it so a backlog
+ * does not keep hammering a desk that has said it is overloaded.
+ */
+let deskPausedUntil = 0;
+
+export function deskBackoffUntil(): number {
+  return deskPausedUntil;
+}
+
+/** For tests only. */
+export function resetDeskBackoff(): void {
+  deskPausedUntil = 0;
+}
+
+/** Milliseconds from a Retry-After header (seconds or an HTTP date), or null. */
+export function parseRetryAfter(
+  value: string | null,
+  now: number = Date.now(),
+): number | null {
+  if (value == null || value.trim() === "") {
+    return null;
+  }
+  const v = value.trim();
+  if (/^\d+$/.test(v)) {
+    return Number(v) * 1000;
+  }
+  const at = Date.parse(v);
+  return Number.isFinite(at) ? Math.max(0, at - now) : null;
+}
+
+/** What a send to the desk came back with — status 0 for no answer at all. */
+export type DeskSendResult = {
+  readonly ok: boolean;
+  readonly status: number;
+  readonly retryAfterMs: number | null;
+  readonly body: unknown;
+};
+
+/**
+ * One POST to the desk, with the outcome described rather than collapsed to
+ * null — the outbox needs the status to decide whether to retry.
+ */
+export async function sendToDesk(
+  path: string,
+  body: unknown,
+  cfg: DeskConfig,
+  headers: Record<string, string> = {},
+): Promise<DeskSendResult> {
+  try {
+    const res = await fetch(new URL(path, cfg.url), {
+      method: "POST",
+      headers: {
+        ...headers,
+        "content-type": "application/json",
+        "x-qdesk-app-key": cfg.key,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10_000),
+      ...NO_REDIRECT,
+    });
+    const retryAfterMs = parseRetryAfter(res.headers.get("retry-after"));
+    if ((res.status === 429 || res.status === 503) && retryAfterMs != null) {
+      // Capped: a desk asking for a day of silence is more likely broken
+      // than busy, and the give-up window is the real backstop.
+      deskPausedUntil = Math.max(
+        deskPausedUntil,
+        Date.now() + Math.min(retryAfterMs, 60 * 60 * 1000),
+      );
+    }
+    if (!res.ok) {
+      console.error(`qdesk-forward: ${path} -> ${res.status}`);
+      await res.body?.cancel().catch(() => {});
+      return { ok: false, status: res.status, retryAfterMs, body: null };
+    }
+    // Always an object on success, so a caller can read "this landed"
+    // off a non-null result — a 200 with an empty body is still a
+    // delivery, and the ticks depend on telling those apart.
+    const json = (await res.json().catch(() => ({}))) as unknown;
+    return { ok: true, status: res.status, retryAfterMs, body: json };
+  } catch (err) {
+    console.error(`qdesk-forward: ${path} failed`, err);
+    return { ok: false, status: 0, retryAfterMs: null, body: null };
+  }
 }
 
 /**
@@ -42,33 +149,13 @@ export function qdeskConfigured(): boolean {
 async function post(
   path: string,
   body: unknown,
-  cfg: { url: string; key: string } | null = config(),
+  cfg: DeskConfig | null = config(),
 ): Promise<unknown | null> {
   if (cfg == null) {
     return null;
   }
-  try {
-    const res = await fetch(new URL(path, cfg.url), {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-qdesk-app-key": cfg.key,
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) {
-      console.error(`qdesk-forward: ${path} -> ${res.status}`);
-      return null;
-    }
-    // Always an object on success, so a caller can read "this landed"
-    // off a non-null result — a 200 with an empty body is still a
-    // delivery, and the ticks depend on telling those apart.
-    return (await res.json().catch(() => ({}))) as unknown;
-  } catch (err) {
-    console.error(`qdesk-forward: ${path} failed`, err);
-    return null;
-  }
+  const result = await sendToDesk(path, body, cfg);
+  return result.ok ? result.body : null;
 }
 
 /**
@@ -299,13 +386,28 @@ export function forwardReplyToQdesk(
  * exact message in the desk's own thread. `qdeskMessageId` is the desk's
  * id, carried in on the delivery leg and stored on the local message row.
  */
+//
+// The four forwards below used to be `void post(...)`: one attempt, and a
+// desk that was down, restarting or rate-limiting at that moment lost the
+// rating, the thumbs, the resolution or the archive for good. They now go
+// through the durable outbox (qdesk-outbox.ts) — a row written first, sent
+// at once, and retried with backoff by the sweep. Each keeps its
+// fire-and-forget signature: the customer's click never waits on the desk.
+//
+// The dedupe key makes the latest word win: a second rating, or "sorted"
+// followed by "not really", replaces the one still waiting rather than
+// queueing behind it, so a retry can never land an out-of-date value last.
 export function forwardFeedbackToQdesk(
   ticketId: number,
   qdeskMessageId: number,
   rating: "good" | "bad",
 ): void {
-  void post(`/_/apps/tickets/${ticketId}/messages/${qdeskMessageId}/feedback`, {
-    rating,
+  enqueueForward({
+    kind: "feedback",
+    ticketId,
+    path: `/_/apps/tickets/${ticketId}/messages/${qdeskMessageId}/feedback`,
+    body: { rating },
+    dedupeKey: `feedback:${ticketId}:${qdeskMessageId}`,
   });
 }
 
@@ -314,7 +416,13 @@ export function forwardCsatToQdesk(
   rating: number,
   note: string | null,
 ): void {
-  void post(`/_/apps/tickets/${ticketId}/csat`, { rating, note });
+  enqueueForward({
+    kind: "csat",
+    ticketId,
+    path: `/_/apps/tickets/${ticketId}/csat`,
+    body: { rating, note },
+    dedupeKey: `csat:${ticketId}`,
+  });
 }
 
 /**
@@ -325,8 +433,12 @@ export function forwardCsatToQdesk(
  * in the archive.
  */
 export function forwardArchiveToQdesk(ticketId: number): void {
-  void post(`/_/apps/tickets/${ticketId}/archive`, {
-    reason: "deleted-by-user",
+  enqueueForward({
+    kind: "archive",
+    ticketId,
+    path: `/_/apps/tickets/${ticketId}/archive`,
+    body: { reason: "deleted-by-user" },
+    dedupeKey: `archive:${ticketId}`,
   });
 }
 
@@ -347,7 +459,13 @@ export function forwardResolutionToQdesk(
   ticketId: number,
   resolved: boolean,
 ): void {
-  void post(`/_/apps/tickets/${ticketId}/resolution`, { resolved });
+  enqueueForward({
+    kind: "resolution",
+    ticketId,
+    path: `/_/apps/tickets/${ticketId}/resolution`,
+    body: { resolved },
+    dedupeKey: `resolution:${ticketId}`,
+  });
 }
 
 /**
@@ -370,6 +488,7 @@ export async function deskIsTyping(ticketId: number): Promise<boolean> {
       {
         headers: { "x-qdesk-app-key": cfg.key },
         signal: AbortSignal.timeout(4000),
+        ...NO_REDIRECT,
       },
     );
     if (!res.ok) {
@@ -403,7 +522,10 @@ export function tellDeskCustomerTyping(ticketId: number): void {
     },
     body: "{}",
     signal: AbortSignal.timeout(3000),
-  }).catch(() => {});
+    ...NO_REDIRECT,
+  })
+    .then((res) => res.body?.cancel())
+    .catch(() => {});
 }
 
 /** One published help article, as the desk publishes it. */
@@ -439,6 +561,7 @@ export async function fetchHelpArticles(): Promise<readonly HelpArticle[]> {
     const res = await fetch(new URL("/_/apps/answers", cfg.url), {
       headers: { "x-qdesk-app-key": cfg.key },
       signal: AbortSignal.timeout(10_000),
+      ...NO_REDIRECT,
     });
     if (!res.ok) {
       throw new Error(`status ${res.status}`);
@@ -510,6 +633,7 @@ export async function fetchDeskNotices(): Promise<readonly DeskNotice[]> {
     const res = await fetch(new URL("/_/apps/notices", cfg.url), {
       headers: { "x-qdesk-app-key": cfg.key },
       signal: AbortSignal.timeout(5_000),
+      ...NO_REDIRECT,
     });
     if (!res.ok) {
       throw new Error(`status ${res.status}`);
@@ -552,6 +676,7 @@ export async function fetchExpectedReplyMinutes(): Promise<number | null> {
     const res = await fetch(new URL("/_/apps/expected-reply", cfg.url), {
       headers: { "x-qdesk-app-key": cfg.key },
       signal: AbortSignal.timeout(5_000),
+      ...NO_REDIRECT,
     });
     if (!res.ok) {
       throw new Error(`status ${res.status}`);
@@ -576,6 +701,7 @@ export async function fetchExpectedReplyMinutes(): Promise<number | null> {
 export async function fetchDeskAttachment(
   ticketId: number,
   attachmentId: number,
+  maxBytes: number = SupportAttachment.MAX_BYTES,
 ): Promise<Buffer | null> {
   const cfg = config();
   if (cfg == null) {
@@ -589,16 +715,63 @@ export async function fetchDeskAttachment(
       ),
       {
         headers: { "x-qdesk-app-key": cfg.key },
-        signal: AbortSignal.timeout(15_000),
+        // Covers the body as well as the headers: the signal stays live
+        // while the stream below is read.
+        signal: AbortSignal.timeout(DESK_TIMEOUT_MS),
+        ...NO_REDIRECT,
       },
     );
     if (!res.ok) {
       console.error(`qdesk attachment ${attachmentId} -> ${res.status}`);
+      await res.body?.cancel().catch(() => {});
       return null;
     }
-    return Buffer.from(await res.arrayBuffer());
+    return await readCapped(res, maxBytes, `qdesk attachment ${attachmentId}`);
   } catch (err) {
     console.error(`qdesk attachment ${attachmentId} failed`, err);
     return null;
   }
+}
+
+/**
+ * The body, read in chunks and abandoned the moment it passes `maxBytes`.
+ *
+ * `arrayBuffer()` buffered the whole response before anything looked at
+ * its size, so a desk (or whatever answered as one) could make this
+ * process hold any amount of memory for a file that was then thrown away
+ * for being over 10 MB. A declared length over the cap is refused before
+ * a byte is read; an undeclared or understated one is cut off as it
+ * streams.
+ */
+async function readCapped(
+  res: Response,
+  maxBytes: number,
+  what: string,
+): Promise<Buffer | null> {
+  const declared = Number(res.headers.get("content-length") ?? "");
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    console.error(`${what}: declared ${declared} bytes, over ${maxBytes}`);
+    await res.body?.cancel().catch(() => {});
+    return null;
+  }
+  if (res.body == null) {
+    return Buffer.alloc(0);
+  }
+  const reader = res.body.getReader();
+  const chunks: Buffer[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    total += value.byteLength;
+    if (total > maxBytes) {
+      console.error(`${what}: over ${maxBytes} bytes, abandoned`);
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks, total);
 }

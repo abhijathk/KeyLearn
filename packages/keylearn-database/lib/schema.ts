@@ -6,6 +6,7 @@ import { AdCampaign } from "./ad-campaign.ts";
 import { AdSeen, AdStat } from "./ad-stat.ts";
 import { AgentStatus } from "./agent-status.ts";
 import { Answer, AnswerRule } from "./answer.ts";
+import { AuthThrottle } from "./auth-throttle.ts";
 import { DeskUnlock } from "./desk-unlock.ts";
 import { LearnerResponse } from "./learner-response.ts";
 import {
@@ -162,6 +163,9 @@ export async function createSchema(knex: Knex): Promise<void> {
     }
   }
   await createTable(DeskUnlock);
+  // Per-account sign-in failure counters (auth-throttle.ts): keyed by what
+  // is being guessed at, not by the guesser's IP.
+  await createTable(AuthThrottle);
   // Gives a fresh deployment a working failsafe before anyone has signed in
   // to set one. A no-op once a passcode exists — see DeskUnlock.bootstrap.
   if (await DeskUnlock.bootstrap(process.env["ADMIN_UNLOCK_PASSCODE"] ?? "")) {
@@ -245,6 +249,12 @@ export async function createSchema(knex: Knex): Promise<void> {
   });
   await addColumn("user", "recovery_codes", (table) => {
     table.text("recovery_codes").nullable();
+  });
+  // The 30-second step of the last authenticator code this account spent.
+  // A code stays valid for ~90 s; without this, one watched or phished code
+  // could be spent again inside that window. Epoch-step, not a timestamp.
+  await addColumn("user", "totp_last_step", (table) => {
+    table.bigInteger("totp_last_step").nullable();
   });
 
   // Recorded as a need, not a diagnosis: what the app must know is whether to

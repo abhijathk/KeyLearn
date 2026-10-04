@@ -1,5 +1,5 @@
 import { inject, injectable } from "@fastr/invert";
-import { Env, listStaffEmails } from "@keylearn/config";
+import { DataDir, Env, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
   Notification,
@@ -15,6 +15,7 @@ import { Controller as AuthController } from "../auth/index.ts";
 import { Mailer } from "../mail/index.ts";
 import { emailStaffDigest } from "../site-config/readers.ts";
 import { repeat } from "../site-config/repeat.ts";
+import { sweepStaleUploads } from "./attachment-quota.ts";
 import { forwardResolutionToQdesk } from "./qdesk-forward.ts";
 import { deskPageUrl } from "./qdesk-forward.ts";
 import { QdeskRetrySweep } from "./qdesk-retry.ts";
@@ -44,6 +45,9 @@ export function holdingSweepIntervalMs(): number {
 @injectable({ singleton: true })
 export class HoldingQueueSweep {
   #timer: NodeJS.Timeout | null = null;
+  #uploadTimer: NodeJS.Timeout | null = null;
+
+  constructor(@inject(DataDir) readonly dataDir: DataDir) {}
 
   /** Begins the daily sweep. Safe to call once per process. */
   start(): void {
@@ -56,6 +60,16 @@ export class HoldingQueueSweep {
     }, interval);
     // Never hold the process open for the sake of a cleanup sweep.
     this.#timer.unref?.();
+    // Abandoned uploads ride along with the other unconfirmed-intake
+    // cleanup, hourly rather than daily: a tray is meant to live for
+    // minutes, and a day is the most it may hold disk for nothing.
+    this.#uploadTimer = setInterval(
+      () => {
+        void this.sweepUploads();
+      },
+      60 * 60 * 1000,
+    );
+    this.#uploadTimer.unref?.();
     Logger.info("Holding-queue sweep scheduled", {
       everyHours: interval / (60 * 60 * 1000),
       afterDays: holdingDays(),
@@ -66,6 +80,24 @@ export class HoldingQueueSweep {
     if (this.#timer != null) {
       clearInterval(this.#timer);
       this.#timer = null;
+    }
+    if (this.#uploadTimer != null) {
+      clearInterval(this.#uploadTimer);
+      this.#uploadTimer = null;
+    }
+  }
+
+  /** Removes uploads never sent within their window. Returns how many. */
+  async sweepUploads(now: number = Date.now()): Promise<number> {
+    try {
+      const removed = await sweepStaleUploads(this.dataDir, now);
+      if (removed > 0) {
+        Logger.info("Stale support uploads removed", { removed });
+      }
+      return removed;
+    } catch (err: any) {
+      Logger.warn(err, "Stale support upload sweep failed");
+      return 0;
     }
   }
 

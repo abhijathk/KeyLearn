@@ -81,19 +81,36 @@ export function verifyTotp(
   code: string,
   now: number = Date.now(),
 ): boolean {
+  return matchTotpStep(secret, code, now) != null;
+}
+
+/**
+ * As {@link verifyTotp}, but answers WHICH 30-second step the code belongs
+ * to, or null when it matches none.
+ *
+ * The step is what replay protection needs: a code is valid for up to ~90 s,
+ * so somebody who watched it being typed (or read it from a phished form) can
+ * spend it again inside that window unless the step it was accepted at is
+ * remembered and anything at or before it refused. See `User.acceptTotp`.
+ */
+export function matchTotpStep(
+  secret: string,
+  code: string,
+  now: number = Date.now(),
+): number | null {
   const trimmed = code.replace(/\s+/g, "");
   if (!/^\d{6}$/.test(trimmed)) {
-    return false;
+    return null;
   }
   let key: Buffer;
   try {
     key = base32Decode(secret);
   } catch {
-    return false;
+    return null;
   }
   const counter = Math.floor(now / 1000 / PERIOD);
   const supplied = Buffer.from(trimmed, "utf8");
-  let ok = false;
+  let matched: number | null = null;
   for (let i = -WINDOW; i <= WINDOW; i++) {
     const expected = Buffer.from(hotp(key, counter + i), "utf8");
     // No early exit: every candidate is compared, so the time taken does not
@@ -102,10 +119,10 @@ export function verifyTotp(
       expected.length === supplied.length &&
       timingSafeEqual(expected, supplied)
     ) {
-      ok = true;
+      matched = counter + i;
     }
   }
-  return ok;
+  return matched;
 }
 
 /** The `otpauth://` URI an authenticator app scans. */

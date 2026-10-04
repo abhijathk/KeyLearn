@@ -323,7 +323,7 @@ function LockIcon(): ReactNode {
 function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
   const premiumVisible = usePageData().premiumSell === true || PREMIUM_VISIBLE;
   const { formatMessage } = useIntl();
-  const { user, publicUser, actions } = useAccountActions(props);
+  const { user, publicUser, actions, pinPrompt } = useAccountActions(props);
   const premium = isPremiumUser(publicUser);
   const [pane, setPaneState] = useState<Pane>(initialPane);
   const navigate = useNavigate();
@@ -821,6 +821,8 @@ function SignedIn(props: { user: UserDetails; publicUser: AnyUser }) {
           <div className={styles.pane}>{paneBody}</div>
         </div>
       )}
+
+      {pinPrompt}
 
       {confirm === "logout" && (
         <ConfirmDialog

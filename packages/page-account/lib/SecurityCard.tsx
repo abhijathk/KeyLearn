@@ -10,8 +10,9 @@ import { PasswordField } from "./AuthPage.tsx";
 import { ParentPinCard } from "./ParentPinCard.tsx";
 import { passkeyErrorMessage } from "./passkey-errors.ts";
 import { PasswordStrength } from "./PasswordStrength.tsx";
+import { useParentPinGate } from "./pin-gate.tsx";
 import { SecurityResetDialog } from "./SecurityResetDialog.tsx";
-import { AccountService, type Passkey } from "./service.ts";
+import { AccountService, isReauthRequired, type Passkey } from "./service.ts";
 import { TwoFactorCard } from "./TwoFactorCard.tsx";
 
 // A friendly automatic name for a new passkey, derived from the current device
@@ -52,6 +53,10 @@ export function SecurityCard({
   const [pkError, setPkError] = useState<string | null>(null);
   const [pkMsg, setPkMsg] = useState<string | null>(null);
   const supported = AccountService.passkeysSupported();
+  // Adding a passkey (and downloading the data) sit behind the grown-up PIN
+  // on the server; adding a passkey also wants a recent sign-in.
+  const pinGate = useParentPinGate();
+  const [reauthOpen, setReauthOpen] = useState(false);
 
   useEffect(() => {
     AccountService.listPasskeys()
@@ -64,7 +69,8 @@ export function SecurityCard({
     setPkBusy(true);
     setPkError(null);
     setPkMsg(null);
-    AccountService.registerPasskey(deviceName())
+    pinGate
+      .gated(() => AccountService.registerPasskey(deviceName()))
       .then(() => AccountService.listPasskeys().then(setPasskeys))
       .then(() =>
         setPkMsg(
@@ -74,15 +80,21 @@ export function SecurityCard({
           }),
         ),
       )
-      .catch((err) =>
+      .catch((err) => {
+        if (isReauthRequired(err)) {
+          // Not a failure: the session is older than the server allows for
+          // this. Confirm it is them, then try again on its own.
+          setReauthOpen(true);
+          return;
+        }
         setPkError(
           passkeyErrorMessage(err, "add", { formatMessage }) ??
             formatMessage({
               id: "security.passkey.addError",
               defaultMessage: "Could not add a passkey.",
             }),
-        ),
-      )
+        );
+      })
       .finally(() => setPkBusy(false));
   };
 
@@ -308,6 +320,19 @@ export function SecurityCard({
         />
       )}
 
+      {reauthOpen && (
+        <ReauthDialog
+          user={user}
+          onClose={() => setReauthOpen(false)}
+          onDone={() => {
+            setReauthOpen(false);
+            addPasskey();
+          }}
+        />
+      )}
+
+      {pinGate.prompt}
+
       <TwoFactorCard user={user} onChanged={onChanged} />
 
       <ParentPinCard user={user} onChanged={onChanged} />
@@ -354,7 +379,11 @@ export function SecurityCard({
           type="button"
           className={styles.secBtn}
           onClick={() => {
-            void AccountService.exportData(user.name, formatStamp(Date.now()));
+            pinGate
+              .gated(() =>
+                AccountService.exportData(user.name, formatStamp(Date.now())),
+              )
+              .catch(() => {});
           }}
         >
           <FormattedMessage
@@ -748,6 +777,236 @@ function PasswordDialog({
               defaultMessage: "Update password",
             })}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type ReauthMethod = "password" | "code" | "totp";
+
+/**
+ * "Confirm it's you" — asked before a change the server will only make
+ * shortly after a sign-in (adding a passkey). One proof is enough: the
+ * password, a code emailed to the account, or the authenticator code.
+ */
+function ReauthDialog({
+  user,
+  onClose,
+  onDone,
+}: {
+  readonly user: UserDetails;
+  readonly onClose: () => void;
+  readonly onDone: () => void;
+}): ReactNode {
+  const { formatMessage } = useIntl();
+  const canPassword = user.hasPassword;
+  const canTotp = user.twoFactorEnabled;
+  const [method, setMethod] = useState<ReauthMethod>(
+    canPassword ? "password" : canTotp ? "totp" : "code",
+  );
+  const [value, setValue] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const pick = (next: ReauthMethod) => {
+    setMethod(next);
+    setValue("");
+    setErr(null);
+  };
+
+  const sendCode = () => {
+    setBusy(true);
+    setErr(null);
+    AccountService.sendIdentityCode()
+      .then(() => setCodeSent(true))
+      .catch((e) => setErr(e?.message ?? null))
+      .finally(() => setBusy(false));
+  };
+
+  const confirm = () => {
+    const v = value.trim();
+    if (v === "" || busy) {
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    const proof =
+      method === "password"
+        ? { password: value }
+        : method === "totp"
+          ? { totp: v }
+          : { identityCode: v };
+    AccountService.reauth(proof)
+      .then(() => onDone())
+      .catch((e) => {
+        setErr(e?.message ?? null);
+        setBusy(false);
+      });
+  };
+
+  const needsSend = method === "code" && !codeSent;
+
+  return (
+    <div
+      className={dlg.scrim}
+      role="presentation"
+      onClick={(ev) => {
+        if (ev.target === ev.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className={dlg.dialog} role="dialog" aria-modal={true}>
+        <h2 className={dlg.title}>
+          <FormattedMessage
+            id="security.reauth.title"
+            defaultMessage="Confirm it’s you"
+          />
+        </h2>
+        <p className={dlg.message}>
+          <FormattedMessage
+            id="security.reauth.intro"
+            defaultMessage="For your security, confirm it’s you before adding a passkey."
+          />
+        </p>
+        {method === "password" && (
+          <PasswordField
+            autoComplete="current-password"
+            placeholder={formatMessage({
+              id: "security.password.current",
+              defaultMessage: "Current password",
+            })}
+            value={value}
+            onChange={setValue}
+          />
+        )}
+        {method === "totp" && (
+          <TextField
+            size="full"
+            type="text"
+            autoComplete="one-time-code"
+            autoFocus={true}
+            maxLength={32}
+            placeholder={formatMessage({
+              id: "auth.2fa.codePlaceholder",
+              defaultMessage: "Authenticator or recovery code",
+            })}
+            value={value}
+            onChange={setValue}
+          />
+        )}
+        {method === "code" && codeSent && (
+          <>
+            <p className={dlg.message}>
+              <FormattedMessage
+                id="security.reauth.codeSent"
+                defaultMessage="Enter the 6-digit code we sent to {email}."
+                values={{ email: <strong>{user.email}</strong> }}
+              />
+            </p>
+            <TextField
+              size="full"
+              type="text"
+              autoComplete="one-time-code"
+              autoFocus={true}
+              maxLength={6}
+              placeholder={formatMessage({
+                id: "auth.verify.codePlaceholder",
+                defaultMessage: "6-digit code",
+              })}
+              value={value}
+              onChange={(v) => setValue(v.replace(/\D/g, "").slice(0, 6))}
+            />
+          </>
+        )}
+        {needsSend && (
+          <p className={dlg.message}>
+            <FormattedMessage
+              id="security.reauth.codeIntro"
+              defaultMessage="We’ll email a code to {email}."
+              values={{ email: <strong>{user.email}</strong> }}
+            />
+          </p>
+        )}
+        {err != null && <p className={styles.secErr}>{err}</p>}
+        <p className={styles.note}>
+          {method !== "password" && canPassword && (
+            <button
+              type="button"
+              className={styles.secBtn}
+              onClick={() => pick("password")}
+            >
+              <FormattedMessage
+                id="security.reauth.usePassword"
+                defaultMessage="Use my password"
+              />
+            </button>
+          )}
+          {method !== "totp" && canTotp && (
+            <button
+              type="button"
+              className={styles.secBtn}
+              onClick={() => pick("totp")}
+            >
+              <FormattedMessage
+                id="security.reauth.useTotp"
+                defaultMessage="Use my authenticator app"
+              />
+            </button>
+          )}
+          {method !== "code" && (
+            <button
+              type="button"
+              className={styles.secBtn}
+              onClick={() => pick("code")}
+            >
+              <FormattedMessage
+                id="security.reauth.useCode"
+                defaultMessage="Email me a code"
+              />
+            </button>
+          )}
+        </p>
+        <div className={dlg.actions}>
+          <button className={`${dlg.btn} ${dlg.cancel}`} onClick={onClose}>
+            {formatMessage({ id: "t_Cancel", defaultMessage: "Cancel" })}
+          </button>
+          {needsSend && (
+            <button
+              className={`${dlg.btn} ${dlg.confirm}`}
+              disabled={busy}
+              onClick={sendCode}
+            >
+              <FormattedMessage
+                id="security.reauth.sendCode"
+                defaultMessage="Send code"
+              />
+            </button>
+          )}
+          {!needsSend && (
+            <button
+              className={`${dlg.btn} ${dlg.confirm}`}
+              disabled={busy || value.trim() === ""}
+              onClick={confirm}
+            >
+              <FormattedMessage
+                id="security.reauth.confirm"
+                defaultMessage="Confirm"
+              />
+            </button>
+          )}
         </div>
       </div>
     </div>

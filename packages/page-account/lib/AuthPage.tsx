@@ -103,6 +103,12 @@ function reload(url: string) {
   window.location.href = url;
 }
 
+/** The lookup's own limiter (429) — said plainly, without the server's words. */
+const tooManyLookups = defineMessage({
+  id: "auth.login.tooManyLookups",
+  defaultMessage: "Too many tries. Wait a few minutes, then try again.",
+});
+
 /**
  * All the auth screens live in one compact floating window. Switching between
  * them swaps the form in place (with the window gliding to the new height) and
@@ -542,7 +548,11 @@ function LoginForm({
   const [verifyEmail, setVerifyEmail] = useState<string | null>(
     ssoParam() === "verify" ? ssoEmail() : null,
   );
-  const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
+  // A provider or a magic link that finished on an account with two-step on
+  // lands here with ?sso=twofactor: the session is parked until the code.
+  const [needsTwoFactor, setNeedsTwoFactor] = useState(
+    ssoParam() === "twofactor",
+  );
   const [remember, setRemember] = useState(true);
   const captcha = useCaptcha();
   const sso = ssoParam();
@@ -585,6 +595,8 @@ function LoginForm({
                 "Please complete the verification below and try again.",
             }),
           );
+        } else if (err?.status === 429) {
+          setError(formatMessage(tooManyLookups));
         } else {
           setError(err.message);
         }
@@ -713,7 +725,15 @@ function LoginForm({
           className={styles.passkeyBtn}
           onClick={() => {
             AccountService.loginPasskey()
-              .then(() => reload(loginReturnTo()))
+              .then((result) => {
+                if ("twoFactor" in result) {
+                  // The passkey proved possession only; the account's
+                  // two-step code still finishes the sign-in.
+                  setNeedsTwoFactor(true);
+                } else {
+                  reload(loginReturnTo());
+                }
+              })
               .catch(() => {});
           }}
         >
@@ -937,6 +957,7 @@ function VerifyCodeStep({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
   const captcha = useCaptcha();
 
   const submit = () => {
@@ -946,7 +967,14 @@ function VerifyCodeStep({
     setBusy(true);
     setError(null);
     AccountService.verifyEmail({ email: email.trim(), code: code.trim() })
-      .then(() => reload(destination))
+      .then((result) => {
+        if ("twoFactor" in result) {
+          setBusy(false);
+          setNeedsTwoFactor(true);
+        } else {
+          reload(destination);
+        }
+      })
       .catch((err) => {
         setError(err.message);
         setBusy(false);
@@ -970,6 +998,10 @@ function VerifyCodeStep({
         }
       });
   };
+
+  if (needsTwoFactor) {
+    return <TwoFactorLoginStep onBack={onBack} destination={destination} />;
+  }
 
   return (
     <form
@@ -1565,6 +1597,7 @@ function ResetForm({ token }: { readonly token: string }) {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
   const captcha = useCaptcha();
 
   const mismatch = confirm !== "" && confirm !== password;
@@ -1589,7 +1622,16 @@ function ResetForm({ token }: { readonly token: string }) {
       password,
       turnstileToken: captcha.token,
     })
-      .then(() => reload("/"))
+      .then((result) => {
+        if ("twoFactor" in result) {
+          // The new password is saved; a reset is not a way past two-step,
+          // so the sign-in still waits on the code.
+          setBusy(false);
+          setNeedsTwoFactor(true);
+        } else {
+          reload("/");
+        }
+      })
       .catch((err) => {
         if (isCaptchaRequired(err)) {
           captcha.require();
@@ -1606,6 +1648,15 @@ function ResetForm({ token }: { readonly token: string }) {
         setBusy(false);
       });
   };
+
+  if (needsTwoFactor) {
+    return (
+      <TwoFactorLoginStep
+        onBack={() => reload(Pages.login.path)}
+        destination="/"
+      />
+    );
+  }
 
   return (
     <form

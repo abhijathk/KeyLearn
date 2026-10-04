@@ -19,6 +19,7 @@ import { randomString, type SessionState } from "@fastr/middleware-session";
 import { FileStore } from "@fastr/middleware-session-file-store";
 import { type LearnerOwner } from "@keylearn/config";
 import {
+  AuthThrottle,
   Certificate,
   Credential,
   EmailVerification,
@@ -101,6 +102,13 @@ import {
   assertMayRegister,
   consumeInviteCode,
 } from "./registration.ts";
+import {
+  finishSignIn,
+  PENDING_2FA_TTL_MS,
+  REAUTH_AT_KEY,
+  requireRecentAuth,
+  SECOND_FACTOR_KEY,
+} from "./sign-in.ts";
 import { encryptTotpSecret, resolveTotpSecret } from "./totp-crypto.ts";
 import {
   clearFailures,
@@ -322,7 +330,7 @@ async function seedTimeZone(
 }
 
 const TCreateToken = z.object({
-  email: z.string().min(1).email(),
+  email: z.string().trim().min(1).email(),
   turnstileToken: z.string().max(4096).optional(),
 });
 type TCreateToken = z.infer<typeof TCreateToken>;
@@ -331,7 +339,7 @@ const PCreateToken = zod(TCreateToken, () => {
 });
 
 const TRegister = z.object({
-  email: z.string().min(1).email(),
+  email: z.string().trim().min(1).email(),
   password: z.string().min(MIN_PASSWORD).max(128),
   // Both required. The account holder's real name seeds their learner profile,
   // and a household of "Me" and "Me 2" is no use to anyone.
@@ -351,7 +359,7 @@ const PRegister = zod(TRegister, () => {
 });
 
 const TVerifyEmail = z.object({
-  email: z.string().min(1).email(),
+  email: z.string().trim().min(1).email(),
   code: z.string().regex(/^\d{6}$/),
 });
 type TVerifyEmail = z.infer<typeof TVerifyEmail>;
@@ -360,7 +368,7 @@ const PVerifyEmail = zod(TVerifyEmail, () => {
 });
 
 const TResend = z.object({
-  email: z.string().min(1).email(),
+  email: z.string().trim().min(1).email(),
   turnstileToken: z.string().max(4096).optional(),
 });
 type TResend = z.infer<typeof TResend>;
@@ -369,7 +377,7 @@ const PResend = zod(TResend, () => {
 });
 
 const TChangeEmail = z.object({
-  email: z.string().min(1).email(),
+  email: z.string().trim().min(1).email(),
   password: z.string().max(128).optional(),
   // For accounts without a password: a code sent to the CURRENT email proves
   // the request comes from the account owner, not a hijacked session.
@@ -415,7 +423,7 @@ const PDeleteAccount = zod(TDeleteAccount, () => {
 });
 
 const TLookup = z.object({
-  email: z.string().min(1).email(),
+  email: z.string().trim().min(1).email(),
   turnstileToken: z.string().max(4096).optional(),
 });
 type TLookup = z.infer<typeof TLookup>;
@@ -424,7 +432,7 @@ const PLookup = zod(TLookup, () => {
 });
 
 const TLogin = z.object({
-  email: z.string().min(1).email(),
+  email: z.string().trim().min(1).email(),
   password: z.string().min(1).max(128),
   // Optional Cloudflare Turnstile token, sent only when the adaptive gate has
   // asked the client for a challenge.
@@ -438,7 +446,7 @@ const PLogin = zod(TLogin, () => {
 });
 
 const TForgot = z.object({
-  email: z.string().min(1).email(),
+  email: z.string().trim().min(1).email(),
   turnstileToken: z.string().max(4096).optional(),
 });
 type TForgot = z.infer<typeof TForgot>;
@@ -508,6 +516,19 @@ const TTwoFactorLogin = z.object({
 type TTwoFactorLogin = z.infer<typeof TTwoFactorLogin>;
 const PTwoFactorLogin = zod(TTwoFactorLogin, () => {
   throw new ApplicationError("Enter the 6-digit code from your app");
+});
+
+// Re-proving who you are mid-session, before a sensitive change: the
+// password, a code emailed to the account (`identity` purpose), or a
+// current authenticator code. Any one the account actually holds.
+const TReauth = z.object({
+  password: z.string().max(128).optional(),
+  identityCode: z.string().trim().max(16).optional(),
+  totp: z.string().max(32).optional(),
+});
+type TReauth = z.infer<typeof TReauth>;
+const PReauth = zod(TReauth, () => {
+  throw new ApplicationError("Invalid request");
 });
 
 const TParentPin = z.object({
@@ -585,6 +606,19 @@ const PPatchAccount = zod(TPatchAccount, () => {
  * practice page gates as "made for a bigger screen", can go on to the account
  * instead of dead-ending there; see the browser's `SignedInLanding`.
  */
+/**
+ * The per-address resend cooldown (`UserLoginRequest.init`,
+ * `EmailVerification.issue`) refused to send again so soon.
+ *
+ * On the routes anybody can call about any address, that refusal must not
+ * reach the caller: it only fires when a mail WAS sent moments ago, which on
+ * forgot-password and resend-code means "this address has an account".
+ * Those routes swallow it and answer exactly as if they had sent.
+ */
+function isEmailCooldown(err: unknown): boolean {
+  return (err as { code?: unknown } | null)?.code === "EMAIL_COOLDOWN";
+}
+
 export function signedInLanding(next: string | undefined): string {
   if (next != null && /^\/(?![/\\])/.test(next)) {
     return next;
@@ -856,9 +890,16 @@ export class Controller {
             );
             return;
           case "ok":
-            ctx.state.session.start();
-            ctx.state.session.set("userId", result.user.id!);
-            ctx.state.session.set("epoch", result.user.sessionEpoch ?? 0);
+            // The provider vouches for the address, not for a second factor:
+            // an account with two-step on still has to give its code.
+            if (
+              finishSignIn(ctx, result.user, {
+                method: `sso:${resourceOwner.provider}`,
+              }) === "pending-2fa"
+            ) {
+              ctx.response.redirect("/login?sso=twofactor");
+              return;
+            }
             this.#audit(ctx, "login", result.user.id!, resourceOwner.provider);
             break;
         }
@@ -882,7 +923,19 @@ export class Controller {
     if ((await User.findByEmail(email)) == null) {
       assertMayCreateAccountWithoutCode();
     }
-    const token = String(await UserLoginRequest.init(email, "login"));
+    let token: string;
+    try {
+      token = String(await UserLoginRequest.init(email, "login"));
+    } catch (err) {
+      // A link already went to this address moments ago. Answer as if this
+      // one did too: the earlier link still works, and the cooldown is not
+      // a way to learn anything about the address.
+      if (isEmailCooldown(err)) {
+        ctx.response.body = { email };
+        return;
+      }
+      throw err;
+    }
     const link = String(
       new URL(ctx.state.router.makePath("login", { token }), this.canonicalUrl),
     );
@@ -976,11 +1029,16 @@ export class Controller {
     if (user == null) {
       throw new ForbiddenError("This account no longer exists");
     }
+    // A flag flip and NOT claimVerifiedEmail: the code proves the mailbox,
+    // but on this path the password was set moments ago by the person now
+    // holding the code — purging it would break every ordinary sign-up. The
+    // takeover that purge exists for arrives by a provider or a magic link,
+    // and those paths do purge (User.ensure, User.login).
     await user.$query().patch({ emailVerified: true });
-    ctx.state.session.destroy();
-    ctx.state.session.start();
-    ctx.state.session.set("userId", user.id!);
-    ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
+    if (finishSignIn(ctx, user, { method: "sign-up" }) === "pending-2fa") {
+      ctx.response.body = { twoFactor: true };
+      return;
+    }
     // Completing sign-up also signs you in, so it belongs in the trail.
     this.#audit(ctx, "login", user.id!, "sign-up");
     ctx.response.body = { ok: true };
@@ -997,7 +1055,15 @@ export class Controller {
     // answer the same way so the endpoint can't probe for registered emails.
     const user = await User.findByEmail(email);
     if (user != null && !user.emailVerified) {
-      await this.#sendVerificationCode(email, "verify-email");
+      try {
+        await this.#sendVerificationCode(email, "verify-email");
+      } catch (err) {
+        // Only an address with a pending account can hit the cooldown, so
+        // letting it through would say which addresses those are.
+        if (!isEmailCooldown(err)) {
+          throw err;
+        }
+      }
     }
     ctx.response.body = { ok: true };
   }
@@ -1020,22 +1086,42 @@ export class Controller {
   ) {
     rateLimit(ctx, "lookup", 30, 300_000);
     await requireCaptchaIfSuspicious(ctx, turnstileToken);
+    // Per ADDRESS as well as per client: the IP limit alone lets a botnet
+    // ask about one address as often as it likes, and asking about the same
+    // address over and over is what probing for its sign-in methods looks
+    // like. A person needs a handful of lookups; ten in fifteen minutes,
+    // from anywhere, is the budget.
+    const subject = AuthThrottle.forEmail(email);
+    if ((await AuthThrottle.lockedFor("lookup", subject)) > 0) {
+      throw new ApplicationError(
+        "Too many attempts. Please wait a few minutes and try again.",
+        { status: 429 },
+      );
+    }
+    await AuthThrottle.recordFailure("lookup", subject);
+    ctx.response.headers.set("Cache-Control", "private, no-store");
 
     const user = await User.findByEmail(email);
     if (user == null) {
       recordFailure(ctx);
-      ctx.response.body = { exists: false };
+      // The same keys as a known address, so a client cannot tell the two
+      // apart by shape — only by the one bit the sign-in UI needs.
+      ctx.response.body = { exists: false, hasPassword: false, providers: [] };
       return;
     }
+    const hasPassword = user.passwordHash != null;
     ctx.response.body = {
       exists: true,
-      hasPassword: user.passwordHash != null,
-      twoFactor: Boolean(user.totpEnabled),
-      // Which buttons to highlight, so someone who signed up with Google is
-      // pointed back at Google rather than at a password they never set.
-      providers: (user.externalIds ?? []).map((x) => x.provider),
+      hasPassword,
+      // Which provider to point at — needed only when there is no password
+      // field to show, so only revealed then. Whether the account has
+      // two-step verification is no longer told to anybody who asks: the
+      // sign-in screen never used it, and it is a map of which accounts
+      // are worth a password-only attack.
+      providers: hasPassword
+        ? []
+        : (user.externalIds ?? []).map((x) => x.provider),
     };
-    ctx.response.headers.set("Cache-Control", "private, no-store");
   }
 
   @http.POST({ name: "login-password", path: "/auth/login-password" })
@@ -1067,29 +1153,19 @@ export class Controller {
       ctx.response.body = { verify: true, email };
       return;
     }
-    ctx.state.session.destroy();
-    ctx.state.session.start();
     // Two-step verification: the password is only the first factor, so the
     // session is marked PENDING rather than signed in. `loadUser` refuses to
     // resolve a pending session to a user, so nothing is reachable until the
-    // second factor is supplied.
-    if (user.totpEnabled) {
-      ctx.state.session.set("pending2faUserId", user.id!);
-      ctx.state.session.set("pending2faAt", Date.now());
-      if (remember === false) {
-        ctx.state.session.set("shortLived", true);
-      }
+    // second factor is supplied. Shared/family device: `remember: false`
+    // marks the session short-lived so it lapses in a day.
+    if (
+      finishSignIn(ctx, user, { method: "password", remember }) ===
+      "pending-2fa"
+    ) {
       ctx.response.body = { twoFactor: true };
       return;
     }
-    ctx.state.session.set("userId", user.id!);
-    ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
     this.#audit(ctx, "login", user.id!, "password");
-    // Shared/family device: mark the session short-lived so it lapses in a day.
-    if (remember === false) {
-      ctx.state.session.set("shortLived", true);
-      ctx.state.session.set("loginAt", Date.now());
-    }
     ctx.response.body = { ok: true };
   }
 
@@ -1103,20 +1179,35 @@ export class Controller {
     // Only send a link to accounts that actually exist, but always answer the
     // same way so the endpoint can't be used to probe for registered emails.
     const user = await User.findByEmail(email);
+    let token: string | null = null;
     if (user != null) {
-      const token = String(await UserLoginRequest.init(email, "reset"));
+      try {
+        token = String(await UserLoginRequest.init(email, "reset"));
+      } catch (err) {
+        // Only a registered address can be in its cooldown — a second
+        // request answered 429 would say the address has an account. The
+        // first link still works; answer exactly as if this one was sent.
+        if (!isEmailCooldown(err)) {
+          throw err;
+        }
+      }
+    }
+    if (user != null && token != null) {
       const link = String(
         new URL(`/reset-password/${token}`, this.canonicalUrl),
       );
-      try {
-        await this.mailer.sendMail(messageWithResetLink({ email, link }));
-      } catch (err: any) {
-        Logger.warn(
-          err,
-          "Error sending reset e-mail to '%s'",
-          maskEmail(email),
-        );
-      }
+      // Not awaited: an address with an account used to answer only after
+      // the mail server had, and one without answered at once — the same
+      // body, but the clock said which addresses were registered.
+      void this.mailer
+        .sendMail(messageWithResetLink({ email, link }))
+        .catch((err: any) => {
+          Logger.warn(
+            err,
+            "Error sending reset e-mail to '%s'",
+            maskEmail(email),
+          );
+        });
     }
     ctx.response.body = { ok: true };
   }
@@ -1152,10 +1243,21 @@ export class Controller {
     // every existing session, then stamp this new one with the fresh epoch.
     const epoch = (user.sessionEpoch ?? 0) + 1;
     await user.$query().patch({ sessionEpoch: epoch });
-    ctx.state.session.destroy();
-    ctx.state.session.start();
-    ctx.state.session.set("userId", user.id!);
-    ctx.state.session.set("epoch", epoch);
+    user.sessionEpoch = epoch;
+    // Whoever had been guessing at this address is no longer in the way of
+    // the owner, who has just proved the mailbox.
+    await AuthThrottle.clear("password", AuthThrottle.forEmail(email));
+    // Passkeys are deliberately left: they are device-bound and cannot have
+    // been phished with the old password, and the alert above tells the owner
+    // to review them. A reset is NOT a way past two-step verification,
+    // though — that is what an attacker holding the inbox would want.
+    if (
+      finishSignIn(ctx, user, { method: "password-reset" }) === "pending-2fa"
+    ) {
+      ctx.response.body = { twoFactor: true };
+      return;
+    }
+    this.#audit(ctx, "login", user.id!, "password reset");
     ctx.response.body = { ok: true };
   }
 
@@ -1169,9 +1271,13 @@ export class Controller {
     ctx.state.session.destroy();
     const user = await UserLoginRequest.login(token);
     if (user != null) {
-      ctx.state.session.start();
-      ctx.state.session.set("userId", user.id!);
-      ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
+      // Holding the inbox is one factor. An account with two-step on still
+      // gives its code before the link opens anything.
+      if (finishSignIn(ctx, user, { method: "magic-link" }) === "pending-2fa") {
+        ctx.response.redirect("/login?sso=twofactor");
+        return;
+      }
+      this.#audit(ctx, "login", user.id!, "magic link");
       ctx.response.redirect(signedInLanding(next));
     } else {
       throw new ForbiddenError("Invalid login link", {
@@ -1227,6 +1333,9 @@ export class Controller {
     { anonymized, publicProfile, name }: TPatchAccount,
   ) {
     const user = ctx.state.requireUser();
+    // Making the household's history public, or renaming the account, is a
+    // grown-up's decision — the same server-side gate as profile management.
+    this.#requireParentPin(ctx, user);
     const patch: Record<string, unknown> = {};
     if (anonymized !== undefined) {
       patch.anonymized = Number(anonymized);
@@ -1384,13 +1493,13 @@ export class Controller {
       (totp != null &&
         Boolean(user.totpEnabled) &&
         ((user.totpSecret != null &&
-          verifyTotp(
+          (await user.acceptTotp(
             resolveTotpSecret(
               user.totpSecret,
               this.userData.dataDir.dataPath(),
             ),
             totp,
-          )) ||
+          ))) ||
           (await user.useRecoveryCode(totp)))) ||
       (password != null &&
         user.passwordHash != null &&
@@ -1679,7 +1788,15 @@ export class Controller {
     // Sent to the OLD address as well as recorded — otherwise the one person
     // who needs to know an address was taken over never hears about it.
     this.#alert(ctx, user, "Your email address was changed");
-    await user.$query().patch({ email: pending, emailVerified: true });
+    // The address is what every recovery path trusts, so a change of it
+    // signs out every other device; this one is re-stamped and stays.
+    const epoch = (user.sessionEpoch ?? 0) + 1;
+    await user.$query().patch({
+      email: pending,
+      emailVerified: true,
+      sessionEpoch: epoch,
+    });
+    ctx.state.session.set("epoch", epoch);
     this.#audit(ctx, "email-changed", user.id!, pending);
     ctx.state.session.delete("pendingEmail");
     ctx.response.body = { ok: true, email: pending };
@@ -1702,6 +1819,12 @@ export class Controller {
     ctx: Context<RouterState & SessionState & AuthState>,
   ) {
     const user = ctx.state.requireUser();
+    // A passkey is a permanent, password-less key to the account. Adding one
+    // needs a recent sign-in (or `/auth/reauth`), and on a household with a
+    // grown-up PIN, the PIN — not merely an unlocked session on a tablet.
+    this.#requireParentPin(ctx, user);
+    requireRecentAuth(ctx);
+    rateLimit(ctx, "passkey", 30, 60_000);
     const { rpID, rpName } = this.#rp();
     const existing = await Credential.listForUser(user.id!);
     const options = await generateRegistrationOptions({
@@ -1731,6 +1854,10 @@ export class Controller {
     @body.json(null, { maxLength: 65536 }) data: any,
   ) {
     const user = ctx.state.requireUser();
+    // Checked again on the second leg: the options call is not the one
+    // that writes the key.
+    this.#requireParentPin(ctx, user);
+    requireRecentAuth(ctx);
     const { rpID, origin } = this.#rp();
     const expectedChallenge = ctx.state.session.pull("passkeyChallenge") as
       | string
@@ -1823,10 +1950,20 @@ export class Controller {
     if (user == null) {
       throw new ForbiddenError();
     }
-    ctx.state.session.destroy();
-    ctx.state.session.start();
-    ctx.state.session.set("userId", user.id!);
-    ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
+    // A passkey the authenticator unlocked with a PIN or biometric is two
+    // factors in one (the device, and the person); one that only proved
+    // possession is one, and an account with two-step on still asks for its
+    // code.
+    const userVerified = verification.authenticationInfo.userVerified === true;
+    if (
+      finishSignIn(ctx, user, {
+        method: "passkey",
+        secondFactor: userVerified,
+      }) === "pending-2fa"
+    ) {
+      ctx.response.body = { twoFactor: true };
+      return;
+    }
     this.#audit(ctx, "login", user.id!, "passkey");
     ctx.response.body = { ok: true };
   }
@@ -1838,6 +1975,9 @@ export class Controller {
   @http.GET({ name: "export-account", path: "/_/account/export" })
   async exportAccount(ctx: Context<RouterState & SessionState & AuthState>) {
     const user = ctx.state.requireUser();
+    // The export carries every child's records and the account's email —
+    // a grown-up's download, behind the PIN when there is one.
+    this.#requireParentPin(ctx, user);
     rateLimit(ctx, "export", 5, 3_600_000);
     ctx.response.body = await buildAccountExport(this.userData, user);
     ctx.response.headers.set("Cache-Control", "private, no-store");
@@ -2161,6 +2301,8 @@ export class Controller {
     const secret = generateTotpSecret();
     await user.$query().patch({
       totpSecret: encryptTotpSecret(secret, this.userData.dataDir.dataPath()),
+      // A new secret starts a new sequence of spent codes.
+      totpLastStep: null,
     });
     // The response carries the real secret — for the QR code and the
     // manual-entry fallback — never what's stored.
@@ -2185,12 +2327,13 @@ export class Controller {
     if (user.totpSecret == null) {
       throw new ApplicationError("Start the setup again.");
     }
-    if (
-      !verifyTotp(
-        resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
-        code,
-      )
-    ) {
+    const secret = resolveTotpSecret(
+      user.totpSecret,
+      this.userData.dataDir.dataPath(),
+    );
+    // Checked here without spending it, so a refused password below does not
+    // burn the code the person is still looking at; spent once all is proved.
+    if (!verifyTotp(secret, code)) {
       throw new ForbiddenError("That code is not right. Try the next one.");
     }
     // Then re-confirm who this is: a second factor enrolled by whoever holds
@@ -2215,8 +2358,18 @@ export class Controller {
           : "That confirmation code is incorrect or has expired.",
       );
     }
+    // Records the step as spent, so this code cannot also finish a sign-in.
+    if (!(await user.acceptTotp(secret, code))) {
+      throw new ForbiddenError("That code is not right. Try the next one.");
+    }
     const codes = generateRecoveryCodes();
-    await user.$query().patch({ totpEnabled: true });
+    // Turning on two-step signs out every other session — any of them could
+    // be the stolen one this is meant to shut out. This session has just
+    // used the second factor, so it stays, and counts as having used it.
+    const epoch = (user.sessionEpoch ?? 0) + 1;
+    await user.$query().patch({ totpEnabled: true, sessionEpoch: epoch });
+    ctx.state.session.set("epoch", epoch);
+    ctx.state.session.set(SECOND_FACTOR_KEY, true);
     await user.setRecoveryCodes(codes);
     this.#audit(ctx, "two-factor-enabled", user.id!);
     ctx.response.body = { ok: true, recoveryCodes: codes };
@@ -2243,12 +2396,13 @@ export class Controller {
       password != null &&
       (await User.loginWithPassword(user.email!, password)) != null;
     const byCode =
+      !byPassword &&
       code != null &&
       user.totpSecret != null &&
-      verifyTotp(
+      (await user.acceptTotp(
         resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
         code,
-      );
+      ));
     if (!byPassword && !byCode) {
       throw new ForbiddenError("Confirm with your password or a current code.");
     }
@@ -2274,7 +2428,7 @@ export class Controller {
     const at = Number(ctx.state.session.get("pending2faAt") ?? 0);
     // The half-finished sign-in is short-lived: leaving it open indefinitely
     // would leave a password-only foothold sitting around.
-    if (pendingId == null || Date.now() - at > 10 * 60_000) {
+    if (pendingId == null || Date.now() - at > PENDING_2FA_TTL_MS) {
       ctx.state.session.destroy();
       throw new ForbiddenError("Start signing in again.");
     }
@@ -2283,12 +2437,14 @@ export class Controller {
       ctx.state.session.destroy();
       throw new ForbiddenError("Start signing in again.");
     }
+    // acceptTotp spends the code (no replay) and counts failures against
+    // the ACCOUNT, so a botnet's guesses add up however many IPs send them.
     const byTotp =
       user.totpSecret != null &&
-      verifyTotp(
+      (await user.acceptTotp(
         resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
         code,
-      );
+      ));
     const byRecovery = byTotp ? false : await user.useRecoveryCode(code);
     if (!byTotp && !byRecovery) {
       recordFailure(ctx);
@@ -2297,14 +2453,11 @@ export class Controller {
     }
     clearFailures(ctx);
     const wasShortLived = ctx.state.session.get("shortLived") === true;
-    ctx.state.session.destroy();
-    ctx.state.session.start();
-    ctx.state.session.set("userId", user.id!);
-    ctx.state.session.set("epoch", user.sessionEpoch ?? 0);
-    if (wasShortLived) {
-      ctx.state.session.set("shortLived", true);
-      ctx.state.session.set("loginAt", Date.now());
-    }
+    finishSignIn(ctx, user, {
+      method: "two-factor",
+      remember: !wasShortLived,
+      secondFactor: true,
+    });
     this.#audit(
       ctx,
       "login",
@@ -2316,6 +2469,55 @@ export class Controller {
       // Surfaced so the UI can nudge for a fresh set before they run out.
       recoveryCodesLeft: user.countRecoveryCodes(),
     };
+  }
+
+  /**
+   * Re-proving who you are inside a signed-in session, for the changes that
+   * need a recent sign-in (see `requireRecentAuth`) — the password, a code
+   * emailed to the account, or a current authenticator code.
+   *
+   * Every check goes through the per-account lockouts, so this is no side
+   * door for guessing.
+   */
+  @http.POST({ name: "reauth", path: "/auth/reauth" })
+  async reauth(
+    ctx: Context<RouterState & SessionState & AuthState>,
+    @body.json(PReauth, jsonOpts) { password, identityCode, totp }: TReauth,
+  ) {
+    rateLimit(ctx, "reauth", 10, 300_000);
+    const user = ctx.state.requireUser();
+    const byPassword =
+      password != null &&
+      user.passwordHash != null &&
+      user.email != null &&
+      (await User.loginWithPassword(user.email, password)) != null;
+    const byCode =
+      !byPassword &&
+      identityCode != null &&
+      user.email != null &&
+      (await EmailVerification.verify(user.email, "identity", identityCode));
+    const byTotp =
+      !byPassword &&
+      !byCode &&
+      totp != null &&
+      Boolean(user.totpEnabled) &&
+      user.totpSecret != null &&
+      (await user.acceptTotp(
+        resolveTotpSecret(user.totpSecret, this.userData.dataDir.dataPath()),
+        totp,
+      ));
+    if (!byPassword && !byCode && !byTotp) {
+      recordFailure(ctx);
+      this.#audit(ctx, "login-failed", user.id!, "re-authentication");
+      throw new ForbiddenError(
+        "That confirmation is incorrect or has expired.",
+      );
+    }
+    ctx.state.session.set(REAUTH_AT_KEY, Date.now());
+    if (byTotp) {
+      ctx.state.session.set(SECOND_FACTOR_KEY, true);
+    }
+    ctx.response.body = { ok: true };
   }
 
   // The account's own security activity. Owner only — this is a record of when

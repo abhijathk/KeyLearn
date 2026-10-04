@@ -31,7 +31,12 @@ function loadTurnstile(): Promise<void> {
 
 /** True when a thrown request error is the server asking for a CAPTCHA. */
 export function isCaptchaRequired(err: any): boolean {
-  return err?.status === 428 || err?.body?.error?.captcha === true;
+  // 428 is also how the grown-up PIN gate answers (with `parentPin`), and
+  // that one wants a PIN, not a challenge.
+  return (
+    err?.body?.error?.captcha === true ||
+    (err?.status === 428 && err?.body?.error?.parentPin !== true)
+  );
 }
 
 function TurnstileWidget({
@@ -104,6 +109,9 @@ export function useCaptcha({
   const [needed, setNeeded] = useState(false);
   const [token, setToken] = useState<string | undefined>(undefined);
   const [failed, setFailed] = useState(false);
+  // Bumped each time the server asks again. A token is single-use, so a
+  // second challenge needs a fresh widget, not the one already spent.
+  const [nonce, setNonce] = useState(0);
 
   // An eager widget is still earning its first token. Sending now would only
   // be refused (428), so the caller holds Send until it lands. Once it has
@@ -130,6 +138,7 @@ export function useCaptcha({
   const widget =
     (eager || needed) && siteKey ? (
       <TurnstileWidget
+        key={nonce}
         siteKey={siteKey}
         onToken={setToken}
         onError={() => setFailed(true)}
@@ -145,7 +154,11 @@ export function useCaptcha({
     /** An eager check is still running: hold Send until it finishes. */
     pending,
     /** Show the challenge (call after a "captcha required" response). */
-    require: () => setNeeded(true),
+    require: () => {
+      setNeeded(true);
+      setToken(undefined);
+      setNonce((n) => n + 1);
+    },
     /** The rendered widget (or null). Place it above the submit button. */
     widget,
   };

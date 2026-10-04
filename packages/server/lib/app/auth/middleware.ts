@@ -1,10 +1,19 @@
 import { timingSafeEqual } from "node:crypto";
 import { type Context, type Middleware, type Next } from "@fastr/core";
-import { ForbiddenError } from "@fastr/errors";
+import { ForbiddenError, HttpError } from "@fastr/errors";
 import { randomString, type SessionState } from "@fastr/middleware-session";
 import { Env } from "@keylearn/config";
-import { StaffAuditEvent, User } from "@keylearn/database";
+import {
+  PasswordHashBusyError,
+  StaffAuditEvent,
+  User,
+} from "@keylearn/database";
 import { clientIp } from "./ratelimit.ts";
+import {
+  ABSOLUTE_SESSION_MS,
+  LOGIN_AT_KEY,
+  SECOND_FACTOR_KEY,
+} from "./sign-in.ts";
 import { staffAccessStatus } from "./staff-access.ts";
 import { type AuthState } from "./types.ts";
 
@@ -60,7 +69,18 @@ export function loadUser(): Middleware<SessionState & AuthState> {
   ): Promise<void> => {
     const { state } = ctx;
     Object.assign(state, await makeAuthState(ctx));
-    await next();
+    try {
+      await next();
+    } catch (err) {
+      // Every password hasher is busy and the queue is full (password.ts):
+      // say so with a 503 now, rather than queue a request that would
+      // only time out — that queue is the memory-exhaustion attack.
+      if (err instanceof PasswordHashBusyError) {
+        ctx.response.headers.set("Retry-After", "5");
+        throw new HttpError(503, "The server is busy. Try again in a moment.");
+      }
+      throw err;
+    }
   };
 }
 
@@ -98,6 +118,25 @@ async function makeAuthState(
         user = null;
       }
     }
+    // An absolute ceiling on every session. The cookie rolls, so a session
+    // in daily use would otherwise live for ever — and so would one somebody
+    // stole. A session from before sign-in stamped the time starts its clock
+    // now rather than being thrown out at deploy.
+    // (`capFrom`, not the sign-in time itself: an unstamped session has not
+    // signed in recently, and `requireRecentAuth` must not think it has.)
+    if (user != null) {
+      let loginAt = Number(
+        session.get(LOGIN_AT_KEY) ?? session.get("capFrom") ?? 0,
+      );
+      if (loginAt === 0) {
+        loginAt = Date.now();
+        session.set("capFrom", loginAt);
+      }
+      if (Date.now() - loginAt > ABSOLUTE_SESSION_MS) {
+        session.destroy();
+        user = null;
+      }
+    }
   }
   const publicUser = User.toPublicUser(user, sessionId);
   const requireUser = () => {
@@ -124,6 +163,19 @@ async function makeAuthState(
             status.reason === "not-staff"
               ? "not staff"
               : "no passkey or two-step verification",
+          ip,
+        });
+        throw new ForbiddenError();
+      }
+      // Enrolment is not use. A staff account with two-step on that signed
+      // in by magic link, reset link or provider never typed a code — and
+      // the desk reads every message ever sent. So the session itself must
+      // have used a second factor (finishSignIn records it).
+      if (session.get(SECOND_FACTOR_KEY) !== true) {
+        void StaffAuditEvent.record({
+          userId: u.id,
+          action: "staff-access-denied",
+          detail: "signed in without a second factor this session",
           ip,
         });
         throw new ForbiddenError();

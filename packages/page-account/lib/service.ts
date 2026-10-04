@@ -124,14 +124,16 @@ export namespace AccountService {
     return await postAuthResult("/auth/register-password", data);
   }
 
-  export type Lookup =
-    | { readonly exists: false }
-    | {
-        readonly exists: true;
-        readonly hasPassword: boolean;
-        readonly twoFactor: boolean;
-        readonly providers: readonly string[];
-      };
+  /**
+   * Both shapes carry the same keys, so an unknown address cannot be told
+   * from a known one by shape. `providers` is filled only for an account
+   * with no password — the one case the sign-in screen needs it.
+   */
+  export type Lookup = {
+    readonly exists: boolean;
+    readonly hasPassword: boolean;
+    readonly providers: readonly string[];
+  };
 
   /** Asks what this address needs next, before showing a password field. */
   export async function lookup(data: {
@@ -150,12 +152,15 @@ export namespace AccountService {
     return await postAuthResult("/auth/login-password", data);
   }
 
-  /** Confirm the emailed 6-digit code; signs the account in on success. */
+  /**
+   * Confirm the emailed 6-digit code; signs the account in on success — or
+   * parks it pending two-step ({ twoFactor: true }) when that is on.
+   */
   export async function verifyEmail(data: {
     readonly email: string;
     readonly code: string;
-  }): Promise<void> {
-    await postAuth("/auth/verify-email", data);
+  }): Promise<AuthResult> {
+    return await postAuthResult("/auth/verify-email", data);
   }
 
   /** Ask for a fresh verification code (always resolves — never reveals whether the email exists). */
@@ -223,18 +228,40 @@ export namespace AccountService {
     return await response.json();
   }
 
-  /** Create a passkey for the signed-in account (a browser prompt appears). */
+  /**
+   * Create a passkey for the signed-in account (a browser prompt appears).
+   * The server wants a recent sign-in first: without one, the options leg
+   * answers 403 with `reauth: true` (see {@link isReauthRequired}).
+   */
   export async function registerPasskey(name?: string): Promise<void> {
     const optionsJSON = await postJson("/auth/passkey/register-options");
     const response = await startRegistration({ optionsJSON });
     await postJson("/auth/passkey/register-verify", { response, name });
   }
 
-  /** Sign in with a passkey (usernameless). Reload on success. */
-  export async function loginPasskey(): Promise<void> {
+  /**
+   * Sign in with a passkey (usernameless). A passkey that only proved
+   * possession leaves an account with two-step on pending its code.
+   */
+  export async function loginPasskey(): Promise<AuthResult> {
     const optionsJSON = await postJson("/auth/passkey/login-options");
     const response = await startAuthentication({ optionsJSON });
-    await postJson("/auth/passkey/login-verify", response);
+    return (await postJson(
+      "/auth/passkey/login-verify",
+      response,
+    )) as AuthResult;
+  }
+
+  /**
+   * Re-prove who is at the keyboard mid-session, for the changes that need
+   * a recent sign-in. Exactly one of the three is checked.
+   */
+  export async function reauth(proof: {
+    readonly password?: string;
+    readonly identityCode?: string;
+    readonly totp?: string;
+  }): Promise<void> {
+    await postAuth("/auth/reauth", proof);
   }
 
   // ---- Two-step verification ----
@@ -384,8 +411,8 @@ export namespace AccountService {
     readonly token: string;
     readonly password: string;
     readonly turnstileToken?: string;
-  }): Promise<void> {
-    await postAuth("/auth/reset-password", data);
+  }): Promise<AuthResult> {
+    return await postAuthResult("/auth/reset-password", data);
   }
 
   export async function patchAccount(
@@ -560,4 +587,22 @@ export namespace AccountService {
       passwordLinkSent: boolean;
     };
   }
+}
+
+/** The server asking for the grown-up PIN before it goes on (HTTP 428). */
+export function isParentPinRequired(err: unknown): boolean {
+  const e = err as {
+    status?: number;
+    body?: { error?: { parentPin?: boolean } };
+  } | null;
+  return e?.status === 428 && e?.body?.error?.parentPin === true;
+}
+
+/** The server asking the owner to re-prove themselves (`/auth/reauth`). */
+export function isReauthRequired(err: unknown): boolean {
+  const e = err as {
+    status?: number;
+    body?: { error?: { reauth?: boolean } };
+  } | null;
+  return e?.status === 403 && e?.body?.error?.reauth === true;
 }

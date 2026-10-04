@@ -171,11 +171,64 @@ export function scanBuffer(
   });
 }
 
+/**
+ * How many scans one process runs against the daemon at once, and how many
+ * may wait for a turn. clamd has a fixed thread pool (MaxThreads, 10 by
+ * default) and every scan holds up to 10 MB of upload in memory here while
+ * it streams; an upload swarm without a bound used to mean an unbounded
+ * number of buffers in flight and a daemon answering nobody in time.
+ */
+export function scanConcurrency(): number {
+  return Math.max(1, Number(process.env["CLAMAV_MAX_CONCURRENT"] ?? 4));
+}
+
+export function scanQueueLimit(): number {
+  return Math.max(0, Number(process.env["CLAMAV_MAX_QUEUED"] ?? 16));
+}
+
+let scansRunning = 0;
+const scanWaiters: (() => void)[] = [];
+
+async function acquireScanSlot(): Promise<void> {
+  if (scansRunning < scanConcurrency()) {
+    scansRunning += 1;
+    return;
+  }
+  if (scanWaiters.length >= scanQueueLimit()) {
+    // Same outcome as a daemon that is down — the caller already turns
+    // that into an honest "try again in a few minutes".
+    throw new ScannerDown("scanner busy: too many scans queued");
+  }
+  await new Promise<void>((resolve) => {
+    scanWaiters.push(resolve);
+  });
+  // The slot was handed over by releaseScanSlot without being given back.
+}
+
+function releaseScanSlot(): void {
+  const next = scanWaiters.shift();
+  if (next != null) {
+    next();
+  } else {
+    scansRunning = Math.max(0, scansRunning - 1);
+  }
+}
+
+/** Scans in flight and waiting in this process. For tests and diagnostics. */
+export function scanLoad(): { running: number; queued: number } {
+  return { running: scansRunning, queued: scanWaiters.length };
+}
+
 /** Scans against the configured daemon, or says why it could not. */
 export async function scanUpload(data: Buffer): Promise<ScanVerdict> {
   const where = scannerAddress();
   if (where == null) {
     throw new ScannerDown("no CLAMAV_HOST is configured");
   }
-  return await scanBuffer(data, where);
+  await acquireScanSlot();
+  try {
+    return await scanBuffer(data, where);
+  } finally {
+    releaseScanSlot();
+  }
 }

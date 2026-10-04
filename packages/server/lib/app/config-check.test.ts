@@ -42,6 +42,9 @@ const sane = {
   DATABASE_CLIENT: "mysql",
   TRUSTED_PROXIES: "loopback",
   CLAMAV_HOST: "clamav",
+  // Required in production since the swarm-resilience pass (4 Oct 2026).
+  TURNSTILE_SITE_KEY: "0x4AAAAAAAsiteKeyForTests",
+  TURNSTILE_SECRET_KEY: "0x4AAAAAAAsecretKeyForTests",
 };
 
 test("say nothing outside production", () => {

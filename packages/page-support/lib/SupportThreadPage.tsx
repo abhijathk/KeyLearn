@@ -37,6 +37,8 @@ export function SupportThreadPage(): ReactNode {
   >({ kind: "loading" });
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
+  /** The server's reason a reply was refused (its reply quota is a 429). */
+  const [sendError, setSendError] = useState<string | null>(null);
   // The same full-size view the account thread opens an image in.
   const [viewing, setViewing] = useState<AttachmentFile | null>(null);
   // The account thread's attachment component, pointed at this thread's
@@ -143,12 +145,18 @@ export function SupportThreadPage(): ReactNode {
       return;
     }
     setBusy(true);
+    setSendError(null);
     SupportService.replyToThread(token, trimmed)
       .then((r) => {
         if (r.ticket != null) {
           setState({ kind: "ready", thread: r.ticket });
           setReply("");
         }
+      })
+      .catch((err: any) => {
+        // Kept in the box, and the reason said: a refusal that only
+        // re-enabled the button read as a send that did nothing.
+        setSendError(err?.body?.error?.message ?? err?.message ?? null);
       })
       .finally(() => setBusy(false));
   };
@@ -229,6 +237,12 @@ export function SupportThreadPage(): ReactNode {
           />
         </p>
       ) : null}
+
+      {!closed && sendError != null && (
+        <p className={styles.notice} role="alert">
+          {sendError}
+        </p>
+      )}
 
       {closed ? null : (
         <div className={styles.composer}>

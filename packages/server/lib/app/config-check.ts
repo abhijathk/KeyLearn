@@ -179,6 +179,21 @@ export function checkProductionConfig(
     );
   }
 
+  // Turnstile is the only thing between the anonymous support form and a
+  // script: unset keys switch the challenge off entirely (the right default
+  // for a laptop), and in production that silently opens a door that mails
+  // arbitrary addresses and feeds tickets to the desk's agent. Both halves
+  // are needed — the widget cannot render without the site key, and tokens
+  // cannot be checked without the secret.
+  for (const name of ["TURNSTILE_SITE_KEY", "TURNSTILE_SECRET_KEY"]) {
+    if (Env.getString(name, "") === "") {
+      fatal.push(
+        `${name} is not set, so the anonymous support form and the ` +
+          "sign-in challenge would run without any bot check.",
+      );
+    }
+  }
+
   // A business enquiry is forwarded to this address and nowhere else.
   // Unset, the forward is skipped silently — so a partnership or
   // licensing approach lands in the queue and nobody is told, which is
@@ -196,7 +211,9 @@ export function checkProductionConfig(
       const url = new URL(qdeskUrl);
       // Loopback never leaves the machine — the same set every transport
       // guard uses (QDesk's config-check, the agent's desk URL).
-      const loopback = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname.toLowerCase());
+      const loopback = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(
+        url.hostname.toLowerCase(),
+      );
       if (url.protocol !== "https:" && !loopback) {
         fatal.push(
           `QDESK_URL is ${url.protocol} not https; the app key would travel ` +

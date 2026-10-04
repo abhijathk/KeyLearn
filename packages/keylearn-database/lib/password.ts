@@ -1,12 +1,79 @@
 import { randomBytes, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 
-const scrypt = promisify(scryptCb) as (
+const rawScrypt = promisify(scryptCb) as (
   password: string,
   salt: Buffer,
   keylen: number,
   options: { N: number; r: number; p: number; maxmem: number },
 ) => Promise<Buffer>;
+
+/**
+ * Thrown when too many password hashes are already running or waiting.
+ *
+ * Each hash at N=2^17 holds ~128 MB and a libuv thread for a few hundred
+ * milliseconds, so an unbounded burst of sign-in attempts (each one costs the
+ * attacker a few bytes) is a memory-exhaustion attack on the whole process.
+ * The server maps this to a 503 — failing fast is the point: a queue that
+ * grows without bound is the same outage, just slower.
+ */
+export class PasswordHashBusyError extends Error {
+  constructor() {
+    super("Too many password checks in progress");
+    this.name = "PasswordHashBusyError";
+  }
+}
+
+/** Hashes allowed to run at once (libuv's default pool is 4 threads). */
+export const MAX_CONCURRENT_HASHES = 4;
+/** Callers allowed to wait for a slot before new ones are refused. */
+export const MAX_QUEUED_HASHES = 32;
+
+let running = 0;
+const waiting: (() => void)[] = [];
+
+async function acquireHashSlot(): Promise<void> {
+  if (running < MAX_CONCURRENT_HASHES) {
+    running += 1;
+    return;
+  }
+  if (waiting.length >= MAX_QUEUED_HASHES) {
+    throw new PasswordHashBusyError();
+  }
+  // The slot is handed over directly by release(), so `running` is not
+  // decremented and re-incremented in between — nobody can jump the queue.
+  await new Promise<void>((resolve) => {
+    waiting.push(resolve);
+  });
+}
+
+function releaseHashSlot(): void {
+  const next = waiting.shift();
+  if (next != null) {
+    next();
+  } else {
+    running -= 1;
+  }
+}
+
+/** For tests: how many hashes are running and how many are waiting. */
+export function hashSlotStats(): { running: number; waiting: number } {
+  return { running, waiting: waiting.length };
+}
+
+const scrypt = async (
+  password: string,
+  salt: Buffer,
+  keylen: number,
+  options: { N: number; r: number; p: number; maxmem: number },
+): Promise<Buffer> => {
+  await acquireHashSlot();
+  try {
+    return await rawScrypt(password, salt, keylen, options);
+  } finally {
+    releaseHashSlot();
+  }
+};
 
 const KEYLEN = 32;
 const SALTLEN = 16;

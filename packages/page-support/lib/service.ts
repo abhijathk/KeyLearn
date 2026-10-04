@@ -216,6 +216,8 @@ export namespace SupportService {
     token: string,
     message: string,
   ): Promise<{ readonly ticket?: ThreadView }> {
+    // A refusal with a message (429 from the thread's reply quota) throws
+    // an ApplicationError carrying it, which the page shows as it is.
     const response = await request
       .use(expectType("application/json"))
       .POST(`/_/support/t/${encodeURIComponent(token)}/reply`)
@@ -389,6 +391,8 @@ export namespace SupportService {
     readonly subject: string;
     readonly message: string;
     readonly attachmentIds?: readonly number[];
+    /** Only after the server asked for one (428 with `captcha`). */
+    readonly turnstileToken?: string;
   }): Promise<{ readonly id: number; readonly reference: string }> {
     return await json(
       await request
@@ -408,6 +412,8 @@ export namespace SupportService {
       readonly message: string;
       readonly attachmentIds?: readonly number[];
       readonly clientId?: string;
+      /** Only after the server asked for one (428 with `captcha`). */
+      readonly turnstileToken?: string;
     },
   ): Promise<{ readonly id: number; readonly duplicate: boolean }> {
     return await json(

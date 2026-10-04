@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { type DataDir } from "@keylearn/config";
 import { SupportAttachment } from "@keylearn/database";
+import { assertDiskRoom, assertWithinQuota } from "./attachment-quota.ts";
 import { bytesMatchType } from "./my-controller.ts";
 import { fetchDeskAttachment } from "./qdesk-forward.ts";
 import { ScannerDown, scanningRequired, scanUpload } from "./virus-scan.ts";
@@ -43,6 +44,18 @@ export async function storeDeskAttachments(
       bytes.length > SupportAttachment.MAX_BYTES ||
       !bytesMatchType(bytes, file.mimeType)
     ) {
+      continue;
+    }
+    // The same disk floor and ticket quota a customer's upload meets. A
+    // file over either is skipped like any other refusal: the words still
+    // land, and the count tells the desk what did not.
+    try {
+      await assertWithinQuota({ userId: null, ticketId, size: bytes.length });
+      await assertDiskRoom(dataDir, bytes.length);
+    } catch {
+      console.warn(
+        `desk-attachment: skipped file ${String(file.id)} on ticket ${String(ticketId)} (quota or disk floor)`,
+      );
       continue;
     }
     let scanner: string | null = null;

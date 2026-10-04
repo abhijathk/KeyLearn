@@ -1,4 +1,5 @@
 import cluster from "node:cluster";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { type Context } from "@fastr/core";
 import { HttpError } from "@fastr/errors";
 import { Env } from "@keylearn/config";
@@ -157,8 +158,23 @@ function prune(now: number): void {
         map.delete(k);
       }
     }
+    // AND A HARD CEILING. A swarm on rotating addresses makes every key a
+    // live one, so the expiry sweep above frees nothing and the maps grow
+    // until the process runs out of memory (pre-release audit, 4 Oct 2026).
+    // Past the ceiling the oldest buckets go first: an attacker with that
+    // many addresses gains nothing from a forgotten counter that a fresh
+    // address would not already give them.
+    if (map.size > MAP_CEILING) {
+      const drop = map.size - Math.floor(MAP_CEILING * 0.8);
+      let n = 0;
+      for (const k of map.keys()) {
+        if (n++ >= drop) break;
+        map.delete(k);
+      }
+    }
   }
 }
+const MAP_CEILING = 50_000;
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -316,6 +332,10 @@ if (cluster.isWorker) {
  */
 export function clientIp(ctx: Context): string {
   const req = (ctx.request as unknown as { req?: any }).req;
+  const vouched = deskVouchedIp(req?.headers);
+  if (vouched != null) {
+    return vouched;
+  }
   const peer: string = normalize(req?.socket?.remoteAddress ?? "");
   if (peer !== "" && isTrustedProxy(peer)) {
     const fwd = req?.headers?.["x-forwarded-for"];
@@ -413,4 +433,58 @@ function isPrivate(ip: string): boolean {
   }
   // IPv6 unique-local.
   return ip.startsWith("fc") || ip.startsWith("fd");
+}
+
+/**
+ * THE DESK SPEAKS FOR ITS STAFF'S ADDRESSES (pre-release audit, 4 Oct 2026).
+ *
+ * Every QDesk staff sign-in reaches this server from the desk's own address,
+ * so the per-IP limits on staff auth were one bucket for everybody: thirty
+ * passkey requests a minute from anyone emptied it, and every staff member
+ * was locked out. QDesk now forwards the browser's address, signed with the
+ * shared ops key:
+ *
+ *   x-qdesk-client-ip      the address
+ *   x-qdesk-client-ip-ts   unix seconds when it was signed
+ *   x-qdesk-client-ip-sig  hex HMAC-SHA256(OPS_API_KEY, `${ip}|${ts}`)
+ *
+ * Honoured only with a valid signature, compared in constant time, inside a
+ * 60-second window. Anything else (no key configured, missing headers, bad
+ * or stale signature) is ignored and the socket rule above applies — a
+ * forged header buys an attacker nothing they could not already do.
+ */
+function deskVouchedIp(
+  headers: Record<string, unknown> | undefined,
+): string | null {
+  const key = process.env.OPS_API_KEY ?? "";
+  if (headers == null || key === "") {
+    return null;
+  }
+  const ip = headers["x-qdesk-client-ip"];
+  const ts = headers["x-qdesk-client-ip-ts"];
+  const sig = headers["x-qdesk-client-ip-sig"];
+  if (
+    typeof ip !== "string" ||
+    typeof ts !== "string" ||
+    typeof sig !== "string"
+  ) {
+    return null;
+  }
+  if (
+    ip === "" ||
+    ip.length > 64 ||
+    !/^\d{1,12}$/.test(ts) ||
+    !/^[0-9a-f]{64}$/.test(sig)
+  ) {
+    return null;
+  }
+  if (Math.abs(Math.floor(Date.now() / 1000) - Number(ts)) > 60) {
+    return null;
+  }
+  const want = createHmac("sha256", key).update(`${ip}|${ts}`, "utf8").digest();
+  const got = Buffer.from(sig, "hex");
+  if (got.length !== want.length || !timingSafeEqual(got, want)) {
+    return null;
+  }
+  return normalize(ip);
 }
