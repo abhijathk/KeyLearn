@@ -480,6 +480,42 @@ Happy typing!`;
 }
 
 /**
+ * Sent when support stops a scheduled deletion. Cancelling is the safe
+ * direction, but the person must still hear of it: if THEY asked for the
+ * deletion, somebody quietly undoing it is exactly what this mail exposes.
+ */
+export function messageAccountDeletionCancelled({
+  email,
+  contactLink,
+}: {
+  readonly email: string;
+  readonly contactLink: string;
+}): Mailer.Message {
+  const subject = "The deletion of your KeyLearn account was cancelled";
+  const text = `Hello!
+
+A member of KeyLearn support has cancelled the scheduled deletion of this account. Your account and everything in it stay as they are.
+
+If you still want this account deleted, or you did not expect this, contact us:
+${contactLink}
+
+Happy typing!`;
+  const html = shell(
+    "The scheduled deletion of your KeyLearn account was cancelled",
+    heading("Account deletion cancelled") +
+      paragraph(
+        "A member of KeyLearn support has cancelled the scheduled deletion of this account. Your account and everything in it stay as they are.",
+      ) +
+      factList([["Account", email]]) +
+      paragraph(
+        "If you still want this account deleted, or you did not expect this, contact us:",
+      ) +
+      `<div style="margin:4px 0 4px">${button(contactLink, "Contact support")}</div>`,
+  );
+  return { to: email, subject, text, html };
+}
+
+/**
  * The practice nudge. Sent only to accounts that asked for it, and worded as an
  * invitation rather than a scolding — this goes to households with children,
  * and guilt is a poor teacher.

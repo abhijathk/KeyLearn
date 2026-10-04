@@ -57,6 +57,7 @@ import { z } from "zod";
 import { learnerOwner } from "../access/owner.ts";
 import { buildAccountExport } from "../account-export.ts";
 import {
+  messageAccountDeletionCancelled,
   messageAccountDeletionRequested,
   messagePlanReminder,
 } from "../auth/email.ts";
@@ -2754,6 +2755,35 @@ export class Controller {
       return;
     }
     const cancelled = await pending.cancel("staff");
+    // Tell the person. Best-effort: the cancellation has happened and must
+    // be reported as done whatever the mail server says.
+    const user = await User.findById(id);
+    if (user?.email != null) {
+      try {
+        await this.mailer.sendMail(
+          messageAccountDeletionCancelled({
+            email: user.email,
+            contactLink: this.#link("/support"),
+          }),
+        );
+      } catch (err) {
+        console.error(
+          `cancel-deletion: notice mail to account ${id} failed — ${String(err)}`,
+        );
+      }
+    }
+    try {
+      await Notification.create({
+        userId: id,
+        kind: "account-deletion-cancelled",
+        ticketId: null,
+        body: "Support cancelled the scheduled deletion of this account. Nothing will be deleted. If you did not expect this, contact support.",
+        authorName: null,
+        fromAssistant: false,
+      });
+    } catch {
+      // Best-effort, like the scheduling notice.
+    }
     void StaffAuditEvent.record({
       userId: input.actingStaffUserId ?? null,
       action: "account-deletion-cancelled",

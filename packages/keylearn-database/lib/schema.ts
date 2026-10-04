@@ -45,6 +45,7 @@ import { SupportBlock } from "./support-block.ts";
 import { SupportDraft } from "./support-draft.ts";
 import { SupportMessage } from "./support-message.ts";
 import { SupportPinProof } from "./support-pin-proof.ts";
+import { SupportQdeskOutbox } from "./support-qdesk-outbox.ts";
 import { SupportTicket } from "./support-ticket.ts";
 
 export async function createSchema(knex: Knex): Promise<void> {
@@ -93,6 +94,7 @@ export async function createSchema(knex: Knex): Promise<void> {
   await createTable(SupportMessage);
   await createTable(SupportAttachment);
   await createTable(SupportDraft);
+  await createTable(SupportQdeskOutbox);
   await createTable(SecurityReset);
   await createTable(SupportPinProof);
   await createTable(Notice);

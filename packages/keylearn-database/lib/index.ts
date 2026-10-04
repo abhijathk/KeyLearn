@@ -27,5 +27,6 @@ export * from "./support-block.ts";
 export * from "./support-draft.ts";
 export * from "./support-message.ts";
 export * from "./support-pin-proof.ts";
+export * from "./support-qdesk-outbox.ts";
 export * from "./support-ticket.ts";
 export * from "./totp.ts";

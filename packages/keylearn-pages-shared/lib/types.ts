@@ -483,6 +483,12 @@ export type NotificationKind =
    */
   | "account-deletion-scheduled"
   /**
+   * Support stopped that deletion. Told on the bell too: if the person
+   * asked for the deletion themselves, a quiet cancellation is the thing
+   * they most need to hear about.
+   */
+  | "account-deletion-cancelled"
+  /**
    * Something changed on this account that only its owner should be able
    * to change — a password, an email address, a second factor, a passkey.
    * The "was this you?" class, and the reason it is on the bell rather than

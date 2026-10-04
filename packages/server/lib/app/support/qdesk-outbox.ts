@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { SupportMessage, SupportTicket } from "@keylearn/database";
+import {
+  SupportMessage,
+  SupportQdeskOutbox,
+  SupportTicket,
+} from "@keylearn/database";
 import { Logger } from "@keylearn/logger";
 import { siteNumber } from "@keylearn/site-config";
 import { type Knex } from "knex";
@@ -30,12 +34,13 @@ import { deskConfig, sendToDesk } from "./qdesk-forward.ts";
  *                 swarm that fills the queue from a few accounts cannot hold
  *                 every real customer's rating behind it.
  *
- * The table is created on first use with the same "create if missing" rule
- * the schema bootstrap uses for every other table, because the schema
- * module belongs to the database package. It should move there.
+ * The table is created at bootstrap with every other table
+ * (`@keylearn/database` SupportQdeskOutbox). `ensureOutbox` stays as a
+ * one-check-per-process fallback for a database bootstrapped before the
+ * table moved there.
  */
 
-export const OUTBOX_TABLE = "support_qdesk_outbox";
+export const OUTBOX_TABLE = SupportQdeskOutbox.tableName;
 
 export type OutboxKind = "csat" | "feedback" | "resolution" | "archive";
 
@@ -80,23 +85,7 @@ export async function ensureOutbox(): Promise<void> {
         }
         try {
           await k.schema.createTable(OUTBOX_TABLE, (table) => {
-            table.increments("id").primary();
-            table.string("kind", 24).notNullable();
-            table.integer("ticket_id").unsigned().notNullable();
-            table.string("path", 255).notNullable();
-            table.text("body").notNullable();
-            table.string("idem_key", 64).notNullable().unique();
-            table.string("dedupe_key", 128).notNullable().index();
-            table.string("account_key", 160).notNullable();
-            table.integer("attempts").notNullable().defaultTo(0);
-            // Epoch milliseconds throughout: one representation on both
-            // engines, and nothing to convert when comparing to Date.now().
-            table.bigInteger("next_attempt_at").notNullable();
-            table.bigInteger("created_at").notNullable();
-            table.bigInteger("delivered_at").nullable();
-            table.bigInteger("failed_at").nullable();
-            table.integer("last_status").nullable();
-            table.index(["delivered_at", "failed_at", "next_attempt_at"]);
+            SupportQdeskOutbox.createTable(k, table);
           });
         } catch (err) {
           // Another worker won the race. Anything else is real.
