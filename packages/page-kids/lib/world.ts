@@ -4939,6 +4939,25 @@ type PadDef = {
   readonly levelOf?: PadDef;
 };
 let PADS: PadDef[] = [];
+/**
+ * THE MARKET ROW'S TRADING HOURS, shop 1 to 7 left to right in the model,
+ * as [opens, closes] on the village clock (owner, 4 Oct 2026). Each shop
+ * shutters at its own hour, not the row at once: the tea shop (6, under
+ * the TEA SHOP sign) opens at six for the morning tea, every other shop at
+ * eight; the closing hours are the ones the lamps already kept — the
+ * tailor (5) at seven, the tea shop at eight, the far end (7) at six, the
+ * rest at eight or nine. The lamps read their closing hour from here too,
+ * so a shop's shutter and its lamp can never disagree.
+ */
+export const MARKET_ROW_HOURS: readonly (readonly [number, number])[] = [
+  [8, 21],
+  [8, 20],
+  [8, 21],
+  [8, 21],
+  [8, 19],
+  [6, 20],
+  [8, 18],
+];
 const PAD_BLEND = 4;
 const POND_HW = 7.6;
 const POND_HD = 4.8;
@@ -14891,6 +14910,14 @@ export function createKidsWorld(
   const scatterTrees: THREE.Object3D[] = [];
   let nightNow = false;
   const marketShutters: MarketShutters[] = [];
+  /** Each shop shut outside its own hours (MARKET_ROW_HOURS). Unchanged shops are skipped. */
+  const shutMarketShops = (hour: number) => {
+    for (const shutters of marketShutters) {
+      MARKET_ROW_HOURS.forEach(([opens, closes], i) => {
+        shutters.setShopClosed(i + 1, !(hour >= opens && hour < closes));
+      });
+    }
+  };
 
   // ── the nightfall cross-fade ───────────────────────────────────────────
   //
@@ -23056,6 +23083,15 @@ export function createKidsWorld(
         characterRoots.add(wrap);
         applyEyeGlow(wrap, nightNow);
         if (trueNight) {
+          // The market's shutters keep its trading hours by day as well as by
+          // night, so they are wired here and not with the night lamps.
+          if (/Kerala_Market_Row/i.test(name)) {
+            const shutters = createMarketShutters(wrap);
+            if (shutters != null) {
+              marketShutters.push(shutters);
+              shutMarketShops(village().hour);
+            }
+          }
           await lightBuilding(name, wrap);
         }
         if (TEMPLE_RE.test(name)) {
@@ -23301,13 +23337,6 @@ export function createKidsWorld(
           // lights would cost the whole scene — and the game's lamps stand
           // in their places so they keep each shop's closing hour.
           const ROW = /Kerala_Market_Row/i.test(name);
-          if (ROW) {
-            const shutters = createMarketShutters(wrap);
-            if (shutters) {
-              shutters.setNight(nightNow);
-              marketShutters.push(shutters);
-            }
-          }
           const MS = wide / 27.26; // world units per metre of the row
           const rowAt = (xl: number, yl: number, zl: number) =>
             [
@@ -23334,43 +23363,43 @@ export function createKidsWorld(
               ? [
                   {
                     at: 0,
-                    closes: 21,
+                    closes: MARKET_ROW_HOURS[0]![1],
                     kind: "petromax",
                     spot: rowAt(-9.86, 2.63, 0.7),
                   },
                   {
                     at: 0,
-                    closes: 20,
+                    closes: MARKET_ROW_HOURS[1]![1],
                     kind: "petromax",
                     spot: rowAt(-6.68, 2.61, 0.7),
                   },
                   {
                     at: 0,
-                    closes: 21,
+                    closes: MARKET_ROW_HOURS[2]![1],
                     kind: "oil",
                     spot: rowAt(-3.62, 2.52, 0.7),
                   },
                   {
                     at: 0,
-                    closes: 21,
+                    closes: MARKET_ROW_HOURS[3]![1],
                     kind: "oil",
                     spot: rowAt(-0.53, 2.45, 0.7),
                   },
                   {
                     at: 0,
-                    closes: 19,
+                    closes: MARKET_ROW_HOURS[4]![1],
                     kind: "oil",
                     spot: rowAt(2.62, 2.24, 0.7),
                   },
                   {
                     at: 0,
-                    closes: 20,
+                    closes: MARKET_ROW_HOURS[5]![1],
                     kind: "petromax",
                     spot: rowAt(6.11, 2.23, 0.7),
                   },
                   {
                     at: 0,
-                    closes: 18,
+                    closes: MARKET_ROW_HOURS[6]![1],
                     kind: "oil",
                     spot: rowAt(9.71, 2.17, 0.7),
                   },
@@ -29514,7 +29543,7 @@ export function createKidsWorld(
     // cross-fades, instead of everything snapping at once.
     stepFades(dt);
     rain?.(dt);
-    for (const shutters of marketShutters) shutters.setNight(nightNow);
+    if (marketShutters.length > 0) shutMarketShops(village().hour);
     if (templeFlames.length > 0) {
       const hr = worldHour();
       const evening = hr >= TEMPLE_HOURS[0] && hr < TEMPLE_HOURS[1];

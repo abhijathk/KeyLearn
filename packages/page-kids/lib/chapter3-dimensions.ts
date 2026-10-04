@@ -57,11 +57,11 @@ export const CHAPTER3_DIMENSIONS: Readonly<
   },
   "village-houses/02_long_veranda_house": {
     w: 2.6963,
-    d: 1.5410,
+    d: 1.541,
   },
   "village-houses/03_two_storey_house": {
     w: 1.5806,
-    d: 1.1010,
+    d: 1.101,
   },
   "village-houses/04_compact_tiled_house": {
     w: 1.7804,
@@ -92,7 +92,7 @@ export const CHAPTER3_DIMENSIONS: Readonly<
     d: 1.3615,
   },
   "village-houses/11_ezhara_veedu_elite": {
-    w: 1.7760,
+    w: 1.776,
     d: 1.5762,
   },
   "village-houses/12_courtyard_nadumuttam_house": {
@@ -157,9 +157,11 @@ export const CHAPTER3_DIMENSIONS: Readonly<
     w: 0.6218439978086168,
     d: 0.5572565087486627,
   },
+  // The seven-shop row with wooden shutters (4 Oct 2026): measured from
+  // the GAME_FINAL export, both shutter states included.
   "village-util/Kerala_Market_Row": {
-    w: 3.61,
-    d: 0.814,
+    w: 3.6055,
+    d: 0.8202,
   },
   "village-util/Village_Market": {
     w: 4.271409363094241,

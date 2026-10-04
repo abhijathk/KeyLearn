@@ -251,3 +251,29 @@ test("the new houses in Chapters 1, 2 and 4 face the road too", async () => {
   }
   equal(houses, 4);
 });
+
+test("each market shop keeps its own trading hours", async () => {
+  // Owner, 4 Oct 2026: shutters go up and down shop by shop, not the row
+  // at once. The tea shop (6) opens at six, the rest at eight; the closing
+  // hours are the ones the lamps keep.
+  const { MARKET_ROW_HOURS } = await import("./world.ts");
+  equal(MARKET_ROW_HOURS.length, 7);
+  deepEqual(
+    MARKET_ROW_HOURS.map(([o]) => o),
+    [8, 8, 8, 8, 8, 6, 8],
+  );
+  deepEqual(
+    MARKET_ROW_HOURS.map(([, c]) => c),
+    [21, 20, 21, 21, 19, 20, 18],
+  );
+  const shut = (shop: number, hour: number) => {
+    const [o, c] = MARKET_ROW_HOURS[shop - 1]!;
+    return !(hour >= o && hour < c);
+  };
+  ok(!shut(6, 6.5), "tea at half past six");
+  ok(shut(1, 6.5), "the others still shut at half past six");
+  ok(!shut(1, 8), "open at eight");
+  ok(shut(5, 19.5), "the tailor gone at half past seven");
+  ok(!shut(1, 19.5), "shop 1 still open at half past seven");
+  ok(shut(7, 18.2), "the far end shut after six");
+});
