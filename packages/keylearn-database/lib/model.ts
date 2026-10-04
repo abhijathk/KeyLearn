@@ -373,8 +373,23 @@ export class User extends TimestampMixin(Model) {
   /**
    * Consumes a recovery code if it matches an unused one. Single use: a code
    * that has been spent is removed, so a written-down list cannot be replayed.
+   *
+   * Throttled per ACCOUNT on the same "totp" bucket `acceptTotp` uses, so the
+   * two second-factor forms share one lockout: a botnet rotating IPs cannot
+   * grind the recovery space any more than it can the authenticator code.
+   * To avoid charging a mistyped six-digit code twice, only NON-six-digit
+   * input is counted here — `acceptTotp` already counts the six-digit case,
+   * and every caller tries `acceptTotp` first, so between them each wrong
+   * entry is charged exactly once.
    */
-  async useRecoveryCode(code: string): Promise<boolean> {
+  async useRecoveryCode(
+    code: string,
+    now: number = Date.now(),
+  ): Promise<boolean> {
+    const subject = AuthThrottle.forUser(this.id!);
+    if ((await AuthThrottle.lockedFor("totp", subject, now)) > 0) {
+      return false;
+    }
     let hashes: string[];
     try {
       hashes = JSON.parse(this.recoveryCodes ?? "[]") as string[];
@@ -384,10 +399,14 @@ export class User extends TimestampMixin(Model) {
     const target = User.hashRecoveryCode(code);
     const index = hashes.indexOf(target);
     if (index === -1) {
+      if (!/^\d{6}$/.test(code.replace(/\s+/g, ""))) {
+        await AuthThrottle.recordFailure("totp", subject);
+      }
       return false;
     }
     hashes.splice(index, 1);
     await this.$query().patch({ recoveryCodes: JSON.stringify(hashes) });
+    await AuthThrottle.clear("totp", subject);
     return true;
   }
 

@@ -193,3 +193,40 @@ test("password hashing refuses to queue without bound", async () => {
   equal(hashSlotStats().running, 0);
   equal(hashSlotStats().waiting, 0);
 });
+
+test("a recovery code works once, then not again", async () => {
+  const user = (await User.findByEmail("user3@keylearn.org"))!;
+  await user.setRecoveryCodes(["ABCDE-FGHJK", "MNPQR-STVWX"]);
+  isTrue(await user.useRecoveryCode("ABCDE-FGHJK"));
+  // Spent: the same code is refused.
+  isFalse(await user.useRecoveryCode("ABCDE-FGHJK"));
+  // The other one still works.
+  isTrue(await user.useRecoveryCode("MNPQR-STVWX"));
+});
+
+test("wrong recovery codes lock the account, on the same bucket as the authenticator", async () => {
+  const user = (await User.findByEmail("user1@keylearn.org"))!;
+  await user.setRecoveryCodes(["ABCDE-FGHJK"]);
+  const subject = AuthThrottle.forUser(user.id!);
+  await AuthThrottle.clear("totp", subject);
+  // Ten wrong recovery codes (not six digits, so counted here).
+  for (let i = 0; i < 10; i++) {
+    isFalse(await user.useRecoveryCode(`ZZZZZ-${String(10000 + i)}`));
+  }
+  isTrue((await AuthThrottle.lockedFor("totp", subject)) > 0);
+  // Locked: even the right recovery code is refused while the lock holds.
+  isFalse(await user.useRecoveryCode("ABCDE-FGHJK"));
+  await AuthThrottle.clear("totp", subject);
+});
+
+test("a six-digit miss is not charged twice across the two 2FA forms", async () => {
+  const user = (await User.findByEmail("user2@keylearn.org"))!;
+  await user.setRecoveryCodes(["ABCDE-FGHJK"]);
+  const subject = AuthThrottle.forUser(user.id!);
+  await AuthThrottle.clear("totp", subject);
+  // A six-digit code is the authenticator's to count; useRecoveryCode must
+  // not add a second failure for the same wrong entry.
+  isFalse(await user.useRecoveryCode("000000"));
+  isFalse((await AuthThrottle.lockedFor("totp", subject)) > 0);
+  await AuthThrottle.clear("totp", subject);
+});
