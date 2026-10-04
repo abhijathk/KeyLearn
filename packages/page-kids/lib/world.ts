@@ -9481,7 +9481,20 @@ export function createKidsWorld(
         // as a dead tree rather than a different species. A green that is
         // merely the wrong green is only nudged, so the set keeps its variety.
         const k = reddish ? 1 : tint.strength;
-        c.color.lerp(isLeaf ? leaf : trunk, Math.min(1, k));
+        // A model whose colour lives in its VERTICES (HeroTreesV2) keeps a
+        // deep base colour on the material that darkens those vertex hues to
+        // green; replacing it with a pale season colour let the raw hues
+        // through and the pines came out a rainbow. There the season is
+        // applied OVER the base instead, lifted so it does not just darken.
+        const target = isLeaf ? leaf : trunk;
+        if (src.vertexColors === true) {
+          c.color.lerp(
+            target.clone().multiply(c.color).multiplyScalar(1.6),
+            Math.min(1, k),
+          );
+        } else {
+          c.color.lerp(target, Math.min(1, k));
+        }
         void isTrunk;
         return c;
       });
