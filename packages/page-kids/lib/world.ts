@@ -19636,13 +19636,15 @@ export function createKidsWorld(
     // The road's own furniture, which no theme field declares: it is asked
     // for by name where the milestones and lamps are planted. Time Keepers'
     // only: the other two worlds use their own kits' stones.
-    for (const n of theme.village == null ? [] : [
-      "Milestone_Vazhivilakku",
-      "Laterite_Rock",
-      "Granite_Boulder",
-      "Mossy_Stone",
-      "River_Stone",
-    ]) {
+    for (const n of theme.village == null
+      ? []
+      : [
+          "Milestone_Vazhivilakku",
+          "Laterite_Rock",
+          "Granite_Boulder",
+          "Mossy_Stone",
+          "River_Stone",
+        ]) {
       want.push(`${ASSETS}/models/village-stone/${n}.glb`);
     }
     // ── AND THE WHOLE CHAPTER ────────────────────────────────────────────
@@ -19960,8 +19962,13 @@ export function createKidsWorld(
       const exact = names
         .map((n) => clips.find((c) => c.name === n))
         .filter((c): c is THREE.AnimationClip => c != null);
+      // `IdleToWalk` and `WalkToIdle` say "idle" and are steps: a
+      // transition played on a loop is somebody shuffling on the spot.
       const own = clips.filter(
-        (c) => /idle/i.test(c.name) && !exact.includes(c),
+        (c) =>
+          /idle/i.test(c.name) &&
+          !/idle_?to|to_?idle/i.test(c.name) &&
+          !exact.includes(c),
       );
       const pool = [...exact, ...own];
       return pool.length > 0 ? pool : [calm(clips)].filter((c) => c != null);
@@ -20067,7 +20074,18 @@ export function createKidsWorld(
       const clips = clipsFor(gltf);
       // Guards get a walking loop so their legs move while patrolling; everyone
       // else gets a calm, friendly idle.
-      const pool = guard ? [] : idlePool(clips, scary, /^Cow/.test(model));
+      // VILLAGERS WHO STAND, STAND. One idle, held, no cycling: Interact
+      // and the curious/alert idles read as fidgeting on somebody minding a
+      // stall. The Blacksmith sits at his forge and keeps his own loop.
+      const standing = !guard && model in FOLK_HEIGHT && model !== "Blacksmith";
+      const fullPool = guard ? [] : idlePool(clips, scary, /^Cow/.test(model));
+      const pool = standing
+        ? [
+            clips.find((c) => /idle_?neutral/i.test(c.name)) ??
+              clips.find((c) => c.name === "Idle_A") ??
+              fullPool[0],
+          ].filter((c): c is THREE.AnimationClip => c != null)
+        : fullPool;
       const clip = guard
         ? (clips.find((c) => /walk|run|gallop|march/i.test(c.name)) ??
           pickIdle(clips, scary))
