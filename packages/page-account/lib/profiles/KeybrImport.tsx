@@ -74,11 +74,52 @@ export function KeybrImport({
   const [showHelp, setShowHelp] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * THE WAIT ON EITHER SIDE OF THE FILE WINDOW (owner, 5 Oct 2026). The
+   * browser takes a moment to open the system picker, and a big keybr
+   * export takes a moment to read — and in both the button just sat there,
+   * so it looked as if the click had gone nowhere.
+   */
+  const [picking, setPicking] = useState<"idle" | "opening" | "reading">(
+    "idle",
+  );
+  const unwatch = useRef<(() => void) | null>(null);
 
-  const onFile = (file: File | undefined) => {
-    if (file == null) {
+  const choose = () => {
+    const input = fileRef.current;
+    if (input == null || picking !== "idle") {
       return;
     }
+    setPicking("opening");
+    // The picker says nothing when it APPEARS, only when it closes: a pick
+    // fires `change`, a cancel fires `cancel`, and either way the page gets
+    // its focus back. Whichever comes first ends "Opening…".
+    const done = () => {
+      unwatch.current?.();
+      setPicking((p) => (p === "opening" ? "idle" : p));
+    };
+    // `change` can land just after focus returns, so focus waits a beat.
+    const onFocus = () => window.setTimeout(done, 500);
+    // Never stuck: a browser that sends neither still lets go.
+    const fallback = window.setTimeout(done, 20_000);
+    input.addEventListener("cancel", done);
+    window.addEventListener("focus", onFocus);
+    unwatch.current = () => {
+      input.removeEventListener("cancel", done);
+      window.removeEventListener("focus", onFocus);
+      window.clearTimeout(fallback);
+      unwatch.current = null;
+    };
+    input.click();
+  };
+
+  const onFile = (file: File | undefined) => {
+    unwatch.current?.();
+    if (file == null) {
+      setPicking("idle");
+      return;
+    }
+    setPicking("reading");
     setError(null);
     setSummary(null);
     setResults(null);
@@ -114,7 +155,8 @@ export function KeybrImport({
             defaultMessage: "Could not read that file.",
           }),
         );
-      });
+      })
+      .finally(() => setPicking("idle"));
   };
 
   const run = async () => {
@@ -270,19 +312,41 @@ export function KeybrImport({
                 <button
                   type="button"
                   className={styles.uploadBtn}
-                  onClick={() => fileRef.current?.click()}
+                  onClick={choose}
+                  aria-busy={picking !== "idle"}
+                  aria-live="polite"
                 >
-                  <FormattedMessage
-                    id="import.choose.any"
-                    defaultMessage="Choose file…"
-                  />
+                  {picking !== "idle" && (
+                    <span className={styles.uploadSpin} aria-hidden="true" />
+                  )}
+                  {picking === "opening" ? (
+                    <FormattedMessage
+                      id="import.choose.opening"
+                      defaultMessage="Opening…"
+                    />
+                  ) : picking === "reading" ? (
+                    <FormattedMessage
+                      id="import.choose.reading"
+                      defaultMessage="Reading file…"
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="import.choose.any"
+                      defaultMessage="Choose file…"
+                    />
+                  )}
                 </button>
                 <input
                   ref={fileRef}
                   type="file"
                   accept=".json,application/json"
                   style={{ display: "none" }}
-                  onChange={(ev) => onFile(ev.target.files?.[0])}
+                  onChange={(ev) => {
+                    const file = ev.target.files?.[0];
+                    // Cleared so choosing the same file again still fires.
+                    ev.target.value = "";
+                    onFile(file);
+                  }}
                 />
                 {results != null && (
                   <p className={styles.hint}>

@@ -952,6 +952,8 @@
   "highScores.yourPosition": "Your position",
   "import.badFile.any": "That doesn’t look like a KeyLearn or keybr export — expected a JSON file.",
   "import.choose.any": "Choose file…",
+  "import.choose.opening": "Opening…",
+  "import.choose.reading": "Reading file…",
   "import.confirmBtn": "Yes, replace",
   "import.confirmReplace": "This profile already has progress. Replacing will permanently erase it. Click Import again to confirm.",
   "import.done.merge": "Imported {added} of {total} lessons ({dupes} were already there).",

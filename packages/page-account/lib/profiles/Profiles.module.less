@@ -714,6 +714,36 @@
     border-color: var(--accent-d1);
     color: var(--text-color);
   }
+
+  // While the file window opens, and while the chosen file is read: the
+  // button says so, rather than looking as if the click went nowhere.
+  &[aria-busy="true"] {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    border-style: solid;
+    cursor: progress;
+  }
+}
+
+.uploadSpin {
+  flex: none;
+  inline-size: 0.7rem;
+  block-size: 0.7rem;
+  border: 2px solid var(--text-color-f2);
+  border-block-start-color: var(--accent);
+  border-radius: 50%;
+  animation: importSpin 0.8s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes importSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .deleteBtn {
