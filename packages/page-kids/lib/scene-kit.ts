@@ -1356,6 +1356,16 @@ export function heroLand(scene: number): Land {
     dirt: ground.dirt,
     sun: light.sun,
     fog: s.season === "winter" ? 0xdbe6ee : light.fog,
+    // A misty morning is misty: a close, pale haze and a soft sky, not the
+    // clear day the hour would otherwise give it.
+    ...(s.weather === "misty"
+      ? {
+          cover: 0.85,
+          skyTop: 0xc4d2d6,
+          skyBottom: 0xdfe7e6,
+          fogRange: [26, 86] as const,
+        }
+      : {}),
     path: "stones",
     trees: "HeroTreesV2",
     friend: HERO_FRIENDS[scene % HERO_FRIENDS.length]!,

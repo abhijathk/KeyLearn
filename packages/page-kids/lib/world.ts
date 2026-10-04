@@ -7919,6 +7919,8 @@ export function createKidsWorld(
   // seconds so nightfall is an event rather than a switch.
   const nightLayer = new THREE.Group();
   nightLayer.visible = false;
+  /** Advances the rain each frame, when the scene has any (Dino Run storms). */
+  let rain: ((dt: number) => void) | null = null;
   /**
    * THE TEMPLE'S OWN FLAMES, the meshes in the temple set. Shown by the
    * world's hour, not by night: the evening ones from six to eight, the
@@ -9494,6 +9496,23 @@ export function createKidsWorld(
           );
         } else {
           c.color.lerp(target, Math.min(1, k));
+        }
+        // FROST ON A WINTER TREE: snow lies on whatever faces the sky, so
+        // the upward-facing faces of the foliage go white and the rest keep
+        // the tree's own green — a snow-capped look from the models we have.
+        if (isLeaf && land.heroScene?.season === "winter") {
+          c.onBeforeCompile = (sh) => {
+            sh.fragmentShader = sh.fragmentShader.replace(
+              "#include <normal_fragment_maps>",
+              `#include <normal_fragment_maps>
+              {
+                vec3 upV = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+                float snow = smoothstep(0.25, 0.7, dot(normal, upV));
+                diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93, 0.96, 1.0), snow * 0.85);
+              }`,
+            );
+          };
+          c.customProgramCacheKey = () => "foliage-frost";
         }
         void isTrunk;
         return c;
@@ -21657,6 +21676,55 @@ export function createKidsWorld(
         }
       }
 
+      // RAIN, for a storm: slanted streaks falling through a box that rides
+      // with the camera, so it is always raining where the child is and
+      // nowhere it costs anything. One draw call.
+      if (ds.weather === "storm") {
+        const N = 900;
+        const pos = new Float32Array(N * 6);
+        const seeds = new Float32Array(N * 3);
+        const rr = mulberry32(hashSeed("rain", opts.sceneIndex ?? 0));
+        for (let i = 0; i < N; i++) {
+          seeds[i * 3] = (rr() - 0.5) * 90;
+          seeds[i * 3 + 1] = rr() * 34;
+          seeds[i * 3 + 2] = -40 + rr() * 70;
+        }
+        const geo = new THREE.BufferGeometry();
+        const attr = new THREE.BufferAttribute(pos, 3);
+        attr.setUsage(THREE.DynamicDrawUsage);
+        geo.setAttribute("position", attr);
+        const drops = new THREE.LineSegments(
+          geo,
+          new THREE.LineBasicMaterial({
+            color: 0xd8e2ee,
+            transparent: true,
+            opacity: 0.42,
+            depthWrite: false,
+          }),
+        );
+        drops.frustumCulled = false;
+        scene.add(drops);
+        let fall = 0;
+        rain = (dt: number) => {
+          fall = (fall + dt * 26 * motionScale) % 34;
+          const cx = cam.position.x;
+          for (let i = 0; i < N; i++) {
+            const x = cx + seeds[i * 3]!;
+            let y = seeds[i * 3 + 1]! - fall;
+            if (y < 0) y += 34;
+            const z = seeds[i * 3 + 2]!;
+            pos[i * 6] = x;
+            pos[i * 6 + 1] = y;
+            pos[i * 6 + 2] = z;
+            // A streak, leaning with the wind.
+            pos[i * 6 + 3] = x - 0.35;
+            pos[i * 6 + 4] = y + 1.1;
+            pos[i * 6 + 5] = z;
+          }
+          attr.needsUpdate = true;
+        };
+      }
+
       // LAVA, for the ash scenes: glowing runnels across the dark ground,
       // flat on it, so they can lie in front of the road as well as behind
       // without hiding anything. Drawn past tone mapping so they glow.
@@ -21764,6 +21832,53 @@ export function createKidsWorld(
     }
     if (land.heroScene != null && CHAPTER == null) {
       const hs = land.heroScene;
+      // THE BOG'S BOARDWALK: the path is planks, on short posts, the whole
+      // way — a road across wet ground is built, not worn. One instanced
+      // mesh for the planks and one for the posts.
+      if (hs.terrain === "boggy") {
+        const plankGeo = new THREE.BoxGeometry(0.46, 0.1, 3.5);
+        const postGeo = new THREE.CylinderGeometry(0.09, 0.11, 0.9, 6);
+        const wood = new THREE.MeshStandardMaterial({ color: 0x8a6440, roughness: 0.95 });
+        const postWood = new THREE.MeshStandardMaterial({ color: 0x5e4128, roughness: 1 });
+        const from = -40;
+        const to = TRAIL_END + 40;
+        const step = 0.54;
+        const nPlanks = Math.ceil((to - from) / step);
+        const planks = new THREE.InstancedMesh(plankGeo, wood, nPlanks);
+        const nPosts = Math.ceil((to - from) / 3) * 2;
+        const posts = new THREE.InstancedMesh(postGeo, postWood, nPosts);
+        const m = new THREE.Matrix4();
+        const q = new THREE.Quaternion();
+        const up = new THREE.Vector3(0, 1, 0);
+        const col = new THREE.Color();
+        for (let i = 0; i < nPlanks; i++) {
+          const x = from + i * step;
+          const z = meander(x);
+          const y = terrainY(x, z) + 0.02;
+          // Turned with the road, and each board a shade apart.
+          const yaw = -Math.atan2(meander(x + 0.5) - meander(x - 0.5), 1);
+          q.setFromAxisAngle(up, yaw + (((i * 37) % 7) - 3) * 0.004);
+          m.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(1, 1, 1));
+          planks.setMatrixAt(i, m);
+          planks.setColorAt(i, col.setScalar(0.86 + ((i * 53) % 11) / 55));
+        }
+        for (let i = 0; i < nPosts; i++) {
+          const x = from + Math.floor(i / 2) * 3;
+          const side = i % 2 === 0 ? -1.78 : 1.78;
+          const z = meander(x) + side;
+          m.compose(
+            new THREE.Vector3(x, terrainY(x, z) - 0.25, z),
+            q.identity(),
+            new THREE.Vector3(1, 1, 1),
+          );
+          posts.setMatrixAt(i, m);
+        }
+        planks.receiveShadow = true;
+        planks.frustumCulled = false;
+        posts.frustumCulled = false;
+        posts.castShadow = true;
+        scene.add(planks, posts);
+      }
       const pieceRand = mulberry32(hashSeed("setpiece", opts.sceneIndex ?? 0));
       const loaded = new Map<string, Awaited<ReturnType<typeof loadModel>>>();
       const piece = async (
@@ -21837,6 +21952,12 @@ export function createKidsWorld(
       };
       const lm = landmarks[hs.landmark];
       if (lm != null) {
+        // ONE IN THE OPENING VIEW: a scene known for its campfire, tower or
+        // shrine shows it before the child has typed a key (owner, 4 Oct).
+        await piece(lm[0], lm[1], 22, lm[2] + 1, lm[3], (pieceRand() - 0.5) * 0.8);
+        if (hs.landmark === "campfire") {
+          await piece("HeroLandmarks", /^FallenLog/, 29, 7, 1, pieceRand() * 3);
+        }
         for (let n = 0; n < SPOTS; n++) {
           await piece(
             lm[0],
@@ -29159,6 +29280,7 @@ export function createKidsWorld(
     // eyes — so nightfall arrives over a couple of seconds as the cast
     // cross-fades, instead of everything snapping at once.
     stepFades(dt);
+    rain?.(dt);
     if (templeFlames.length > 0) {
       const hr = worldHour();
       const evening = hr >= TEMPLE_HOURS[0] && hr < TEMPLE_HOURS[1];
