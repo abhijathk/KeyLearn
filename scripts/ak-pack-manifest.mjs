@@ -27,9 +27,6 @@ const ROLE = {
   Temple: ["Temple", "Village landmark"],
   Market: ["Village Market", "Village landmark"],
   Banyan: ["Banyan Tree", "Village landmark"],
-  HouseMoss: ["Moss-Crowned Homestead", "Village dwelling"],
-  HouseHearth: ["Hearth House", "Village dwelling"],
-  HouseThatch: ["Thatch Homestead", "Village dwelling"],
   Wall: ["Stone Wall", "Village dressing"],
   Cart: ["Wooden Cart", "Village dressing"],
 };

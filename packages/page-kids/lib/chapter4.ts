@@ -58,7 +58,12 @@ export const LESSONS_4: readonly Lesson[] = [
     1,
     "Forest Edge",
     [
-      prop("ak-3d-pack/CottageTiled", 0.06, -34, 7, 3),
+      // New Kerala house (owner, 4 Oct 2026); its front is -Z, so it turns
+      // half round to face the road as the old model did unturned.
+      {
+        ...prop("village-houses/04_compact_tiled_house", 0.06, -34, 7, 3),
+        turn: Math.PI,
+      },
       tree(0.62, -24, 16),
       rock(0.83),
     ],

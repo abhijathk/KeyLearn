@@ -122,7 +122,7 @@ test("anchors are found by what the chapter actually stands up", () => {
     { model: "village-plants/Peepal_Arayal", x: 40, z: -12 },
     { model: "village-util/Village_Well", x: 60, z: -14 },
     { model: "village-stone/Shrine_Idol", x: 80, z: -9 },
-    { model: "ak-3d-pack/Mana", x: 120, z: -31 },
+    { model: "village-houses/Mana", x: 120, z: -31 },
     { model: "village-plants/Mango_Tree", x: 15, z: -8 },
   ];
   const found = anchorsFrom(placed);

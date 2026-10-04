@@ -590,6 +590,11 @@ export type UserDetails = {
   readonly parentPinSet: boolean;
   /** How many digits it has; null when unset, or set before we recorded it. */
   readonly parentPinLength: number | null;
+  /**
+   * Whether leaving the kids page for a grown-up's profile asks for that
+   * PIN. Off by default; only means anything once a PIN is set.
+   */
+  readonly kidsExitPin: boolean;
   /** Whether the account's email address has been verified. */
   readonly emailVerified: boolean;
   /**

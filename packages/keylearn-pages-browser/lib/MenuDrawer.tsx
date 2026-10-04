@@ -71,8 +71,9 @@ export function MenuDrawer({
     }
   };
   // From a kid's profile to a grown-up's is the one switch that crosses the
-  // lock this drawer is built around, so on a household that has set a
-  // grown-up PIN it asks for it first. Kid to kid stays free: nothing a
+  // lock this drawer is built around, so a household that has set a
+  // grown-up PIN AND switched on "ask for it to leave the kids page"
+  // (Account → Security; off by default, owner 4 Oct 2026) is asked first. Kid to kid stays free: nothing a
   // grown-up keeps is on the other side of it.
   const [pinFor, setPinFor] = useState<{
     readonly id: string;
@@ -83,7 +84,12 @@ export function MenuDrawer({
     kind: "adult" | "kid",
     visionSupport = false,
   ) => {
-    if (kidLock && kind === "adult" && user?.parentPinSet === true) {
+    if (
+      kidLock &&
+      kind === "adult" &&
+      user?.parentPinSet === true &&
+      user.kidsExitPin === true
+    ) {
       setPinFor({ id, visionSupport });
       return;
     }

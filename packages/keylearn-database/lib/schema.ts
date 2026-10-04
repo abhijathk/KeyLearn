@@ -185,6 +185,9 @@ export async function createSchema(knex: Knex): Promise<void> {
   await addColumn("user", "session_epoch", (table) => {
     table.integer("session_epoch").notNullable().defaultTo(0);
   });
+  await addColumn("user", "kids_exit_pin", (table) => {
+    table.boolean("kids_exit_pin").notNullable().defaultTo(false);
+  });
   const emailVerifiedAdded = await addColumn(
     "user",
     "email_verified",

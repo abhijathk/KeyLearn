@@ -533,9 +533,20 @@ const SCENE_NAMES: ReadonlyMap<string, string> = new Map([
   ["Banyan_Almaram", "the banyan tree"],
   ["Stone_Althara", "the stone platform"],
   ["Wall", "garden walls"],
-  ["HouseThatch", "a thatched house"],
-  ["HouseMoss", "an old house"],
-  ["HouseHearth", "a house with a hearth"],
+  ["01_large_nalukettu", "a big family house"],
+  ["02_long_veranda_house", "a house with a long veranda"],
+  ["03_two_storey_house", "a two-storey house"],
+  ["04_compact_tiled_house", "a tiled house"],
+  ["05_wooden_laterite_house", "a laterite house"],
+  ["06_simple_thatched_house", "a thatched house"],
+  ["07_fisherman_coastal_house", "a fisherman's house"],
+  ["08_workers_house_modest", "a small house"],
+  ["09_storeroom_outbuilding", "a storeroom"],
+  ["10_granary_vayalpura", "a granary"],
+  ["11_ezhara_veedu_elite", "a grand house"],
+  ["12_courtyard_nadumuttam_house", "a courtyard house"],
+  ["13_hill_slope_house", "a house on the slope"],
+  ["14_farmers_house_rustic", "a farmer's house"],
   // The land itself.
   ["MegaBroadleaf", "the big trees"],
   ["Trees", "the trees"],
@@ -4203,8 +4214,20 @@ export const VILLAGE_THEME: WorldTheme = {
       // The lamps in front of it — the stone kalvilakku and the brass vilakku —
       // come with the temple model itself: see `dressTemple`.
     ],
-    houses: ["HouseThatch", "HouseMoss", "HouseHearth"],
-    cottages: ["CottageTiled", "CottageBell", "CottageVeranda"],
+    // The new Kerala houses (owner, 4 Oct 2026), matched to the old models
+    // they replace by footprint: thatch, the old homestead and the hearth
+    // house; then the tiled, bell and veranda cottages. Every one's front is
+    // -Z, so each is stood with a half turn (see the plots and strays).
+    houses: [
+      "village-houses/06_simple_thatched_house",
+      "village-houses/07_fisherman_coastal_house",
+      "village-houses/05_wooden_laterite_house",
+    ],
+    cottages: [
+      "village-houses/04_compact_tiled_house",
+      "village-houses/08_workers_house_modest",
+      "village-houses/13_hill_slope_house",
+    ],
     // ELEVEN, WITH THE DISTANCE DOING THE REST. 14 was the human-scale
     // figure and too big in the frame; 8.4 was 60 per cent of it and right
     // for the nearest house but wrong for the far ones, which were the same
@@ -4231,8 +4254,8 @@ export const VILLAGE_THEME: WorldTheme = {
     // Out on the empty stretches, very rarely: a house set back off the road,
     // or a cart somebody left. See `strayRate` where these are placed.
     strays: [
-      { model: "HouseThatch", h: 8.4 },
-      { model: "HouseMoss", h: 8.4 },
+      { model: "village-houses/06_simple_thatched_house", h: 8.4 },
+      { model: "village-houses/07_fisherman_coastal_house", h: 8.4 },
       { model: "Cart", h: 5.0 },
     ],
   },
@@ -4883,6 +4906,12 @@ type PadDef = {
   readonly hw: number;
   readonly hd: number;
   g0: number | null;
+  /**
+   * Plots that overlap share one level, taken from this one, or the two
+   * would disagree where their blends meet and a house straddling the
+   * seam would float on one side (the village centre's close-set plots).
+   */
+  readonly levelOf?: PadDef;
 };
 let PADS: PadDef[] = [];
 const PAD_BLEND = 4;
@@ -5148,7 +5177,10 @@ const terrainY = (x: number, z: number): number => {
   for (const p of PADS) {
     const d = Math.max(Math.abs(x - p.x) - p.hw, Math.abs(z - p.z) - p.hd);
     if (d > PAD_BLEND) continue;
-    p.g0 ??= terrainYBase(p.x, p.z);
+    p.g0 ??=
+      p.levelOf != null
+        ? (p.levelOf.g0 ??= terrainYBase(p.levelOf.x, p.levelOf.z))
+        : terrainYBase(p.x, p.z);
     const u = d / PAD_BLEND;
     const t = d <= 0 ? 1 : 1 - (3 * u * u - 2 * u * u * u);
     out += (p.g0 - out) * t;
@@ -6329,6 +6361,78 @@ export function createKidsWorld(
         const hw = ((side ? dim.d : dim.w) * s) / 2 + 1;
         const hd = ((side ? dim.w : dim.d) * s) / 2 + 1;
         PADS.push({ x: from + p.at * len, z: p.z, hw, hd, g0: null });
+      }
+    }
+    const padAt = (
+      x: number,
+      z: number,
+      model: string,
+      h: number,
+      turn = 0,
+      extra = 0,
+    ) => {
+      const dim = CHAPTER3_DIMENSIONS[model];
+      if (dim == null) return;
+      const s = h * depthScale(z, V.camZ, theme.laneZ ?? 0);
+      const side = Math.abs(Math.sin(turn)) > 0.5;
+      PADS.push({
+        x,
+        z,
+        hw: ((side ? dim.d : dim.w) * s) / 2 + 1 + extra,
+        hd: ((side ? dim.w : dim.d) * s) / 2 + 1 + extra,
+        g0: null,
+      });
+    };
+    // THE NEXT CHAPTER'S PREVIEW past the end of the road stands its first
+    // lesson's houses at these places (see "THE NEXT CHAPTER, SEEN FROM THE
+    // END OF THIS ONE"); they need a level plot as much as the road's own.
+    const nextFirst = CHAPTERS[CHAPTER_N % CHAPTERS.length]?.lessons[0];
+    const lessonLen = CHAPTER[1]! - CHAPTER[0]!;
+    for (const p of nextFirst?.props ?? []) {
+      if (p.run != null || !/village-houses\/\d\d_/.test(p.model)) continue;
+      const x = TRAIL_END + p.at * lessonLen;
+      if (x > TRAIL_END + 72) continue;
+      padAt(x, p.z, p.model, p.h, p.turn ?? 0);
+    }
+    // THE VILLAGE CENTRE (Chapter 1, lesson 5): its plots draw from shuffled
+    // pools, so each plot is levelled for the largest house either pool
+    // could put there.
+    const vill = theme.village;
+    if (CHAPTER_N === 1 && vill != null) {
+      const cFrom = CHAPTER[4]!;
+      const cLen = CHAPTER[5]! - cFrom;
+      const pools = [...vill.houses, ...(vill.cottages ?? [])];
+      const widest = pools.reduce((a, m) =>
+        (CHAPTER3_DIMENSIONS[m]?.w ?? 0) * (CHAPTER3_DIMENSIONS[m]?.d ?? 0) >
+        (CHAPTER3_DIMENSIONS[a]?.w ?? 0) * (CHAPTER3_DIMENSIONS[a]?.d ?? 0)
+          ? m
+          : a,
+      );
+      // A plot's house is pulled forward until its back wall is inside the
+      // floor (GROUND_BACK + 1.5; see the plots), so the level ground runs
+      // from there to the furthest forward its front can come.
+      const deepest = CHAPTER3_DIMENSIONS[widest]!;
+      // One level for the whole centre: its plots are close enough that
+      // their blends overlap (see PadDef.levelOf).
+      let lead: PadDef | undefined;
+      for (const home of villageHouses(cFrom, cLen)) {
+        const s =
+          vill.houseHeight *
+          home.scale *
+          depthScale(home.z, V.camZ, theme.laneZ ?? 0);
+        const depth = Math.max(deepest.w, deepest.d) * s;
+        const back = GROUND_BACK + 1.5 - 1;
+        const front = Math.max(home.z, GROUND_BACK + 1.5 + depth / 2) + depth / 2 + 1;
+        const pad: PadDef = {
+          x: home.x,
+          z: (back + front) / 2,
+          hw: (Math.max(deepest.w, deepest.d) * s) / 2 + 1,
+          hd: (front - back) / 2,
+          g0: null,
+          ...(lead != null ? { levelOf: lead } : {}),
+        };
+        lead ??= pad;
+        PADS.push(pad);
       }
     }
   }
@@ -8558,6 +8662,8 @@ export function createKidsWorld(
   const TMP_AT = new THREE.Vector3();
 
   const spotPool: THREE.SpotLight[] = [];
+  /** Counts frames for the lamp shadows' moving-caster refresh (see the tick). */
+  let lampShadowFrame = 0;
   for (let i = 0; i < AIMED_LIGHTS; i++) {
     // Wide and very soft: this is a flame in an opening, not a torch. The
     // penumbra does the work — a hard cone edge on a mud road reads as a
@@ -12377,13 +12483,23 @@ export function createKidsWorld(
       ? gltf.animations
       : sharedClips;
 
+  /**
+   * THE HERO TRAIL'S CAST, A SIZE UP (owner, 4 Oct 2026: "the main
+   * characters are too small in Hero Trail in Novice … all characters
+   * including villagers, a bit more big"). One factor on every person the
+   * trail stands up — the player, who walks with them, and everybody met on
+   * the road — so their heights against each other, and the Novice-to-
+   * Champion growth, are exactly what they were; only the cast against the
+   * world grows. (A Novice's own start moved too: see `sizeForAge`.)
+   */
+  const CAST_SCALE = theme.modelDir === "hero" ? 1.15 : 1;
   function rigOf(
     gltf: { scene: THREE.Group; animations: THREE.AnimationClip[] },
     targetH: number,
     /** The model file's name — only pose corrections solved for one rig use it. */
     name = "",
   ): DinoRig {
-    const wrap = fitToHeight(gltf.scene, targetH);
+    const wrap = fitToHeight(gltf.scene, targetH * CAST_SCALE);
     // The same head this character has when they walk as a companion — see
     // castHeadScale. Before this, only companions got it.
     scaleHead(gltf.scene, castHeadScale(name));
@@ -18885,8 +19001,14 @@ export function createKidsWorld(
 
   // Overall size also reads the age — a small (not tiny) baby up to a big (not
   // giant) adult, so the stage is legible at a glance.
-  const sizeForAge = (age: number) =>
-    0.72 + 0.66 * Math.max(0, Math.min(1, age));
+  // A hatchling's curve on Dino Run. On the Hero Trail a Novice is a child
+  // starting out, not a baby: at 0.72 the player stood half the height of
+  // the heroes met on the road (owner, 4 Oct 2026, "too small in Novice"),
+  // so the trail starts at 0.92 and still grows to well over full size.
+  const sizeForAge = (age: number) => {
+    const a = Math.max(0, Math.min(1, age));
+    return theme.modelDir === "hero" ? 0.92 + 0.38 * a : 0.72 + 0.66 * a;
+  };
 
   /**
    * Characters who do not grow.
@@ -19445,7 +19567,7 @@ export function createKidsWorld(
         want.push(villageUrl(h.model));
       }
       // The yards are inside the same Chapter 1 gate as the heart.
-      for (const h of heartBuilt ? v.houses : []) {
+      for (const h of heartBuilt ? [...v.houses, ...(v.cottages ?? [])] : []) {
         want.push(villageUrl(h));
       }
       want.push(villageUrl(v.wall));
@@ -19813,7 +19935,7 @@ export function createKidsWorld(
       // them would read as a different, smaller person rather than as the
       // same person further off. The party has to stay one size: a child
       // compares themselves to Dave, and Dave must not change.
-      const wrap = fitToHeight(gltf.scene, h);
+      const wrap = fitToHeight(gltf.scene, h * CAST_SCALE);
       if (girth != null && girth !== 1) {
         // Across and through only; the height was already fitted and must not
         // move, or the character stops matching the number that set it.
@@ -22439,6 +22561,18 @@ export function createKidsWorld(
               const cap = behind ? Infinity : sideSign > 0 ? 0.5 : 1.6;
               scl = Math.min(scl, cap / (tall * 1.3));
             }
+            // GRASS AND FLOWERS NEVER OUTGROW THE CAST (owner, 4 Oct 2026:
+            // on the Hero Trail the background grass and flowers stood as
+            // tall as the heroes, and the children were hard to pick out
+            // against them). Behind the sight-line the cap above does not
+            // apply, so the far verge's tufts reached about 2.9 against
+            // heroes of 3 to 3.2. Held to 1.2 wherever they stand: knee to
+            // thigh on the smallest of the cast, so a figure always rises
+            // clear of the planting behind it.
+            if (/Hero(Grass|Flowers)$/.test(spec.file)) {
+              const own = Math.max(0.05, gb.max.y - gb.min.y);
+              scl = Math.min(scl, 1.2 / own);
+            }
             if (PERSP == null && sideSign > 0 && z > 12) {
               // THE CAMERA'S SIDE STAYS LOW. The depth falloff magnifies
               // anything this near five or six times, so a taro leaf grew to
@@ -23458,7 +23592,10 @@ export function createKidsWorld(
           return; // a platform, not a dwelling: nothing to light
         }
 
-        if (/^House|^(0[1-9]|1[0-4])_/i.test(name)) {
+        // On the LAST path segment: the village houses are named with their
+        // folder ("village-houses/06_…"), and anchored at the start this
+        // never lit one of them.
+        if (/(?:^|\/)(?:House|(?:0[1-9]|1[0-4])_)/i.test(name)) {
           // NOT EVERY HOUSE IS AWAKE AT EIGHT.
           //
           // A lamp at every single door is a village where nobody has gone to
@@ -23785,9 +23922,9 @@ export function createKidsWorld(
             hx,
             hz,
             V.houseHeight * home.scale,
-            // No `oz > 0` half-turn any more: nothing stands on the near side,
-            // so every house already faces the road it fronts.
-            hashRange(ox, oz, 122, -0.35, 0.35),
+            // Nothing stands on the near side, so every house faces the road
+            // it fronts: the new houses' fronts are -Z, hence the half turn.
+            Math.PI + hashRange(ox, oz, 122, -0.35, 0.35),
           );
           // THEN CHECKED AGAINST THE FLOOR IT IS ACTUALLY STANDING ON.
           //
@@ -23817,64 +23954,15 @@ export function createKidsWorld(
           }
         }
 
-        // ── AND A ROW BEHIND THEM, ON CARDS ────────────────────────────
+        // ── NO ROW BEHIND THEM ANY MORE (owner, 4 Oct 2026) ────────────
         //
-        // The village used to end at its back row. A settlement does not —
-        // it thins out, and the roofs you can just make out past the last
-        // real house are most of what makes it read as a place people live
-        // rather than a set of six buildings.
-        //
-        // Out here nothing can be walked round, occluded or seen from a
-        // second angle: the floor stops at -38 and the painted horizon takes
-        // over. So these are cards — a fifth the bytes of the models they
-        // were rendered from, and carrying MORE detail than those models do,
-        // because they come off the raw million-triangle bake rather than
-        // off what survived decimation.
-        //
-        // No blockers pushed for them. Nothing walks that far back, and a
-        // card is not a thing to bump into.
-        // Name, aspect, and SINK — all three measured off the render rather
-        // than typed in. The sink is how far the base line sits above the
-        // silhouette's lowest corner, and without it every card in this row
-        // hovered by two or three per cent of its own height.
-        const CARDS = [
-          ["CottageThatch", 1.6901, 0.0271],
-          ["CottageTiled", 1.8541, 0.0344],
-          ["CottageBell", 1.5316, 0.0219],
-          ["CottageVeranda", 1.6845, 0.0262],
-        ] as const;
-        if (CHAPTER != null) {
-          const cFrom = CHAPTER[4]!;
-          const cLen = CHAPTER[5]! - cFrom;
-          // Offset from the houses' own fractions so a card never lines up
-          // directly behind a roof, which is the arrangement that makes two
-          // buildings read as one.
-          const far: readonly (readonly [number, number, number])[] = [
-            [0.16, -35.5, 0.62],
-            [0.35, -36.8, 0.5],
-            [0.54, -35.2, 0.58],
-            [0.68, -37, 0.46],
-            [0.9, -35.8, 0.54],
-          ];
-          // ALL FIVE AT ONCE. Awaited one at a time these are five network
-          // round trips in single file at the very end of the build — the
-          // same mistake the chapter's models made before they were pulled
-          // into the warm burst, on a smaller scale. They do not depend on
-          // each other and nothing after them depends on any of them.
-          await Promise.all(
-            far.map(([at, cz, scale], i) => {
-              const [nm, aspect, sink] = CARDS[i % CARDS.length]!;
-              return standCard(
-                nm,
-                cFrom + at * cLen + hashRange(at, cz, 124, -2.2, 2.2),
-                cz + hashRange(at, cz, 125, -0.8, 0.8),
-                V.houseHeight * scale,
-                aspect,
-                sink,
-              );
-            }),
-          );
-        }
+        // There was a back row of five flat cards here, pictures of the old
+        // cottages. The old cottages are gone from the game, and real houses
+        // cannot replace the cards: a card has no depth, but a house is
+        // about fourteen units deep, and pulled inside the floor's back edge
+        // (-38) each one stood on top of the plots in front of it. The
+        // plots' own houses, set back at different depths, carry the
+        // thinning-out the cards were for.
 
         // Wall segments along the road, enclosing the yards. Laid end to end
         // with a gap where the market fronts the road, so the child can see in.
@@ -27418,7 +27506,9 @@ export function createKidsWorld(
         }
         try {
           const g = await loadModel(
-            `${ASSETS}/models/${V.dir}/${stray.model}.glb`,
+            stray.model.includes("/")
+              ? `${ASSETS}/models/${stray.model}.glb`
+              : `${ASSETS}/models/${V.dir}/${stray.model}.glb`,
           );
           if (g == null) {
             continue;
@@ -27430,7 +27520,12 @@ export function createKidsWorld(
             stray.h * perspective(z),
           );
           wrap.position.set(x, surfaceY(x, z), z);
-          wrap.rotation.y = Math.random() * Math.PI * 2;
+          // A house never shows the road its back (owner, 4 Oct 2026):
+          // facing it, or turned up to about a quarter either way. Its front
+          // is -Z, so facing the road is a half turn. A cart goes any way.
+          wrap.rotation.y = /village-houses\//.test(stray.model)
+            ? Math.PI + (Math.random() - 0.5) * 1.6
+            : Math.random() * Math.PI * 2;
           scene.add(wrap);
           characterRoots.add(wrap);
           applyEyeGlow(wrap, nightNow);
@@ -27439,7 +27534,7 @@ export function createKidsWorld(
           // somebody is home. Placed from the box like the village ones,
           // but never given a real light: these are far from the road and a
           // point light out there would be spent on empty paddy.
-          if (trueNight && /^House/i.test(stray.model)) {
+          if (trueNight && /village-houses\//.test(stray.model)) {
             const box = measureBox(wrap);
             const cz = (box.min.z + box.max.z) / 2;
             const faces = cz >= 0 ? -1 : 1;
@@ -29388,6 +29483,32 @@ export function createKidsWorld(
         // dozen absolute differences and two matrix writes, against a road
         // that would otherwise be lit only at its very beginning.
         if (spotPool.length > 0 && aimed.length > 0) {
+          // ANYTHING THAT MOVES REDRAWS THE MAP (owner, 4 Oct 2026: the
+          // buffalo's shadow at night "showing other place, not starting
+          // right under the buffalo"). The map is only redrawn when a cone
+          // changes lamp, on the reasoning that lamps do not move — but what
+          // they light does. A grazing buffalo, a cow, a villager or the
+          // children walking left their lamp shadow where they had stood
+          // when the map was last drawn. So while anything that moves is in
+          // a cone's reach, that cone's map is redrawn every third frame:
+          // a 1024 depth pass of a few nearby things, and only then.
+          lampShadowFrame = (lampShadowFrame + 1) % 3;
+          const movesNear =
+            lampShadowFrame === 0
+              ? (lx: number, lz: number): boolean => {
+                  const R = 26;
+                  const close = (o: THREE.Object3D | undefined) =>
+                    o != null &&
+                    o.visible &&
+                    Math.abs(o.position.x - lx) < R &&
+                    Math.abs(o.position.z - lz) < R;
+                  if (close(player?.wrap)) return true;
+                  for (const f of followers) if (close(f.rig?.wrap)) return true;
+                  for (const w of wilds) if (close(w.wrap)) return true;
+                  for (const f of friends) if (close(f.wrap)) return true;
+                  return false;
+                }
+              : null;
           const near = [...aimed].sort(
             (a, b) => Math.abs(a.x - playerX) - Math.abs(b.x - playerX),
           );
@@ -29407,6 +29528,12 @@ export function createKidsWorld(
               spot.position.set(at.x, at.y, at.z);
               spot.target.position.copy(at.aim);
               spot.target.updateMatrixWorld();
+              spot.shadow.needsUpdate = true;
+            } else if (
+              movesNear != null &&
+              spot.intensity > 0 &&
+              movesNear(at.x, at.z)
+            ) {
               spot.shadow.needsUpdate = true;
             }
             // Fades out as the lamp it is standing in leaves the frame, so a

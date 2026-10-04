@@ -49,23 +49,12 @@ const HUNTS = [
  * object.
  */
 const ALIASES = {
-  "ak-3d-pack/CottageBell": "House_Bell_m6",
-  "ak-3d-pack/CottageTiled": "House_Tiled_m6",
-  "ak-3d-pack/CottageVeranda": "House_Veranda_m6",
-  "ak-3d-pack/Mana": "Weathered_Heritage_Mana",
   "ak-3d-pack/Temple": "Meshy_AI_Moss_Covered_Temple",
-  "ak-3d-pack/HouseMoss": "Meshy_AI_Moss_Crowned_Homestea",
-  "ak-3d-pack/HouseThatch": "Meshy_AI_Mossy_Thatch_Homestea",
-  "ak-3d-pack/HouseHearth": "Meshy_AI_weathered_hearth_hous",
   "village-stone/Shrine_Idol": "Shrine_Idol_v6",
   "village-util/Nilavilakku": "Nilavilakku_raw",
   "village-util/Haystack": "Haystack_raw",
   "village-util/Estate_Gate": "Estate_Gate_raw",
   "village-util/Produce_Pile": "Produce_Pile_raw",
-  "cards/CottageBell": "House_Bell_m6",
-  "cards/CottageTiled": "House_Tiled_m6",
-  "cards/CottageThatch": "House_Thatch_m6",
-  "cards/CottageVeranda": "House_Veranda_m6",
 };
 const WRITE = process.argv.includes("--write");
 

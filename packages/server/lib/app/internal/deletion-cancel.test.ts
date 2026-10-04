@@ -51,7 +51,7 @@ function app() {
   return startApp(context.get(Application, kMain));
 }
 
-async function post(path: string, body: unknown) {
+async function post(path: string, body: object) {
   return await app()
     .POST(path)
     .header("content-type", "application/json")

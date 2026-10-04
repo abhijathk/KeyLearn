@@ -81,6 +81,7 @@ test("render signed-in account page", () => {
             hasPassword: true,
             twoFactorEnabled: false,
             parentPinSet: false,
+            kidsExitPin: false,
             parentPinLength: null,
             emailVerified: true,
             signupCountry: null,

@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "7958d5efcc10";
+export const ASSET_VERSION = "eb678c400ff8";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -322,26 +322,6 @@ export const ASSET_MAP: Readonly<
     "b": 68931,
     "g": "shared"
   },
-  "cards/CottageBell.webp": {
-    "u": "v4c7d0c9b/cards/CottageBell.webp",
-    "b": 82500,
-    "g": "village"
-  },
-  "cards/CottageThatch.webp": {
-    "u": "v26c39289/cards/CottageThatch.webp",
-    "b": 122336,
-    "g": "village"
-  },
-  "cards/CottageTiled.webp": {
-    "u": "v0da4dd7d/cards/CottageTiled.webp",
-    "b": 94524,
-    "g": "village"
-  },
-  "cards/CottageVeranda.webp": {
-    "u": "vbcaa16a8/cards/CottageVeranda.webp",
-    "b": 95260,
-    "g": "village"
-  },
   "cards/world-dino.webp": {
     "u": "v97dd80d5/cards/world-dino.webp",
     "b": 20802,
@@ -537,21 +517,6 @@ export const ASSET_MAP: Readonly<
     "b": 178456,
     "g": "village"
   },
-  "models/ak-3d-pack/CottageBell.glb": {
-    "u": "vf1724489/models/ak-3d-pack/CottageBell.glb",
-    "b": 331748,
-    "g": "village"
-  },
-  "models/ak-3d-pack/CottageTiled.glb": {
-    "u": "v1436c4bd/models/ak-3d-pack/CottageTiled.glb",
-    "b": 396416,
-    "g": "village"
-  },
-  "models/ak-3d-pack/CottageVeranda.glb": {
-    "u": "v380229e8/models/ak-3d-pack/CottageVeranda.glb",
-    "b": 414976,
-    "g": "village"
-  },
   "models/ak-3d-pack/Explorer.glb": {
     "u": "v43bb5afc/models/ak-3d-pack/Explorer.glb",
     "b": 1044424,
@@ -560,26 +525,6 @@ export const ASSET_MAP: Readonly<
   "models/ak-3d-pack/Explorer6.glb": {
     "u": "v9f67543b/models/ak-3d-pack/Explorer6.glb",
     "b": 1251632,
-    "g": "village"
-  },
-  "models/ak-3d-pack/HouseHearth.glb": {
-    "u": "v852d321a/models/ak-3d-pack/HouseHearth.glb",
-    "b": 391288,
-    "g": "village"
-  },
-  "models/ak-3d-pack/HouseMoss.glb": {
-    "u": "v69d97eac/models/ak-3d-pack/HouseMoss.glb",
-    "b": 389648,
-    "g": "village"
-  },
-  "models/ak-3d-pack/HouseThatch.glb": {
-    "u": "v510e235e/models/ak-3d-pack/HouseThatch.glb",
-    "b": 369780,
-    "g": "village"
-  },
-  "models/ak-3d-pack/Mana.glb": {
-    "u": "v9edc8f4f/models/ak-3d-pack/Mana.glb",
-    "b": 484784,
     "g": "village"
   },
   "models/ak-3d-pack/Market.glb": {
@@ -600,11 +545,6 @@ export const ASSET_MAP: Readonly<
   "models/ak-3d-pack/Robot.glb": {
     "u": "v6235dfe2/models/ak-3d-pack/Robot.glb",
     "b": 281752,
-    "g": "village"
-  },
-  "models/ak-3d-pack/Temple.glb": {
-    "u": "v26ee708f/models/ak-3d-pack/Temple.glb",
-    "b": 367560,
     "g": "village"
   },
   "models/ak-3d-pack/Wall.glb": {

@@ -590,6 +590,7 @@ const PSecurityResetConfirm = zod(TSecurityResetConfirm, () => {
 const TPatchAccount = z.object({
   anonymized: z.boolean().optional(),
   publicProfile: z.boolean().optional(),
+  kidsExitPin: z.boolean().optional(),
   name: z.string().min(1).max(32).optional(),
 });
 type TPatchAccount = z.infer<typeof TPatchAccount>;
@@ -1330,7 +1331,7 @@ export class Controller {
   async patchAccount(
     ctx: Context<RouterState & SessionState & AuthState>,
     @body.json(PPatchAccount, jsonOpts)
-    { anonymized, publicProfile, name }: TPatchAccount,
+    { anonymized, publicProfile, kidsExitPin, name }: TPatchAccount,
   ) {
     const user = ctx.state.requireUser();
     // Making the household's history public, or renaming the account, is a
@@ -1342,6 +1343,11 @@ export class Controller {
     }
     if (publicProfile !== undefined) {
       patch.publicProfile = Number(publicProfile);
+    }
+    // Behind the same PIN gate as everything here, so a child on the kids
+    // page cannot switch off the lock that keeps them there.
+    if (kidsExitPin !== undefined) {
+      patch.kidsExitPin = Number(kidsExitPin);
     }
     if (name !== undefined && name !== user.name) {
       // Names are unique across accounts.

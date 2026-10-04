@@ -80,7 +80,16 @@ export const LESSONS_2: readonly Lesson[] = [
       { model: `${STONE}/Mossy_Stone`, at: 0.22, z: -8.5, h: 0.9 },
       // A roof, far enough back to be the last one rather than a house on
       // this road. Depth does the work: at -30 it is scenery.
-      { model: "ak-3d-pack/HouseThatch", at: 0.3, z: -30, h: 10, clear: 11 },
+      // New Kerala house (owner, 4 Oct 2026); its front is -Z, so it turns
+      // half round to face the road as the old model did unturned.
+      {
+        model: "village-houses/06_simple_thatched_house",
+        at: 0.3,
+        z: -30,
+        h: 10,
+        turn: Math.PI,
+        clear: 11,
+      },
       { model: `${PLANTS}/Palmyra_Karimpana`, at: 0.78, z: -16, h: 25 },
       { model: `${STONE}/Laterite_Rock`, at: 0.86, z: -9, h: 0.7 },
     ],

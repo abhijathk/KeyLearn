@@ -234,3 +234,49 @@ test("proving the PIN on one account does not open another's", async () => {
     });
   });
 });
+
+test("the kids-page PIN lock is off by default, and only the PIN can change it", async () => {
+  // Owner, 4 Oct 2026: asking for the PIN to leave the kids page is a
+  // setting, off unless the household turns it on. Turning it OFF must need
+  // the PIN, or a child on the kids page could simply switch the lock off.
+  const user = await findUser("user3@keylearn.org");
+  const request = startApp(context.get(Application, kMain));
+  await request.become(user.id!);
+  const patch = (on: boolean) =>
+    request
+      .PATCH("/_/account")
+      .type("application/json")
+      .send(JSON.stringify({ kidsExitPin: on }));
+  try {
+    await withPin(user, async () => {
+      const { User } = await import("@keylearn/database");
+      const before = await User.findById(user.id!);
+      equal(before!.toDetails().kidsExitPin, false);
+
+      equal((await patch(true)).status, 428);
+
+      const proved = await request
+        .POST("/_/account/parent-pin/verify")
+        .type("application/json")
+        .send(JSON.stringify({ pin: PIN }));
+      equal(proved.status, 200);
+      const on = await patch(true);
+      equal(on.status, 200);
+      const body = (await on.body.json()) as { user: { kidsExitPin: boolean } };
+      equal(body.user.kidsExitPin, true);
+    });
+    // A fresh visit has not proved the PIN: switching it off is refused.
+    await withPin(user, async () => {
+      const fresh = startApp(context.get(Application, kMain));
+      await fresh.become(user.id!);
+      const off = await fresh
+        .PATCH("/_/account")
+        .type("application/json")
+        .send(JSON.stringify({ kidsExitPin: false }));
+      equal(off.status, 428);
+    });
+  } finally {
+    const { User } = await import("@keylearn/database");
+    await User.query().findById(user.id!).patch({ kidsExitPin: 0 });
+  }
+});

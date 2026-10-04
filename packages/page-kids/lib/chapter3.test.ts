@@ -206,3 +206,27 @@ test("no buffalo anywhere in the village", () => {
     );
   }
 });
+
+test("the new houses in Chapters 1, 2 and 4 face the road too", async () => {
+  // They replaced the old cottages and homesteads there (owner, 4 Oct
+  // 2026). Those faced +Z unturned; the new ones face -Z, so each must be
+  // turned, and none may show the road its back.
+  const { LESSONS_2 } = await import("./chapter2.ts");
+  const { LESSONS_4 } = await import("./chapter4.ts");
+  let houses = 0;
+  for (const ls of [LESSONS, LESSONS_2, LESSONS_4]) {
+    for (const l of ls) {
+      for (const p of l.props) {
+        ok(
+          !/ak-3d-pack\/(Cottage|House)/.test(p.model),
+          `${p.model} is an old house model`,
+        );
+        if (!/village-houses\/\d\d_/.test(p.model)) continue;
+        houses++;
+        const fz = -Math.cos(p.turn ?? 0);
+        ok(fz > -0.5, `${p.model} in lesson ${l.n} has its back to the road`);
+      }
+    }
+  }
+  equal(houses, 4);
+});

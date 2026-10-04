@@ -981,7 +981,16 @@ export const LESSONS: readonly Lesson[] = [
     mix: [0.32, 0.2, 0.48],
     depth: [8, 28],
     props: [
-      { model: "ak-3d-pack/HouseMoss", at: 0.55, z: -22, h: 11, clear: 12 },
+      // New Kerala house (owner, 4 Oct 2026); its front is -Z, so it turns
+      // half round to face the road as the old model did unturned.
+      {
+        model: "village-houses/07_fisherman_coastal_house",
+        at: 0.55,
+        z: -22,
+        h: 11,
+        turn: Math.PI,
+        clear: 12,
+      },
       // 3.2, NOT 2.2, for the reason the market's well was raised: a well
       // is a waist-high parapet a grown woman draws from, and at 2.2
       // against a farmer standing 5.4 it was a garden feature. A little
@@ -1123,7 +1132,16 @@ export const LESSONS: readonly Lesson[] = [
       },
       { model: `${PLANTS}/Kerala_Grass_Tuft`, at: 0.33, z: -9, h: 1 },
       { model: `${PLANTS}/Kerala_Fern`, at: 0.34, z: -11.3, h: 0.85 },
-      { model: "ak-3d-pack/HouseHearth", at: 0.6, z: -23, h: 13, clear: 13 },
+      // New Kerala house (owner, 4 Oct 2026); its front is -Z, so it turns
+      // half round to face the road as the old model did unturned.
+      {
+        model: "village-houses/05_wooden_laterite_house",
+        at: 0.6,
+        z: -23,
+        h: 13,
+        turn: Math.PI,
+        clear: 13,
+      },
       // INSIDE THE COMPOUND, NOT THROUGH ITS WALL. At 0.72 and z -11 the
       // cart stood across the boundary: the wall runs at z -10 and is
       // seven tenths of a unit thick, and a cart nearly six units long

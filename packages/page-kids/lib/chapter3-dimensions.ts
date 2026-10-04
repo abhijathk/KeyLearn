@@ -3,10 +3,6 @@
 export const CHAPTER3_DIMENSIONS: Readonly<
   Record<string, { w: number; d: number }>
 > = {
-  "ak-3d-pack/CottageVeranda": {
-    w: 1.6713346044210449,
-    d: 1.6794398940105217,
-  },
   "village-util/Laterite_Wall": {
     w: 2.6058506106219825,
     d: 0.3743254757171258,
@@ -14,18 +10,6 @@ export const CHAPTER3_DIMENSIONS: Readonly<
   "village-plants/Mango_Tree": {
     w: 0.8232421875,
     d: 0.9197126116071429,
-  },
-  "ak-3d-pack/CottageTiled": {
-    w: 1.9404796422439239,
-    d: 1.554741400588587,
-  },
-  "ak-3d-pack/CottageBell": {
-    w: 1.4519921100444804,
-    d: 1.19842788660177,
-  },
-  "ak-3d-pack/HouseMoss": {
-    w: 2.074553324238341,
-    d: 1.6185380346348859,
   },
   "village-util/Estate_Gate": {
     w: 1.938106702337165,
@@ -50,10 +34,6 @@ export const CHAPTER3_DIMENSIONS: Readonly<
   "village-plants/Hibiscus_Chemparathi": {
     w: 1.0474322085622112,
     d: 0.9862237335425931,
-  },
-  "ak-3d-pack/HouseHearth": {
-    w: 1.772335543139522,
-    d: 2.1977647965426224,
   },
   "village-plants/Jackfruit_Tree": {
     w: 0.7922148379221484,
@@ -205,14 +185,6 @@ export const CHAPTER3_DIMENSIONS: Readonly<
   "ak-3d-pack/Market": {
     w: 4.343450473389612,
     d: 1.028185857593632,
-  },
-  "ak-3d-pack/Mana": {
-    w: 1.7623765320722542,
-    d: 1.6081840331981385,
-  },
-  "ak-3d-pack/HouseThatch": {
-    w: 2.2297127295057027,
-    d: 1.5951396963004283,
   },
   "village-util/Bamboo_Fence": {
     w: 1.7515793565944213,

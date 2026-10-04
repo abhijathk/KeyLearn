@@ -1,9 +1,11 @@
 import { type UserDetails } from "@keylearn/pages-shared";
-import { FloatingShell, PinField } from "@keylearn/widget";
+import { ConfirmDialog, FloatingShell, PinField } from "@keylearn/widget";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { PasswordField } from "./AuthPage.tsx";
+import { Toggle } from "./controls.tsx";
+import { useParentPinGate } from "./pin-gate.tsx";
 import { AccountService } from "./service.ts";
 
 /**
@@ -23,6 +25,21 @@ export function ParentPinCard({
   const { formatMessage: fm } = useIntl();
   const [open, setOpen] = useState(false);
   const card = useRef<HTMLDivElement | null>(null);
+  // The kids-page lock is saved through the same PIN gate as the rest of
+  // the account, so a child cannot switch it off from here either.
+  const pinGate = useParentPinGate();
+  const [exitBusy, setExitBusy] = useState(false);
+  // Either way round it changes what a child can do on a shared device, so
+  // it is confirmed first (owner, 4 Oct 2026), then saved behind the PIN.
+  const [confirmExit, setConfirmExit] = useState<boolean | null>(null);
+  const setKidsExitPin = (next: boolean) => {
+    setExitBusy(true);
+    pinGate
+      .gated(() => AccountService.patchAccount({ kidsExitPin: next }))
+      .then(() => onChanged())
+      .catch(() => undefined)
+      .finally(() => setExitBusy(false));
+  };
 
   // Support sends people here when they have no PIN yet. Landing on the
   // Security pane is only half the journey — the card is below the fold,
@@ -74,6 +91,82 @@ export function ParentPinCard({
           )}
         </button>
       </div>
+
+      {/* Off by default (owner, 4 Oct 2026): a family that wants the kids
+          page to be a place a child cannot leave turns it on. Needs a PIN to
+          mean anything, so it waits for one. */}
+      <div className={styles.row}>
+        <div className={styles.rowText}>
+          <span className={styles.rowLabel}>
+            <FormattedMessage
+              id="sec.pin.kidsExit"
+              defaultMessage="Ask for the PIN to leave the kids page"
+            />
+          </span>
+          <span className={styles.rowSub}>
+            {user.parentPinSet ? (
+              <FormattedMessage
+                id="sec.pin.kidsExit.sub"
+                defaultMessage="Switching from a child's profile to a grown-up's needs the PIN."
+              />
+            ) : (
+              <FormattedMessage
+                id="sec.pin.kidsExit.needsPin"
+                defaultMessage="Set a PIN first."
+              />
+            )}
+          </span>
+        </div>
+        <Toggle
+          on={user.parentPinSet && user.kidsExitPin}
+          onChange={setConfirmExit}
+          disabled={!user.parentPinSet || exitBusy}
+        />
+      </div>
+      {confirmExit != null && (
+        <ConfirmDialog
+          title={
+            confirmExit
+              ? fm({
+                  id: "sec.pin.kidsExit.onTitle",
+                  defaultMessage: "Lock the kids page?",
+                })
+              : fm({
+                  id: "sec.pin.kidsExit.offTitle",
+                  defaultMessage: "Unlock the kids page?",
+                })
+          }
+          message={
+            confirmExit
+              ? fm({
+                  id: "sec.pin.kidsExit.onMessage",
+                  defaultMessage:
+                    "Switching from a child's profile to a grown-up's will need the grown-up PIN.",
+                })
+              : fm({
+                  id: "sec.pin.kidsExit.offMessage",
+                  defaultMessage:
+                    "Anyone on a child's profile will be able to switch to a grown-up's without the PIN.",
+                })
+          }
+          confirmLabel={
+            confirmExit
+              ? fm({ id: "sec.pin.kidsExit.onConfirm", defaultMessage: "Turn on" })
+              : fm({
+                  id: "sec.pin.kidsExit.offConfirm",
+                  defaultMessage: "Turn off",
+                })
+          }
+          danger={!confirmExit}
+          onConfirm={() => {
+            const next = confirmExit;
+            setConfirmExit(null);
+            setKidsExitPin(next);
+          }}
+          onCancel={() => setConfirmExit(null)}
+        />
+      )}
+      {pinGate.prompt}
 
       {open && (
         <FloatingShell

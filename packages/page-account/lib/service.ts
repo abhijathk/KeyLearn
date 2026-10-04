@@ -52,6 +52,7 @@ export type ProfileInput = {
 export type PatchAccountRequest = {
   readonly anonymized?: boolean;
   readonly publicProfile?: boolean;
+  readonly kidsExitPin?: boolean;
   readonly name?: string;
 };
 

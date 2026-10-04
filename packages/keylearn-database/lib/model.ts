@@ -138,6 +138,9 @@ export class User extends TimestampMixin(Model) {
     // devtools; this is checked by the server.
     table.string("parent_pin_hash", 160).nullable();
     table.integer("parent_pin_length").unsigned().nullable();
+    // Ask for that PIN to leave the kids page for a grown-up's. Off unless
+    // the household turns it on (owner, 4 Oct 2026).
+    table.boolean("kids_exit_pin").notNullable().defaultTo(false);
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.unique(["email"]);
     table.unique(["name"]);
@@ -165,6 +168,8 @@ export class User extends TimestampMixin(Model) {
   recoveryCodes?: string | null;
   parentPinHash?: string | null;
   parentPinLength?: number | null;
+  /** SQLite hands booleans back as 0/1. */
+  kidsExitPin?: number | boolean;
   /**
    * This household has had a learner profile at some point, so the support
    * section stays behind the grown-up PIN even if that profile is later
@@ -735,6 +740,7 @@ export class User extends TimestampMixin(Model) {
        */
       parentPinLength:
         this.parentPinHash == null ? null : (this.parentPinLength ?? null),
+      kidsExitPin: Boolean(this.kidsExitPin),
       emailVerified: Boolean(this.emailVerified),
       /**
        * Where the network said they were when they registered.
