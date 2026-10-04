@@ -22,6 +22,7 @@ import { DataDir, Env, isAdminEmail, listStaffEmails } from "@keylearn/config";
 import {
   AccountDeletionRequest,
   AdCampaign,
+  AuthThrottle,
   Certificate,
   checkUnlockPasscode,
   Credential,
@@ -39,6 +40,7 @@ import {
   ProfileData,
   SecurityEvent,
   Staff,
+  type StaffAuditAction,
   StaffAuditEvent,
   StaffSettings,
   SupportAttachment,
@@ -61,6 +63,19 @@ import {
 import { clientIp, rateLimit } from "../auth/ratelimit.ts";
 import { staffAccessStatus } from "../auth/staff-access.ts";
 import { refreshStaffCache } from "../auth/staff-cache.ts";
+import {
+  dailyCap,
+  issuePasskeyChallenge,
+  issueStepUpToken,
+  readStepUpToken,
+  spendPasskeyChallenge,
+  spendStepUp,
+  STEP_UP_ACTIONS,
+  type StepUpAction,
+  type StepUpClaims,
+  stepUpEnforced,
+  stepUpMismatch,
+} from "../auth/step-up.ts";
 import { resolveTotpSecret } from "../auth/totp-crypto.ts";
 import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
@@ -116,6 +131,52 @@ const TStaffAuthPasskeyVerify = z.object({
 });
 type TStaffAuthPasskeyVerify = z.infer<typeof TStaffAuthPasskeyVerify>;
 const PStaffAuthPasskeyVerify = zod(TStaffAuthPasskeyVerify);
+
+const TStaffStepUp = z.object({
+  email: z.string().trim().email().max(320),
+  action: z.enum(STEP_UP_ACTIONS),
+  /** An account id, "keep:from" for a merge, an organisation id, or "new". */
+  target: z
+    .string()
+    .trim()
+    .regex(/^(new|\d{1,12}(:\d{1,12})?)$/),
+  passkey: z
+    .object({
+      response: z.record(z.string(), z.any()),
+      challenge: z.string().min(1).max(512),
+    })
+    .optional(),
+  totp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/)
+    .optional(),
+});
+type TStaffStepUp = z.infer<typeof TStaffStepUp>;
+const PStaffStepUp = zod(TStaffStepUp);
+
+/** What the desk is told when a destructive call arrives unconfirmed. */
+const STEP_UP_MESSAGE =
+  "This action needs a fresh confirmation (passkey or authenticator code).";
+
+/**
+ * The audit row each confirmed action leaves behind — what the daily caps
+ * count. A merge writes one row against each account, so two per merge.
+ */
+const STEP_UP_AUDIT: Record<
+  StepUpAction,
+  { readonly action: StaffAuditAction; readonly rowsPerAction: number }
+> = {
+  "account-export": { action: "account-data-exported", rowsPerAction: 1 },
+  "account-reveal-email": {
+    action: "account-email-revealed",
+    rowsPerAction: 1,
+  },
+  "account-merge": { action: "account-merged", rowsPerAction: 2 },
+  "account-delete": { action: "account-deletion-requested", rowsPerAction: 1 },
+  "org-create": { action: "org-created", rowsPerAction: 1 },
+  "org-plan": { action: "org-plan-changed", rowsPerAction: 1 },
+};
 
 const TActedRequest = z.object({
   reason: z.string().trim().min(1).max(500),
@@ -573,6 +634,10 @@ export class Controller {
     const options = await generateAuthenticationOptions({
       rpID,
       userVerification: "preferred",
+      // A challenge KeyLearn can recognise later, so `staff-auth/step-up`
+      // accepts only challenges it issued, each once. Sign-in is unchanged:
+      // it is still an opaque value the caller hands back.
+      challenge: issuePasskeyChallenge(this.userData.dataDir.dataPath()),
     });
     ctx.response.body = { options };
   }
@@ -641,6 +706,240 @@ export class Controller {
       email: user!.email,
       admin: isAdminEmail(user!.email),
     };
+  }
+
+  /**
+   * Step-up: the acting staff member confirms ONE destructive action on ONE
+   * target with their own passkey (default) or authenticator code, and gets
+   * a two-minute, single-use token for it. The destructive routes below
+   * refuse without one (428), so the ops key alone — which only proves the
+   * call came from the desk — cannot export, reveal, merge, delete or
+   * re-plan anything. See auth/step-up.ts for the token and its secret.
+   *
+   * The passkey path is the passkey-verify path with three more rules: the
+   * credential must belong to the named staff member, the authenticator
+   * must have verified the user, and the challenge must be one
+   * `passkey-options` issued and not yet spent — a synced passkey reports a
+   * counter of 0, so without that an assertion captured from any earlier
+   * ceremony could be replayed with its own challenge.
+   */
+  @http.POST("/_/internal/staff-auth/step-up")
+  async staffStepUp(
+    ctx: Context<RouterState & AuthState>,
+    @body.json(PStaffStepUp) input: TStaffStepUp,
+  ) {
+    ctx.state.requireOpsApi();
+    rateLimit(
+      ctx,
+      `ops-staff-step-up:${input.email.toLowerCase()}`,
+      10,
+      300_000,
+    );
+    const ip = clientIp(ctx);
+    const what = `${input.action} on ${input.target}`;
+    const refuse = (
+      userId: number | null,
+      reason: "invalid" | "not-staff" | "locked" | "needs-2fa",
+      why: string,
+    ) => {
+      void StaffAuditEvent.record({
+        userId,
+        action: "desk-unlock-failed",
+        detail: `step-up for ${what} refused: ${why} (via ops app)`,
+        ip,
+      });
+      ctx.response.body = { ok: false, reason };
+    };
+
+    const user = await User.findByEmail(input.email);
+    if (user == null) {
+      refuse(null, "invalid", "unknown email");
+      return;
+    }
+    const status = await staffAccessStatus(user);
+    if (!status.ok) {
+      refuse(
+        user.id!,
+        status.reason === "needs-2fa" ? "needs-2fa" : "not-staff",
+        status.reason,
+      );
+      return;
+    }
+
+    const dataDir = this.userData.dataDir.dataPath();
+    let method: string;
+    if (input.passkey != null) {
+      if (!(await this.#stepUpPasskey(user, input.passkey, dataDir))) {
+        refuse(user.id!, "invalid", "passkey not accepted");
+        return;
+      }
+      method = "passkey";
+    } else if (input.totp != null) {
+      if (!user.totpEnabled || user.totpSecret == null) {
+        refuse(user.id!, "needs-2fa", "no authenticator enrolled");
+        return;
+      }
+      const subject = AuthThrottle.forUser(user.id!);
+      if ((await AuthThrottle.lockedFor("totp", subject)) > 0) {
+        refuse(user.id!, "locked", "authenticator codes locked");
+        return;
+      }
+      // acceptTotp: replay-protected, failures counted per account.
+      if (
+        !(await user.acceptTotp(
+          resolveTotpSecret(user.totpSecret, dataDir),
+          input.totp,
+        ))
+      ) {
+        const locked = (await AuthThrottle.lockedFor("totp", subject)) > 0;
+        refuse(
+          user.id!,
+          locked ? "locked" : "invalid",
+          locked ? "authenticator codes locked" : "authenticator code refused",
+        );
+        return;
+      }
+      method = "authenticator code";
+    } else {
+      refuse(user.id!, "invalid", "no passkey or code");
+      return;
+    }
+
+    const { token, expiresAt } = issueStepUpToken(
+      {
+        sub: user.id!,
+        em: user.email!,
+        act: input.action,
+        tgt: input.target,
+      },
+      dataDir,
+    );
+    void StaffAuditEvent.record({
+      userId: user.id!,
+      action: "desk-unlock",
+      detail: `step-up for ${what} confirmed by ${method} (via ops app)`,
+      ip,
+    });
+    ctx.response.body = { ok: true, token, expiresAt };
+  }
+
+  async #stepUpPasskey(
+    user: User,
+    passkey: NonNullable<TStaffStepUp["passkey"]>,
+    dataDir: string,
+  ): Promise<boolean> {
+    if (!spendPasskeyChallenge(passkey.challenge, dataDir)) {
+      return false;
+    }
+    const cred = await Credential.findByCredentialId(
+      String(passkey.response.id),
+    );
+    if (cred == null || cred.userId !== user.id) {
+      return false;
+    }
+    const { rpID, origins } = this.#rp();
+    let verification;
+    try {
+      verification = await verifyAuthenticationResponse({
+        response: passkey.response as any,
+        expectedChallenge: passkey.challenge,
+        expectedOrigin: origins as string[],
+        expectedRPID: rpID,
+        requireUserVerification: true,
+        credential: {
+          id: cred.credentialId!,
+          publicKey: new Uint8Array(Buffer.from(cred.publicKey!, "base64")),
+          counter: cred.counter ?? 0,
+          transports: cred.transports ? JSON.parse(cred.transports) : undefined,
+        },
+      });
+    } catch {
+      return false;
+    }
+    if (
+      !verification.verified ||
+      !verification.authenticationInfo.userVerified
+    ) {
+      return false;
+    }
+    await cred
+      .$query()
+      .patch({ counter: verification.authenticationInfo.newCounter });
+    return true;
+  }
+
+  /**
+   * The gate in front of every destructive internal route: a step-up token
+   * for exactly this action, target and acting staff member (unless
+   * `STAFF_STEP_UP=off`), then the per-staff daily cap. Answers 428 or 429
+   * itself and returns false; the token is spent only once both pass.
+   */
+  async #confirmDestructive(
+    ctx: Context<RouterState & AuthState>,
+    action: StepUpAction,
+    target: string,
+    actor: number | null | undefined,
+  ): Promise<boolean> {
+    const dataDir = this.userData.dataDir.dataPath();
+    const ip = clientIp(ctx);
+    const needsStepUp = (why: string) => {
+      void StaffAuditEvent.record({
+        userId: actor ?? null,
+        action: "staff-access-denied",
+        detail: `step-up missing for ${action} on ${target}: ${why} (via ops app)`,
+        ip,
+      });
+      ctx.response.status = 428;
+      ctx.response.body = { error: { message: STEP_UP_MESSAGE, stepUp: true } };
+      return false;
+    };
+
+    let claims: StepUpClaims | null = null;
+    if (stepUpEnforced()) {
+      claims = readStepUpToken(
+        ctx.request.headers.get("x-staff-step-up"),
+        dataDir,
+      );
+      const why = stepUpMismatch(claims, { act: action, tgt: target, actor });
+      if (why != null) {
+        return needsStepUp(why);
+      }
+    }
+
+    const cap = dailyCap(action);
+    const { action: audited, rowsPerAction } = STEP_UP_AUDIT[action];
+    const rows = StaffAuditEvent.query()
+      .where("action", audited)
+      .where("createdAt", ">", new Date(Date.now() - DAY_MS));
+    if (actor == null) {
+      rows.whereNull("userId");
+    } else {
+      rows.where("userId", actor);
+    }
+    const done = Math.ceil((await rows.resultSize()) / rowsPerAction);
+    if (done >= cap) {
+      void StaffAuditEvent.record({
+        userId: actor ?? null,
+        action: "staff-access-denied",
+        detail: `daily cap for ${action} reached (${done}/${cap}) on ${target} (via ops app)`,
+        ip,
+      });
+      ctx.response.status = 429;
+      ctx.response.body = {
+        error: {
+          message:
+            `You have reached today's limit of ${cap} for this action. ` +
+            "It frees up 24 hours after each earlier one; an admin can raise the limit.",
+          dailyCap: true,
+        },
+      };
+      return false;
+    }
+
+    if (claims != null && !spendStepUp(claims, dataDir)) {
+      return needsStepUp("already used");
+    }
+    return true;
   }
 
   /**
@@ -756,6 +1055,11 @@ export class Controller {
     }
     const a = parsed.data;
     const staffUserId = a.actingStaffUserId ?? null;
+    if (
+      !(await this.#confirmDestructive(ctx, "org-create", "new", staffUserId))
+    ) {
+      return;
+    }
 
     // Checked before the transaction so the answer is a sentence rather
     // than a constraint violation: "that name is taken" is something a
@@ -1000,6 +1304,16 @@ export class Controller {
       .safeParse(input);
     if (!parsed.success) {
       throw new BadRequestError("That plan change is not valid.");
+    }
+    if (
+      !(await this.#confirmDestructive(
+        ctx,
+        "org-plan",
+        String(id),
+        parsed.data.actingStaffUserId,
+      ))
+    ) {
+      return;
     }
     const org = await Organization.query().findById(id);
     if (org == null) {
@@ -2102,6 +2416,16 @@ export class Controller {
     @queryParam("reason", pQuery) reason: string | undefined,
   ) {
     ctx.state.requireOpsApi();
+    if (
+      !(await this.#confirmDestructive(
+        ctx,
+        "account-export",
+        String(id),
+        actingStaffUserId,
+      ))
+    ) {
+      return;
+    }
     // `User.findById`, NOT `User.query().findById`.
     //
     // They read the same and are not: the model's own loader fetches the
@@ -2175,6 +2499,16 @@ export class Controller {
     const { fromId, reason } = parsed.data;
     if (fromId === id) {
       throw new BadRequestError("An account cannot be merged into itself.");
+    }
+    if (
+      !(await this.#confirmDestructive(
+        ctx,
+        "account-merge",
+        `${id}:${fromId}`,
+        parsed.data.actingStaffUserId,
+      ))
+    ) {
+      return;
     }
     const [keep, gone] = await Promise.all([
       User.query().findById(id),
@@ -2299,6 +2633,16 @@ export class Controller {
     @body.json(PActedRequest) input: TActedRequest,
   ) {
     ctx.state.requireOpsApi();
+    if (
+      !(await this.#confirmDestructive(
+        ctx,
+        "account-reveal-email",
+        String(id),
+        input.actingStaffUserId,
+      ))
+    ) {
+      return;
+    }
     const user = await User.findById(id);
     if (user == null) {
       ctx.response.status = 404;
@@ -2320,6 +2664,16 @@ export class Controller {
     @body.json(PActedRequest) input: TActedRequest,
   ) {
     ctx.state.requireOpsApi();
+    if (
+      !(await this.#confirmDestructive(
+        ctx,
+        "account-delete",
+        String(id),
+        input.actingStaffUserId,
+      ))
+    ) {
+      return;
+    }
     const user = await User.findById(id);
     if (user == null) {
       ctx.response.status = 404;
