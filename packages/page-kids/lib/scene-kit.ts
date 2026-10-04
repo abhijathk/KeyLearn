@@ -1696,11 +1696,12 @@ export function heroWaterPlan(terrain: HeroTerrain, trailEnd: number): WaterPlan
   const lakes: Pool[] = [];
   const pools: Pool[] = [];
   if (terrain === "meadow") {
-    for (let x = 95; x < trailEnd - 60; x += 165) {
+    // The first in the opening frame: a scene known for its water shows it.
+    for (let x = 30; x < trailEnd - 60; x += 165) {
       streams.push(x);
     }
   } else if (terrain === "lake") {
-    for (let x = 120; x < trailEnd - 50; x += 220) {
+    for (let x = 40; x < trailEnd - 50; x += 220) {
       lakes.push({ x, z: -21, rx: 62, rz: 13 });
     }
   } else if (terrain === "boggy") {

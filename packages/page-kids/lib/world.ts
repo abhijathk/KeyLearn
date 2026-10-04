@@ -20506,8 +20506,44 @@ export function createKidsWorld(
     // long now, so it comes round again twice, further along. The same cast
     // by the roadside every couple of hundred units, which is how a country
     // road looks; the friend, who stands at the very start, is not repeated.
+    // A DINO RUN SCENE BRINGS ITS OWN PACK (the mock: four to six around
+    // the runner). Its record names the species; they stand in loose groups
+    // of four behind the road, one group in the opening frame and one every
+    // ninety units after it — enough to read as a valley full of them
+    // without a skinned rig every few steps.
+    const DINO_HEIGHT: Record<string, number> = {
+      Apatosaurus: 3.6,
+      Stegosaurus: 2.5,
+      Triceratops: 2.6,
+      Parasaurolophus: 2.7,
+      Velociraptor: 1.7,
+      TRex: 3.1,
+    };
+    const packSpots =
+      land.dinoScene != null && CHAPTER == null
+        ? (() => {
+            const kinds = land.dinoScene.dinos;
+            const out: (typeof theme.herd)[number][] = [];
+            let k = 0;
+            for (let gx = 10; gx < TRAIL_END - 20; gx += 90) {
+              for (let j = 0; j < 4; j++) {
+                const model = kinds[k % kinds.length]!;
+                k++;
+                out.push({
+                  model,
+                  x: gx + j * 6 + ((k * 13) % 4),
+                  z: -(6 + ((k * 37) % 9)),
+                  h: DINO_HEIGHT[model] ?? 2.5,
+                });
+              }
+            }
+            return out;
+          })()
+        : null;
     const herdSpots =
-      CHAPTER != null
+      packSpots != null
+        ? packSpots
+        : CHAPTER != null
         ? theme.herd
         : [0, 220, 440].flatMap((shift) =>
             theme.herd
@@ -21196,11 +21232,12 @@ export function createKidsWorld(
               : rand() > 0.65
                 ? Math.min(depth, PERSP != null ? 12 : depth)
                 : -depth;
-          if (!onRoad(x, z, String(file), reach)) {
+          // Not in the water either (see the clusters).
+          if (!onRoad(x, z, String(file), reach) && waterCarve(x, z) <= 0.02) {
             break;
           }
         }
-        if (onRoad(x, z, String(file), reach)) {
+        if (onRoad(x, z, String(file), reach) || waterCarve(x, z) > 0.02) {
           continue; // eight tries and still in the way: drop this one
         }
         // ROCKS SIT IN THE GROUND, NOT ON IT.
@@ -21397,6 +21434,10 @@ export function createKidsWorld(
         start: number;
         sink?: number;
         unfogged?: boolean;
+        /** Taller than the model was made: the mock's volcano is steep. */
+        stretchY?: number;
+        /** How far along the road it may wander from its spot. */
+        jitter?: number;
       };
       const wants: Want[] = [];
       const ashy = ds.shape === "ash" || has("lava");
@@ -21408,9 +21449,11 @@ export function createKidsWorld(
           near: 19,
           far: 21,
           size: 22,
-          start: 6,
+          start: 34,
           sink: 1.5,
           unfogged: true,
+          stretchY: 1.9,
+          jitter: 6,
         });
       }
       if (has("geyser")) {
@@ -21517,12 +21560,13 @@ export function createKidsWorld(
           const box = measureBox(v);
           const sz = box.getSize(new THREE.Vector3());
           const k = w.size / (Math.max(sz.x, sz.y, sz.z) || 1);
+          const ky = k * (w.stretchY ?? 1);
           v.position.set(
             (-(box.min.x + box.max.x) / 2) * k,
-            -box.min.y * k,
+            -box.min.y * ky,
             (-(box.min.z + box.max.z) / 2) * k,
           );
-          v.scale.setScalar(k);
+          v.scale.set(k, ky, k);
           v.traverse((o) => {
             const m = o as THREE.Mesh;
             if (!m.isMesh) return;
@@ -21540,7 +21584,7 @@ export function createKidsWorld(
           });
           const wrap = new THREE.Group();
           wrap.add(v);
-          const px = x + (rnd() - 0.5) * w.gap * 0.3;
+          const px = x + (rnd() - 0.5) * (w.jitter ?? w.gap * 0.3);
           const z = meander(px) - (w.near + rnd() * (w.far - w.near));
           wrap.position.set(px, surfaceY(px, z) - (w.sink ?? 0.05), z);
           wrap.rotation.y = (rnd() - 0.5) * 1.2;
@@ -22178,6 +22222,9 @@ export function createKidsWorld(
             const z = spec.roadRelative
               ? meander(x) + sideSign * depth
               : sideSign * depth;
+            // NOTHING GROWS IN THE WATER: a lake planted over with flowers
+            // and trees was a lake nobody could see (owner, 4 Oct 2026).
+            if (waterCarve(x, z) > 0.02) continue;
             const lo = spec.lo ?? 0.7;
             const hi = spec.hi ?? 1.4;
             // AND THE DEPTH CUE, which this path did not have.
