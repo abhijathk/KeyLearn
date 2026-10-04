@@ -19634,8 +19634,9 @@ export function createKidsWorld(
       }
     }
     // The road's own furniture, which no theme field declares: it is asked
-    // for by name where the milestones and lamps are planted.
-    for (const n of [
+    // for by name where the milestones and lamps are planted. Time Keepers'
+    // only: the other two worlds use their own kits' stones.
+    for (const n of theme.village == null ? [] : [
       "Milestone_Vazhivilakku",
       "Laterite_Rock",
       "Granite_Boulder",
@@ -28025,6 +28026,26 @@ export function createKidsWorld(
           }
         };
         void (async () => {
+          // EACH WORLD'S OWN STONES (4 Oct 2026). The village set is the AK
+          // 3D Pack (commercial, private): Hero Trail and Dino Run take the
+          // rocks of their own kits, so the open-source games stand alone.
+          if (theme.village == null) {
+            const own =
+              theme === DINO_THEME
+                ? { file: "dino/DinoSets", node: /^Boulder_/ }
+                : { file: "hero/HeroRocks", node: /./ };
+            try {
+              const g = await loadModel(`${ASSETS}/models/${own.file}.glb`);
+              if (g != null && !disposed) {
+                for (const c of g.scene.children) {
+                  if (own.node.test(c.name)) pool.push(c);
+                }
+              }
+            } catch {
+              // No rocks at the stones; the stones still stand.
+            }
+            return;
+          }
           // Already fetched by the scatter, so the cache makes these free.
           for (const n of [
             "Laterite_Rock",
@@ -28047,13 +28068,29 @@ export function createKidsWorld(
       }
       await (async () => {
         try {
+          // The milestone, from each world's own kit (see the rocks above).
+          const own =
+            theme.village != null
+              ? null
+              : theme === DINO_THEME
+                ? { file: "dino/DinoSets", node: /^Slab_1/ }
+                : { file: "hero/HeroLandmarks", node: /^Waymarker/ };
           const g = await loadModel(
-            `${ASSETS}/models/village-stone/Milestone_Vazhivilakku.glb`,
+            own == null
+              ? `${ASSETS}/models/village-stone/Milestone_Vazhivilakku.glb`
+              : `${ASSETS}/models/${own.file}.glb`,
           );
           if (g == null || disposed) {
             return;
           }
-          const src = g.scene;
+          const picked =
+            own == null
+              ? g.scene
+              : (g.scene.children.find((c) => own.node.test(c.name)) ?? null);
+          if (picked == null) {
+            return;
+          }
+          const src = picked;
           makeMilestone = (n: number) => {
             // TALLER, BECAUSE IT IS NOW TWO STONES IN ONE.
             //

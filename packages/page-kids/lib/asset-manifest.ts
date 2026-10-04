@@ -598,8 +598,8 @@ export const ASSET_MAP: Readonly<
     "g": "dino"
   },
   "models/dino/Velociraptor.glb": {
-    "u": "v3a61ac33/models/dino/Velociraptor.glb",
-    "b": 153176,
+    "u": "vba948472/models/dino/Velociraptor.glb",
+    "b": 162500,
     "g": "dino"
   },
   "models/hero/Barbarian.glb": {
