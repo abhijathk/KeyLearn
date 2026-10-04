@@ -22,33 +22,42 @@ const root = new URL(
   "../../../root/public/kids-assets/models/",
   import.meta.url,
 );
-test("all ten lessons use shipped assets, continuous local stones, and clear road space", { skip: AK_PACK_MISSING }, () => {
-  equal(LESSONS_3.length, 10);
-  LESSONS_3.forEach((l, i) => {
-    ok(
-      !l.folk.includes("Blacksmith"),
-      "the seated smith belongs only to his shop",
-    );
-    equal(l.n, i + 1);
-    equal(l.from, i);
-    equal(l.to, i + 1);
-    for (const name of [
-      ...l.canopy,
-      ...l.mid,
-      ...l.ground,
-      ...l.props.map((p) => p.model),
-    ]) {
-      ok(existsSync(new URL(name + ".glb", root)), name);
-    }
-    for (const name of l.folk)
-      ok(existsSync(new URL(`village-folk/${name}.glb`, root)), name);
-    for (const p of l.props) {
-      ok(p.z <= -9, l.name);
-      ok(p.at >= 0 && p.at <= 1, l.name);
-    }
-  });
-  ok(BLEED >= 0.15 && BLEED <= 0.25);
-});
+test(
+  "all ten lessons use shipped assets, continuous local stones, and clear road space",
+  { skip: AK_PACK_MISSING },
+  () => {
+    equal(LESSONS_3.length, 10);
+    LESSONS_3.forEach((l, i) => {
+      ok(
+        !l.folk.includes("Blacksmith"),
+        "the seated smith belongs only to his shop",
+      );
+      equal(l.n, i + 1);
+      equal(l.from, i);
+      equal(l.to, i + 1);
+      for (const name of [
+        ...l.canopy,
+        ...l.mid,
+        ...l.ground,
+        ...l.props.map((p) => p.model),
+      ]) {
+        // The file the game actually loads: a "Temple" is the Kerala small
+        // temple now, wherever it is named (world.ts `prop`, 4 Oct 2026).
+        const file = /(?:^|\/)Temple$/.test(name)
+          ? "village-temple/Kerala_SmallTemple_GAME"
+          : name;
+        ok(existsSync(new URL(file + ".glb", root)), name);
+      }
+      for (const name of l.folk)
+        ok(existsSync(new URL(`village-folk/${name}.glb`, root)), name);
+      for (const p of l.props) {
+        ok(p.z <= -9, l.name);
+        ok(p.at >= 0 && p.at <= 1, l.name);
+      }
+    });
+    ok(BLEED >= 0.15 && BLEED <= 0.25);
+  },
+);
 test("authored placements remain finite across all age bands", () => {
   setChapterLessons(LESSONS_3);
   try {
@@ -139,30 +148,39 @@ test("fitting market rows never cancels their distance scaling", () => {
   }
 });
 
-test("the larger village uses all house families, real gates, banyan and peepal assets", { skip: AK_PACK_MISSING }, () => {
-  const props = LESSONS_3.flatMap((l) => l.props);
-  for (const name of [
-    // 11 (ezhara) stood behind milestone 27 until the owner swapped it for a kavu.
-    ...Array.from({ length: 14 }, (_, i) => String(i + 1).padStart(2, "0") + "_").filter((n) => n !== "11_"),
-    "Mana",
-    "Temple",
-    "Banyan_Almaram",
-    "Peepal_Arayal",
-  ]) {
-    ok(
-      props.some((p) =>
-        /^\d\d_$/.test(name)
-          ? p.model.startsWith("village-houses/" + name)
-          : p.model.endsWith("/" + name),
-      ),
-      name,
+test(
+  "the larger village uses all house families, real gates, banyan and peepal assets",
+  { skip: AK_PACK_MISSING },
+  () => {
+    const props = LESSONS_3.flatMap((l) => l.props);
+    for (const name of [
+      // 11 (ezhara) stood behind milestone 27 until the owner swapped it for a kavu.
+      ...Array.from(
+        { length: 14 },
+        (_, i) => String(i + 1).padStart(2, "0") + "_",
+      ).filter((n) => n !== "11_"),
+      "Mana",
+      "Temple",
+      "Banyan_Almaram",
+      "Peepal_Arayal",
+    ]) {
+      ok(
+        props.some((p) =>
+          /^\d\d_$/.test(name)
+            ? p.model.startsWith("village-houses/" + name)
+            : p.model.endsWith("/" + name),
+        ),
+        name,
+      );
+    }
+    const gates = props.flatMap((p) =>
+      p.run?.gate == null ? [] : [p.run.gate],
     );
-  }
-  const gates = props.flatMap((p) => (p.run?.gate == null ? [] : [p.run.gate]));
-  ok(gates.length >= 3);
-  for (const gate of gates)
-    ok(existsSync(new URL(gate.model + ".glb", root)), gate.model);
-});
+    ok(gates.length >= 3);
+    for (const gate of gates)
+      ok(existsSync(new URL(gate.model + ".glb", root)), gate.model);
+  },
+);
 
 test("no village house turns its back to the road or its lane", () => {
   // Every house model's front (steps, veranda, door) is on its -Z side; a
@@ -179,7 +197,10 @@ test("no village house turns its back to the road or its lane", () => {
       const fz = -Math.cos(t);
       const x = (l.n - 1) * 64 + p.at * 64;
       if (Math.abs(fx) < 0.5) {
-        ok(fz > 0.5, `${p.model} at x ${x.toFixed(0)} faces away from the road`);
+        ok(
+          fz > 0.5,
+          `${p.model} at x ${x.toFixed(0)} faces away from the road`,
+        );
       } else {
         const lane = CHAPTER3_LANES.reduce((a, b) =>
           Math.abs(b.x - x) < Math.abs(a.x - x) ? b : a,

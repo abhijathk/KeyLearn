@@ -85,6 +85,10 @@ import {
   routineSeconds,
   thinAnchors,
 } from "./kuttichathan.ts";
+import {
+  createMarketShutters,
+  type MarketShutters,
+} from "./market-shutters.ts";
 import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
 import {
   MAX_UNITS_PER_KEY,
@@ -687,7 +691,8 @@ async function afterLoaderRunner(name?: string): Promise<void> {
 
 /** Give the main thread back for a moment (scheduler.yield where there is one). */
 function yieldToMain(): Promise<void> {
-  const sch = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
+  const sch = (globalThis as { scheduler?: { yield?: () => Promise<void> } })
+    .scheduler;
   if (sch?.yield != null) return sch.yield();
   return new Promise((go) => setTimeout(go, 0));
 }
@@ -1358,22 +1363,20 @@ function serveTranscoderFromUrl(ktx2: KTX2Loader): void {
       TRANSCODER_BYTES = null; // let the next one try again
       throw err;
     });
-  self.transcoderPending = TRANSCODER_BYTES
-    .then((bytes) => bytes.slice(0))
-    .then((binary) => {
-      self.transcoderBinary = binary;
-      self.workerPool.setWorkerCreator(() => {
-        const worker = new Worker(versioned(`${ASSETS}/basis/ktx2-worker.js`));
-        const transcoderBinary = (self.transcoderBinary as ArrayBuffer).slice(
-          0,
-        );
-        worker.postMessage(
-          { type: "init", config: self.workerConfig, transcoderBinary },
-          [transcoderBinary],
-        );
-        return worker;
-      });
+  self.transcoderPending = TRANSCODER_BYTES.then((bytes) =>
+    bytes.slice(0),
+  ).then((binary) => {
+    self.transcoderBinary = binary;
+    self.workerPool.setWorkerCreator(() => {
+      const worker = new Worker(versioned(`${ASSETS}/basis/ktx2-worker.js`));
+      const transcoderBinary = (self.transcoderBinary as ArrayBuffer).slice(0);
+      worker.postMessage(
+        { type: "init", config: self.workerConfig, transcoderBinary },
+        [transcoderBinary],
+      );
+      return worker;
     });
+  });
 }
 
 /**
@@ -6449,7 +6452,8 @@ export function createKidsWorld(
           depthScale(home.z, V.camZ, theme.laneZ ?? 0);
         const depth = Math.max(deepest.w, deepest.d) * s;
         const back = GROUND_BACK + 1.5 - 1;
-        const front = Math.max(home.z, GROUND_BACK + 1.5 + depth / 2) + depth / 2 + 1;
+        const front =
+          Math.max(home.z, GROUND_BACK + 1.5 + depth / 2) + depth / 2 + 1;
         const pad: PadDef = {
           x: home.x,
           z: (back + front) / 2,
@@ -14886,6 +14890,7 @@ export function createKidsWorld(
    */
   const scatterTrees: THREE.Object3D[] = [];
   let nightNow = false;
+  const marketShutters: MarketShutters[] = [];
 
   // ── the nightfall cross-fade ───────────────────────────────────────────
   //
@@ -20806,12 +20811,12 @@ export function createKidsWorld(
       packSpots != null
         ? packSpots
         : CHAPTER != null
-        ? theme.herd
-        : [0, 220, 440].flatMap((shift) =>
-            theme.herd
-              .filter((spot) => shift === 0 || spot.model !== "$friend")
-              .map((spot) => ({ ...spot, x: spot.x + shift })),
-          );
+          ? theme.herd
+          : [0, 220, 440].flatMap((shift) =>
+              theme.herd
+                .filter((spot) => shift === 0 || spot.model !== "$friend")
+                .map((spot) => ({ ...spot, x: spot.x + shift })),
+            );
     for (const spot of herdSpots) {
       const model = spot.model === "$friend" ? land.friend : spot.model;
       // THE CHAPTER OWNS THE ANIMALS WHEN THERE IS A CHAPTER.
@@ -22018,8 +22023,14 @@ export function createKidsWorld(
       if (hs.terrain === "boggy") {
         const plankGeo = new THREE.BoxGeometry(0.46, 0.1, 3.5);
         const postGeo = new THREE.CylinderGeometry(0.09, 0.11, 0.9, 6);
-        const wood = new THREE.MeshStandardMaterial({ color: 0x8a6440, roughness: 0.95 });
-        const postWood = new THREE.MeshStandardMaterial({ color: 0x5e4128, roughness: 1 });
+        const wood = new THREE.MeshStandardMaterial({
+          color: 0x8a6440,
+          roughness: 0.95,
+        });
+        const postWood = new THREE.MeshStandardMaterial({
+          color: 0x5e4128,
+          roughness: 1,
+        });
         const from = -40;
         const to = TRAIL_END + 40;
         const step = 0.54;
@@ -22134,7 +22145,14 @@ export function createKidsWorld(
       if (lm != null) {
         // ONE IN THE OPENING VIEW: a scene known for its campfire, tower or
         // shrine shows it before the child has typed a key (owner, 4 Oct).
-        await piece(lm[0], lm[1], 22, lm[2] + 1, lm[3], (pieceRand() - 0.5) * 0.8);
+        await piece(
+          lm[0],
+          lm[1],
+          22,
+          lm[2] + 1,
+          lm[3],
+          (pieceRand() - 0.5) * 0.8,
+        );
         if (hs.landmark === "campfire") {
           await piece("HeroLandmarks", /^FallenLog/, 29, 7, 1, pieceRand() * 3);
         }
@@ -23264,6 +23282,13 @@ export function createKidsWorld(
           // lights would cost the whole scene — and the game's lamps stand
           // in their places so they keep each shop's closing hour.
           const ROW = /Kerala_Market_Row/i.test(name);
+          if (ROW) {
+            const shutters = createMarketShutters(wrap);
+            if (shutters) {
+              shutters.setNight(nightNow);
+              marketShutters.push(shutters);
+            }
+          }
           const MS = wide / 27.26; // world units per metre of the row
           const rowAt = (xl: number, yl: number, zl: number) =>
             [
@@ -29434,6 +29459,7 @@ export function createKidsWorld(
     // cross-fades, instead of everything snapping at once.
     stepFades(dt);
     rain?.(dt);
+    for (const shutters of marketShutters) shutters.setNight(nightNow);
     if (templeFlames.length > 0) {
       const hr = worldHour();
       const evening = hr >= TEMPLE_HOURS[0] && hr < TEMPLE_HOURS[1];
@@ -29561,7 +29587,8 @@ export function createKidsWorld(
                     Math.abs(o.position.x - lx) < R &&
                     Math.abs(o.position.z - lz) < R;
                   if (close(player?.wrap)) return true;
-                  for (const f of followers) if (close(f.rig?.wrap)) return true;
+                  for (const f of followers)
+                    if (close(f.rig?.wrap)) return true;
                   for (const w of wilds) if (close(w.wrap)) return true;
                   for (const f of friends) if (close(f.wrap)) return true;
                   return false;
