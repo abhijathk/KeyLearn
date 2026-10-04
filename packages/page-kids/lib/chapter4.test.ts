@@ -226,11 +226,11 @@ for (const band of ["5-6", "7-8", "9-10", "11+"]) {
   });
 }
 
-test("one buffalo to every Chapter 3 and 4 lesson with open ground", async () => {
+test("one buffalo to every Chapter 4 lesson with open ground, none in the village", async () => {
   const { LESSONS_3 } = await import("./chapter3.ts");
   const with3 = LESSONS_3.filter((l) => l.buffalo === true).map((l) => l.n);
-  // Not lesson 8 either: the Mana and its kavu (owner, 3 Oct 2026).
-  equal(with3.join(","), "1,2,3,9,10");
+  // Chapter 3 is the village: no buffalo in it at all (owner, 4 Oct 2026).
+  equal(with3.join(","), "");
   const with4 = LESSONS_4.filter((l) => l.buffalo === true).map((l) => l.n);
   equal(with4.join(","), "1,2,3,4,5,6,8,9,10");
 });

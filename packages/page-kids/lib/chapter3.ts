@@ -76,7 +76,17 @@ const roadHouse = (id: number, ax: number): Abs => {
   const hh = sp.h * UM;
   let z = -11 - (sp.d * UM * 0.78) / 2;
   for (let i = 0; i < 4; i++) z = -11 - (sp.d * UM * persp(z)) / 2;
-  return abs(ax, { model: VILLAGE_HOUSES + sp.file, z, h: hh, clear: 3 });
+  // Every house model's front (steps, veranda, door) is on its -Z side, so a
+  // house behind the road turns half round to face it. Unturned, all of
+  // them showed the road their back wall (owner, 4 Oct 2026: "sideways, but
+  // never back to the road"). `laneHouse` already turns -Z toward its lane.
+  return abs(ax, {
+    model: VILLAGE_HOUSES + sp.file,
+    z,
+    h: hh,
+    turn: Math.PI,
+    clear: 3,
+  });
 };
 /** A house beside a cross road, turned to face it (side -1 = left of the lane). */
 const laneHouse = (id: number, lane: number, side: -1 | 1): Abs => {
@@ -92,9 +102,9 @@ const laneHouse = (id: number, lane: number, side: -1 | 1): Abs => {
     h: hh,
     turn: side < 0 ? -Math.PI / 2 : Math.PI / 2,
     clear: 3,
-    // The wooden laterite house's plinth stood clear of the ground beside
-    // the Mana Lane (owner, 3 Oct 2026): set it down into the earth.
-    ...(id === 5 ? { lift: -1.4 } : {}),
+    // No `lift` for the wooden laterite house any more: its plinth stood
+    // clear of the slope beside the Mana Lane (3 Oct 2026) and was sunk by
+    // hand; the plot under every house is levelled now (world.ts PADS).
   });
 };
 /** A stone bench: a flat slab on two upright river stones. */
@@ -405,11 +415,11 @@ const lesson = (
   depth: [10, 28],
   props: [...props, ...byLesson(n)],
   herd: [],
-  // One buffalo to each lesson's open ground (owner, 25 Sep 2026), except
-  // where a water buffalo does not graze: the junction round the sacred
-  // banyan, the market, the temple street and the children's playground -
-  // nor the Mana's lesson with its kavu (owner, 3 Oct 2026).
-  buffalo: ![4, 5, 6, 7, 8].includes(n),
+  // No buffalo anywhere in the village (owner, 4 Oct 2026: "no buffalo
+  // should be placed inside a village"). This chapter is one continuous
+  // street of houses, so its open ground is gardens and yards, not grazing;
+  // the buffalo stay in the fields and pastures of the other chapters.
+  buffalo: false,
   folk: [],
   corridor: false,
   ...options,

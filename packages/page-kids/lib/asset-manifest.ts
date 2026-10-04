@@ -3,10 +3,15 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "24171cf49666";
+export const ASSET_VERSION = "7958d5efcc10";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
+  "AK-3D-PACK.md": {
+    "u": "v3d846776/AK-3D-PACK.md",
+    "b": 722,
+    "g": "shared"
+  },
   "audio/ambient/cricket_night_01.mp3": {
     "u": "vaf8441f7/audio/ambient/cricket_night_01.mp3",
     "b": 10074,
@@ -953,73 +958,73 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "models/village-houses/01_large_nalukettu.glb": {
-    "u": "vf1d99f25/models/village-houses/01_large_nalukettu.glb",
-    "b": 98868,
+    "u": "v13fad0cc/models/village-houses/01_large_nalukettu.glb",
+    "b": 98088,
     "g": "village"
   },
   "models/village-houses/02_long_veranda_house.glb": {
-    "u": "vd1f89b5c/models/village-houses/02_long_veranda_house.glb",
-    "b": 90512,
+    "u": "vc13dba61/models/village-houses/02_long_veranda_house.glb",
+    "b": 83496,
     "g": "village"
   },
   "models/village-houses/03_two_storey_house.glb": {
-    "u": "v0a7d5176/models/village-houses/03_two_storey_house.glb",
-    "b": 95868,
+    "u": "v580218bb/models/village-houses/03_two_storey_house.glb",
+    "b": 93756,
     "g": "village"
   },
   "models/village-houses/04_compact_tiled_house.glb": {
-    "u": "v5b6769b8/models/village-houses/04_compact_tiled_house.glb",
-    "b": 89016,
+    "u": "v232919c0/models/village-houses/04_compact_tiled_house.glb",
+    "b": 81724,
     "g": "village"
   },
   "models/village-houses/05_wooden_laterite_house.glb": {
-    "u": "v69fe5f78/models/village-houses/05_wooden_laterite_house.glb",
-    "b": 97612,
+    "u": "v6b948376/models/village-houses/05_wooden_laterite_house.glb",
+    "b": 88248,
     "g": "village"
   },
   "models/village-houses/06_simple_thatched_house.glb": {
-    "u": "v5f32543c/models/village-houses/06_simple_thatched_house.glb",
-    "b": 84016,
+    "u": "ve534ea12/models/village-houses/06_simple_thatched_house.glb",
+    "b": 78524,
     "g": "village"
   },
   "models/village-houses/07_fisherman_coastal_house.glb": {
-    "u": "v4d8e42ff/models/village-houses/07_fisherman_coastal_house.glb",
-    "b": 84456,
+    "u": "v77a03ddf/models/village-houses/07_fisherman_coastal_house.glb",
+    "b": 77844,
     "g": "village"
   },
   "models/village-houses/08_workers_house_modest.glb": {
-    "u": "vf6b2adda/models/village-houses/08_workers_house_modest.glb",
-    "b": 83740,
+    "u": "v56b0d5cd/models/village-houses/08_workers_house_modest.glb",
+    "b": 76792,
     "g": "village"
   },
   "models/village-houses/09_storeroom_outbuilding.glb": {
-    "u": "vce009bc5/models/village-houses/09_storeroom_outbuilding.glb",
-    "b": 81072,
+    "u": "v3f4757a0/models/village-houses/09_storeroom_outbuilding.glb",
+    "b": 74908,
     "g": "village"
   },
   "models/village-houses/10_granary_vayalpura.glb": {
-    "u": "v97a25415/models/village-houses/10_granary_vayalpura.glb",
-    "b": 81344,
+    "u": "v6299c7d6/models/village-houses/10_granary_vayalpura.glb",
+    "b": 73404,
     "g": "village"
   },
   "models/village-houses/11_ezhara_veedu_elite.glb": {
-    "u": "v13126ca1/models/village-houses/11_ezhara_veedu_elite.glb",
-    "b": 99516,
+    "u": "v610366ce/models/village-houses/11_ezhara_veedu_elite.glb",
+    "b": 95480,
     "g": "village"
   },
   "models/village-houses/12_courtyard_nadumuttam_house.glb": {
-    "u": "v6fae8b02/models/village-houses/12_courtyard_nadumuttam_house.glb",
-    "b": 96868,
+    "u": "v1b87f6d0/models/village-houses/12_courtyard_nadumuttam_house.glb",
+    "b": 78740,
     "g": "village"
   },
   "models/village-houses/13_hill_slope_house.glb": {
-    "u": "v549a4ff7/models/village-houses/13_hill_slope_house.glb",
-    "b": 96304,
+    "u": "va8755d28/models/village-houses/13_hill_slope_house.glb",
+    "b": 88512,
     "g": "village"
   },
   "models/village-houses/14_farmers_house_rustic.glb": {
-    "u": "v547e1bc7/models/village-houses/14_farmers_house_rustic.glb",
-    "b": 90548,
+    "u": "v9aeef4a9/models/village-houses/14_farmers_house_rustic.glb",
+    "b": 80532,
     "g": "village"
   },
   "models/village-houses/Mana.glb": {

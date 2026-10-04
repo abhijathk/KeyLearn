@@ -10,6 +10,7 @@ import {
   setChapterLessons,
 } from "./chapter1.ts";
 import {
+  CHAPTER3_LANES,
   LESSONS_3,
   WHISPER_NODES,
   whisperFolkOut,
@@ -161,4 +162,47 @@ test("the larger village uses all house families, real gates, banyan and peepal 
   ok(gates.length >= 3);
   for (const gate of gates)
     ok(existsSync(new URL(gate.model + ".glb", root)), gate.model);
+});
+
+test("no village house turns its back to the road or its lane", () => {
+  // Every house model's front (steps, veranda, door) is on its -Z side; a
+  // turn of θ points it along (-sin θ, -cos θ). Behind the road (z < 0) the
+  // front must point at the road (+Z); beside a cross road, at the lane.
+  // Sideways to the road is allowed, a back wall to it is not.
+  let houses = 0;
+  for (const l of LESSONS_3) {
+    for (const p of l.props) {
+      if (!/village-houses\/\d\d_/.test(p.model)) continue;
+      houses++;
+      const t = p.turn ?? 0;
+      const fx = -Math.sin(t);
+      const fz = -Math.cos(t);
+      const x = (l.n - 1) * 64 + p.at * 64;
+      if (Math.abs(fx) < 0.5) {
+        ok(fz > 0.5, `${p.model} at x ${x.toFixed(0)} faces away from the road`);
+      } else {
+        const lane = CHAPTER3_LANES.reduce((a, b) =>
+          Math.abs(b.x - x) < Math.abs(a.x - x) ? b : a,
+        );
+        ok(
+          Math.sign(fx) === Math.sign(lane.x - x),
+          `${p.model} at x ${x.toFixed(0)} faces away from ${lane.name}`,
+        );
+      }
+    }
+  }
+  ok(houses >= 14, `only ${houses} houses found`);
+});
+
+test("no buffalo anywhere in the village", () => {
+  // Owner, 4 Oct 2026. The chapter's houses line every lesson, and a lesson's
+  // `buffalo` flag and its herd list are the only two ways one is placed
+  // (the theme's wild buffalo stand down whenever a chapter is loaded).
+  for (const l of LESSONS_3) {
+    ok(l.buffalo !== true, `lesson ${l.n} still places a buffalo`);
+    ok(
+      !l.herd.some((h) => /buffalo/i.test(h)),
+      `lesson ${l.n} lists a buffalo in its herd`,
+    );
+  }
 });

@@ -4865,6 +4865,27 @@ type PondDef = {
   g0: number | null;
 };
 let PONDS: PondDef[] = [];
+/**
+ * HOUSE PLOTS, LEVELLED (owner, 4 Oct 2026: on the floor, not floating, and
+ * not sunk either). The village's houses stand on a plinth on a slope, and
+ * the land under one rises by up to three units from front to back: placed
+ * at the centre, the downhill corner hung in the air; sunk to the lowest
+ * corner, the uphill plinth was buried. A real plot is cut flat, so the
+ * ground is: level at the centre's height across the footprint (plus a
+ * step's margin), blended back to the land over `PAD_BLEND`, exactly as
+ * the pond's ground is. Only the fourteen village houses — the market, the
+ * Mana and the temple were right as they stood and are not touched.
+ */
+type PadDef = {
+  readonly x: number;
+  readonly z: number;
+  /** Half the footprint across and deep, in world units, margin included. */
+  readonly hw: number;
+  readonly hd: number;
+  g0: number | null;
+};
+let PADS: PadDef[] = [];
+const PAD_BLEND = 4;
 const POND_HW = 7.6;
 const POND_HD = 4.8;
 const POND_IN_HW = 7.15;
@@ -5121,7 +5142,18 @@ const terrainY = (x: number, z: number): number => {
     const t = out <= 0 ? 1 : 1 - (3 * (out / 4) ** 2 - 2 * (out / 4) ** 3);
     return y + (p.g0 - y) * t;
   }
-  return y;
+  // Applied in turn, so two plots whose blends meet join smoothly rather
+  // than at a step.
+  let out = y;
+  for (const p of PADS) {
+    const d = Math.max(Math.abs(x - p.x) - p.hw, Math.abs(z - p.z) - p.hd);
+    if (d > PAD_BLEND) continue;
+    p.g0 ??= terrainYBase(p.x, p.z);
+    const u = d / PAD_BLEND;
+    const t = d <= 0 ? 1 : 1 - (3 * u * u - 2 * u * u * u);
+    out += (p.g0 - out) * t;
+  }
+  return out;
 };
 
 type DinoRig = {
@@ -6282,6 +6314,24 @@ export function createKidsWorld(
       ? new THREE.PerspectiveCamera(PERSP.fov, 2.75, PERSP.near, PERSP.far)
       : new THREE.OrthographicCamera();
   PONDS = [];
+  PADS = [];
+  if (CHAPTER != null) {
+    for (const l of LESSONS) {
+      for (const p of l.props ?? []) {
+        if (!/village-houses\/\d\d_/.test(p.model)) continue;
+        const dim = CHAPTER3_DIMENSIONS[p.model];
+        if (dim == null) continue;
+        const from = CHAPTER[l.n - 1]!;
+        const len = CHAPTER[l.n]! - from;
+        const s = p.h * depthScale(p.z, V.camZ, theme.laneZ ?? 0);
+        const side = Math.abs(Math.sin(p.turn ?? 0)) > 0.5;
+        // One unit of margin: the steps and the dripline stand on the plot.
+        const hw = ((side ? dim.d : dim.w) * s) / 2 + 1;
+        const hd = ((side ? dim.w : dim.d) * s) / 2 + 1;
+        PADS.push({ x: from + p.at * len, z: p.z, hw, hd, g0: null });
+      }
+    }
+  }
   if (CHAPTER != null) {
     for (const l of LESSONS) {
       for (const p of l.props ?? []) {
@@ -22555,6 +22605,30 @@ export function createKidsWorld(
         wrap.rotation.y = turn + (TEMPLE_RE.test(name) ? Math.PI : 0);
         if (mirrorNext) wrap.scale.x *= -1;
         mirrorNext = false;
+        // ON THE GROUND (owner, 4 Oct 2026). The village houses' plots are
+        // levelled (see PADS), so the centre's height is the height under
+        // every corner; this only takes up what the ground grid's rounding
+        // leaves at a plot's edge, and never more than a hand's depth - a
+        // plinth stays a plinth. Everything else stands as it always has.
+        if (/village-houses\/\d\d_/.test(name)) {
+          const b = measureBox(wrap);
+          let low = Infinity;
+          for (const fx of [0, 0.5, 1]) {
+            for (const fz of [0, 0.5, 1]) {
+              low = Math.min(
+                low,
+                surfaceY(
+                  b.min.x + (b.max.x - b.min.x) * fx,
+                  b.min.z + (b.max.z - b.min.z) * fz,
+                ),
+              );
+            }
+          }
+          const under = surfaceY(x, z) - low;
+          if (Number.isFinite(under) && under > 0) {
+            wrap.position.y -= Math.min(under, 0.3);
+          }
+        }
         // NO TWO ROCKS THE SAME WAY UP. A loose rock placed without a heading
         // stood at 0 like every other one, so the same boulder turned up
         // again and again in the same pose (owner, 25 Sep 2026). Hashed on
