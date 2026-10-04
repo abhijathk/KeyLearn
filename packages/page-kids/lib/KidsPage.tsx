@@ -4556,7 +4556,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const castFirstAt = useRef<number | null>(null);
   /** How many cast names are already at the head of the ticker's queue. */
   const castQueued = useRef(0);
-  const onCastReady = useCallback(() => setCastReady(true), []);
+  const onCastReady = useCallback(() => {
+    performance.mark("kids:cast-ready");
+    setCastReady(true);
+  }, []);
   const onCastWarm = useCallback((name: string) => {
     castFirstAt.current ??= performance.now();
     setCastIn((was) => (was.includes(name) ? was : [...was, name]));
@@ -4837,6 +4840,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
             prefsRef.current.world,
             reviewScene ?? sceneIndexOf(lessonsDoneOf(prefsRef.current)),
           ));
+    performance.mark("kids:world-create");
     const world = createKidsWorld(canvas, land, theme, {
       nightStyle: resolveNightStyle(band, nightStyleOf(prefsRef.current)),
       // Where in its scene the road opens, and which scene it is. Time
@@ -4951,6 +4955,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     let cancelled = false;
     world.ready
       .then(() => {
+        performance.mark("kids:built");
         if (cancelled) {
           // Unmounted (or rebuilt for a new theme/style) while the world was
           // still loading. world.dispose() already ran; calling these now
@@ -5012,6 +5017,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       })
       .finally(() => {
         if (!cancelled) {
+          performance.mark("kids:world-ready");
           setWorldReady(true);
         }
       });
@@ -5886,6 +5892,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // a child wait for: three seconds of a finished card is three seconds of
     // a screen with nothing left to do.
     if (castIn.length >= VILLAGE_CHARACTERS.length) {
+      performance.mark("kids:walk-armed");
       setWalkArmed(true);
       return;
     }
@@ -5894,10 +5901,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     const since = performance.now() - (castFirstAt.current ?? 0);
     const owed = Math.max(0, CAST_PATIENCE_MS - since);
     if (owed === 0) {
+      performance.mark("kids:walk-armed");
       setWalkArmed(true);
       return;
     }
-    const t = setTimeout(() => setWalkArmed(true), owed);
+    const t = setTimeout(() => {
+      performance.mark("kids:walk-armed");
+      setWalkArmed(true);
+    }, owed);
     return () => clearTimeout(t);
   }, [castReady, castIn]);
 
@@ -5916,12 +5927,14 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * a button, on a screen that is plainly a question.
    */
   useEffect(() => {
+    performance.mark("kids:gate-check");
     if (loaded) {
       return;
     }
     // Only Time Keepers has a picker, and it opens once the cast is in.
     if (onVillage) {
       if (walkArmed) {
+        performance.mark("kids:picker-open");
         setPickOpen(true);
       }
       return;
@@ -5939,7 +5952,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     if (worldReady) {
       const since = performance.now() - loaderShownAt.current;
       const wait = Math.max(0, MIN_LOADER_MS - since);
-      const t = setTimeout(() => setLoaded(true), wait);
+      const t = setTimeout(() => {
+        performance.mark("kids:road");
+        setLoaded(true);
+      }, wait);
       return () => clearTimeout(t);
     }
     return undefined;
@@ -6207,6 +6223,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           const p = prefsRef.current;
           worldRef.current?.setPlayer(charOf(p)).catch(() => {});
           worldRef.current?.setCompanions(companionsOf(p)).catch(() => {});
+          performance.mark("kids:road");
           setLoaded(true);
         }}
       />

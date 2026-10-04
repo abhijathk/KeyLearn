@@ -685,6 +685,18 @@ async function afterLoaderRunner(name?: string): Promise<void> {
   await loaderFirst.hold;
 }
 
+/** Give the main thread back for a moment (scheduler.yield where there is one). */
+function yieldToMain(): Promise<void> {
+  const sch = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
+  if (sch?.yield != null) return sch.yield();
+  return new Promise((go) => setTimeout(go, 0));
+}
+
+/** A skinned geometry's box in its bind pose, measured once — see measureBox. */
+const SKINNED_BOX = new WeakMap<THREE.BufferGeometry, THREE.Box3>();
+/** Geometries whose own box has been recomputed from the vertices. */
+const MEASURED = new WeakSet<THREE.BufferGeometry>();
+
 function modelUrl(modelDir: string, name: string): string {
   const own = OWN_MODELS.get(name);
   if (own != null) return `${ASSETS}/models/${own}/${name}.glb`;
@@ -1322,6 +1334,8 @@ function meshoptOffMainThread(): void {
   }
 }
 
+/** The Basis transcoder's wasm, fetched once and shared — see below. */
+let TRANSCODER_BYTES: Promise<ArrayBuffer> | null = null;
 function serveTranscoderFromUrl(ktx2: KTX2Loader): void {
   const self = ktx2 as unknown as {
     transcoderPending: Promise<void> | null;
@@ -1331,13 +1345,21 @@ function serveTranscoderFromUrl(ktx2: KTX2Loader): void {
   };
   // `fetch` and `new Worker` never touch three's loading manager, so these
   // two are the only URLs in the file that have to be rewritten by hand.
-  self.transcoderPending = fetch(
-    versioned(`${ASSETS}/basis/basis_transcoder.wasm`),
-  )
+  // ONE DOWNLOAD PER PAGE (loading, 4 Oct 2026): the loading card, the
+  // picker and the world each have a transcoder, and each fetched the 200 KB
+  // wasm for itself. They share the bytes; each still gets its own copy to
+  // hand to its workers.
+  TRANSCODER_BYTES ??= fetch(versioned(`${ASSETS}/basis/basis_transcoder.wasm`))
     .then((r) => {
       if (!r.ok) throw new Error(`basis_transcoder.wasm: ${r.status}`);
       return r.arrayBuffer();
     })
+    .catch((err: unknown) => {
+      TRANSCODER_BYTES = null; // let the next one try again
+      throw err;
+    });
+  self.transcoderPending = TRANSCODER_BYTES
+    .then((bytes) => bytes.slice(0))
     .then((binary) => {
       self.transcoderBinary = binary;
       self.workerPool.setWorkerCreator(() => {
@@ -5778,6 +5800,11 @@ export function createKidsWorld(
     antialias: true,
     powerPreference: "high-performance",
   });
+  // NO SYNCHRONOUS SHADER CHECK (loading, 4 Oct 2026). three.js reads every
+  // program's info log to report errors, and reading it makes the browser
+  // finish compiling right there — about two seconds of a village load spent
+  // waiting on shaders one at a time. The shaders are ours and fixed.
+  renderer.debug.checkShaderErrors = false;
   renderer.shadowMap.enabled = true;
   // THE LOW TIER GETS THE SAME PICTURE WITH LESS WORK BEHIND IT.
   //
@@ -11685,6 +11712,12 @@ export function createKidsWorld(
       return null;
     }
     loaded.push(gltf.scene);
+    // A BREATH BETWEEN MODELS (loading, 4 Oct 2026). Each model's parse and
+    // the caller's preparation after it ran back to back as one long task, so
+    // the Time Keepers picker — its own canvas, on the same thread — could
+    // not draw until the whole village was built. Yielding here lets it, and
+    // the loading card, keep their frames.
+    await yieldToMain();
     // Said once per FILE, not once per thing placed: the scatter plants forty
     // of the same plant off one load, and a loading card that says
     // "the undergrowth" forty times running is a stutter, not a story.
@@ -12050,8 +12083,20 @@ export function createKidsWorld(
     root.traverse((o) => {
       const m = o as THREE.SkinnedMesh;
       if (m.isSkinnedMesh) {
-        m.computeBoundingBox();
-        tmp.copy(m.boundingBox!).applyMatrix4(m.matrixWorld);
+        // ONCE PER MODEL, NOT ONCE PER COPY (loading, 4 Oct 2026). A skinned
+        // box walks every vertex through its bones — 1.4 s of the village's
+        // load went on measuring the same villager again for each copy.
+        // Copies share their geometry and are measured in their bind pose,
+        // so the first answer is every copy's answer.
+        let local = SKINNED_BOX.get(m.geometry);
+        if (local == null) {
+          m.computeBoundingBox();
+          local = m.boundingBox!.clone();
+          SKINNED_BOX.set(m.geometry, local);
+        } else {
+          m.boundingBox = local.clone();
+        }
+        tmp.copy(local).applyMatrix4(m.matrixWorld);
         box.union(tmp);
       } else if ((o as THREE.Mesh).isMesh) {
         // MEASURED, NEVER TAKEN ON TRUST.
@@ -12076,7 +12121,11 @@ export function createKidsWorld(
         // meshes really occupy. It costs one pass over the positions at load
         // time and nothing per frame.
         const m2 = o as THREE.Mesh;
-        m2.geometry.computeBoundingBox();
+        // Once per geometry: a shared geometry measures the same every time.
+        if (!MEASURED.has(m2.geometry)) {
+          m2.geometry.computeBoundingBox();
+          MEASURED.add(m2.geometry);
+        }
         if (m2.geometry.boundingBox != null) {
           tmp.copy(m2.geometry.boundingBox).applyMatrix4(m2.matrixWorld);
           box.union(tmp);
@@ -19560,9 +19609,13 @@ export function createKidsWorld(
     const straysBuilt = CHAPTER == null; // see `V.strays`
     if (v != null) {
       const villageUrl = (name: string) =>
-        name.includes("/")
-          ? `${ASSETS}/models/${name}.glb`
-          : `${ASSETS}/models/${v.dir}/${name}.glb`;
+        // The temple is the Kerala small temple now (see `prop`): warming
+        // the old one fetched 340 KB nothing draws.
+        /(?:^|\/)Temple$/.test(name)
+          ? `${ASSETS}/models/village-temple/Kerala_SmallTemple_GAME.glb`
+          : name.includes("/")
+            ? `${ASSETS}/models/${name}.glb`
+            : `${ASSETS}/models/${v.dir}/${name}.glb`;
       for (const h of heartBuilt ? v.heart : []) {
         want.push(villageUrl(h.model));
       }
@@ -19639,6 +19692,9 @@ export function createKidsWorld(
   }
 
   const ready = (async () => {
+    // Loading stages, for measuring (DevTools → Performance, or
+    // `performance.getEntriesByType("mark")`).
+    performance.mark("kids:build-start");
     // BEHIND THE LOADING CARD'S RUNNER, THE WHOLE BUILD — see
     // `afterLoaderRunner`. Gating `loadModel` alone was measured and was not
     // enough: the player, the herd and the planting fetch by other paths, and
@@ -19646,6 +19702,7 @@ export function createKidsWorld(
     // pulling 1.5 MB against the runner's one. Held here, before the first
     // prefetch, every one of those paths waits.
     await afterLoaderRunner();
+    performance.mark("kids:runner-released");
     // Before anything else is awaited — see `warmEverything`.
     warmEverything();
     // Load the shared movement/idle clips first so every hero can play them.
@@ -19666,6 +19723,7 @@ export function createKidsWorld(
       }
     }
     await setPlayer(theme.defaultPlayer);
+    performance.mark("kids:player-in");
     if (disposed) {
       // Torn down mid-load: setPlayer already no-opped, and every step below
       // (herd, travellers, sheep, scenery, sky) only ever adds to a scene
@@ -34324,6 +34382,11 @@ export function createLoaderScene(
     antialias: true,
     alpha: true,
   });
+  // NO SYNCHRONOUS SHADER CHECK (loading, 4 Oct 2026). three.js reads every
+  // program's info log to report errors, and reading it makes the browser
+  // finish compiling right there — about two seconds of a village load spent
+  // waiting on shaders one at a time. The shaders are ours and fixed.
+  renderer.debug.checkShaderErrors = false;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(canvas.width, canvas.height, false);
   const scene = new THREE.Scene();
@@ -34576,6 +34639,11 @@ export function createPickerScene(
     antialias: true,
     alpha: true,
   });
+  // NO SYNCHRONOUS SHADER CHECK (loading, 4 Oct 2026). three.js reads every
+  // program's info log to report errors, and reading it makes the browser
+  // finish compiling right there — about two seconds of a village load spent
+  // waiting on shaders one at a time. The shaders are ours and fixed.
+  renderer.debug.checkShaderErrors = false;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(canvas.width, canvas.height, false);
   const scene = new THREE.Scene();
