@@ -481,11 +481,14 @@ export const ROUND_SKINS: Record<string, Skin> = {
     "#212428",
     ["#e8db35", "#cbbe1e"],
     "#847c0e",
+    // NEAR-BLACK ON THE LEMON, ON BOTH THEMES (owner, 5 Oct 2026: "the text
+    // inside the yellow keys should be always black … white text is hardly
+    // seen on yellow"). A cream legend used to take over on the light theme,
+    // on the reasoning that the lemon sat as a deep olive there — but the
+    // cap reads as yellow, and cream on #e8db35 is about 1.2:1. #2b290f is
+    // about 10:1 on the lit lemon and still ~3.6:1 at its darkest, so no
+    // second ink is needed: `accentInkLight` is left unset on purpose.
     "#2b290f",
-    // The lemon reads as a deep olive with the backlight off, and #2b290f on
-    // it is very nearly unreadable — the reported bug, on Backquote and
-    // Enter. The board's own legend colour carries there instead.
-    "#f2eecf",
   ),
 
   offwhite: roundSkin(

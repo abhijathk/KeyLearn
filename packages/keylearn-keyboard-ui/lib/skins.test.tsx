@@ -118,3 +118,13 @@ test("capLook dresses Enter as each board does", () => {
   equal(round.edge, "#847c0e");
   equal(round.radiusRatio, 0.5);
 });
+
+test("Round Graphite's yellow keys carry a near-black legend on both themes", () => {
+  // Owner, 5 Oct 2026: the legend on the lemon accent keys is always dark —
+  // a cream legend on the light theme was about 1.2:1 against the yellow.
+  // Graphite is the default colour, so the Round style alone selects it.
+  const round = withStyle(KeyboardStyle.ROUND);
+  equal(skinFor(round, true)?.accentInk, "#2b290f");
+  equal(skinFor(round, false)?.accentInk, "#2b290f");
+  equal(ROUND_SKINS.graphite!.accentInkLight, undefined);
+});
