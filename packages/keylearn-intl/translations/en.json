@@ -1834,6 +1834,8 @@
   "settings.keyboardColour.short": "The board keeps this colour on both themes — a keyboard on a desk doesn’t repaint itself when the lamp goes off. Only the light follows the page.",
   "settings.keyboardPointers.short": "Lights up the key you need next while you are still learning where they are.",
   "settings.keyboardStyle.label": "Keyboard",
+  "settings.keyboardStyle.locked": "Sign in to choose a keyboard. Round, Flat Silver, Flat Midnight and Mechanical are for account holders.",
+  "settings.keyboardStyle.lockedToast": "Sign in to choose a keyboard.",
   "settings.keyboardStyle.short": "Key positions, sizes and labels are the same on all five — only the finish changes. Flat Silver and Flat Midnight are the same board in two finishes, each worn on whichever theme you like; Round comes in six colours.",
   "settings.language.label": "Language",
   "settings.language.short": "The language the practice words are drawn from.",

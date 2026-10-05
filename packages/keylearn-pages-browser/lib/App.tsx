@@ -90,6 +90,7 @@ function applySiteLearnerDefaults(
   defaults: Readonly<Record<string, unknown>>,
   overrides: Readonly<Record<string, "forced" | "hidden">>,
   boardChoiceLocked = false,
+  signedIn = false,
 ) {
   const json: Record<string, unknown> = {};
   for (const key of [
@@ -115,6 +116,14 @@ function applySiteLearnerDefaults(
   ];
   if (source != null) {
     json["typingTest.textSource.type"] = source;
+  }
+  // THE ROUND GRAPHITE BOARD FOR ACCOUNT HOLDERS (owner, 5 Oct 2026, for
+  // the next release). A default, not a force: it sits under the learner's
+  // own settings, so anybody who has picked a board keeps it. Guests are not
+  // given it — they meet KeyLearn's own board, and while the site keeps the
+  // finish for accounts (`boardChoiceLocked`, below) they cannot change it.
+  if (signedIn && json["keyboard.style"] === undefined) {
+    json["keyboard.style"] = "round";
   }
   if (Object.keys(json).length > 0) {
     Settings.addDefaults(new Settings(json as any));
@@ -329,15 +338,17 @@ function PageRoutes() {
   // Tabs that are already open learn about a switch in the control centre
   // within half a minute, without a refresh.
   usePageStatesSync();
-  const { learnerDefaults, learnerOverrides, boardChoiceLocked } =
+  const { learnerDefaults, learnerOverrides, boardChoiceLocked, publicUser } =
     usePageData();
+  const signedIn = publicUser.id != null;
   useEffect(() => {
     applySiteLearnerDefaults(
       learnerDefaults ?? {},
       learnerOverrides ?? {},
       boardChoiceLocked === true,
+      signedIn,
     );
-  }, [learnerDefaults, learnerOverrides, boardChoiceLocked]);
+  }, [learnerDefaults, learnerOverrides, boardChoiceLocked, signedIn]);
   return (
     <BrowserRouter basename={Pages.intlBase(locale)}>
       <FirstRunRedirect />

@@ -38,6 +38,7 @@ import {
 } from "@keylearn/widget";
 import { memo, type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import * as styles from "./KeyboardSettings.module.less";
 
 export function KeyboardSettings(): ReactNode {
   return (
@@ -84,7 +85,91 @@ export function KeyboardSettings(): ReactNode {
  * present but does nothing is worse than one that is absent: it invites the
  * learner to change it and then wonder why the board looks the same.
  */
+/** A small closed padlock, beside a setting a visitor cannot change. */
+function BoardLock(): ReactNode {
+  return (
+    <svg className={styles.lock} viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 10V7a5 5 0 0 1 10 0v3" />
+      <rect x="4.6" y="10" width="14.8" height="10.4" rx="2.4" />
+    </svg>
+  );
+}
+
+/** How long the "sign in to choose" note stays under a locked control. */
+const LOCKED_NOTICE_MS = 3500;
+
+/**
+ * A control a visitor may SEE but not use (owner, 5 Oct 2026). Shown dimmed
+ * and padlocked; a click or a key press on it is stopped before the control
+ * opens, and a short note says — only because they asked — that signing in
+ * opens it.
+ *
+ * The note is drawn HERE, under the control, not as a site toast: the
+ * settings window blurs the page behind it, and a toast down there was a
+ * message nobody could read (owner, 5 Oct 2026). One note, re-timed on each
+ * click, so a visitor poking at it is told, not shouted at.
+ */
+function LockedFor({
+  locked,
+  notice,
+  children,
+}: {
+  readonly locked: boolean;
+  readonly notice: string;
+  readonly children: ReactNode;
+}): ReactNode {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (!shown) {
+      return;
+    }
+    const id = window.setTimeout(() => setShown(false), LOCKED_NOTICE_MS);
+    return () => window.clearTimeout(id);
+  }, [shown]);
+  if (!locked) {
+    return children;
+  }
+  const say = () => {
+    // Off then on, so a second click restarts the timer on the same note.
+    setShown(false);
+    window.setTimeout(() => setShown(true), 0);
+  };
+  const stop = (ev: { preventDefault(): void; stopPropagation(): void }) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+  };
+  return (
+    <div className={styles.lockedWrap}>
+      <div
+        className={styles.locked}
+        aria-disabled="true"
+        title={notice}
+        onPointerDownCapture={stop}
+        onMouseDownCapture={stop}
+        onClickCapture={(ev) => {
+          stop(ev);
+          say();
+        }}
+        onKeyDownCapture={(ev) => {
+          if (["Enter", " ", "ArrowDown", "ArrowUp"].includes(ev.key)) {
+            stop(ev);
+            say();
+          }
+        }}
+      >
+        {children}
+      </div>
+      {shown && (
+        <p role="status" className={styles.lockedNotice}>
+          {notice}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function StyleProp(): ReactNode {
+  const { formatMessage } = useIntl();
   const { settings, updateSettings } = useSettings();
   const style = settings.get(keyboardProps.style);
   const stored = settings.get(keyboardProps.colour);
@@ -109,25 +194,42 @@ function StyleProp(): ReactNode {
   return (
     <>
       {/* The site can keep the board's finish for account holders. The row
-          goes rather than turning inert, on the same reasoning the colour row
-          below already follows: a picker with nothing to pick is worse than
-          no picker. Everything a visitor actually needs to type — the layout,
-          the language, the shape, the finger zones — is in the cards above
-          and is never gated. */}
-      {!boardLocked && (
-        <SettingRow
-          label={
+          STAYS for a visitor, locked, rather than going (owner, 5 Oct 2026:
+          "don't hide the keyboard options but show locked"): it is the only
+          way they learn the other boards exist, and a click on it says, once
+          and only when asked, that signing in opens it. Everything a visitor
+          actually needs to type — the layout, the language, the shape, the
+          finger zones — is in the cards above and is never gated. */}
+      <SettingRow
+        label={
+          <span className={boardLocked ? styles.lockedLabel : undefined}>
             <FormattedMessage
               id="settings.keyboardStyle.label"
               defaultMessage="Keyboard"
             />
-          }
-          description={
+            {boardLocked && <BoardLock />}
+          </span>
+        }
+        description={
+          boardLocked ? (
+            <FormattedMessage
+              id="settings.keyboardStyle.locked"
+              defaultMessage="Sign in to choose a keyboard. Round, Flat Silver, Flat Midnight and Mechanical are for account holders."
+            />
+          ) : (
             <FormattedMessage
               id="settings.keyboardStyle.short"
               defaultMessage="Key positions, sizes and labels are the same on all five — only the finish changes. Flat Silver and Flat Midnight are the same board in two finishes, each worn on whichever theme you like; Round comes in six colours."
             />
-          }
+          )
+        }
+      >
+        <LockedFor
+          locked={boardLocked}
+          notice={formatMessage({
+            id: "settings.keyboardStyle.lockedToast",
+            defaultMessage: "Sign in to choose a keyboard.",
+          })}
         >
           <OptionList
             // The kids finishes are in ALL so a stored value parses, but they
@@ -140,13 +242,18 @@ function StyleProp(): ReactNode {
               }))}
             value={style.id}
             onSelect={(id) => {
+              // The lock is also kept here, not only on the click: a choice
+              // that somehow got through would be stored and shown back.
+              if (boardLocked) {
+                return;
+              }
               updateSettings(
                 settings.set(keyboardProps.style, KeyboardStyle.ALL.get(id)),
               );
             }}
           />
-        </SettingRow>
-      )}
+        </LockedFor>
+      </SettingRow>
 
       {/* Only the round board is sold in more than one colour, so the row
           only exists under it. A picker with nothing to pick is worse than
@@ -189,9 +296,9 @@ function StyleProp(): ReactNode {
         </>
       )}
 
-      {/* Nothing above it when the finish row is gone — a hairline at the top
-          of the card reads as a rule under a heading that isn't there. */}
-      {!boardLocked && <RowSeparator />}
+      {/* The finish row is always there now (locked for a visitor), so the
+          rule under it always has something above it. */}
+      <RowSeparator />
       {/* The pack belongs to the board you picked, so it lives here rather
           than under Text Input, and its options are filtered by that board. */}
       <SoundsThemeProp />

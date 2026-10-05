@@ -1,0 +1,62 @@
+// A setting a visitor can see but not change: dimmed, with a padlock, and the
+// pointer says so. Clicking it explains why (see LockedFor).
+.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+
+  & * {
+    cursor: not-allowed;
+  }
+}
+
+.lockedLabel {
+  display: inline-flex;
+  gap: 0.35em;
+  align-items: center;
+}
+
+.lock {
+  flex: none;
+  inline-size: 0.95em;
+  block-size: 0.95em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+
+.lockedWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-end;
+}
+
+// The "sign in to choose" note, shown in the settings window itself — the
+// page behind it is blurred, so a site toast there could not be read.
+.lockedNotice {
+  margin: 0;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.5rem;
+  // The site's own popup tokens, so it looks like the toasts elsewhere and
+  // follows the day and night themes.
+  color: var(--Popup__color);
+  background-color: var(--Popup__background-color);
+  box-shadow: var(--Popup__box-shadow);
+  font-size: 0.8rem;
+  font-weight: 600;
+  animation: lockedNoticeIn 0.18s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes lockedNoticeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
