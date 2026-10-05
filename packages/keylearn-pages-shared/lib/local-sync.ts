@@ -178,6 +178,13 @@ export function isPortable(key: string): boolean {
   if (base === "keylearn.loginPromptLastShown") {
     return false;
   }
+  // Whether this browser has already shown the tour (first-run.ts). Per
+  // device by the owner's rule (5 Oct 2026): carried as account data it was
+  // taken off the device at sign-out, so the tour came straight back over
+  // the page the visitor landed on.
+  if (base === "keylearn.tourSeen") {
+    return false;
+  }
   // The typing statistics (`keylearn.ngrams`) DO travel. They were kept back
   // as "rebuilt from practice", but nothing rebuilds them, so a new device
   // started the weak-pair drill and the profile chart from nothing. Writes

@@ -287,6 +287,10 @@ test("what stays on the device is a decision, with a reason", () => {
   isFalse(isPortable("profile-9.keylearn.braille.progress")); // Merges, not copies.
   isFalse(isPortable("keylearn.support.outbox")); // A send queue.
   isFalse(isPortable("keylearn.braille.days.9")); // Merges, not copies.
+  // Per device: carried as account data, sign-out took it off the device
+  // and the tour came straight back (owner, 5 Oct 2026).
+  isFalse(isPortable("keylearn.tourSeen"));
+  isFalse(isPortable("keylearn.loginPromptLastShown"));
 
   // And the settings the customer actually reported, every one of which was
   // device-local before this existed.

@@ -6,6 +6,10 @@ import {
   useAssessmentReset,
 } from "@keylearn/assessment";
 import { type KeyId, useKeyboard } from "@keylearn/keyboard";
+import {
+  markTourSeenOnThisMachine,
+  tourSeenOnThisMachine,
+} from "@keylearn/pages-shared";
 import { type Result, uiProps } from "@keylearn/result";
 import { useSettings } from "@keylearn/settings";
 import { type LineList } from "@keylearn/textinput";
@@ -18,7 +22,14 @@ import {
   useTimeout,
   useWindowEvent,
 } from "@keylearn/widget";
-import { memo, type ReactNode, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useKidsPractice } from "./kids-flavour.ts";
 import { Presenter } from "./Presenter.tsx";
 import {
@@ -51,6 +62,15 @@ export const Controller = memo(function Controller({
     sitting,
   );
   const { settings, updateSettings } = useSettings();
+  const tourSeen = settings.get(uiProps.tourSeen);
+  // Seen on the account counts as seen in this browser too, so signing out —
+  // which hands over to guest settings that never recorded it — does not
+  // bring the tour back over the page (owner, 5 Oct 2026). See first-run.ts.
+  useEffect(() => {
+    if (tourSeen) {
+      markTourSeenOnThisMachine();
+    }
+  }, [tourSeen]);
   // A timed run rarely ends on a line break. What is already typed when the
   // clock stops is measured the same way a finished line is.
   useAssessmentPartial(() => {
@@ -101,9 +121,14 @@ export const Controller = memo(function Controller({
       // Never over an assessment. A learner who brought their history across
       // from another app arrives at their first sitting on a new account,
       // and the welcome tour opened on top of the timed run.
-      startWithTourOpen={!sitting && !settings.get(uiProps.tourSeen)}
+      // Once, ever, in this browser: the account's flag OR this machine's.
+      // Still there on demand from the practice tools ("Show tour").
+      startWithTourOpen={!sitting && !tourSeen && !tourSeenOnThisMachine()}
       kids={kids}
-      onTourClose={() => updateSettings(settings.set(uiProps.tourSeen, true))}
+      onTourClose={() => {
+        markTourSeenOnThisMachine();
+        updateSettings(settings.set(uiProps.tourSeen, true));
+      }}
     />
   );
 });

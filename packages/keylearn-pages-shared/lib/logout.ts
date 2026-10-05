@@ -1,5 +1,6 @@
 import { DESK_SESSION_HEADER } from "./desk-session.ts";
 import { releaseDevice } from "./device-release.ts";
+import { markSignedOutJustNow } from "./first-run.ts";
 import { getPageData } from "./pagedata.tsx";
 
 /** The longest sign-out waits on handing the device back, before going anyway. */
@@ -39,6 +40,11 @@ export async function logout(
       body: "{}",
     });
   } finally {
+    // The page sign-out lands on is not the moment to ask them to sign up
+    // again (owner, 5 Oct 2026) — a later refresh may.
+    if (!desk) {
+      markSignedOutJustNow();
+    }
     // Navigate regardless: if the request failed the session may still be live,
     // and landing on a fresh page load is the clearest signal of what happened.
     window.location.href = returnTo;

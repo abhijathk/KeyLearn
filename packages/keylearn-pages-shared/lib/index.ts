@@ -8,6 +8,7 @@ export * from "./certificate-client.ts";
 export * from "./datemark.ts";
 export * from "./desk-session.ts";
 export * from "./download.ts";
+export * from "./first-run.ts";
 export * from "./LoadingProgress.tsx";
 export * from "./local-sync.ts";
 export * from "./logout.ts";

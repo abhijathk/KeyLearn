@@ -1,4 +1,9 @@
-import { Pages, usePageData } from "@keylearn/pages-shared";
+import {
+  Pages,
+  takeSignedOutJustNow,
+  tourSeenOnThisMachine,
+  usePageData,
+} from "@keylearn/pages-shared";
 import { Button, FloatingShell } from "@keylearn/widget";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -62,7 +67,19 @@ export function LoginPrompt({ path }: { readonly path: string }): ReactNode {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
   const { user } = usePageData();
-  const [dismissed, setDismissed] = useState(() => !dueToShow());
+  // Decided ONCE per page load, not per render (owner, 5 Oct 2026: never
+  // two floating windows at once, and nothing straight after signing out):
+  // - the page sign-out lands on stays clear; a later refresh may prompt;
+  // - a load the tour opens on stays clear for its whole length, so a new
+  //   visitor meets one window, not two stacked;
+  // - otherwise the once-a-day rule below.
+  // `takeSignedOutJustNow` is evaluated first so it is always consumed.
+  const [dismissed, setDismissed] = useState(
+    () =>
+      takeSignedOutJustNow() ||
+      (path === Pages.practice.path && !tourSeenOnThisMachine()) ||
+      !dueToShow(),
+  );
 
   const excluded = EXCLUDED_PATHS.some(
     (p) => path === p || path.startsWith(`${p}/`),
