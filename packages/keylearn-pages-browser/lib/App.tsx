@@ -654,17 +654,19 @@ function PageRoutes() {
             }
           />
         )}
-        <Route
-          path={`${Pages.profile.path}`}
-          element={
-            <Template path={Pages.profile.path}>
-              <Title page={Pages.profile} />
-              <Suspense fallback={<LoadingProgress />}>
-                <ProfilePage />
-              </Suspense>
-            </Template>
-          }
-        />
+        {live("profile") && (
+          <Route
+            path={`${Pages.profile.path}`}
+            element={
+              <Template path={Pages.profile.path}>
+                <Title page={Pages.profile} />
+                <Suspense fallback={<LoadingProgress />}>
+                  <ProfilePage />
+                </Suspense>
+              </Template>
+            }
+          />
+        )}
         {live("publicProfiles") && (
           <Route
             path={`${Pages.profile.path}/:userId`}

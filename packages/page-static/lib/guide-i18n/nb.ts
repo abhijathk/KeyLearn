@@ -22,28 +22,22 @@ export const nb: GuideTranslation = {
       nav: "Innlogging og passord",
       heading: "Registrering, innlogging og passord",
       blocks: [
-        { p: "Alt ligger i menyen øverst til høyre." },
-        { lab: "Opprett en konto" },
         {
-          steps: [
-            "Åpne menyen (øverst til høyre).",
-            "Velg Registrer deg.",
-            "Skriv inn en e-postadresse og et passord.",
-            "Bekreft — og du er inne.",
-          ],
+          p: "Alt ligger i menyen øverst til høyre, under Logg inn eller registrer deg — samme dør enten du allerede har en konto eller ikke.",
         },
-        { lab: "Logg inn" },
+        { lab: "Opprett en konto eller logg inn" },
         {
           steps: [
-            "Åpne menyen og velg Logg inn.",
-            "Skriv inn e-postadressen og passordet ditt.",
+            "Åpne menyen og velg Logg inn eller registrer deg.",
+            "Fortsett med Google, Facebook eller en passnøkkel — eller skriv inn e-postadressen din og trykk Fortsett.",
+            "En ny e-postadresse setter deg opp med et passord; en eksisterende ber om det.",
           ],
         },
         { lab: "Tilbakestill et glemt passord" },
         {
           steps: [
-            "På innloggingssiden velger du Glemt passord.",
-            "Skriv inn e-postadressen din.",
+            "Skriv inn e-postadressen din på innloggingssiden og trykk Fortsett.",
+            "Velg Glemt passordet?",
             "Åpne lenken for tilbakestilling som vi sender deg.",
             "Velg et nytt passord og logg inn.",
           ],
@@ -115,7 +109,13 @@ export const nb: GuideTranslation = {
       heading: "Live-visningen",
       blocks: [
         {
-          p: "Mens du skriver, viser det svevende panelet farten og nøyaktigheten din akkurat nå, en liten kurve over de siste øktene, målsporene dine og rekken din. Det er der for å oppmuntre deg, ikke for å mase.",
+          p: "Mens du skriver, viser det svevende panelet farten og nøyaktigheten din akkurat nå, en liten kurve over de siste rundene, målene dine og rekken din. Det er der for å oppmuntre deg, ikke for å mase.",
+        },
+        {
+          p: "*− og +* ved siden av målet justerer dagens mål opp eller ned med en gang, uten å åpne Innstillinger. Senk det hvis de samme få bokstavene har sluttet å bli bedre; farten en bokstav må nå, er det eneste som avgjør hvor fort nye bokstaver låses opp.",
+        },
+        {
+          p: "Har du valgt et profilbilde, kan bildet ligge svakt bak tallene — Konto, Utseende, *Illustrasjonen din bak tallene*, med en glider for hvor tydelig det er. Av med mindre du slår det på.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const nb: GuideTranslation = {
           tips: [
             "*Guidet øving* — det adaptive standardvalget som utvider alfabetet ditt tast for tast.",
             "*Klassisk kurs* — en fast, ordnet marsj gjennom tastene.",
+            "*Kodehåndverk* — ekte kode fra ekte rammeverk.",
             "*Vanlige ord* — de vanligste ordene på språket ditt.",
             "*Boktekst* — skriv deg gjennom ekte bøker som er innebygd i appen.",
+            "*Sitater* — korte, fullstendige tanker med ekte store bokstaver og tegnsetting.",
             "*Din egen tekst* — lim inn hva du vil og øv på det.",
-            "*Kodesnutter* — parenteser, symboler og rytmen i kode.",
             "*Talløvelser* — tallrekken og det numeriske tastaturet.",
           ],
         },
@@ -183,23 +184,26 @@ export const nb: GuideTranslation = {
     {
       id: "keyboard",
       nav: "Tastaturoppsett",
-      heading: "Sette opp tastaturet ditt",
+      heading: "Sette opp tastaturet",
       blocks: [
         {
-          p: "Under Innstillinger, Tastaturoppsett tilpasser du KeyLearn til tastaturet ditt og til utlegget du vil lære.",
+          p: "Innstillinger, Tastatur er der du tilpasser KeyLearn til tastaturet ditt og til oppsettet du vil lære.",
         },
-        { lab: "Bytt tastaturutlegg" },
+        { lab: "Bytt tastaturoppsett" },
         {
           steps: [
             "Åpne Innstillinger.",
-            "Gå til Tastaturoppsett.",
-            "Velg språket ditt, og deretter utlegget (QWERTY, Dvorak, Colemak og flere).",
-            "La «Simuler dette utlegget» stå på, så du kan øve på det uansett hva datamaskinen din er stilt inn på.",
-            "Se på den levende forhåndsvisningen for å bekrefte.",
+            "Gå til Tastatur.",
+            "Velg språket ditt, deretter oppsettet (QWERTY, Dvorak, Colemak og flere).",
+            "La «Emuler oppsett» være på, så du kan øve på oppsettet uansett hva datamaskinen er stilt inn på.",
+            "Se på forhåndsvisningen for å bekrefte.",
           ],
         },
         {
-          p: "På samme skjerm kan du velge tastaturform, farge tastene etter fingersone og fremheve neste tast mens du fortsatt lærer hvor ting ligger.",
+          p: "På samme skjerm kan du velge tastaturets form, fargelegge tastene etter fingersone og fremheve neste tast mens du fortsatt lærer hvor alt er.",
+        },
+        {
+          p: "Tastaturets *finish* — hvordan tastene ser ut — følger med en konto. Når du er logget inn, kan du velge mellom fem, og det runde finnes i seks farger; én av dem følger fargen på temaet ditt. Alt det andre over er ditt uansett: språket, oppsettet, formen og fingersonene holdes aldri tilbake, for det er de som får appen til å passe tastaturet foran deg.",
         },
       ],
     },
@@ -209,7 +213,10 @@ export const nb: GuideTranslation = {
       heading: "Visning og følelse",
       blocks: [
         {
-          p: "Innstillingene for Visning og Tekstinntasting lar deg vise farten din som ord eller tegn per minutt og finjustere hvordan skrivingen føles. Gjenopprett standardverdier er alltid ett klikk unna hvis du vil begynne på nytt.",
+          p: "Innstillingene for Diverse og Skriving lar deg vise farten som ord eller tegn per minutt og finjustere hvordan skrivingen føles. Nullstill er alltid bare et klikk unna hvis du vil begynne på nytt.",
+        },
+        {
+          p: "Hvordan hele nettstedet ser ut, finner du under Konto, Utseende: lyst, mørkt eller følg systemet, en temafarge og en tekststørrelse som gjelder på alle sider. Hver elev i husstanden har sine egne valg, og de følger med dem — se *Ta vare på dataene dine*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const nb: GuideTranslation = {
           steps: [
             "Åpne menyen.",
             "Velg Profil.",
-            "Bruk filterraden for å konsentrere deg om Bokstaver, Tall, Tegnsetting eller Symboler.",
           ],
         },
       ],
@@ -240,7 +246,7 @@ export const nb: GuideTranslation = {
         {
           steps: [
             "Åpne Profil for eleven du vil nullstille.",
-            "Bla ned til nullstillingsknappen nederst på siden.",
+            "Bla ned til nullstillingen nederst på siden.",
             "Bekreft «Slett alt» — bare denne profilen tømmes.",
           ],
         },
@@ -252,7 +258,10 @@ export const nb: GuideTranslation = {
           ],
         },
         {
-          p: "Logg inn hvis du vil at historikken din skal synkroniseres mellom enheter, og for å kunne dele en offentlig profillenke. Det finnes ingen reklame og ingen sporere, og du kan slette dataene dine — eller hele kontoen din — når du vil.",
+          p: "Logg inn hvis du vil at historikken skal synkroniseres mellom enheter og for å dele en offentlig profillenke. Det finnes ingen annonsenettverk og ingen sporere, og du kan slette dataene dine — eller hele kontoen — når du vil.",
+        },
+        {
+          p: "Å logge inn tar nå med seg mer enn resultatene dine. Innstillingene, temaet og tekststørrelsen, tilgjengelighetsvalgene du har gjort og hver elevs egne preferanser følger profilen i stedet for nettleseren — så en elev som åpner KeyLearn på en ny datamaskin, fortsetter der hen slapp, på samme skjerm og satt opp på samme måte, i stedet for å starte på nytt fra standardinnstillingene.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const nb: GuideTranslation = {
         },
         {
           p: "Inni kan du stille inn verden og figuren, Store bokstaver, Lyder, Hjelpehender (den glødende fingerguiden), Tastaturet (skjult, enkelt, eller det fulle voksentastaturet), Bokstaver på stien (ordene vist som klosser rett i spillet), en økt-Timer, Heiarop (oppmuntrende små meldinger) og — gjemt under Avansert — glidere for Lysstyrke, Farge og hvor livlig verden føles. Det finnes et rolig nattutseende i tillegg til det lyse dagutseendet.",
+        },
+        {
+          p: "*Key style* endrer hvordan tastene er malt, og selve tastene flytter seg ikke: *Crayon* er den hvite tasten med en ring i fingerfargen sin, og *Rainbow* er læringstastaturet i grunnfarger — grønn ramme, røde tall, blå bokstaver med vokalene skilt ut — der rammetastene er piler i stedet for ord, for et barn som ennå ikke kan lese «enter». Alle begynner med Crayon. *Finger colours* ved siden av slår av fargeleggingen helt for et barn som ikke lenger trenger den.",
         },
       ],
     },
@@ -485,7 +497,48 @@ export const nb: GuideTranslation = {
       heading: "Personvern, i én setning",
       blocks: [
         {
-          p: "Ingen reklame og ingen sporere. Profilen til et barn forlater aldri nettleseren din. Logg inn bare hvis du vil synkronisere eller dele; ellers blir alt værende på denne enheten, og du står fritt til å slette det når som helst.",
+          p: "Ingen annonsenettverk og ingen sporere. Et barns profil forlater aldri nettleseren din. Logg inn bare hvis du vil synkronisere eller dele; ellers blir alt på denne enheten, og du kan slette det når som helst.",
+        },
+        {
+          p: "Du kan se en *sponset linje* på enkelte sider. Den har vi solgt og viser selv — det finnes ikke noe annonsenettverk her, og ingenting følger deg ut av nettstedet. Den velges av siden du er på, aldri av noe vi vet om deg, og den vises aldri for et barn, inne i barneverdenen, på en skolekonto eller mens en leksjon pågår. Trykk på *Hvorfor ser jeg dette?* på hvilken som helst av dem for den samme forklaringen der og da, og de som har støttet prosjektet, ser aldri noen.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Få hjelp",
+      heading: "Få hjelp",
+      blocks: [
+        {
+          p: "Hver melding du sender oss, blir en *samtale du kan komme tilbake til*, ikke en e-post som forsvinner. Den ligger under Konto og har sitt eget referansenummer — det du oppgir hvis du noen gang ringer eller skriver igjen.",
+        },
+        { lab: "Be om hjelp" },
+        {
+          steps: [
+            "Åpne menyen og velg Konto, deretter Kundestøtte.",
+            "Velg Meld en sak og fortell hva som skjer.",
+            "Legg ved et skjermbilde hvis det hjelper — PNG, JPG eller PDF, opptil 10 MB hver.",
+          ],
+        },
+        {
+          p: "Svarene kommer i den samtalen, og bjella øverst lyser opp når et svar kommer, så du slipper å sitte og følge med på siden. Det som allerede er ordnet, legges bort under Løst, som starter lukket — det du fortsatt venter på, er det du ser.",
+        },
+        { lab: "Hvem som svarer" },
+        {
+          p: "En assistent som heter Tab, leser den først og svarer på det den kan. Den forteller deg at den er en KI — den later aldri som noe annet, og den sier rett ut når den ikke vet noe.",
+        },
+        {
+          p: "Et menneske tar over når det er det beste svaret: alt som handler om penger, dataene dine, sikkerhet, eller rett og slett fordi du ba om det. Du trenger aldri spørre to ganger, og du trenger aldri gjenta deg selv — den som tar over, ser allerede alt du har skrevet.",
+        },
+        {
+          p: "Hvis en melding noen gang høres ut som en ekte nødsituasjon, er svaret det samme hver gang og kommer fra en fast tekst i stedet for fra assistenten: nødnummeret der du er, og en person hos oss som varsles med en gang. Vi kan ikke ringe for deg, og det sier vi også.",
+        },
+        { lab: "Rydde opp" },
+        {
+          p: "Du kan fjerne en samtale fra listen når som helst med søppelbøtta ved siden av den. En liten merknad ved *Meld en sak* teller hvor mange du har ryddet bort, så en tråd som har forsvunnet, aldri blir et mysterium.",
+        },
+        {
+          p: "På en delt familieenhet ber Kundestøtte om voksen-PIN-en før den åpnes — kundestøttesaker hører til kontoen, og den som øver, er ikke alltid den som opprettet kontoen.",
         },
       ],
     },

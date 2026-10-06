@@ -22,28 +22,22 @@ export const ro: GuideTranslation = {
       nav: "Autentificare și parole",
       heading: "Înregistrare, autentificare și parole",
       blocks: [
-        { p: "Totul se află în meniul din dreapta sus." },
-        { lab: "Creează un cont" },
         {
-          steps: [
-            "Deschide meniul (dreapta sus).",
-            "Alege Înregistrare.",
-            "Introdu o adresă de e-mail și o parolă.",
-            "Confirmă — gata, ești înăuntru.",
-          ],
+          p: "Totul se află în meniul din dreapta sus, la Autentificare sau înregistrare — aceeași ușă, fie că ai deja cont, fie că nu.",
         },
-        { lab: "Autentifică-te" },
+        { lab: "Creează un cont sau autentifică-te" },
         {
           steps: [
-            "Deschide meniul și alege Autentificare.",
-            "Introdu adresa de e-mail și parola.",
+            "Deschide meniul și alege Autentificare sau înregistrare.",
+            "Continuă cu Google, Facebook sau o cheie de acces — ori scrie-ți adresa de e-mail și apasă Continuă.",
+            "O adresă nouă te duce la alegerea unei parole; una existentă ți-o cere.",
           ],
         },
         { lab: "Resetează o parolă uitată" },
         {
           steps: [
-            "Pe ecranul de autentificare, alege Am uitat parola.",
-            "Introdu adresa ta de e-mail.",
+            "Pe ecranul de autentificare, scrie-ți adresa de e-mail și apasă Continuă.",
+            "Alege Ți-ai uitat parola?",
             "Deschide linkul de resetare pe care ți-l trimitem.",
             "Alege o parolă nouă și autentifică-te.",
           ],
@@ -112,10 +106,16 @@ export const ro: GuideTranslation = {
     {
       id: "readout",
       nav: "Statistici live",
-      heading: "Afișajul live",
+      heading: "Panoul live",
       blocks: [
         {
           p: "În timp ce scrii, panoul plutitor îți arată viteza și acuratețea de acum, un mic grafic al rundelor recente, evoluția față de obiective și seria ta de zile. Este acolo ca să te încurajeze, nu ca să te cicălească.",
+        },
+        {
+          p: "Butoanele *− și +* de lângă țintă cresc sau scad pe loc obiectivul de azi, fără să deschizi Setările. Coboară-l dacă aceleași câteva litere au încetat să avanseze; viteza pe care trebuie s-o atingă o literă este singurul lucru care decide cât de repede se deblochează altele noi.",
+        },
+        {
+          p: "Dacă ți-ai ales o poză de profil, ilustrația ei poate sta discret în spatele acestor cifre — Cont, Aspect, *Ilustrația ta în spatele cifrelor*, cu un cursor pentru intensitate. Este oprită până o pornești tu.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const ro: GuideTranslation = {
           tips: [
             "*Exersare ghidată* — varianta implicită, adaptivă, care îți crește alfabetul tastă cu tastă.",
             "*Curs clasic* — un parcurs fix, în ordine, prin toate tastele.",
+            "*Cod sursă* — cod adevărat din framework-uri adevărate.",
             "*Cuvinte frecvente* — cele mai obișnuite cuvinte din limba ta.",
             "*Text din cărți* — scrie-ți drumul prin cărți adevărate, incluse în aplicație.",
+            "*Citate* — gânduri scurte și întregi, cu majusculele și punctuația lor adevărate.",
             "*Textul tău* — lipește ce vrei tu și exersează pe el.",
-            "*Fragmente de cod* — paranteze, simboluri și ritmul codului.",
             "*Exerciții cu cifre* — rândul de cifre și blocul numeric.",
           ],
         },
@@ -201,6 +202,9 @@ export const ro: GuideTranslation = {
         {
           p: "Tot de aici poți alege forma tastaturii, poți colora tastele pe zone de degete și poți evidenția tasta următoare cât timp încă înveți unde se află fiecare lucru.",
         },
+        {
+          p: "*Finisajul* tastaturii — felul în care arată tastele — vine odată cu un cont. Autentificat, ai cinci din care să alegi, iar cel rotund vine în șase culori; una dintre ele urmează culoarea temei tale. Tot ce e mai sus este al tău oricum: limba, aranjamentul, forma și zonele degetelor nu sunt niciodată blocate, pentru că ele fac aplicația să se potrivească cu tastatura din fața ta.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const ro: GuideTranslation = {
       blocks: [
         {
           p: "Setările de Afișare și Introducere text îți permit să-ți vezi viteza în cuvinte sau caractere pe minut și să reglezi fin cum se simte scrisul. Restabilește valorile implicite este mereu la un clic distanță, dacă vrei să o iei de la capăt.",
+        },
+        {
+          p: "Cum arată întregul site stabilești la Cont, Aspect: luminos, întunecat sau după sistem, o culoare a temei și o mărime a textului care rămâne aceeași pe toate paginile. Fiecare cursant din casă își păstrează propriile alegeri, iar ele îl însoțesc — vezi *Grija pentru datele tale*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const ro: GuideTranslation = {
           steps: [
             "Deschide meniul.",
             "Alege Profil.",
-            "Folosește rândul de filtre ca să te concentrezi pe Litere, Cifre, Semne de punctuație sau Simboluri.",
           ],
         },
       ],
@@ -234,14 +240,14 @@ export const ro: GuideTranslation = {
     {
       id: "data",
       nav: "Datele tale",
-      heading: "Grija față de datele tale",
+      heading: "Grija pentru datele tale",
       blocks: [
         { lab: "Șterge statisticile unui profil" },
         {
           steps: [
-            "Deschide Profil pentru cursantul pe care vrei să-l resetezi.",
-            "Derulează până la comanda de resetare din josul paginii.",
-            "Confirmă „Șterge tot” — se golește doar acest profil.",
+            "Deschide Profilul cursantului pe care vrei să-l resetezi.",
+            "Derulează până la butonul de resetare din josul paginii.",
+            "Confirmă „Șterge tot” — doar acest profil este golit.",
           ],
         },
         { lab: "Descarcă-ți datele" },
@@ -252,7 +258,10 @@ export const ro: GuideTranslation = {
           ],
         },
         {
-          p: "Autentifică-te dacă vrei ca istoricul tău să se sincronizeze între dispozitive și să poți distribui un link public către profil. Nu există reclame și nici urmăritoare, iar datele tale — sau chiar tot contul — le poți șterge oricând.",
+          p: "Autentifică-te dacă vrei ca istoricul să se sincronizeze între dispozitive și ca să poți distribui un link public către profil. Nu există rețele de publicitate și nici urmăritori, iar datele tale — sau întregul cont — le poți șterge oricând vrei.",
+        },
+        {
+          p: "Autentificarea duce acum cu ea mai mult decât rezultatele. Setările tale, tema și mărimea textului, opțiunile de accesibilitate alese și preferințele fiecărui cursant urmează profilul, nu browserul — așa că un cursant care deschide KeyLearn pe un calculator nou continuă de unde a rămas, pe același ecran, configurat la fel, în loc să o ia de la capăt cu valorile implicite.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const ro: GuideTranslation = {
         },
         {
           p: "Înăuntru poți alege lumea și personajul, Litere mari, Sunete, Mâini ajutătoare (ghidajul luminos pentru degete), Tastatura (ascunsă, simplă sau cea completă, pentru adulți), Litere pe potecă (cuvintele arătate ca niște cuburi chiar în joc), un Cronometru de sesiune, Urale (mesaje mici de încurajare) și — ascunse la Avansate — cursoare pentru Luminozitate, Culoare și cât de vioaie e lumea. Există și un aspect de noapte, liniștit, pe lângă cel luminos de zi.",
+        },
+        {
+          p: "*Key style* schimbă felul în care sunt colorate tastele, iar tastele în sine nu se mută: *Crayon* este tasta albă conturată în culoarea degetului ei, iar *Rainbow* este tastatura de învățare în culori primare — ramă verde, cifre roșii, litere albastre cu vocalele scoase în evidență — unde tastele de pe ramă sunt săgeți în loc de cuvinte, pentru copilul care încă nu poate citi „enter”. Toată lumea începe cu Crayon. *Finger colours*, alături, oprește cu totul colorarea pentru copilul care nu mai are nevoie de ea.",
         },
       ],
     },
@@ -479,10 +491,51 @@ export const ro: GuideTranslation = {
     {
       id: "privacy",
       nav: "Confidențialitate",
-      heading: "Confidențialitatea, într-o singură frază",
+      heading: "Confidențialitatea, într-o propoziție",
       blocks: [
         {
-          p: "Fără reclame și fără urmăritoare. Profilul unui copil nu îți părăsește niciodată browserul. Autentifică-te doar dacă vrei sincronizare sau partajare; altfel totul rămâne pe acest dispozitiv, iar tu ești liber să-l ștergi oricând.",
+          p: "Fără rețele de publicitate și fără urmăritori. Profilul unui copil nu părăsește niciodată browserul tău. Autentifică-te doar dacă vrei sincronizare sau distribuire; altfel totul rămâne pe acest dispozitiv și îl poți șterge oricând.",
+        },
+        {
+          p: "Pe unele pagini poți vedea un *rând sponsorizat*. Este unul pe care l-am vândut și îl afișăm chiar noi — aici nu există nicio rețea de publicitate și nimic nu te urmărește în afara site-ului. Este ales de pagina pe care te afli, niciodată de ceva ce știm despre tine, și nu apare niciodată unui copil, în lumea copiilor, pe un cont de școală sau în timpul unei lecții. Atinge *De ce văd asta?* la oricare dintre ele ca să primești aceeași explicație chiar acolo; cei care au susținut proiectul nu văd niciunul.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Cum primești ajutor",
+      heading: "Cum primești ajutor",
+      blocks: [
+        {
+          p: "Fiecare mesaj pe care ni-l trimiți devine o *conversație la care poți reveni*, nu un e-mail care dispare. Se află la Cont și are propriul număr de referință — pe acesta îl menționezi dacă vreodată suni sau scrii din nou.",
+        },
+        { lab: "Cere ajutor" },
+        {
+          steps: [
+            "Deschide meniul și alege Cont, apoi Asistență.",
+            "Alege Deschide o solicitare și spune ce se întâmplă.",
+            "Atașează o captură de ecran dacă ajută — PNG, JPG sau PDF, până la 10 MB fiecare.",
+          ],
+        },
+        {
+          p: "Răspunsurile apar în acea conversație, iar clopoțelul din antet se aprinde când sosește unul, așa că nu trebuie să stai cu ochii pe pagină. Tot ce e deja rezolvat se strânge la Rezolvată, care pornește închisă — vezi doar ce încă aștepți.",
+        },
+        { lab: "Cine răspunde" },
+        {
+          p: "Un asistent numit Tab citește primul și răspunde la ce poate. Îți va spune că este un AI — nu se preface niciodată altceva — și va spune deschis când nu știe ceva.",
+        },
+        {
+          p: "Un om preia ori de câte ori acesta e răspunsul mai bun: orice ține de bani, de datele tale, de siguranță sau pur și simplu pentru că ai cerut. Nu trebuie să ceri de două ori și nici să te repeți — cine preia vede deja tot ce ai spus.",
+        },
+        {
+          p: "Dacă un mesaj pare vreodată o urgență reală, răspunsul este de fiecare dată același și vine dintr-un text fix, nu de la asistent: numărul de urgență din locul în care te afli, iar o persoană de la noi este alertată imediat. Nu putem suna noi în locul tău și o spunem clar.",
+        },
+        { lab: "Ordine în listă" },
+        {
+          p: "Poți scoate oricând o conversație din listă cu iconița de coș de gunoi de lângă ea. O mică notă lângă *Deschide o solicitare* ține socoteala câte ai șters, așa că o conversație dispărută nu e niciodată un mister.",
+        },
+        {
+          p: "Pe un dispozitiv folosit de toată familia, secțiunea Asistență cere PIN-ul adulților înainte să se deschidă — conversațiile cu asistența țin de cont, iar cel care exersează nu este mereu cel care a creat contul.",
         },
       ],
     },

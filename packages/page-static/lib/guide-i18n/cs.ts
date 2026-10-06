@@ -22,30 +22,24 @@ export const cs: GuideTranslation = {
       nav: "Přihlášení a hesla",
       heading: "Registrace, přihlášení a hesla",
       blocks: [
-        { p: "Všechno najdeš v nabídce vpravo nahoře." },
-        { lab: "Vytvoření účtu" },
         {
-          steps: [
-            "Otevři nabídku (vpravo nahoře).",
-            "Zvol Registrace.",
-            "Zadej e-mail a heslo.",
-            "Potvrď — a jsi uvnitř.",
-          ],
+          p: "Všechno najdeš v nabídce vpravo nahoře pod Přihlásit se nebo zaregistrovat — stejné dveře, ať už účet máš, nebo ne.",
         },
-        { lab: "Přihlášení" },
+        { lab: "Vytvoření účtu nebo přihlášení" },
         {
           steps: [
-            "Otevři nabídku a zvol Přihlásit se.",
-            "Zadej svůj e-mail a heslo.",
+            "Otevři nabídku a zvol Přihlásit se nebo zaregistrovat.",
+            "Pokračuj přes Google, Facebook nebo přístupový klíč — nebo napiš svůj e-mail a stiskni Pokračovat.",
+            "S novým e-mailem si nastavíš heslo; u e-mailu, který už známe, se tě na něj zeptáme.",
           ],
         },
         { lab: "Obnovení zapomenutého hesla" },
         {
           steps: [
-            "Na přihlašovací obrazovce zvol Zapomenuté heslo.",
-            "Zadej svou e-mailovou adresu.",
+            "Na přihlašovací obrazovce zadej svůj e-mail a stiskni Pokračovat.",
+            "Zvol Zapomněli jste heslo?",
             "Otevři odkaz pro obnovení, který ti pošleme.",
-            "Zvol nové heslo a přihlas se.",
+            "Zvol si nové heslo a přihlas se.",
           ],
         },
       ],
@@ -117,6 +111,12 @@ export const cs: GuideTranslation = {
         {
           p: "Zatímco píšeš, plovoucí panel ukazuje tvoji aktuální rychlost a přesnost, malý graf posledních běhů, plnění tvých cílů a tvoji sérii. Je tu od toho, aby tě povzbuzoval, ne aby tě otravoval.",
         },
+        {
+          p: "Tlačítka *− a +* vedle cíle posunou dnešní cíl nahoru nebo dolů hned na místě, bez otevírání Nastavení. Sniž ho, když se stejných pár písmen přestalo hýbat; rychlost, které musí písmeno dosáhnout, je to jediné, co rozhoduje, jak rychle se odemykají nová.",
+        },
+        {
+          p: "Pokud sis vybral profilový obrázek, může jeho motiv jemně prosvítat za těmi čísly — Účet, Vzhled, *Tvůj obrázek za statistikami*, s posuvníkem pro jeho sílu. Vypnuté, dokud si to nezapneš.",
+        },
       ],
     },
     {
@@ -141,10 +141,11 @@ export const cs: GuideTranslation = {
           tips: [
             "*Vedené procvičování* — adaptivní výchozí režim, který rozšiřuje tvoji abecedu klávesu po klávese.",
             "*Klasický kurz* — pevný, uspořádaný pochod klávesami.",
+            "*Zdrojový kód* — skutečný kód ze skutečných frameworků.",
             "*Častá slova* — nejběžnější slova tvého jazyka.",
             "*Text z knihy* — propiš se skrz opravdové knihy zabudované v aplikaci.",
+            "*Citáty* — krátké ucelené myšlenky se skutečnými velkými písmeny a interpunkcí.",
             "*Vlastní text* — vlož si cokoli chceš a procvičuj na tom.",
-            "*Úryvky kódu* — závorky, symboly a rytmus kódu.",
             "*Cvičení s čísly* — číselná řada a numerická klávesnice.",
           ],
         },
@@ -201,6 +202,9 @@ export const cs: GuideTranslation = {
         {
           p: "Na téže obrazovce si můžeš vybrat tvar klávesnice, obarvit klávesy podle prstových zón a zvýraznit další klávesu, dokud se ještě učíš, kde co je.",
         },
+        {
+          p: "*Povrchová úprava* klávesnice — vzhled kláves — přichází s účtem. Po přihlášení máš na výběr z pěti a ta kulatá je v šesti barvách; jedna z nich se řídí barvou tvého motivu. Všechno výše je tvoje tak jako tak: jazyk, rozložení, tvar a prstové zóny se nikdy nezadržují, protože právě díky nim aplikace odpovídá klávesnici, kterou máš před sebou.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const cs: GuideTranslation = {
       blocks: [
         {
           p: "Nastavení Zobrazení a Zadávání textu ti umožní ukazovat rychlost ve slovech nebo ve znacích za minutu a doladit, jak psaní působí. Obnovit výchozí nastavení je vždycky na jedno kliknutí, kdybys chtěl začít nanovo.",
+        },
+        {
+          p: "Jak vypadá celý web, nastavíš v Účet, Vzhled: světlý, tmavý nebo podle systému, barva motivu a velikost textu, která platí na každé stránce. Každý žák v domácnosti si drží vlastní nastavení a to cestuje s ním — viz *Péče o tvoje data*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const cs: GuideTranslation = {
           steps: [
             "Otevři nabídku.",
             "Zvol Profil.",
-            "Pomocí řádku filtrů se zaměř na Písmena, Číslice, Interpunkci nebo Symboly.",
           ],
         },
       ],
@@ -252,7 +258,10 @@ export const cs: GuideTranslation = {
           ],
         },
         {
-          p: "Přihlas se, pokud chceš, aby se tvoje historie synchronizovala mezi zařízeními a abys mohl sdílet veřejný odkaz na profil. Nejsou tu žádné reklamy ani sledovací nástroje a svoje data — nebo celý účet — můžeš smazat, kdykoli se ti zachce.",
+          p: "Přihlas se, pokud chceš, aby se tvoje historie synchronizovala mezi zařízeními, a sdílet veřejný odkaz na profil. Nejsou tu žádné reklamní sítě ani sledovací nástroje a svoje data — nebo celý účet — můžeš smazat, kdykoli budeš chtít.",
+        },
+        {
+          p: "Přihlášení dnes nese víc než jen výsledky. Tvoje nastavení, motiv a velikost textu, volby přístupnosti, které sis zvolil, i vlastní předvolby každého žáka se řídí profilem, ne prohlížečem — takže žák, který otevře KeyLearn na novém počítači, pokračuje tam, kde přestal, na stejné obrazovce a stejně nastavený, místo aby začínal znovu od výchozích hodnot.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const cs: GuideTranslation = {
         },
         {
           p: "Uvnitř nastavíš svět a postavu, Velká písmena, Zvuky, Pomocné ruce (zářícího průvodce prsty), Klávesnici (skrytou, jednoduchou, nebo celou pro dospělé), Písmena na stezce (slova zobrazená jako kostky přímo ve hře), Časovač sezení, Povzbuzování (malé pochvalné vzkazy) a — schované pod Pokročilým nastavením — posuvníky pro Jas, Barvu a to, jak živě svět působí. Kromě jasného denního vzhledu je tu i klidný noční.",
+        },
+        {
+          p: "*Key style* mění, jak jsou klávesy namalované, a samotné klávesy se nehýbou: *Crayon* je bílá klávesa s kroužkem v barvě svého prstu a *Rainbow* je výuková klávesnice v základních barvách — zelený rám, červená čísla, modrá písmena s oddělenými samohláskami — kde jsou rámové klávesy šipky místo slov, pro dítě, které ještě neumí přečíst „enter“. Všichni začínají s Crayon. *Finger colours* vedle úplně vypne obarvení pro dítě, které ho už nepotřebuje.",
         },
       ],
     },
@@ -482,7 +494,48 @@ export const cs: GuideTranslation = {
       heading: "Soukromí, v jedné větě",
       blocks: [
         {
-          p: "Žádné reklamy a žádné sledovací nástroje. Profil dítěte nikdy neopustí tvůj prohlížeč. Přihlas se jen tehdy, když chceš synchronizovat nebo sdílet; jinak všechno zůstane na tomhle zařízení a můžeš to kdykoli smazat.",
+          p: "Žádné reklamní sítě a žádné sledovací nástroje. Profil dítěte nikdy neopustí tvůj prohlížeč. Přihlas se, jen pokud chceš synchronizovat nebo sdílet; jinak všechno zůstane na tomto zařízení a můžeš to kdykoli smazat.",
+        },
+        {
+          p: "Na některých stránkách můžeš vidět *sponzorovaný řádek*. Je to řádek, který jsme sami prodali a sami zobrazujeme — žádná reklamní síť tu není a nic tě nesleduje mimo web. Vybírá ho stránka, na které jsi, nikdy nic, co o tobě víme, a nikdy se nezobrazí dítěti, v dětském světě, na školním účtu ani během probíhající lekce. U kteréhokoli z nich klepni na *Proč to vidím?* a dostaneš stejné vysvětlení přímo na místě — a lidé, kteří projekt podpořili, ho neuvidí nikdy.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Získání pomoci",
+      heading: "Získání pomoci",
+      blocks: [
+        {
+          p: "Každá zpráva, kterou nám pošleš, se stane *konverzací, ke které se můžeš vrátit*, ne e-mailem, který zmizí. Najdeš ji pod Účtem a má vlastní referenční číslo — to uveď, kdybys nám někdy znovu volal nebo psal.",
+        },
+        { lab: "Požádání o pomoc" },
+        {
+          steps: [
+            "Otevři nabídku a zvol Účet, pak Podpora.",
+            "Zvol Podat žádost a napiš, co se děje.",
+            "Přilož snímek obrazovky, pokud to pomůže — PNG, JPG nebo PDF, každý do 10 MB.",
+          ],
+        },
+        {
+          p: "Odpovědi se objevují v té konverzaci a zvonek v záhlaví se rozsvítí, když nějaká přijde, takže nemusíš sedět a hlídat stránku. Cokoli už vyřešeného se schová pod Vyřešeno, které je na začátku sbalené — vidíš tedy to, na co ještě čekáš.",
+        },
+        { lab: "Kdo odpovídá" },
+        {
+          p: "Jako první ji čte asistent jménem Tab a odpoví, na co umí. Řekne ti, že je AI — nikdy nepředstírá opak a narovinu řekne, když něco neví.",
+        },
+        {
+          p: "Člověk to převezme vždy, když je to lepší odpověď: cokoli o penězích, tvých datech, bezpečí, nebo prostě proto, že sis o to řekl. Nikdy se nemusíš ptát dvakrát a nikdy se nemusíš opakovat — kdo to převezme, už vidí všechno, co jsi napsal.",
+        },
+        {
+          p: "Pokud by zpráva někdy vypadala jako skutečná nouzová situace, odpověď je pokaždé stejná a pochází z pevného textu, ne od asistenta: číslo tísňového volání tam, kde jsi, a člověk na naší straně, který je okamžitě upozorněn. Ten hovor za tebe uskutečnit nemůžeme, a to také říkáme.",
+        },
+        { lab: "Úklid" },
+        {
+          p: "Konverzaci můžeš kdykoli odstranit ze seznamu ikonou koše vedle ní. Malá poznámka u *Podat žádost* počítá, kolik jsi jich odstranil, takže zmizelé vlákno nikdy není záhadou.",
+        },
+        {
+          p: "Na sdíleném rodinném zařízení si sekce Podpora před otevřením řekne o PIN pro dospělé — vlákna podpory jsou věcí účtu a ten, kdo zrovna procvičuje, nemusí být ten, kdo účet založil.",
         },
       ],
     },

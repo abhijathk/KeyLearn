@@ -21,28 +21,22 @@ export const lt: GuideTranslation = {
       nav: "Prisijungimas ir slaptažodžiai",
       heading: "Registracija, prisijungimas ir slaptažodžiai",
       blocks: [
-        { p: "Viską rasi meniu viršuje dešinėje." },
-        { lab: "Susikurti paskyrą" },
         {
-          steps: [
-            "Atidaryk meniu (viršuje dešinėje).",
-            "Pasirink Registruotis.",
-            "Įvesk el. pašto adresą ir slaptažodį.",
-            "Patvirtink — ir jau esi viduje.",
-          ],
+          p: "Viskas yra meniu viršuje dešinėje, po Prisijungti arba registruotis — tos pačios durys, nesvarbu, ar paskyrą jau turi, ar ne.",
         },
-        { lab: "Prisijungti" },
+        { lab: "Susikurti paskyrą arba prisijungti" },
         {
           steps: [
-            "Atidaryk meniu ir pasirink Prisijungti.",
-            "Įvesk savo el. pašto adresą ir slaptažodį.",
+            "Atidaryk meniu ir pasirink Prisijungti arba registruotis.",
+            "Tęsk su „Google“, „Facebook“ arba slaptarakčiu — arba įvesk savo el. pašto adresą ir spausk Tęsti.",
+            "Su nauju el. pašto adresu nusistatysi slaptažodį; su jau esamu jo bus paprašyta.",
           ],
         },
         { lab: "Atkurti pamirštą slaptažodį" },
         {
           steps: [
-            "Prisijungimo lange pasirink Pamiršau slaptažodį.",
-            "Įvesk savo el. pašto adresą.",
+            "Prisijungimo ekrane įvesk savo el. pašto adresą ir spausk Tęsti.",
+            "Pasirink Pamiršote slaptažodį?",
             "Atidaryk atkūrimo nuorodą, kurią tau atsiųsime.",
             "Pasirink naują slaptažodį ir prisijunk.",
           ],
@@ -110,11 +104,17 @@ export const lt: GuideTranslation = {
     },
     {
       id: "readout",
-      nav: "Statistika gyvai",
-      heading: "Rodmenys gyvai",
+      nav: "Tiesioginė statistika",
+      heading: "Tiesioginis skydelis",
       blocks: [
         {
-          p: "Kol rašai, plaukiojantis skydelis rodo dabartinį greitį ir tikslumą, mažą paskutinių bandymų kreivę, tikslų eigą ir tavo seriją. Jis čia tam, kad padrąsintų, o ne kad priekabiautų.",
+          p: "Kol rašai, plūduriuojantis skydelis rodo dabartinį tavo greitį ir tikslumą, mažą pastarųjų bandymų grafiką, tikslų eigą ir tavo dienų seriją. Jis skirtas tave padrąsinti, o ne bambėti.",
+        },
+        {
+          p: "*− ir +* šalia tikslo iš karto pakelia arba nuleidžia šiandienos tikslą, neatidarant Nustatymų. Nuleisk jį, jei tos pačios kelios raidės nustojo gerėti; greitis, kurį raidė turi pasiekti, yra vienintelis dalykas, nuo kurio priklauso, kaip greitai atsirakina naujos.",
+        },
+        {
+          p: "Jei pasirinkai profilio paveikslėlį, jo iliustracija gali blankiai matytis už tų skaičių — Paskyra, Išvaizda, *Jūsų kūrinys už statistikos*, su slankikliu ryškumui nustatyti. Išjungta, kol pats neįjungsi.",
         },
       ],
     },
@@ -140,10 +140,11 @@ export const lt: GuideTranslation = {
           tips: [
             "*Vedamos pratybos* — prisitaikanti numatytoji veiksena, auginanti tavo abėcėlę po vieną klavišą.",
             "*Klasikinis kursas* — nustatytas, iš eilės einantis žygis per klavišus.",
+            "*Išeities kodas* — tikras kodas iš tikrų karkasų.",
             "*Dažniausi žodžiai* — dažniausi tavo kalbos žodžiai.",
             "*Knygų tekstas* — rašyk per tikras knygas, įdėtas į programą.",
+            "*Citatos* — trumpos, užbaigtos mintys su tikromis didžiosiomis raidėmis ir skyrybos ženklais.",
             "*Tavo tekstas* — įklijuok, ką nori, ir mokykis su juo.",
-            "*Kodo iškarpos* — skliaustai, simboliai ir kodo ritmas.",
             "*Skaičių pratimai* — skaičių eilutė ir skaičių klaviatūra.",
           ],
         },
@@ -181,34 +182,40 @@ export const lt: GuideTranslation = {
     },
     {
       id: "keyboard",
-      nav: "Klaviatūros nustatymas",
-      heading: "Savo klaviatūros nustatymas",
+      nav: "Klaviatūros sąranka",
+      heading: "Klaviatūros nustatymas",
       blocks: [
         {
-          p: "Nustatymuose, skiltyje Klaviatūros nustatymas, priderini KeyLearn prie savo klaviatūros ir prie išdėstymo, kurio nori išmokti.",
+          p: "Nustatymų skiltyje Klaviatūra pritaikai KeyLearn prie savo klaviatūros ir išdėstymo, kurį nori išmokti.",
         },
         { lab: "Pakeisti klaviatūros išdėstymą" },
         {
           steps: [
-            "Atverk Nustatymus.",
-            "Eik į Klaviatūros nustatymas.",
-            "Pasirink savo kalbą, tada išdėstymą (QWERTY, Dvorak, Colemak ir kiti).",
-            "Palik įjungtą „Imituoti šį išdėstymą“, kad galėtum jo mokytis, kad ir kaip nustatytas tavo kompiuteris.",
-            "Įsitikink žiūrėdamas į gyvą peržiūrą.",
+            "Atidaryk Nustatymus.",
+            "Eik į Klaviatūra.",
+            "Pasirink kalbą, tada išdėstymą (QWERTY, Dvorak, Colemak ir kitus).",
+            "Palik įjungtą „Emuliuoti išdėstymą“, kad galėtum jį praktikuoti, kad ir kaip būtų nustatytas tavo kompiuteris.",
+            "Patvirtink pažiūrėjęs į tiesioginę peržiūrą.",
           ],
         },
         {
-          p: "Tame pačiame ekrane gali pasirinkti klaviatūros formą, nuspalvinti klavišus pagal pirštų zonas ir paryškinti kitą klavišą, kol dar mokaisi, kas kur yra.",
+          p: "Tame pačiame ekrane gali pasirinkti klaviatūros formą, nuspalvinti klavišus pagal pirštų zonas ir paryškinti kitą klavišą, kol dar mokaisi, kur kas yra.",
+        },
+        {
+          p: "Klaviatūros *apdaila* — klavišų išvaizda — ateina kartu su paskyra. Prisijungęs gali rinktis iš penkių, o apvalioji būna šešių spalvų; viena iš jų seka tavo temos spalvą. Visa kita tavo bet kuriuo atveju: kalba, išdėstymas, forma ir pirštų zonos niekada neribojamos, nes būtent jos pritaiko programą prie priešais tave esančios klaviatūros.",
         },
       ],
     },
     {
       id: "display",
-      nav: "Vaizdas",
-      heading: "Vaizdas ir pojūtis",
+      nav: "Rodinys",
+      heading: "Rodinys ir pojūtis",
       blocks: [
         {
-          p: "Vaizdo ir Teksto įvesties nustatymai leidžia rodyti greitį žodžiais arba ženklais per minutę ir tiksliai suderinti, kaip jaučiasi rašymas. Atkurti numatytuosius visada vos per vieną spustelėjimą, jei nori pradėti iš naujo.",
+          p: "Nustatymai Įvairūs ir Spausdinimas leidžia rodyti greitį žodžiais arba ženklais per minutę ir tiksliai suderinti, kaip jaučiasi rašymas. Atstatyti visada už vieno spustelėjimo, jei nori pradėti iš naujo.",
+        },
+        {
+          p: "Visos svetainės išvaizda yra skiltyje Paskyra, Išvaizda: šviesi, tamsi arba pagal sistemą, temos spalva ir teksto dydis, kuris galioja kiekviename puslapyje. Kiekvienas namų mokinys turi savo nustatymus, ir jie keliauja kartu su juo — žr. *Kaip rūpintis savo duomenimis*.",
         },
       ],
     },
@@ -225,7 +232,6 @@ export const lt: GuideTranslation = {
           steps: [
             "Atidaryk meniu.",
             "Pasirink Profilis.",
-            "Filtrų eilute susitelk į Raides, Skaitmenis, Skyrybos ženklus arba Simbolius.",
           ],
         },
       ],
@@ -233,25 +239,28 @@ export const lt: GuideTranslation = {
     {
       id: "data",
       nav: "Tavo duomenys",
-      heading: "Rūpinimasis savo duomenimis",
+      heading: "Kaip rūpintis savo duomenimis",
       blocks: [
         { lab: "Išvalyti profilio statistiką" },
         {
           steps: [
-            "Atverk to mokinio Profilį, kurio duomenis nori atstatyti.",
+            "Atidaryk mokinio, kurį nori atstatyti, Profilį.",
             "Slink iki atstatymo valdiklio puslapio apačioje.",
-            "Patvirtink „Ištrinti viską“ — bus išvalytas tik šis profilis.",
+            "Patvirtink „Ištrinti viską“ — išvalomas tik šis profilis.",
           ],
         },
         { lab: "Atsisiųsti savo duomenis" },
         {
           steps: [
-            "Atverk Profilį.",
-            "Pasinaudok atsisiuntimo parinktimi, kad išsaugotum istoriją kaip failą.",
+            "Atidaryk Profilį.",
+            "Atsisiuntimo parinktimi išsaugok savo istoriją kaip failą.",
           ],
         },
         {
-          p: "Prisijunk, jei nori, kad istorija būtų sinchronizuojama tarp įrenginių ir kad galėtum dalytis viešo profilio nuoroda. Nėra jokių reklamų ir jokių sekiklių, o savo duomenis — ar visą paskyrą — gali ištrinti kada tik panorėjęs.",
+          p: "Prisijunk, jei nori, kad tavo istorija būtų sinchronizuojama tarp įrenginių, ir norėdamas dalytis viešo profilio nuoroda. Nėra jokių reklamos tinklų ir jokių sekiklių, o savo duomenis — ar visą paskyrą — gali ištrinti kada tik nori.",
+        },
+        {
+          p: "Prisijungus dabar perkeliami ne tik rezultatai. Tavo nustatymai, tema ir teksto dydis, prieinamumo pasirinkimai ir kiekvieno mokinio nuostatos seka profilį, o ne naršyklę — todėl mokinys, atsidaręs KeyLearn naujame kompiuteryje, tęsia ten, kur baigė, tame pačiame ekrane ir taip pat nustatytame, o ne pradeda iš naujo nuo numatytųjų nustatymų.",
         },
       ],
     },
@@ -288,6 +297,9 @@ export const lt: GuideTranslation = {
         },
         {
           p: "Viduje gali nustatyti pasaulį ir personažą, Dideles raides, Garsus, Pagalbines rankas (švytintį pirštų vedlį), Klaviatūrą (paslėptą, paprastą arba visą suaugusiųjų), Raides ant tako (žodžius, rodomus kaip kaladėlės tiesiai žaidime), užsiėmimo Laikmatį, Padrąsinimus (mažas paskatinančias žinutes) ir — paslėptus po Išplėstiniais — slankiklius Ryškumui, Spalvai ir tam, kaip gyva atrodo pasaulis. Yra ir ramus naktinis vaizdas, ne tik šviesus dieninis.",
+        },
+        {
+          p: "*Key style* keičia tai, kaip klavišai nuspalvinti, o patys klavišai nejuda: *Crayon* — tai baltas klavišas, apvestas savo piršto spalva, o *Rainbow* — pagrindinių spalvų mokomoji klaviatūra: žalias rėmelis, raudoni skaičiai, mėlynos raidės, balsės išskirtos atskirai; joje rėmelio klavišai yra rodyklės, o ne žodžiai, vaikui, kuris dar nemoka perskaityti „enter“. Visi pradeda nuo Crayon. Šalia esantis *Finger colours* visiškai išjungia spalvinimą vaikui, kuriam jo nebereikia.",
         },
       ],
     },
@@ -484,7 +496,48 @@ export const lt: GuideTranslation = {
       heading: "Privatumas vienu sakiniu",
       blocks: [
         {
-          p: "Jokių reklamų ir jokių sekiklių. Vaiko profilis niekada nepalieka tavo naršyklės. Prisijunk tik tada, jei nori sinchronizavimo ar dalijimosi; kitu atveju viskas lieka šiame įrenginyje, ir gali tai ištrinti bet kada.",
+          p: "Jokių reklamos tinklų ir jokių sekiklių. Vaiko profilis niekada nepalieka tavo naršyklės. Prisijunk tik jei nori sinchronizavimo ar bendrinimo; kitaip viskas lieka šiame įrenginyje, ir gali tai ištrinti bet kada.",
+        },
+        {
+          p: "Kai kuriuose puslapiuose gali pamatyti *remiamą eilutę*. Tai vieta, kurią patys pardavėme ir patys rodome — čia nėra reklamos tinklo ir niekas tavęs neseka už svetainės ribų. Ji parenkama pagal puslapį, kuriame esi, niekada ne pagal tai, ką apie tave žinome, ir niekada nerodoma vaikui, vaikų pasaulyje, mokyklos paskyroje ar vykstant pamokai. Bakstelėk *Kodėl tai matau?* prie bet kurios iš jų, ir ten pat gausi tą patį paaiškinimą; projektą parėmę žmonės jų nemato visai.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Pagalba",
+      heading: "Kaip gauti pagalbos",
+      blocks: [
+        {
+          p: "Kiekviena žinutė, kurią mums atsiunti, tampa *pokalbiu, prie kurio gali grįžti*, o ne dingstančiu el. laišku. Jis yra skiltyje Paskyra ir turi savo nuorodos numerį — tą, kurį reikia nurodyti, jei kada nors vėl skambinsi ar rašysi.",
+        },
+        { lab: "Paprašyti pagalbos" },
+        {
+          steps: [
+            "Atidaryk meniu ir pasirink Paskyra, tada Pagalba.",
+            "Pasirink Registruoti užklausą ir parašyk, kas vyksta.",
+            "Pridėk ekrano kopiją, jei tai padeda — PNG, JPG arba PDF, kiekviena iki 10 MB.",
+          ],
+        },
+        {
+          p: "Atsakymai pasirodo tame pokalbyje, o antraštėje esantis varpelis užsidega, kai jų ateina, todėl nereikia sėdėti ir stebėti puslapio. Tai, kas jau sutvarkyta, susiskleidžia po Išspręsta, kuris iš pradžių uždarytas — matai tai, ko dar lauki.",
+        },
+        { lab: "Kas atsako" },
+        {
+          p: "Pirmiausia ją perskaito asistentas, vardu Tab, ir atsako, į ką gali. Jis tau pasakys, kad yra dirbtinis intelektas — niekada neapsimeta kitaip — ir tiesiai pasakys, kai ko nors nežino.",
+        },
+        {
+          p: "Žmogus perima, kai tik tai geresnis atsakymas: viskas, kas susiję su pinigais, tavo duomenimis, saugumu, ar tiesiog todėl, kad paprašei. Niekada nereikia prašyti dukart ir niekada nereikia kartotis — kas bebūtų perėmęs, jau mato viską, ką pasakei.",
+        },
+        {
+          p: "Jei žinutė kada nors atrodo kaip tikra skubi pagalba, atsakymas kaskart tas pats ir ateina iš nustatyto teksto, o ne iš asistento: skubiosios pagalbos numeris ten, kur esi, ir iš karto įspėjamas žmogus mūsų pusėje. Mes negalime paskambinti už tave ir tai pasakome.",
+        },
+        { lab: "Tvarkymasis" },
+        {
+          p: "Pokalbį iš savo sąrašo gali bet kada pašalinti šalia esančia šiukšliadėžės piktograma. Maža pastaba prie *Registruoti užklausą* skaičiuoja, kiek jų išvalei, todėl dingęs pokalbis niekada nėra paslaptis.",
+        },
+        {
+          p: "Bendrame šeimos įrenginyje skiltis Pagalba prieš atsidarydama paprašo suaugusiojo PIN kodo — pagalbos pokalbiai yra paskyros reikalas, o tas, kuris praktikuojasi, ne visada yra tas, kuris paskyrą sukūrė.",
         },
       ],
     },

@@ -22,28 +22,22 @@ export const sq: GuideTranslation = {
       nav: "Hyrja dhe fjalëkalimet",
       heading: "Regjistrimi, hyrja dhe fjalëkalimet",
       blocks: [
-        { p: "Gjithçka gjendet te menyja lart djathtas." },
-        { lab: "Krijo një llogari" },
         {
-          steps: [
-            "Hap menynë (lart djathtas).",
-            "Zgjidh Regjistrohu.",
-            "Shkruaj një email dhe një fjalëkalim.",
-            "Konfirmo — ja ku je brenda.",
-          ],
+          p: "Gjithçka gjendet te menyja lart djathtas, te Hyr ose regjistrohu — e njëjta derë, qoftë se e ke një llogari, qoftë se jo.",
         },
-        { lab: "Hyr në llogari" },
+        { lab: "Krijo një llogari ose hyr" },
         {
           steps: [
-            "Hap menynë dhe zgjidh Hyr.",
-            "Shkruaj email-in dhe fjalëkalimin tënd.",
+            "Hap menynë dhe zgjidh Hyr ose regjistrohu.",
+            "Vazhdo me Google, Facebook ose një çelës hyrjeje — ose shkruaj email-in tënd dhe shtyp Vazhdo.",
+            "Një email i ri të çon te vendosja e një fjalëkalimi; një email ekzistues ta kërkon atë.",
           ],
         },
         { lab: "Rivendos një fjalëkalim të harruar" },
         {
           steps: [
-            "Në faqen e hyrjes, zgjidh Harrova fjalëkalimin.",
-            "Shkruaj adresën tënde të email-it.",
+            "Në faqen e hyrjes, shkruaj email-in tënd dhe shtyp Vazhdo.",
+            "Zgjidh Harruat fjalëkalimin?",
             "Hap lidhjen e rivendosjes që të dërgojmë.",
             "Zgjidh një fjalëkalim të ri dhe hyr.",
           ],
@@ -117,6 +111,12 @@ export const sq: GuideTranslation = {
         {
           p: "Ndërsa shkruan, paneli notues tregon shpejtësinë dhe saktësinë e tanishme, një grafik të vockël të provave të fundit, ecurinë e objektivave dhe serinë tënde. Është aty për të të inkurajuar, jo për të të bezdisur.",
         },
+        {
+          p: "Butonat *− dhe +* pranë objektivit e ngrenë ose e ulin objektivin e sotëm në çast, pa hapur Cilësimet. Uleje nëse të njëjtat pak shkronja kanë ngecur; shpejtësia që duhet të arrijë një shkronjë është e vetmja gjë që vendos sa shpejt hapen shkronjat e reja.",
+        },
+        {
+          p: "Nëse ke zgjedhur një foto profili, vizatimi i saj mund të duket lehtë pas këtyre numrave — Llogaria, Pamja, *Vizatimi juaj pas statistikave*, me një rrëshqitës për fuqinë. Është i fikur derisa ta ndezësh.",
+        },
       ],
     },
     {
@@ -141,10 +141,11 @@ export const sq: GuideTranslation = {
           tips: [
             "*Praktikë e udhëhequr* — parazgjedhja përshtatëse që ta rrit alfabetin tast pas tasti.",
             "*Kursi klasik* — një ecje e caktuar, me radhë, nëpër taste.",
+            "*Kodi burimor* — kod i vërtetë nga framework-e të vërteta.",
             "*Fjalë të shpeshta* — fjalët më të zakonshme në gjuhën tënde.",
             "*Tekst librash* — shkruaj përmes librave të vërtetë të përfshirë në aplikacion.",
+            "*Citime* — mendime të shkurtra e të plota, me shkronjat e mëdha dhe pikësimin e tyre të vërtetë.",
             "*Teksti yt* — ngjit çfarë të duash dhe praktiko mbi të.",
-            "*Copëza kodi* — kllapa, simbole dhe ritmi i kodit.",
             "*Ushtrime me numra* — rreshti i numrave dhe tastiera numerike.",
           ],
         },
@@ -201,6 +202,9 @@ export const sq: GuideTranslation = {
         {
           p: "Në të njëjtin ekran mund të zgjedhësh formën e tastierës, të ngjyrosësh tastet sipas zonës së gishtave dhe të ndriçosh tastin që vjen, ndërsa je ende duke mësuar ku ndodhet çdo gjë.",
         },
+        {
+          p: "*Përfundimi* i tastierës — pamja e tasteve — vjen me një llogari. Kur ke hyrë, ke pesë për të zgjedhur, dhe ai i rrumbullaku vjen në gjashtë ngjyra; njëra prej tyre ndjek ngjyrën e temës sate. Gjithçka më sipër është jotja gjithsesi: gjuha, shpërndarja, forma dhe zonat e gishtave nuk mbyllen kurrë, sepse janë pikërisht ato që e bëjnë aplikacionin të përputhet me tastierën që ke përpara.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const sq: GuideTranslation = {
       blocks: [
         {
           p: "Cilësimet e Pamjes dhe të Futjes së tekstit të lejojnë ta shfaqësh shpejtësinë si fjalë ose si shenja në minutë dhe ta rregullosh imtësisht se si ndihet të shkruarit. Rikthe parazgjedhjet rri gjithmonë vetëm një klikim larg, nëse do të nisësh nga e para.",
+        },
+        {
+          p: "Si duket i gjithë sajti e cakton te Llogaria, Pamja: e çelët, e errët ose sipas sistemit, një ngjyrë teme dhe një madhësi teksti që mbetet e njëjtë në çdo faqe. Çdo nxënës në shtëpi i ka zgjedhjet e veta, dhe ato e shoqërojnë kudo — shih *Kujdesi për të dhënat e tua*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const sq: GuideTranslation = {
           steps: [
             "Hap menynë.",
             "Zgjidh Profili.",
-            "Përdor rreshtin e filtrave për t'u përqendruar te Shkronjat, Shifrat, Pikësimi ose Simbolet.",
           ],
         },
       ],
@@ -240,7 +246,7 @@ export const sq: GuideTranslation = {
         {
           steps: [
             "Hap Profilin e nxënësit që do të rivendosësh.",
-            "Rrëshqit deri te kontrolli i rivendosjes në fund të faqes.",
+            "Lëviz poshtë te kontrolli i rivendosjes në fund të faqes.",
             "Konfirmo “Fshi gjithçka” — pastrohet vetëm ky profil.",
           ],
         },
@@ -248,11 +254,14 @@ export const sq: GuideTranslation = {
         {
           steps: [
             "Hap Profilin.",
-            "Përdor mundësinë e shkarkimit për ta ruajtur historikun si skedar.",
+            "Përdor opsionin e shkarkimit për ta ruajtur historikun si skedar.",
           ],
         },
         {
-          p: "Hyr në llogari nëse dëshiron që historiku yt të sinkronizohet nëpër pajisje dhe të ndash një lidhje publike profili. Nuk ka reklama dhe nuk ka gjurmues, dhe mund t'i fshish të dhënat — ose gjithë llogarinë — kurdo që të duash.",
+          p: "Hyr në llogari nëse do që historiku të sinkronizohet mes pajisjeve dhe për të ndarë një lidhje publike profili. Nuk ka rrjete reklamash dhe nuk ka gjurmues, dhe mund t’i fshish të dhënat — ose gjithë llogarinë — kur të duash.",
+        },
+        {
+          p: "Hyrja në llogari tani mbart më shumë se rezultatet. Cilësimet e tua, tema dhe madhësia e tekstit, zgjedhjet e aksesueshmërisë dhe preferencat e çdo nxënësi e ndjekin profilin, jo shfletuesin — kështu një nxënës që hap KeyLearn në një kompjuter të ri vazhdon aty ku e la, në të njëjtin ekran dhe me të njëjtat cilësime, në vend që të nisë sërish nga parazgjedhjet.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const sq: GuideTranslation = {
         },
         {
           p: "Brenda mund të caktosh botën dhe personazhin, Shkronja të mëdha, Tinguj, Duar ndihmëse (udhëzuesi ndriçues i gishtave), Tastierën (e fshehur, e thjeshtë, ose tabela e plotë e të rriturve), Shkronjat në shteg (fjalët e shfaqura si blloqe pikërisht brenda lojës), një Kohëmatës seance, Brohoritje (mesazhe të vogla inkurajuese) dhe — të fshehura te Të përparuara — rrëshqitës për Ndriçimin, Ngjyrën dhe sa e gjallë ndihet bota. Ka edhe një pamje të qetë nate përveç asaj të ndritshme të ditës.",
+        },
+        {
+          p: "*Key style* ndryshon mënyrën si ngjyrosen tastet, ndërsa vetë tastet nuk lëvizin: *Crayon* është tasti i bardhë i rrethuar me ngjyrën e gishtit të vet, ndërsa *Rainbow* është tastiera mësimore me ngjyra bazë — kornizë e gjelbër, numra të kuq, shkronja blu me zanoret të veçuara — ku tastet e kornizës janë shigjeta në vend të fjalëve, për fëmijën që ende nuk di të lexojë “enter”. Të gjithë nisin me Crayon. *Finger colours* aty pranë e fik krejt ngjyrosjen për fëmijën që nuk ka më nevojë për të.",
         },
       ],
     },
@@ -482,7 +494,48 @@ export const sq: GuideTranslation = {
       heading: "Privatësia, me një fjali",
       blocks: [
         {
-          p: "Pa reklama dhe pa gjurmues. Profili i një fëmije nuk del kurrë nga shfletuesi yt. Hyr në llogari vetëm nëse do sinkronizim ose ndarje; përndryshe gjithçka rri në këtë pajisje, dhe je i lirë ta fshish në çdo çast.",
+          p: "Pa rrjete reklamash dhe pa gjurmues. Profili i një fëmije nuk del kurrë nga shfletuesi yt. Hyr në llogari vetëm nëse do sinkronizim ose ndarje; përndryshe gjithçka rri në këtë pajisje, dhe je i lirë ta fshish në çdo çast.",
+        },
+        {
+          p: "Në disa faqe mund të shohësh një *rresht të sponsorizuar*. Është një që e kemi shitur dhe e shfaqim vetë — këtu nuk ka rrjet reklamash dhe asgjë nuk të ndjek jashtë sajtit. E zgjedh faqja ku ndodhesh, kurrë diçka që dimë për ty, dhe nuk i shfaqet kurrë një fëmije, brenda botës së fëmijëve, në një llogari shkolle ose gjatë një mësimi. Prek *Pse po e shoh këtë?* te cilido prej tyre për të njëjtin shpjegim aty për aty; ata që e kanë mbështetur projektin nuk shohin asnjë.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Si të marrësh ndihmë",
+      heading: "Si të marrësh ndihmë",
+      blocks: [
+        {
+          p: "Çdo mesazh që na dërgon bëhet një *bisedë ku mund të rikthehesh*, jo një email që zhduket. Ajo ndodhet te Llogaria dhe ka numrin e vet të referencës — atë që duhet të përmendësh nëse ndonjëherë telefonon ose shkruan sërish.",
+        },
+        { lab: "Kërko ndihmë" },
+        {
+          steps: [
+            "Hap menynë dhe zgjidh Llogaria, pastaj Mbështetje.",
+            "Zgjidh Regjistro një biletë dhe trego çfarë po ndodh.",
+            "Bashkëngjit një pamje ekrani nëse ndihmon — PNG, JPG ose PDF, deri në 10 MB secila.",
+          ],
+        },
+        {
+          p: "Përgjigjet shfaqen në atë bisedë, dhe zilja në krye ndizet kur vjen një e re, ndaj s’ke pse rri e shikon faqen. Çdo gjë e zgjidhur palloset te Zgjidhur, që fillon e mbyllur — ajo që ende pret është ajo që sheh.",
+        },
+        { lab: "Kush përgjigjet" },
+        {
+          p: "Një asistent i quajtur Tab e lexon i pari dhe përgjigjet për aq sa mundet. Do të ta thotë që është IA — nuk shtiret kurrë ndryshe — dhe do ta thotë hapur kur nuk di diçka.",
+        },
+        {
+          p: "Një njeri e merr përsipër sa herë që kjo është përgjigjja më e mirë: për çdo gjë që lidhet me para, me të dhënat e tua, me sigurinë, ose thjesht sepse e kërkove. Nuk ke pse të kërkosh dy herë dhe as të përsëritesh — kushdo që e merr përsipër i sheh tashmë të gjitha ato që ke thënë.",
+        },
+        {
+          p: "Nëse një mesazh duket ndonjëherë si një emergjencë e vërtetë, përgjigjja është gjithmonë e njëjtë dhe vjen nga një tekst i caktuar, jo nga asistenti: numri i emergjencës aty ku ndodhesh, dhe një njeri nga ana jonë njoftohet menjëherë. Ne nuk mund ta bëjmë atë telefonatë për ty, dhe këtë e themi qartë.",
+        },
+        { lab: "Rregullimi" },
+        {
+          p: "Mund ta heqësh një bisedë nga lista kur të duash me ikonën e koshit pranë saj. Një shënim i vogël pranë *Regjistro një biletë* numëron sa ke pastruar, ndaj një bisedë që u zhduk nuk është kurrë mister.",
+        },
+        {
+          p: "Në një pajisje të përbashkët familjare, seksioni Mbështetje kërkon PIN-in e të rriturve para se të hapet — bisedat me mbështetjen janë punë e llogarisë, dhe ai që praktikon nuk është gjithmonë ai që e krijoi llogarinë.",
         },
       ],
     },

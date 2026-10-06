@@ -22,29 +22,23 @@ export const is: GuideTranslation = {
       nav: "Innskráning og lykilorð",
       heading: "Nýskráning, innskráning og lykilorð",
       blocks: [
-        { p: "Allt er í valmyndinni efst til hægri." },
-        { lab: "Búa til aðgang" },
         {
-          steps: [
-            "Opnaðu valmyndina (efst til hægri).",
-            "Veldu Nýskrá.",
-            "Sláðu inn netfang og lykilorð.",
-            "Staðfestu — og þú ert kominn inn.",
-          ],
+          p: "Allt er í valmyndinni efst til hægri, undir Skrá inn eða nýskrá — sömu dyrnar hvort sem þú átt aðgang fyrir eða ekki.",
         },
-        { lab: "Skrá sig inn" },
+        { lab: "Stofna aðgang eða skrá sig inn" },
         {
           steps: [
-            "Opnaðu valmyndina og veldu Skrá inn.",
-            "Sláðu inn netfangið þitt og lykilorðið.",
+            "Opnaðu valmyndina og veldu Skrá inn eða nýskrá.",
+            "Haltu áfram með Google, Facebook eða aðgangslykli — eða sláðu inn netfangið þitt og ýttu á Halda áfram.",
+            "Nýtt netfang leiðir þig í að búa til lykilorð; netfang sem er þegar skráð biður um það.",
           ],
         },
         { lab: "Endurstilla gleymt lykilorð" },
         {
           steps: [
-            "Á innskráningarskjánum velurðu Gleymt lykilorð.",
-            "Sláðu inn netfangið þitt.",
-            "Opnaðu endurstillingarhlekkinn sem við sendum þér.",
+            "Á innskráningarskjánum slærðu inn netfangið þitt og ýtir á Halda áfram.",
+            "Veldu Gleymdirðu lykilorðinu?",
+            "Opnaðu endurstillingartengilinn sem við sendum þér.",
             "Veldu nýtt lykilorð og skráðu þig inn.",
           ],
         },
@@ -111,11 +105,17 @@ export const is: GuideTranslation = {
     },
     {
       id: "readout",
-      nav: "Lifandi tölur",
-      heading: "Lifandi mælaborðið",
+      nav: "Tölfræði í beinni",
+      heading: "Mælaborðið í beinni",
       blocks: [
         {
-          p: "Meðan þú skrifar sýnir fljótandi spjaldið hraðann þinn og nákvæmni, litla línu yfir nýlegar umferðir, markmiðin þín og samfelluna. Það er þar til að hvetja þig, ekki til að nöldra.",
+          p: "Á meðan þú skrifar sýnir fljótandi spjaldið núverandi hraða og nákvæmni, lítið línurit yfir síðustu umferðir, markmiðin þín og samfelldu dagana þína. Það er þarna til að hvetja þig, ekki til að nöldra.",
+        },
+        {
+          p: "*− og +* við hliðina á markmiðinu hækka eða lækka markmið dagsins á staðnum, án þess að opna Stillingar. Lækkaðu það ef sömu fáu stafirnir eru hættir að taka framförum; hraðinn sem stafur þarf að ná er það eina sem ræður því hversu hratt nýir opnast.",
+        },
+        {
+          p: "Ef þú hefur valið prófílmynd geturðu látið myndverkið hennar sitja dauft á bak við tölurnar — Aðgangur, Útlit, *Myndverkið þitt á bak við tölfræðina*, með sleða sem stillir hversu sterkt það er. Slökkt nema þú kveikir á því.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const is: GuideTranslation = {
           tips: [
             "*Leidd æfing* — aðlagandi sjálfgefna leiðin sem stækkar stafrófið þitt lykil fyrir lykil.",
             "*Klassískt námskeið* — föst og skipuleg ganga í gegnum lyklana.",
+            "*Kóðabrot* — alvöru kóði úr alvöru forritunarumgjörðum.",
             "*Algeng orð* — algengustu orðin í tungumálinu þínu.",
             "*Bókatexti* — skrifaðu þig í gegnum alvöru bækur sem fylgja appinu.",
+            "*Tilvitnanir* — stuttar, heilar hugsanir með sínum réttu hástöfum og greinarmerkjum.",
             "*Þinn eigin texti* — límdu inn hvað sem þú vilt og æfðu þig á því.",
-            "*Kóðabútar* — svigar, tákn og taktur kóðans.",
             "*Töluæfingar* — talnaröðin og talnaborðið.",
           ],
         },
@@ -182,34 +183,40 @@ export const is: GuideTranslation = {
     },
     {
       id: "keyboard",
-      nav: "Uppsetning lyklaborðs",
-      heading: "Að stilla lyklaborðið þitt",
+      nav: "Lyklaborðsuppsetning",
+      heading: "Að setja upp lyklaborðið",
       blocks: [
         {
-          p: "Í Stillingum, undir Uppsetning lyklaborðs, samræmirðu KeyLearn við lyklaborðið þitt og við uppsetninguna sem þú vilt læra.",
+          p: "Í Stillingum, undir Lyklaborðsuppsetning, lagarðu KeyLearn að lyklaborðinu þínu og að uppsetningunni sem þú vilt læra.",
         },
         { lab: "Skipta um lyklaborðsuppsetningu" },
         {
           steps: [
             "Opnaðu Stillingar.",
-            "Farðu í Uppsetningu lyklaborðs.",
-            "Veldu tungumálið þitt, síðan uppsetninguna (QWERTY, Dvorak, Colemak og fleiri).",
-            "Hafðu „Herma eftir þessari uppsetningu“ kveikt svo þú getir æft hana hvernig sem tölvan þín er stillt.",
-            "Fylgstu með lifandi forskoðuninni til að staðfesta.",
+            "Farðu í Lyklaborðsuppsetning.",
+            "Veldu tungumálið þitt og svo uppsetninguna (QWERTY, Dvorak, Colemak og fleiri).",
+            "Hafðu kveikt á „Herma eftir þessari uppsetningu“ svo þú getir æft hana hvernig sem tölvan þín er stillt.",
+            "Skoðaðu forskoðunina í beinni til að staðfesta.",
           ],
         },
         {
-          p: "Á sama skjá geturðu valið lögun lyklaborðsins, litað lyklana eftir fingrasvæði, og látið næsta lykil lýsa upp meðan þú ert enn að læra hvar hlutirnir eru.",
+          p: "Á sama skjá geturðu valið lögun lyklaborðsins, litað lyklana eftir fingrasvæðum og lýst upp næsta lykil á meðan þú ert enn að læra hvar allt er.",
+        },
+        {
+          p: "*Áferð* lyklaborðsins — útlit lyklanna — fylgir aðgangi. Innskráð(ur) hefurðu fimm að velja úr og sú kringlótta fæst í sex litum; einn þeirra fylgir litnum á þemanu þínu. Allt hitt er þitt hvort sem er: tungumálinu, uppsetningunni, löguninni og fingrasvæðunum er aldrei haldið eftir, því það eru þau sem láta appið passa við lyklaborðið fyrir framan þig.",
         },
       ],
     },
     {
       id: "display",
-      nav: "Útlit",
-      heading: "Útlit og tilfinning",
+      nav: "Birting",
+      heading: "Birting og tilfinning",
       blocks: [
         {
-          p: "Stillingarnar Útlit og Textainnsláttur leyfa þér að sýna hraðann þinn í orðum eða stöfum á mínútu og fínstilla hvernig innslátturinn upplifist. Endurstilla sjálfgefið er alltaf einn smellur í burtu ef þú vilt byrja upp á nýtt.",
+          p: "Stillingarnar Birting og Textainnsláttur leyfa þér að sýna hraðann sem orð eða stafi á mínútu og fínstilla hvernig það er að skrifa. Endurstilla sjálfgefið er alltaf einum smelli frá ef þú vilt byrja upp á nýtt.",
+        },
+        {
+          p: "Útlit allrar síðunnar er undir Aðgangur, Útlit: ljóst, dökkt eða eftir kerfinu, litur þema og textastærð sem gildir á öllum síðum. Hver nemandi á heimilinu heldur sínu eigin, og það ferðast með honum — sjá *Að gæta gagnanna þinna*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const is: GuideTranslation = {
           steps: [
             "Opnaðu valmyndina.",
             "Veldu Prófíll.",
-            "Notaðu síuröðina til að einbeita þér að Bókstöfum, Tölustöfum, Greinarmerkjum eða Táknum.",
           ],
         },
       ],
@@ -234,13 +240,13 @@ export const is: GuideTranslation = {
     {
       id: "data",
       nav: "Gögnin þín",
-      heading: "Að passa upp á gögnin þín",
+      heading: "Að gæta gagnanna þinna",
       blocks: [
         { lab: "Hreinsa tölfræði prófíls" },
         {
           steps: [
-            "Opnaðu Prófíl fyrir nemandann sem þú vilt núllstilla.",
-            "Skrunaðu niður að endurstillingarstýringunni neðst á síðunni.",
+            "Opnaðu Prófíl nemandans sem þú vilt endurstilla.",
+            "Skrunaðu niður að endurstillingarhnappnum neðst á síðunni.",
             "Staðfestu „Eyða öllu“ — aðeins þessi prófíll er hreinsaður.",
           ],
         },
@@ -248,11 +254,14 @@ export const is: GuideTranslation = {
         {
           steps: [
             "Opnaðu Prófíl.",
-            "Notaðu niðurhalsvalkostinn til að vista ferilinn þinn sem skrá.",
+            "Notaðu niðurhalsvalið til að vista ferilinn þinn sem skrá.",
           ],
         },
         {
-          p: "Skráðu þig inn ef þú vilt að ferillinn samstillist milli tækja og til að deila opinberum prófílhlekk. Það eru engar auglýsingar og engir rekjarar, og þú getur eytt gögnunum þínum — eða öllum aðgangnum — hvenær sem þú vilt.",
+          p: "Skráðu þig inn ef þú vilt að ferillinn þinn samstillist milli tækja og til að deila opinberum prófíltengli. Það eru engin auglýsinganet og engir rekjarar, og þú getur eytt gögnunum þínum — eða öllum aðganginum — hvenær sem þú vilt.",
+        },
+        {
+          p: "Innskráning ber nú meira með sér en niðurstöðurnar þínar. Stillingarnar þínar, þemað og textastærðin, aðgengisvalið sem þú hefur gert og eigin kjörstillingar hvers nemanda fylgja prófílnum frekar en vafranum — svo nemandi sem opnar KeyLearn á nýrri tölvu heldur áfram þar sem frá var horfið, á sama skjá og eins uppsettur, í stað þess að byrja aftur frá sjálfgefnu stillingunum.",
         },
       ],
     },
@@ -283,10 +292,15 @@ export const is: GuideTranslation = {
       blocks: [
         { lab: "Opna leikfangakassann" },
         {
-          steps: ["Á barnaskjánum ýtirðu á tannhjólið efst á leiksvæðinu."],
+          steps: [
+            "Á barnaskjánum ýtirðu á tannhjólið efst á leiksvæðinu.",
+          ],
         },
         {
           p: "Þar inni geturðu stillt heiminn og persónuna, Stóra stafi, Hljóð, Hjálparhendur (glóandi fingraleiðsögnina), Lyklaborðið (falið, einfalt, eða fullorðinsborðið í heild), Stafi á slóðinni (orðin sýnd sem kubbar beint í leiknum), Tímamæli fyrir lotuna, Hvatningu (lítil uppörvandi skilaboð), og — falið undir Ítarlegt — sleða fyrir Birtu, Liti og hversu fjörugur heimurinn er. Það er til rólegt næturútlit jafnt sem bjarta dagsútlitið.",
+        },
+        {
+          p: "*Key style* breytir því hvernig lyklarnir eru málaðir, en lyklarnir sjálfir færast ekki: *Crayon* er hvíti lykillinn umkringdur lit síns fingurs, og *Rainbow* er námsborðið í grunnlitum — grænn rammi, rauðar tölur, bláir stafir með sérhljóðana aðgreinda — þar sem rammalyklarnir eru örvar í stað orða, fyrir barn sem kann ekki enn að lesa „enter“. Allir byrja á Crayon. *Finger colours* þar við hliðina slekkur alveg á litunum fyrir barn sem þarf ekki lengur á þeim að halda.",
         },
       ],
     },
@@ -480,10 +494,51 @@ export const is: GuideTranslation = {
     {
       id: "privacy",
       nav: "Persónuvernd",
-      heading: "Persónuvernd, í einni setningu",
+      heading: "Persónuvernd í einni setningu",
       blocks: [
         {
-          p: "Engar auglýsingar og engir rekjarar. Prófíll barns fer aldrei út úr vafranum þínum. Skráðu þig aðeins inn ef þú vilt samstillingu eða deilingu; annars helst allt á þessu tæki, og þér er frjálst að eyða því hvenær sem er.",
+          p: "Engin auglýsinganet og engir rekjarar. Prófíll barns yfirgefur aldrei vafrann þinn. Skráðu þig aðeins inn ef þú vilt samstillingu eða deilingu; annars helst allt á þessu tæki og þér er frjálst að eyða því hvenær sem er.",
+        },
+        {
+          p: "Þú gætir séð *kostaða línu* á sumum síðum. Hún er pláss sem við seldum sjálf og birtum sjálf — hér er ekkert auglýsinganet og ekkert eltir þig út af síðunni. Hún er valin eftir síðunni sem þú ert á, aldrei eftir neinu sem við vitum um þig, og hún birtist aldrei barni, inni í barnaheiminum, á skólaaðgangi eða á meðan kennslustund er í gangi. Ýttu á *Af hverju sé ég þetta?* á hverri þeirra til að fá sömu skýringu á staðnum, og þau sem hafa stutt verkefnið sjá aldrei neina.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Að fá aðstoð",
+      heading: "Að fá aðstoð",
+      blocks: [
+        {
+          p: "Öll skilaboð sem þú sendir okkur verða að *samtali sem þú getur snúið aftur í*, ekki tölvupósti sem hverfur. Það er undir Aðgangur og hefur sitt eigið tilvísunarnúmer — það sem þú nefnir ef þú hringir eða skrifar einhvern tíma aftur.",
+        },
+        { lab: "Biðja um aðstoð" },
+        {
+          steps: [
+            "Opnaðu valmyndina og veldu Aðgangur, svo Aðstoð.",
+            "Veldu Skrá mál og segðu hvað er að gerast.",
+            "Hengdu við skjámynd ef það hjálpar — PNG, JPG eða PDF, allt að 10 MB hver.",
+          ],
+        },
+        {
+          p: "Svörin birtast í því samtali og bjallan í hausnum lýsist upp þegar svar berst, svo þú þarft ekki að sitja og fylgjast með síðunni. Allt sem er þegar leyst leggst saman undir Leyst, sem byrjar lokað — það sem þú bíður enn eftir er það sem þú sérð.",
+        },
+        { lab: "Hver svarar" },
+        {
+          p: "Aðstoðarmaður sem heitir Tab les það fyrst og svarar því sem hann getur. Hann segir þér að hann sé gervigreind — hann þykist aldrei vera annað — og segir hreint út þegar hann veit ekki eitthvað.",
+        },
+        {
+          p: "Manneskja tekur við hvenær sem það er betra svarið: allt sem varðar peninga, gögnin þín eða öryggi, eða einfaldlega af því að þú baðst um það. Þú þarft aldrei að biðja tvisvar og þú þarft aldrei að endurtaka þig — sá sem tekur við sér nú þegar allt sem þú hefur sagt.",
+        },
+        {
+          p: "Ef skilaboð hljóma einhvern tíma eins og raunverulegt neyðartilvik er svarið alltaf það sama og kemur úr föstum texta frekar en frá aðstoðarmanninum: neyðarnúmerið þar sem þú ert, og manneskja hjá okkur er látin vita strax. Við getum ekki hringt símtalið fyrir þig, og við segjum það.",
+        },
+        { lab: "Að taka til" },
+        {
+          p: "Þú getur fjarlægt samtal af listanum þínum hvenær sem er með ruslatunnutákninu við hliðina á því. Lítil athugasemd við *Skrá mál* heldur utan um hversu mörgum þú hefur eytt, svo samtal sem hvarf er aldrei ráðgáta.",
+        },
+        {
+          p: "Á sameiginlegu fjölskyldutæki biður Aðstoðarhlutinn um PIN-númer fullorðinna áður en hann opnast — aðstoðarsamtöl eru mál aðgangsins, og sá sem æfir sig er ekki alltaf sá sem setti aðganginn upp.",
         },
       ],
     },

@@ -22,28 +22,22 @@ export const lv: GuideTranslation = {
       nav: "Pieteikšanās un paroles",
       heading: "Reģistrēšanās, pieteikšanās un paroles",
       blocks: [
-        { p: "Viss atrodams izvēlnē augšējā labajā stūrī." },
-        { lab: "Izveidot kontu" },
         {
-          steps: [
-            "Atver izvēlni (augšējā labajā stūrī).",
-            "Izvēlies Reģistrēties.",
-            "Ievadi e-pasta adresi un paroli.",
-            "Apstiprini — un esi iekšā.",
-          ],
+          p: "Viss atrodams izvēlnē augšējā labajā stūrī, sadaļā Piesakies vai reģistrējies — tās pašas durvis neatkarīgi no tā, vai tev jau ir konts.",
         },
-        { lab: "Pieteikties" },
+        { lab: "Izveidot kontu vai pieteikties" },
         {
           steps: [
-            "Atver izvēlni un izvēlies Pieteikties.",
-            "Ievadi savu e-pasta adresi un paroli.",
+            "Atver izvēlni un izvēlies Piesakies vai reģistrējies.",
+            "Turpini ar Google, Facebook vai piekļuves atslēgu — vai ieraksti savu e-pasta adresi un nospied Turpināt.",
+            "Ar jaunu e-pasta adresi tu iestatīsi paroli; ar esošu tev to pajautās.",
           ],
         },
         { lab: "Atjaunot aizmirstu paroli" },
         {
           steps: [
-            "Pieteikšanās logā izvēlies Aizmirsu paroli.",
-            "Ievadi savu e-pasta adresi.",
+            "Pieteikšanās logā ievadi savu e-pasta adresi un nospied Turpināt.",
+            "Izvēlies Aizmirsi paroli?",
             "Atver atjaunošanas saiti, ko tev nosūtām.",
             "Izvēlies jaunu paroli un piesakies.",
           ],
@@ -111,11 +105,17 @@ export const lv: GuideTranslation = {
     },
     {
       id: "readout",
-      nav: "Statistika tiešraidē",
-      heading: "Rādījumi tiešraidē",
+      nav: "Tiešraides statistika",
+      heading: "Tiešraides rādījumi",
       blocks: [
         {
-          p: "Kamēr raksti, peldošais panelis rāda tavu pašreizējo ātrumu un precizitāti, nelielu pēdējo piegājienu līkni, mērķu gaitu un tavu sēriju. Tas ir tur, lai iedrošinātu, nevis lai piesietos.",
+          p: "Kamēr raksti, peldošais panelis rāda tavu pašreizējo ātrumu un precizitāti, nelielu nesenāko piegājienu līkni, tavus mērķus un sēriju. Tas ir šeit, lai tevi iedrošinātu, nevis lai uzbāztos.",
+        },
+        {
+          p: "*− un +* blakus mērķim tūlīt paceļ vai pazemina šodienas mērķi, neatverot Iestatījumus. Pazemini to, ja tie paši daži burti vairs neuzlabojas; ātrums, kas burtam jāsasniedz, ir vienīgais, kas nosaka, cik ātri atveras jauni burti.",
+        },
+        {
+          p: "Ja esi izvēlējies profila attēlu, tā zīmējums var vāji rādīties aiz šiem skaitļiem — Konts, Izskats, *Jūsu attēls aiz statistikas*, ar slīdni, kas nosaka, cik spilgts tas ir. Izslēgts, ja vien to neieslēdz.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const lv: GuideTranslation = {
           tips: [
             "*Vadītā prakse* — pielāgojošais noklusējums, kas audzē tavu alfabētu taustiņu pa taustiņam.",
             "*Klasiskais kurss* — noteikts, sakārtots gājiens cauri taustiņiem.",
+            "*Koda meistarība* — īsts kods no īstiem ietvariem.",
             "*Biežākie vārdi* — visbiežāk lietotie vārdi tavā valodā.",
             "*Grāmatu teksts* — raksti cauri īstām grāmatām, kas iebūvētas lietotnē.",
+            "*Citāti* — īsas, pabeigtas domas ar īstiem lielajiem burtiem un pieturzīmēm.",
             "*Tavs paša teksts* — ielīmē, ko vien vēlies, un praktizējies ar to.",
-            "*Koda fragmenti* — iekavas, simboli un koda ritms.",
             "*Ciparu treniņi* — ciparu rinda un ciparu bloks.",
           ],
         },
@@ -183,33 +184,39 @@ export const lv: GuideTranslation = {
     {
       id: "keyboard",
       nav: "Tastatūras iestatīšana",
-      heading: "Tavas tastatūras iestatīšana",
+      heading: "Tastatūras iestatīšana",
       blocks: [
         {
-          p: "Iestatījumi, Tastatūras iestatīšana ir vieta, kur pieskaņot KeyLearn tavai tastatūrai un izkārtojumam, ko vēlies apgūt.",
+          p: "Iestatījumos sadaļā Tastatūras iestatīšana tu pielāgo KeyLearn savai tastatūrai un izkārtojumam, ko vēlies apgūt.",
         },
-        { lab: "Nomainīt tastatūras izkārtojumu" },
+        { lab: "Mainīt tastatūras izkārtojumu" },
         {
           steps: [
             "Atver Iestatījumus.",
             "Dodies uz Tastatūras iestatīšana.",
-            "Izvēlies savu valodu, tad izkārtojumu (QWERTY, Dvorak, Colemak un citus).",
-            "Atstāj ieslēgtu “Simulēt šo izkārtojumu”, lai vari to praktizēt neatkarīgi no tā, kas iestatīts tavā datorā.",
-            "Pārliecinies, skatoties dzīvajā priekšskatījumā.",
+            "Izvēlies valodu un pēc tam izkārtojumu (QWERTY, Dvorak, Colemak un citus).",
+            "Atstāj ieslēgtu “Simulēt šo izkārtojumu”, lai varētu to trenēt neatkarīgi no tā, kā iestatīts tavs dators.",
+            "Pārbaudi tiešraides priekšskatījumā.",
           ],
         },
         {
-          p: "Tajā pašā ekrānā vari izvēlēties tastatūras formu, iekrāsot taustiņus pēc pirkstu zonām un izgaismot nākamo taustiņu, kamēr vēl mācies, kas kur atrodas.",
+          p: "Tajā pašā ekrānā vari izvēlēties tastatūras formu, iekrāsot taustiņus pēc pirkstu zonām un izcelt nākamo taustiņu, kamēr vēl mācies, kur kas atrodas.",
+        },
+        {
+          p: "Tastatūras *apdare* — taustiņu izskats — nāk līdzi kontam. Kad esi pieteicies, vari izvēlēties no piecām, un apaļā ir sešās krāsās; viena no tām seko tavas tēmas krāsai. Viss pārējais iepriekš minētais tev pieder jebkurā gadījumā: valoda, izkārtojums, forma un pirkstu zonas nekad netiek liegtas, jo tieši tās ļauj lietotnei atbilst tastatūrai, kas ir tavā priekšā.",
         },
       ],
     },
     {
       id: "display",
-      nav: "Izskats",
-      heading: "Izskats un sajūta",
+      nav: "Attēlošana",
+      heading: "Attēlošana un sajūta",
       blocks: [
         {
-          p: "Izskata un Teksta ievades iestatījumi ļauj rādīt ātrumu kā vārdus vai zīmes minūtē un smalki noskaņot to, kā rakstīšana jūtas. Atjaunot noklusējumus vienmēr ir viena klikšķa attālumā, ja gribi sākt no gala.",
+          p: "Iestatījumi Attēlošana un Teksta ievade ļauj rādīt ātrumu vārdos vai rakstzīmēs minūtē un smalki noregulēt, kā jūtas rakstīšana. Atjaunot noklusējumus vienmēr ir viena klikšķa attālumā, ja gribi sākt no jauna.",
+        },
+        {
+          p: "Visas vietnes izskats atrodams sadaļā Konts, Izskats: gaišs, tumšs vai pēc sistēmas, tēmas krāsa un teksta izmērs, kas saglabājas katrā lapā. Katrs mājsaimniecības skolēns patur savus iestatījumus, un tie ceļo līdzi — skati *Rūpes par taviem datiem*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const lv: GuideTranslation = {
           steps: [
             "Atver izvēlni.",
             "Izvēlies Profils.",
-            "Ar filtru rindu pievērsies Burtiem, Cipariem, Pieturzīmēm vai Simboliem.",
           ],
         },
       ],
@@ -239,20 +245,23 @@ export const lv: GuideTranslation = {
         { lab: "Notīrīt profila statistiku" },
         {
           steps: [
-            "Atver Profilu tam skolēnam, kuru vēlies atiestatīt.",
+            "Atver Profilu tam skolēnam, kuru gribi atiestatīt.",
             "Ritini līdz atiestatīšanas vadīklai lapas apakšā.",
-            "Apstiprini “Dzēst visu” — tiks notīrīts tikai šis profils.",
+            "Apstiprini “Dzēst visu” — tiek notīrīts tikai šis profils.",
           ],
         },
         { lab: "Lejupielādēt savus datus" },
         {
           steps: [
             "Atver Profilu.",
-            "Izmanto lejupielādes iespēju, lai saglabātu savu vēsturi kā failu.",
+            "Izmanto lejupielādes iespēju, lai saglabātu savu vēsturi failā.",
           ],
         },
         {
-          p: "Piesakies, ja vēlies, lai vēsture sinhronizējas starp ierīcēm un lai varētu dalīties ar publisku profila saiti. Nav ne reklāmu, ne izsekotāju, un savus datus — vai visu kontu — vari dzēst, kad vien vēlies.",
+          p: "Piesakies, ja vēlies, lai tava vēsture sinhronizētos starp ierīcēm, un lai kopīgotu publisku profila saiti. Nav reklāmu tīklu un nav izsekotāju, un tu vari izdzēst savus datus — vai visu kontu — kad vien vēlies.",
+        },
+        {
+          p: "Pieteikšanās tagad saglabā vairāk nekā tikai rezultātus. Tavi iestatījumi, tēma un teksta izmērs, tevis izvēlētās pieejamības iespējas un katra skolēna paša preferences seko profilam, nevis pārlūkam — tāpēc skolēns, kurš atver KeyLearn jaunā datorā, turpina tur, kur palika, tajā pašā ekrānā un tāpat iestatītā, nevis sāk no jauna ar noklusējumiem.",
         },
       ],
     },
@@ -283,10 +292,15 @@ export const lv: GuideTranslation = {
       blocks: [
         { lab: "Atvērt rotaļu kasti" },
         {
-          steps: ["Bērnu ekrānā pieskaries zobratiņam spēles laukuma augšā."],
+          steps: [
+            "Bērnu ekrānā pieskaries zobratiņam spēles laukuma augšā.",
+          ],
         },
         {
           p: "Iekšā vari iestatīt pasauli un tēlu, Lielos burtus, Skaņas, Palīgrokas (mirdzošo pirkstu ceļvedi), Tastatūru (paslēptu, vienkāršu vai pilno pieaugušo tastatūru), Burtus uz takas (vārdi, kas parādīti kā klucīši tieši spēlē), nodarbības Taimeri, Uzmundrinājumus (mazus iedrošinošus vēstījumus) un — paslēptus zem Papildu — slīdņus Spilgtumam, Krāsai un tam, cik dzīva jūtas pasaule. Ir arī mierīgs nakts izskats, ne tikai spilgtais dienas.",
+        },
+        {
+          p: "*Key style* maina to, kā taustiņi ir nokrāsoti, bet paši taustiņi nepārvietojas: *Crayon* ir balts taustiņš ar apmali sava pirksta krāsā, un *Rainbow* ir mācību tastatūra pamatkrāsās — zaļš rāmis, sarkani cipari, zili burti ar atsevišķi izceltiem patskaņiem —, kur rāmja taustiņi ir bultiņas, nevis vārdi, bērnam, kurš vēl neprot izlasīt “enter”. Visi sāk ar Crayon. *Finger colours* blakus pilnībā izslēdz iekrāsojumu bērnam, kuram tas vairs nav vajadzīgs.",
         },
       ],
     },
@@ -483,7 +497,48 @@ export const lv: GuideTranslation = {
       heading: "Privātums vienā teikumā",
       blocks: [
         {
-          p: "Nav reklāmu, nav izsekotāju. Bērna profils nekad neatstāj tavu pārlūkprogrammu. Piesakies tikai tad, ja gribi sinhronizāciju vai dalīšanos; citādi viss paliek šajā ierīcē, un tu vari to izdzēst jebkurā brīdī.",
+          p: "Nav reklāmu tīklu un nav izsekotāju. Bērna profils nekad nepamet tavu pārlūku. Piesakies tikai tad, ja vēlies sinhronizēt vai kopīgot; citādi viss paliek šajā ierīcē, un tu to vari izdzēst jebkurā laikā.",
+        },
+        {
+          p: "Dažās lapās tu vari redzēt *sponsorētu rindu*. To esam pārdevuši un rādām paši — šeit nav reklāmu tīkla, un nekas tev neseko ārpus vietnes. To izvēlas lapa, kurā atrodies, nekad ne kaut kas, ko mēs par tevi zinām, un tā nekad netiek rādīta bērnam, bērnu pasaulē, skolas kontā vai nodarbības laikā. Pieskaries *Kāpēc es to redzu?* pie jebkuras no tām, lai turpat saņemtu to pašu paskaidrojumu, un tie, kas atbalstījuši projektu, tās neredz nekad.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Palīdzības saņemšana",
+      heading: "Palīdzības saņemšana",
+      blocks: [
+        {
+          p: "Katra ziņa, ko mums sūti, kļūst par *sarunu, pie kuras vari atgriezties*, nevis e-pastu, kas pazūd. Tā atrodas sadaļā Konts, un tai ir savs atsauces numurs — to nosauc, ja kādreiz atkal zvani vai raksti.",
+        },
+        { lab: "Lūgt palīdzību" },
+        {
+          steps: [
+            "Atver izvēlni un izvēlies Konts, pēc tam Atbalsts.",
+            "Izvēlies Reģistrēt pieprasījumu un pastāsti, kas notiek.",
+            "Pievieno ekrānuzņēmumu, ja tas palīdz — PNG, JPG vai PDF, līdz 10 MB katrs.",
+          ],
+        },
+        {
+          p: "Atbildes parādās tajā sarunā, un zvaniņš galvenē iedegas, kad kāda pienāk, tāpēc tev nav jāsēž un jāskatās lapā. Viss jau atrisinātais tiek salocīts zem Atrisināts, kas sākumā ir aizvērts — tas, ko vēl gaidi, ir tas, ko redzi.",
+        },
+        { lab: "Kas atbild" },
+        {
+          p: "Asistents vārdā Tab to izlasa pirmais un atbild uz to, ko spēj. Tas tev pateiks, ka ir mākslīgais intelekts — tas nekad neizliekas par ko citu un skaidri pasaka, ja kaut ko nezina.",
+        },
+        {
+          p: "Cilvēks pārņem sarunu, kad tā ir labākā atbilde: viss, kas saistīts ar naudu, taviem datiem, drošību, vai vienkārši tāpēc, ka tu to palūdzi. Tev nekad nav jāprasa divreiz un nekad nav jāatkārtojas — tas, kurš to pārņem, jau redz visu, ko esi teicis.",
+        },
+        {
+          p: "Ja kāda ziņa izklausās pēc īstas ārkārtas situācijas, atbilde katru reizi ir tā pati un nāk no noteikta teksta, nevis no asistenta: ārkārtas tālruņa numurs tavā atrašanās vietā, un kāds no mūsu puses tiek nekavējoties brīdināts. Mēs nevaram piezvanīt tavā vietā, un mēs to arī pasakām.",
+        },
+        { lab: "Sakārtošana" },
+        {
+          p: "Sarunu no saraksta vari noņemt jebkurā laikā ar miskastes ikonu blakus tai. Neliela piezīme pie *Reģistrēt pieprasījumu* skaita, cik esi notīrījis, tāpēc pazudusi saruna nekad nav mīkla.",
+        },
+        {
+          p: "Koplietotā ģimenes ierīcē sadaļa Atbalsts pirms atvēršanas prasa pieaugušo PIN — atbalsta sarunas ir konta lieta, un tas, kurš trenējas, ne vienmēr ir tas, kurš kontu izveidoja.",
         },
       ],
     },

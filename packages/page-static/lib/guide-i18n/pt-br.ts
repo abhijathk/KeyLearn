@@ -22,28 +22,22 @@ export const ptBr: GuideTranslation = {
       nav: "Login e senhas",
       heading: "Cadastro, login e senhas",
       blocks: [
-        { p: "Tudo fica no menu no canto superior direito." },
-        { lab: "Criar uma conta" },
         {
-          steps: [
-            "Abra o menu (canto superior direito).",
-            "Escolha Cadastrar.",
-            "Informe um e-mail e uma senha.",
-            "Confirme — pronto, você está dentro.",
-          ],
+          p: "Tudo fica no menu no canto superior direito, em Entrar ou criar conta — a mesma porta, tenha você uma conta ou não.",
         },
-        { lab: "Fazer login" },
+        { lab: "Criar uma conta ou fazer login" },
         {
           steps: [
-            "Abra o menu e escolha Entrar.",
-            "Informe seu e-mail e sua senha.",
+            "Abra o menu e escolha Entrar ou criar conta.",
+            "Continue com Google, Facebook ou uma chave de acesso — ou digite seu e-mail e toque em Continuar.",
+            "Um e-mail novo leva você a criar uma senha; um já cadastrado pede a senha.",
           ],
         },
         { lab: "Redefinir uma senha esquecida" },
         {
           steps: [
-            "Na tela de Entrar, escolha Esqueci a Senha.",
-            "Informe seu endereço de e-mail.",
+            "Na tela de login, digite seu e-mail e toque em Continuar.",
+            "Escolha Esqueceu sua senha?",
             "Abra o link de redefinição que enviamos a você.",
             "Escolha uma nova senha e faça login.",
           ],
@@ -117,6 +111,12 @@ export const ptBr: GuideTranslation = {
         {
           p: "Enquanto você digita, o painel flutuante mostra sua velocidade e precisão atuais, um minigráfico das rodadas recentes, o andamento das suas metas e sua sequência de dias. Ele está ali para incentivar você, não para importunar.",
         },
+        {
+          p: "Os botões *− e +* ao lado da meta sobem ou descem a meta de hoje na hora, sem abrir as Configurações. Abaixe a meta se as mesmas poucas letras pararam de avançar; a velocidade que uma letra precisa atingir é a única coisa que decide a rapidez com que novas letras são liberadas.",
+        },
+        {
+          p: "Se você escolheu uma foto de perfil, a arte dela pode aparecer bem de leve atrás desses números — Conta, Aparência, *Sua arte atrás dos números*, com um controle deslizante para a intensidade. Fica desligado até você ligar.",
+        },
       ],
     },
     {
@@ -141,10 +141,11 @@ export const ptBr: GuideTranslation = {
           tips: [
             "*Prática guiada* — o padrão adaptativo que amplia seu alfabeto tecla por tecla.",
             "*Curso clássico* — uma marcha fixa e ordenada pelas teclas.",
+            "*Código-fonte* — código de verdade, de frameworks de verdade.",
             "*Palavras frequentes* — as palavras mais comuns do seu idioma.",
             "*Texto de Livro* — digite atravessando livros de verdade embutidos no app.",
+            "*Citações* — pensamentos curtos e completos, com as maiúsculas e a pontuação originais.",
             "*Seu Próprio Texto* — cole o que quiser e pratique com isso.",
-            "*Trechos de Código* — colchetes, símbolos e o ritmo do código.",
             "*Exercícios de Números* — a linha de números e o teclado numérico.",
           ],
         },
@@ -201,6 +202,9 @@ export const ptBr: GuideTranslation = {
         {
           p: "Na mesma tela você pode escolher o formato do teclado, colorir as teclas por zona de dedo e destacar a próxima tecla enquanto ainda está aprendendo onde tudo fica.",
         },
+        {
+          p: "O *acabamento* do teclado — a aparência das teclas — vem com uma conta. Com login, há cinco para escolher, e o redondo vem em seis cores; uma delas acompanha a cor do seu tema. Todo o resto acima é seu de qualquer jeito: o idioma, o layout, o formato e as zonas dos dedos nunca ficam bloqueados, porque são eles que fazem o app combinar com o teclado à sua frente.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const ptBr: GuideTranslation = {
       blocks: [
         {
           p: "As configurações de Exibição e de Entrada de Texto permitem mostrar sua velocidade em palavras ou caracteres por minuto e ajustar finamente como a digitação parece. Restaurar Padrões está sempre a um clique de distância, caso queira começar do zero.",
+        },
+        {
+          p: "A aparência do site inteiro fica em Conta, Aparência: claro, escuro ou seguir o sistema, uma cor de tema e um tamanho de texto que vale em todas as páginas. Cada aprendiz da casa tem as suas próprias escolhas, e elas vão junto com ele — veja *Cuidando dos seus dados*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const ptBr: GuideTranslation = {
           steps: [
             "Abra o menu.",
             "Escolha Perfil.",
-            "Use a linha de filtros para focar em Letras, Dígitos, Pontuação ou Símbolos.",
           ],
         },
       ],
@@ -236,23 +242,26 @@ export const ptBr: GuideTranslation = {
       nav: "Seus dados",
       heading: "Cuidando dos seus dados",
       blocks: [
-        { lab: "Limpar as estatísticas de um perfil" },
+        { lab: "Apagar as estatísticas de um perfil" },
         {
           steps: [
             "Abra o Perfil do aprendiz que você quer zerar.",
-            "Role até o controle de reinício no fim da página.",
-            "Confirme “Apagar tudo” — apenas este perfil é limpo.",
+            "Role até o controle de redefinição no fim da página.",
+            "Confirme “Apagar tudo” — só este perfil é apagado.",
           ],
         },
         { lab: "Baixar seus dados" },
         {
           steps: [
             "Abra o Perfil.",
-            "Use a opção de download para salvar seu histórico como um arquivo.",
+            "Use a opção de download para salvar seu histórico em um arquivo.",
           ],
         },
         {
-          p: "Faça login se quiser que seu histórico sincronize entre dispositivos e para compartilhar um link público de perfil. Não há anúncios nem rastreadores, e você pode excluir seus dados — ou toda a sua conta — quando quiser.",
+          p: "Faça login se quiser que seu histórico seja sincronizado entre dispositivos e para compartilhar um link público do perfil. Não há redes de anúncios nem rastreadores, e você pode excluir seus dados — ou sua conta inteira — quando quiser.",
+        },
+        {
+          p: "Fazer login agora leva mais do que seus resultados. Suas configurações, seu tema e tamanho de texto, as opções de acessibilidade que você escolheu e as preferências de cada aprendiz acompanham o perfil, e não o navegador — assim, quem abre o KeyLearn em um computador novo continua de onde parou, na mesma tela e com tudo configurado do mesmo jeito, em vez de recomeçar dos padrões.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const ptBr: GuideTranslation = {
         },
         {
           p: "Lá dentro você pode definir o mundo e o personagem, Letras grandes, Sons, Mãos ajudantes (o guia de dedos brilhante), o Teclado (oculto, simples ou o teclado completo de adulto), Letras na trilha (as palavras mostradas como blocos dentro do jogo), um Cronômetro de sessão, Torcidas (mensagens de incentivo) e — escondidos em Avançado — controles de Brilho, Cor e o quão animado o mundo parece. Há também um visual noturno calmo, além do visual diurno brilhante.",
+        },
+        {
+          p: "*Key style* muda como as teclas são pintadas, e as teclas em si não mudam de lugar: *Crayon* é a tecla branca contornada pela cor do seu dedo, e *Rainbow* é o teclado de aprendizagem em cores primárias — moldura verde, números vermelhos, letras azuis com as vogais destacadas — em que as teclas da moldura são setas em vez de palavras, para a criança que ainda não sabe ler “enter”. Todo mundo começa no Crayon. *Finger colours*, ao lado, desliga totalmente as cores para a criança que já não precisa delas.",
         },
       ],
     },
@@ -482,7 +494,48 @@ export const ptBr: GuideTranslation = {
       heading: "Privacidade, em uma frase",
       blocks: [
         {
-          p: "Sem anúncios e sem rastreadores. O perfil de uma criança nunca sai do seu navegador. Faça login apenas se quiser sincronização ou compartilhamento; caso contrário, tudo permanece neste dispositivo, e você é livre para apagá-lo a qualquer momento.",
+          p: "Nada de redes de anúncios, nada de rastreadores. O perfil de uma criança nunca sai do seu navegador. Faça login só se quiser sincronizar ou compartilhar; caso contrário, tudo fica neste dispositivo, e você pode apagar tudo quando quiser.",
+        },
+        {
+          p: "Você pode ver uma *linha patrocinada* em algumas páginas. Somos nós que a vendemos e exibimos — não há rede de anúncios aqui, e nada segue você para fora do site. Ela é escolhida pela página em que você está, nunca por algo que sabemos sobre você, e nunca aparece para uma criança, dentro do mundo infantil, em uma conta escolar ou durante uma lição. Toque em *Por que estou vendo isto?* em qualquer uma delas para ver a mesma explicação ali mesmo; quem já apoiou o projeto nunca vê nenhuma.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Como obter ajuda",
+      heading: "Como obter ajuda",
+      blocks: [
+        {
+          p: "Cada mensagem que você nos envia vira uma *conversa à qual você pode voltar*, e não um e-mail que some. Ela fica em Conta e tem seu próprio número de referência — é esse que você informa se um dia ligar ou escrever de novo.",
+        },
+        { lab: "Pedir ajuda" },
+        {
+          steps: [
+            "Abra o menu e escolha Conta e depois Suporte.",
+            "Escolha Abrir um chamado e conte o que está acontecendo.",
+            "Anexe uma captura de tela se ajudar — PNG, JPG ou PDF, até 10 MB cada.",
+          ],
+        },
+        {
+          p: "As respostas aparecem nessa conversa, e o sino no cabeçalho acende quando chega uma, então você não precisa ficar olhando a página. O que já foi resolvido vai para a seção Resolvida, que começa fechada — o que você ainda está esperando é o que fica à vista.",
+        },
+        { lab: "Quem responde" },
+        {
+          p: "Um assistente chamado Tab lê primeiro e responde ao que consegue. Ele vai dizer que é uma IA — nunca finge o contrário — e vai dizer com clareza quando não sabe alguma coisa.",
+        },
+        {
+          p: "Uma pessoa assume sempre que essa for a melhor resposta: qualquer assunto de dinheiro, dos seus dados, de segurança, ou simplesmente porque você pediu. Você nunca precisa pedir duas vezes nem se repetir — quem pegar o caso já vê tudo o que você disse.",
+        },
+        {
+          p: "Se uma mensagem parecer uma emergência de verdade, a resposta é sempre a mesma e vem de um texto fixo, e não do assistente: o número de emergência do lugar onde você está, e uma pessoa da nossa equipe avisada na hora. Não podemos fazer essa ligação por você, e dizemos isso.",
+        },
+        { lab: "Organizando" },
+        {
+          p: "Você pode tirar uma conversa da sua lista a qualquer momento com o ícone de lixeira ao lado dela. Uma pequena nota junto de *Abrir um chamado* conta quantas você já apagou, então uma conversa que sumiu nunca é um mistério.",
+        },
+        {
+          p: "Em um dispositivo compartilhado pela família, a seção Suporte pede o PIN dos adultos antes de abrir — conversas de suporte são assunto da conta, e quem está praticando nem sempre é quem criou a conta.",
         },
       ],
     },

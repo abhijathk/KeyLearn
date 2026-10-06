@@ -55,7 +55,9 @@ export function NavMenu({
     return (
       <div className={styles.root}>
         <MenuItemLink page={Pages.kids} onNavigate={onNavigate} />
-        <MenuItemLink page={Pages.profile} onNavigate={onNavigate} />
+        {live("profile") && (
+          <MenuItemLink page={Pages.profile} onNavigate={onNavigate} />
+        )}
         <MenuItemLink page={Pages.help} onNavigate={onNavigate} />
       </div>
     );
@@ -63,9 +65,13 @@ export function NavMenu({
 
   return (
     <div className={styles.root}>
-      <MenuItemLink page={Pages.practice} onNavigate={onNavigate} />
+      {live("practice") && (
+        <MenuItemLink page={Pages.practice} onNavigate={onNavigate} />
+      )}
 
-      <MenuItemLink page={Pages.profile} onNavigate={onNavigate} />
+      {live("profile") && (
+        <MenuItemLink page={Pages.profile} onNavigate={onNavigate} />
+      )}
 
       {live("typingTest") && (
         <MenuItemLink page={Pages.typingTest} onNavigate={onNavigate} />

@@ -22,28 +22,22 @@ export const nl: GuideTranslation = {
       nav: "Aanmelden en wachtwoorden",
       heading: "Registreren, inloggen en wachtwoorden",
       blocks: [
-        { p: "Alles zit in het menu rechtsboven." },
-        { lab: "Een account aanmaken" },
+        {
+          p: "Alles zit in het menu rechtsboven, onder Inloggen of registreren — dezelfde deur, of je nu al een account hebt of niet.",
+        },
+        { lab: "Een account aanmaken of inloggen" },
         {
           steps: [
-            "Open het menu (rechtsboven).",
-            "Kies Registreren.",
-            "Voer een e-mailadres en een wachtwoord in.",
-            "Bevestig — je bent binnen.",
+            "Open het menu en kies Inloggen of registreren.",
+            "Ga verder met Google, Facebook of een passkey — of typ je e-mailadres en druk op Doorgaan.",
+            "Met een nieuw e-mailadres stel je een wachtwoord in; bij een bestaand adres wordt erom gevraagd.",
           ],
         },
-        { lab: "Inloggen" },
+        { lab: "Een vergeten wachtwoord herstellen" },
         {
           steps: [
-            "Open het menu en kies Inloggen.",
-            "Voer je e-mailadres en wachtwoord in.",
-          ],
-        },
-        { lab: "Een vergeten wachtwoord opnieuw instellen" },
-        {
-          steps: [
-            "Kies op het inlogscherm Wachtwoord vergeten.",
-            "Voer je e-mailadres in.",
+            "Voer op het inlogscherm je e-mailadres in en druk op Doorgaan.",
+            "Kies Wachtwoord vergeten?",
             "Open de herstellink die we je sturen.",
             "Kies een nieuw wachtwoord en log in.",
           ],
@@ -115,7 +109,13 @@ export const nl: GuideTranslation = {
       heading: "De live weergave",
       blocks: [
         {
-          p: "Terwijl je typt, toont het zwevende paneel je huidige snelheid en nauwkeurigheid, een klein grafiekje van recente runs, je doelen en je reeks. Het is er om je aan te moedigen, niet om te zeuren.",
+          p: "Terwijl je typt, toont het zwevende paneel je huidige snelheid en nauwkeurigheid, een kleine grafiek van je recente rondes, je doelen en je reeks. Het is er om je aan te moedigen, niet om te zeuren.",
+        },
+        {
+          p: "Met de *− en +* naast het doel zet je het doel van vandaag ter plekke hoger of lager, zonder Instellingen te openen. Zet het lager als dezelfde paar letters niet meer vooruitgaan; de snelheid die een letter moet halen, is het enige dat bepaalt hoe snel nieuwe letters vrijkomen.",
+        },
+        {
+          p: "Heb je een profielfoto gekozen, dan kan die afbeelding vaag achter die cijfers staan — Account, Weergave, *Jouw illustratie achter de cijfers*, met een schuif voor hoe sterk ze is. Dit staat uit, tenzij je het aanzet.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const nl: GuideTranslation = {
           tips: [
             "*Begeleide oefening* — de adaptieve standaard die je alfabet toets voor toets laat groeien.",
             "*Klassieke cursus* — een vaste, geordende mars door de toetsen.",
+            "*Codeambacht* — echte code uit echte frameworks.",
             "*Veelvoorkomende woorden* — de meest gebruikte woorden in jouw taal.",
             "*Boektekst* — typ je een weg door echte boeken die in de app zijn ingebouwd.",
+            "*Citaten* — korte, afgeronde gedachten met hun echte hoofdletters en leestekens.",
             "*Je eigen tekst* — plak wat je maar wilt en oefen daarop.",
-            "*Codefragmenten* — haakjes, symbolen en het ritme van code.",
             "*Cijferoefeningen* — de cijferrij en het numerieke toetsenblok.",
           ],
         },
@@ -186,20 +187,23 @@ export const nl: GuideTranslation = {
       heading: "Je toetsenbord instellen",
       blocks: [
         {
-          p: "Bij Instellingen, Toetsenbord instellen stem je KeyLearn af op je toetsenbord en op de indeling die je wilt leren.",
+          p: "In Instellingen, Toetsenbord stem je KeyLearn af op je toetsenbord en op de indeling die je wilt leren.",
         },
         { lab: "Je toetsenbordindeling wijzigen" },
         {
           steps: [
             "Open Instellingen.",
-            "Ga naar Toetsenbord instellen.",
+            "Ga naar Toetsenbord.",
             "Kies je taal en daarna je indeling (QWERTY, Dvorak, Colemak en meer).",
-            "Laat “Deze indeling simuleren” aan staan zodat je hem kunt oefenen ongeacht waarop je computer is ingesteld.",
-            "Bekijk het live voorbeeld om het te bevestigen.",
+            "Laat „Indeling emuleren” aanstaan, zodat je de indeling kunt oefenen, hoe je computer ook is ingesteld.",
+            "Kijk naar het live voorbeeld om het te controleren.",
           ],
         },
         {
-          p: "Op hetzelfde scherm kun je de vorm van het toetsenbord kiezen, de toetsen inkleuren per vingerzone en de volgende toets uitlichten terwijl je nog leert waar alles zit.",
+          p: "Op hetzelfde scherm kies je de vorm van het toetsenbord, kleur je de toetsen per vingerzone en laat je de volgende toets oplichten zolang je nog leert waar alles zit.",
+        },
+        {
+          p: "De *afwerking* van het toetsenbord — hoe de toetsen eruitzien — hoort bij een account. Ben je ingelogd, dan kun je kiezen uit vijf, en de ronde komt in zes kleuren; een daarvan volgt de kleur van je thema. Al het andere hierboven is hoe dan ook van jou: de taal, de indeling, de vorm en de vingerzones worden nooit achtergehouden, want daarmee past de app bij het toetsenbord dat voor je ligt.",
         },
       ],
     },
@@ -209,7 +213,10 @@ export const nl: GuideTranslation = {
       heading: "Weergave en gevoel",
       blocks: [
         {
-          p: "Met de instellingen voor Weergave en Tekstinvoer kun je je snelheid tonen in woorden- of tekens-per-minuut en fijnafstemmen hoe het typen aanvoelt. Standaardwaarden herstellen is altijd één klik verwijderd als je opnieuw wilt beginnen.",
+          p: "Met de instellingen voor Overige en Typen toon je je snelheid in woorden of tekens per minuut en stel je fijn af hoe typen aanvoelt. Terugzetten is altijd één klik verwijderd als je opnieuw wilt beginnen.",
+        },
+        {
+          p: "Hoe de hele site eruitziet, regel je onder Account, Weergave: licht, donker of het systeem volgen, een themakleur, en een tekstgrootte die op elke pagina blijft gelden. Elke leerling in het huishouden houdt zijn eigen instellingen, en die reizen met hem mee — zie *Zorg voor je gegevens*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const nl: GuideTranslation = {
           steps: [
             "Open het menu.",
             "Kies Profiel.",
-            "Gebruik de filterrij om je te richten op Letters, Cijfers, Leestekens of Symbolen.",
           ],
         },
       ],
@@ -234,14 +240,14 @@ export const nl: GuideTranslation = {
     {
       id: "data",
       nav: "Je gegevens",
-      heading: "Voor je gegevens zorgen",
+      heading: "Zorg voor je gegevens",
       blocks: [
         { lab: "De statistieken van een profiel wissen" },
         {
           steps: [
-            "Open Profiel voor de leerling die je wilt resetten.",
+            "Open Profiel voor de leerling die je opnieuw wilt laten beginnen.",
             "Scrol naar de resetknop onderaan de pagina.",
-            "Bevestig “Alles wissen” — alleen dit profiel wordt gewist.",
+            "Bevestig „Alles wissen” — alleen dit profiel wordt gewist.",
           ],
         },
         { lab: "Je gegevens downloaden" },
@@ -252,7 +258,10 @@ export const nl: GuideTranslation = {
           ],
         },
         {
-          p: "Log in als je wilt dat je geschiedenis synchroniseert tussen apparaten en om een openbare profiellink te delen. Er zijn geen advertenties en geen trackers, en je kunt je gegevens — of je hele account — verwijderen wanneer je maar wilt.",
+          p: "Log in als je wilt dat je geschiedenis tussen apparaten wordt gesynchroniseerd en als je een openbare profiellink wilt delen. Er zijn geen advertentienetwerken en geen trackers, en je kunt je gegevens — of je hele account — verwijderen wanneer je maar wilt.",
+        },
+        {
+          p: "Inloggen bewaart nu meer dan alleen je resultaten. Je instellingen, je thema en tekstgrootte, de toegankelijkheidskeuzes die je hebt gemaakt en de eigen voorkeuren van elke leerling volgen het profiel in plaats van de browser — dus wie KeyLearn op een nieuwe computer opent, gaat verder waar hij was gebleven, op hetzelfde scherm en op dezelfde manier ingesteld, in plaats van opnieuw te beginnen met de standaardinstellingen.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const nl: GuideTranslation = {
         },
         {
           p: "Daarin kun je de wereld en het personage instellen, Grote letters, Geluiden, Helpende handen (de gloeiende vingergids), het Toetsenbord (verborgen, eenvoudig of het volledige bord voor volwassenen), Letters op het pad (de woorden getoond als blokken midden in het spel), een sessie-Timer, Aanmoedigingen (bemoedigende berichtjes), en — verstopt onder Geavanceerd — schuiven voor Helderheid, Kleur en hoe levendig de wereld aanvoelt. Er is een rustige nachtweergave naast de heldere dagweergave.",
+        },
+        {
+          p: "*Key style* verandert hoe de toetsen geschilderd zijn, en de toetsen zelf blijven op hun plek: *Crayon* is de witte toets met een rand in zijn vingerkleur, en *Rainbow* is het leerbord in primaire kleuren — groene rand, rode cijfers, blauwe letters met de klinkers apart — waarop de randtoetsen pijlen zijn in plaats van woorden, voor een kind dat „enter” nog niet kan lezen. Iedereen begint met Crayon. *Finger colours* ernaast zet de kleuring helemaal uit voor een kind dat het niet meer nodig heeft.",
         },
       ],
     },
@@ -482,7 +494,48 @@ export const nl: GuideTranslation = {
       heading: "Privacy, in één zin",
       blocks: [
         {
-          p: "Geen advertenties en geen trackers. Het profiel van een kind verlaat nooit je browser. Log alleen in als je wilt synchroniseren of delen; anders blijft alles op dit apparaat, en ben je vrij om het op elk moment te verwijderen.",
+          p: "Geen advertentienetwerken en geen trackers. Het profiel van een kind verlaat nooit je browser. Log alleen in als je wilt synchroniseren of delen; anders blijft alles op dit apparaat, en je mag het op elk moment verwijderen.",
+        },
+        {
+          p: "Op sommige pagina’s zie je misschien een *gesponsorde regel*. Die hebben we zelf verkocht en tonen we zelf — er is hier geen advertentienetwerk en niets volgt je buiten de site. Hij wordt gekozen door de pagina waarop je bent, nooit door iets wat we over jou weten, en hij verschijnt nooit bij een kind, in de kinderwereld, op een schoolaccount of tijdens een les. Tik bij elke regel op *Waarom zie ik dit?* voor dezelfde uitleg ter plekke; wie het project heeft gesteund, ziet er nooit een.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Hulp krijgen",
+      heading: "Hulp krijgen",
+      blocks: [
+        {
+          p: "Elk bericht dat je ons stuurt, wordt een *gesprek waar je naar terug kunt*, geen e-mail die verdwijnt. Het staat onder Account en heeft een eigen referentienummer — dat noem je als je ooit opnieuw belt of schrijft.",
+        },
+        { lab: "Om hulp vragen" },
+        {
+          steps: [
+            "Open het menu en kies Account en dan Support.",
+            "Kies Een vraag indienen en vertel wat er aan de hand is.",
+            "Voeg een schermafbeelding toe als dat helpt — PNG, JPG of PDF, tot 10 MB per bestand.",
+          ],
+        },
+        {
+          p: "Antwoorden verschijnen in dat gesprek, en de bel bovenaan licht op als er een binnenkomt, dus je hoeft niet naar de pagina te blijven kijken. Alles wat al geregeld is, klapt weg onder Opgelost, dat dicht begint — waar je nog op wacht, is wat je ziet.",
+        },
+        { lab: "Wie er antwoordt" },
+        {
+          p: "Een assistent die Tab heet, leest het eerst en beantwoordt wat hij kan. Hij vertelt je dat hij een AI is — hij doet nooit alsof dat niet zo is, en hij zegt het eerlijk als hij iets niet weet.",
+        },
+        {
+          p: "Een mens neemt het over zodra dat het betere antwoord is: alles over geld, je gegevens, veiligheid, of gewoon omdat je erom vroeg. Je hoeft het nooit twee keer te vragen en je hoeft jezelf nooit te herhalen — wie het oppakt, ziet al alles wat je hebt gezegd.",
+        },
+        {
+          p: "Leest een bericht ooit als een echt noodgeval, dan is het antwoord elke keer hetzelfde en komt het uit een vaste tekst in plaats van van de assistent: het alarmnummer waar je bent, en iemand aan onze kant die meteen wordt gewaarschuwd. We kunnen dat telefoontje niet voor je plegen, en dat zeggen we ook.",
+        },
+        { lab: "Opruimen" },
+        {
+          p: "Je kunt een gesprek op elk moment uit je lijst halen met het prullenbakje ernaast. Een klein briefje bij *Een vraag indienen* houdt bij hoeveel je er hebt opgeruimd, zodat een verdwenen gesprek nooit een raadsel is.",
+        },
+        {
+          p: "Op een gedeeld gezinsapparaat vraagt het onderdeel Support om de volwassenenpincode voordat het opengaat — supportgesprekken zijn accountzaken, en wie er oefent, is niet altijd degene die het account heeft aangemaakt.",
         },
       ],
     },

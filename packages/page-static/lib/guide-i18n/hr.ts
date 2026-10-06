@@ -21,28 +21,22 @@ export const hr: GuideTranslation = {
       nav: "Prijava i lozinke",
       heading: "Registracija, prijava i lozinke",
       blocks: [
-        { p: "Sve se nalazi u izborniku gore desno." },
-        { lab: "Otvori račun" },
         {
-          steps: [
-            "Otvori izbornik (gore desno).",
-            "Odaberi Registracija.",
-            "Upiši e-poštu i lozinku.",
-            "Potvrdi — i unutra si.",
-          ],
+          p: "Sve se nalazi u izborniku gore desno, pod Prijava ili registracija — ista vrata, imaš li već račun ili ne.",
         },
-        { lab: "Prijavi se" },
+        { lab: "Izradi račun ili se prijavi" },
         {
           steps: [
-            "Otvori izbornik i odaberi Prijava.",
-            "Upiši svoju e-poštu i lozinku.",
+            "Otvori izbornik i odaberi Prijava ili registracija.",
+            "Nastavi s Googleom, Facebookom ili pristupnim ključem — ili upiši svoju e-poštu i pritisni Nastavi.",
+            "Nova adresa e-pošte vodi te do postavljanja lozinke; postojeća traži lozinku.",
           ],
         },
         { lab: "Poništi zaboravljenu lozinku" },
         {
           steps: [
-            "Na zaslonu za prijavu odaberi Zaboravljena lozinka.",
-            "Upiši svoju adresu e-pošte.",
+            "Na zaslonu za prijavu upiši svoju e-poštu i pritisni Nastavi.",
+            "Odaberi Zaboravili ste lozinku?",
             "Otvori poveznicu za poništavanje koju ti pošaljemo.",
             "Odaberi novu lozinku i prijavi se.",
           ],
@@ -114,7 +108,13 @@ export const hr: GuideTranslation = {
       heading: "Prikaz uživo",
       blocks: [
         {
-          p: "Dok tipkaš, plutajuća ploča pokazuje tvoju trenutnu brzinu i točnost, mali grafikon posljednjih pokušaja, napredak prema ciljevima i tvoj niz. Tu je da te ohrabri, a ne da gnjavi.",
+          p: "Dok tipkaš, plutajuća ploča pokazuje tvoju trenutačnu brzinu i točnost, mali grafikon nedavnih pokušaja, tvoje ciljeve i niz dana zaredom. Tu je da te ohrabri, a ne da ti prigovara.",
+        },
+        {
+          p: "*− i +* pokraj cilja odmah podižu ili spuštaju današnji cilj, bez otvaranja Postavki. Spusti ga ako se ista slova više ne pomiču s mjesta; brzina koju slovo mora dosegnuti jedino je što odlučuje koliko brzo se otključavaju nova.",
+        },
+        {
+          p: "Ako si odabrao sliku profila, njezina ilustracija može blijedo stajati iza tih brojki — Račun, Izgled, *Vaša ilustracija iza brojki*, s klizačem za jačinu. Isključeno je dok to ne uključiš.",
         },
       ],
     },
@@ -140,10 +140,11 @@ export const hr: GuideTranslation = {
           tips: [
             "*Vođena vježba* — prilagodljiva zadana postavka koja ti abecedu širi tipku po tipku.",
             "*Klasični tečaj* — čvrst, uređen marš kroz tipke.",
+            "*Izvorni kod* — pravi kôd iz stvarnih programskih okvira.",
             "*Česte riječi* — najčešće riječi tvojega jezika.",
             "*Tekst iz knjige* — protipkaj se kroz prave knjige ugrađene u aplikaciju.",
+            "*Citati* — kratke, cjelovite misli s pravim velikim slovima i interpunkcijom.",
             "*Vlastiti tekst* — zalijepi što god želiš i vježbaj na tome.",
-            "*Isječci koda* — zagrade, simboli i ritam koda.",
             "*Vježbe s brojevima* — red brojeva i numerička tipkovnica.",
           ],
         },
@@ -182,23 +183,26 @@ export const hr: GuideTranslation = {
     {
       id: "keyboard",
       nav: "Postavljanje tipkovnice",
-      heading: "Postavljanje tvoje tipkovnice",
+      heading: "Postavljanje tipkovnice",
       blocks: [
         {
-          p: "U Postavkama, pod Postavljanje tipkovnice, usklađuješ KeyLearn sa svojom tipkovnicom i s rasporedom koji želiš naučiti.",
+          p: "U Postavkama, pod Tipkovnica, KeyLearn usklađuješ sa svojom tipkovnicom i rasporedom koji želiš naučiti.",
         },
         { lab: "Promijeni raspored tipkovnice" },
         {
           steps: [
             "Otvori Postavke.",
-            "Idi na Postavljanje tipkovnice.",
-            "Odaberi svoj jezik, pa svoj raspored (QWERTY, Dvorak, Colemak i drugi).",
-            "Ostavi uključeno „Simuliraj ovaj raspored” da ga možeš vježbati bez obzira na to kako je postavljeno tvoje računalo.",
-            "Provjeri u pregledu uživo.",
+            "Idi na Tipkovnica.",
+            "Odaberi jezik, a zatim raspored (QWERTY, Dvorak, Colemak i drugi).",
+            "Ostavi „Oponašaj izgled” uključeno kako bi ga mogao vježbati bez obzira na to kako je postavljeno tvoje računalo.",
+            "Pogledaj pregled uživo da potvrdiš.",
           ],
         },
         {
-          p: "Na istom zaslonu možeš odabrati oblik tipkovnice, obojiti tipke po zonama prstiju i istaknuti sljedeću tipku dok još učiš gdje je što.",
+          p: "Na istom zaslonu možeš odabrati oblik tipkovnice, obojiti tipke prema zonama prstiju i istaknuti sljedeću tipku dok još učiš gdje je što.",
+        },
+        {
+          p: "*Završna obrada* tipkovnice — izgled tipki — dolazi s računom. Kad si prijavljen, možeš birati između pet, a okrugla dolazi u šest boja; jedna od njih prati boju tvoje teme. Sve ostalo tvoje je u svakom slučaju: jezik, raspored, oblik i zone prstiju nikad se ne uskraćuju, jer upravo oni usklađuju aplikaciju s tipkovnicom pred tobom.",
         },
       ],
     },
@@ -208,7 +212,10 @@ export const hr: GuideTranslation = {
       heading: "Prikaz i osjećaj",
       blocks: [
         {
-          p: "Postavke Prikaz i Unos teksta omogućuju ti da brzinu prikazuješ u riječima ili u znakovima u minuti i da fino podesiš kakav je osjećaj tipkanja. Vrati zadano uvijek je jedan klik daleko ako želiš krenuti ispočetka.",
+          p: "Postavke Razno i Tipkanje omogućuju ti da brzinu prikazuješ kao riječi ili znakove u minuti i da fino podesiš kako se tipkanje osjeća. Vrati zadano uvijek je udaljeno samo jedan klik ako želiš krenuti ispočetka.",
+        },
+        {
+          p: "Izgled cijele stranice nalazi se pod Račun, Izgled: svijetli, tamni ili prema sustavu, boja teme i veličina teksta koja vrijedi na svakoj stranici. Svaki ukućanin koji uči čuva svoje postavke, a one putuju s njim — vidi *Briga o tvojim podacima*.",
         },
       ],
     },
@@ -225,7 +232,6 @@ export const hr: GuideTranslation = {
           steps: [
             "Otvori izbornik.",
             "Odaberi Profil.",
-            "Redom filtara usredotoči se na Slova, Znamenke, Interpunkciju ili Simbole.",
           ],
         },
       ],
@@ -238,8 +244,8 @@ export const hr: GuideTranslation = {
         { lab: "Izbriši statistiku profila" },
         {
           steps: [
-            "Otvori Profil polaznika kojeg želiš vratiti na nulu.",
-            "Klizni do kontrole za poništavanje na dnu stranice.",
+            "Otvori Profil učenika kojeg želiš poništiti.",
+            "Pomakni se do kontrole za poništavanje na dnu stranice.",
             "Potvrdi „Izbriši sve” — briše se samo ovaj profil.",
           ],
         },
@@ -247,11 +253,14 @@ export const hr: GuideTranslation = {
         {
           steps: [
             "Otvori Profil.",
-            "Upotrijebi mogućnost preuzimanja da spremiš svoju povijest kao datoteku.",
+            "Upotrijebi opciju preuzimanja da spremiš svoju povijest kao datoteku.",
           ],
         },
         {
-          p: "Prijavi se ako želiš da se povijest usklađuje među uređajima i da možeš podijeliti javnu poveznicu na profil. Nema oglasa ni pratitelja, a svoje podatke — ili cijeli račun — možeš izbrisati kad god poželiš.",
+          p: "Prijavi se ako želiš da se tvoja povijest sinkronizira na svim uređajima i da dijeliš javnu poveznicu na profil. Nema oglasnih mreža ni alata za praćenje, a svoje podatke — ili cijeli račun — možeš izbrisati kad god želiš.",
+        },
+        {
+          p: "Prijava sada nosi više od samih rezultata. Tvoje postavke, tema i veličina teksta, odabiri pristupačnosti i osobne postavke svakog učenika prate profil, a ne preglednik — pa učenik koji otvori KeyLearn na novom računalu nastavlja gdje je stao, na istom zaslonu i jednako postavljen, umjesto da kreće ispočetka od zadanih postavki.",
         },
       ],
     },
@@ -282,10 +291,15 @@ export const hr: GuideTranslation = {
       blocks: [
         { lab: "Otvori škrinju igračaka" },
         {
-          steps: ["Na dječjem zaslonu dodirni zupčanik na vrhu igrališta."],
+          steps: [
+            "Na dječjem zaslonu dodirni zupčanik na vrhu igrališta.",
+          ],
         },
         {
           p: "Unutra možeš postaviti svijet i lik, Velika slova, Zvukove, Ruke pomoćnice (svjetleći vodič za prste), Tipkovnicu (skrivenu, jednostavnu ili punu, onu za odrasle), Slova na stazi (riječi prikazane kao kocke izravno u igri), Mjerač vremena za sesiju, Bodrenje (male poruke ohrabrenja) i — skriveno pod Napredno — klizače za Svjetlinu, Boju i za to koliko je svijet živahan. Uz svijetli dnevni izgled postoji i mirni noćni.",
+        },
+        {
+          p: "*Key style* mijenja način na koji su tipke obojene, a same tipke ostaju na mjestu: *Crayon* je bijela tipka obrubljena bojom svojega prsta, a *Rainbow* je tipkovnica za učenje u osnovnim bojama — zeleni okvir, crveni brojevi, plava slova s izdvojenim samoglasnicima — na kojoj su tipke okvira strelice umjesto riječi, za dijete koje još ne zna pročitati „enter”. Svi počinju s postavkom Crayon. *Finger colours* pokraj toga potpuno isključuje bojenje za dijete kojem više ne treba.",
         },
       ],
     },
@@ -476,10 +490,51 @@ export const hr: GuideTranslation = {
     {
       id: "privacy",
       nav: "Privatnost",
-      heading: "Privatnost, u jednoj rečenici",
+      heading: "Privatnost u jednoj rečenici",
       blocks: [
         {
-          p: "Nema oglasa ni pratitelja. Dječji profil nikad ne napušta tvoj preglednik. Prijavi se samo ako želiš usklađivanje ili dijeljenje; inače sve ostaje na ovom uređaju i slobodno to možeš izbrisati u bilo kojem trenutku.",
+          p: "Nema oglasnih mreža ni alata za praćenje. Djetetov profil nikad ne napušta tvoj preglednik. Prijavi se samo ako želiš sinkronizaciju ili dijeljenje; inače sve ostaje na ovom uređaju i možeš to izbrisati u bilo kojem trenutku.",
+        },
+        {
+          p: "Na nekim stranicama možda ćeš vidjeti *sponzorirani redak*. To je prostor koji smo sami prodali i sami ga prikazujemo — ovdje nema oglasne mreže i ništa te ne prati izvan stranice. Bira se prema stranici na kojoj se nalaziš, nikad prema bilo čemu što znamo o tebi, i nikad se ne prikazuje djetetu, u dječjem svijetu, na školskom računu ni dok traje lekcija. Dodirni *Zašto ovo vidim?* na bilo kojem od njih za isto objašnjenje na licu mjesta, a oni koji su podržali projekt nikad ga ne vide.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Pomoć",
+      heading: "Kako dobiti pomoć",
+      blocks: [
+        {
+          p: "Svaka poruka koju nam pošalješ postaje *razgovor kojem se možeš vratiti*, a ne e-poruka koja nestane. Nalazi se pod Račun i ima vlastiti referentni broj — onaj koji navodiš ako nas ikad nazoveš ili nam ponovno pišeš.",
+        },
+        { lab: "Zatraži pomoć" },
+        {
+          steps: [
+            "Otvori izbornik i odaberi Račun, zatim Podrška.",
+            "Odaberi Podnesi zahtjev i napiši što se događa.",
+            "Priloži snimku zaslona ako pomaže — PNG, JPG ili PDF, do 10 MB svaka.",
+          ],
+        },
+        {
+          p: "Odgovori se pojavljuju u tom razgovoru, a zvonce u zaglavlju zasvijetli kad stigne odgovor, pa ne moraš sjediti i gledati stranicu. Sve što je već riješeno sklapa se pod Riješeno, koje je u početku zatvoreno — vidiš upravo ono na što još čekaš.",
+        },
+        { lab: "Tko odgovara" },
+        {
+          p: "Pomoćnik po imenu Tab čita poruku prvi i odgovara na ono što može. Reći će ti da je umjetna inteligencija — nikad se ne pretvara da nije — i otvoreno će reći kad nešto ne zna.",
+        },
+        {
+          p: "Čovjek preuzima kad god je to bolji odgovor: za sve što se tiče novca, tvojih podataka, sigurnosti ili jednostavno zato što si to zatražio. Nikad ne moraš tražiti dvaput i nikad se ne moraš ponavljati — tko god preuzme razgovor, već vidi sve što si rekao.",
+        },
+        {
+          p: "Ako poruka ikad zvuči kao stvarna hitna situacija, odgovor je svaki put isti i dolazi iz unaprijed napisanog teksta, a ne od pomoćnika: broj za hitne slučajeve ondje gdje se nalaziš, a netko s naše strane odmah je obaviješten. Taj poziv ne možemo obaviti umjesto tebe i to ti otvoreno kažemo.",
+        },
+        { lab: "Pospremanje" },
+        {
+          p: "Razgovor možeš ukloniti s popisa u bilo kojem trenutku ikonom koša pokraj njega. Mala bilješka uz *Podnesi zahtjev* broji koliko si ih uklonio, pa razgovor koji je nestao nikad nije misterij.",
+        },
+        {
+          p: "Na zajedničkom obiteljskom uređaju odjeljak Podrška traži PIN za odrasle prije otvaranja — razgovori s podrškom stvar su računa, a osoba koja vježba nije uvijek osoba koja je postavila račun.",
         },
       ],
     },

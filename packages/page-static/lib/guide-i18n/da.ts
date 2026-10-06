@@ -22,30 +22,24 @@ export const da: GuideTranslation = {
       nav: "Login og adgangskoder",
       heading: "Oprettelse, login og adgangskoder",
       blocks: [
-        { p: "Det hele ligger i menuen øverst til højre." },
-        { lab: "Opret en konto" },
         {
-          steps: [
-            "Åbn menuen (øverst til højre).",
-            "Vælg Opret bruger.",
-            "Indtast en e-mail og en adgangskode.",
-            "Bekræft — så er du inde.",
-          ],
+          p: "Det hele ligger i menuen øverst til højre under Log ind eller opret konto — den samme dør, uanset om du allerede har en konto eller ej.",
         },
-        { lab: "Log ind" },
+        { lab: "Opret en konto eller log ind" },
         {
           steps: [
-            "Åbn menuen og vælg Log ind.",
-            "Indtast din e-mail og din adgangskode.",
+            "Åbn menuen, og vælg Log ind eller opret konto.",
+            "Fortsæt med Google, Facebook eller en adgangsnøgle — eller skriv din e-mail, og tryk på Fortsæt.",
+            "En ny e-mail får dig til at vælge en adgangskode; en, vi kender i forvejen, beder dig om den.",
           ],
         },
         { lab: "Nulstil en glemt adgangskode" },
         {
           steps: [
-            "Vælg Glemt adgangskode på login-skærmen.",
-            "Indtast din e-mailadresse.",
+            "Skriv din e-mail på login-skærmen, og tryk på Fortsæt.",
+            "Vælg Glemt din adgangskode?",
             "Åbn det nulstillingslink, vi sender dig.",
-            "Vælg en ny adgangskode og log ind.",
+            "Vælg en ny adgangskode, og log ind.",
           ],
         },
       ],
@@ -117,6 +111,12 @@ export const da: GuideTranslation = {
         {
           p: "Mens du skriver, viser det svævende panel din aktuelle hastighed og præcision, en lille kurve over de seneste omgange, dine mål og din stime. Den er der for at opmuntre dig, ikke for at brokke sig.",
         },
+        {
+          p: "*− og +* ved siden af målet skruer dagens mål op eller ned med det samme, uden at du skal åbne Indstillinger. Sæt det lavere, hvis de samme få bogstaver ikke længere rykker sig; den hastighed, et bogstav skal nå, er det eneste, der afgør, hvor hurtigt nye bliver låst op.",
+        },
+        {
+          p: "Hvis du har valgt et profilbillede, kan dets motiv ligge svagt bag tallene — Konto, Udseende, *Dit motiv bag statistikken*, med en skyder til, hvor kraftigt det står. Slået fra, medmindre du slår det til.",
+        },
       ],
     },
     {
@@ -141,10 +141,11 @@ export const da: GuideTranslation = {
           tips: [
             "*Guidet træning* — den adaptive standard, der udvider dit alfabet tast for tast.",
             "*Klassisk kursus* — en fast, ordnet march gennem tasterne.",
+            "*Kildekode* — rigtig kode fra rigtige frameworks.",
             "*Hyppige ord* — de mest almindelige ord på dit sprog.",
             "*Bogtekst* — skriv dig gennem rigtige bøger, der er indbygget i appen.",
+            "*Citater* — korte, hele tanker med deres rigtige store bogstaver og tegnsætning.",
             "*Din egen tekst* — indsæt lige hvad du har lyst til, og øv på det.",
-            "*Kodestumper* — parenteser, tegn og kodens rytme.",
             "*Taltræning* — talrækken og det numeriske tastatur.",
           ],
         },
@@ -201,6 +202,9 @@ export const da: GuideTranslation = {
         {
           p: "På samme skærm kan du vælge tastaturets form, farve tasterne efter fingerzone og fremhæve den næste tast, mens du stadig er ved at lære, hvor tingene ligger.",
         },
+        {
+          p: "Tastaturets *finish* — hvordan tasterne ser ud — følger med en konto. Når du er logget ind, er der fem at vælge imellem, og den runde fås i seks farver; én af dem følger dit temas farve. Alt det ovenfor er dit under alle omstændigheder: sproget, layoutet, formen og fingerzonerne holdes aldrig tilbage, for det er dem, der får appen til at passe til tastaturet foran dig.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const da: GuideTranslation = {
       blocks: [
         {
           p: "Under Visning og Tekstindtastning kan du vise din hastighed som ord eller tegn i minuttet og finjustere, hvordan det føles at skrive. Gendan standardindstillinger er altid kun ét klik væk, hvis du vil starte forfra.",
+        },
+        {
+          p: "Hvordan hele siden ser ud, finder du under Konto, Udseende: lyst, mørkt eller som systemet, en temafarve og en tekststørrelse, der gælder på alle sider. Hver elev i husstanden har sit eget, og det følger med dem — se *Pas på dine data*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const da: GuideTranslation = {
           steps: [
             "Åbn menuen.",
             "Vælg Profil.",
-            "Brug filterrækken til at fokusere på Bogstaver, Tal, Tegnsætning eller Symboler.",
           ],
         },
       ],
@@ -252,7 +258,10 @@ export const da: GuideTranslation = {
           ],
         },
         {
-          p: "Log ind, hvis du vil have din historik synkroniseret på tværs af enheder og kunne dele et offentligt profillink. Der er ingen reklamer og ingen sporing, og du kan slette dine data — eller hele din konto — når du vil.",
+          p: "Log ind, hvis du vil have din historik synkroniseret på tværs af enheder og kunne dele et offentligt profillink. Der er ingen annoncenetværk og ingen trackere, og du kan slette dine data — eller hele din konto — når du vil.",
+        },
+        {
+          p: "Når du er logget ind, følger der nu mere med end dine resultater. Dine indstillinger, dit tema og din tekststørrelse, de tilgængelighedsvalg, du har truffet, og hver elevs egne præferencer følger profilen i stedet for browseren — så en elev, der åbner KeyLearn på en ny computer, fortsætter, hvor de slap, på samme skærm og sat op på samme måde, i stedet for at starte forfra fra standardindstillingerne.",
         },
       ],
     },
@@ -283,10 +292,15 @@ export const da: GuideTranslation = {
       blocks: [
         { lab: "Åbn legekassen" },
         {
-          steps: ["Tryk på tandhjulet øverst i spilleområdet på børneskærmen."],
+          steps: [
+            "Tryk på tandhjulet øverst i spilleområdet på børneskærmen.",
+          ],
         },
         {
           p: "Indeni kan du vælge verden og figur, Store bogstaver, Lyde, Hjælpehænder (den lysende fingerguide), Tastaturet (skjult, enkelt eller det fulde voksentastatur), Bogstaver på stien (ordene vist som klodser inde i selve spillet), en session-Timer, Tilråb (små opmuntrende beskeder) og — gemt under Avanceret — skydere til Lysstyrke, Farve og hvor livlig verden føles. Der er både et roligt natudseende og det lyse dagudseende.",
+        },
+        {
+          p: "*Key style* ændrer, hvordan tasterne er malet, og selve tasterne flytter sig ikke: *Crayon* er den hvide tast med en ring i sin fingerfarve, og *Rainbow* er læringstastaturet i grundfarver — grøn ramme, røde tal, blå bogstaver med vokalerne sat for sig — hvor rammetasterne er pile i stedet for ord, til et barn, der endnu ikke kan læse „enter“. Alle starter med Crayon. *Finger colours* ved siden af slår farvningen helt fra for et barn, der ikke længere har brug for den.",
         },
       ],
     },
@@ -477,10 +491,51 @@ export const da: GuideTranslation = {
     {
       id: "privacy",
       nav: "Privatliv",
-      heading: "Privatliv, kort fortalt",
+      heading: "Privatliv, i én sætning",
       blocks: [
         {
-          p: "Ingen reklamer og ingen sporing. Et barns profil forlader aldrig din browser. Log kun ind, hvis du vil synkronisere eller dele; ellers bliver alt på denne enhed, og du kan frit slette det når som helst.",
+          p: "Ingen annoncenetværk og ingen trackere. Et barns profil forlader aldrig din browser. Log kun ind, hvis du vil synkronisere eller dele; ellers bliver alt på denne enhed, og du kan frit slette det når som helst.",
+        },
+        {
+          p: "Du kan se en *sponsoreret linje* på nogle sider. Det er en, vi selv har solgt og selv viser — der er intet annoncenetværk her, og intet følger efter dig væk fra siden. Den vælges ud fra den side, du er på, aldrig ud fra noget, vi ved om dig, og den vises aldrig for et barn, i børneverdenen, på en skolekonto eller mens en lektion er i gang. Tryk på *Hvorfor ser jeg det her?* ved en hvilken som helst af dem for at få samme forklaring på stedet — og folk, der har støttet projektet, ser aldrig en.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Få hjælp",
+      heading: "Få hjælp",
+      blocks: [
+        {
+          p: "Hver besked, du sender os, bliver til en *samtale, du kan vende tilbage til*, ikke en e-mail, der forsvinder. Den ligger under Konto og har sit eget referencenummer — det, du skal oplyse, hvis du nogensinde ringer eller skriver igen.",
+        },
+        { lab: "Bed om hjælp" },
+        {
+          steps: [
+            "Åbn menuen, og vælg Konto og derefter Support.",
+            "Vælg Indsend en sag, og fortæl, hvad der sker.",
+            "Vedhæft et skærmbillede, hvis det hjælper — PNG, JPG eller PDF, op til 10 MB hver.",
+          ],
+        },
+        {
+          p: "Svar dukker op i samtalen, og klokken i toppen lyser op, når et kommer, så du ikke behøver sidde og holde øje med siden. Alt, hvad der allerede er klaret, foldes væk under Løst, som starter lukket — det, du stadig venter på, er det, du ser.",
+        },
+        { lab: "Hvem svarer" },
+        {
+          p: "En assistent ved navn Tab læser den først og svarer på det, den kan. Den fortæller dig, at den er en AI — den lader aldrig som andet, og den siger klart, når den ikke ved noget.",
+        },
+        {
+          p: "Et menneske tager over, når det er det bedre svar: alt om penge, dine data, sikkerhed, eller bare fordi du bad om det. Du skal aldrig spørge to gange, og du skal aldrig gentage dig selv — den, der tager over, kan allerede se alt, hvad du har skrevet.",
+        },
+        {
+          p: "Hvis en besked nogensinde lyder som en rigtig nødsituation, er svaret det samme hver gang og kommer fra en fast tekst i stedet for fra assistenten: alarmnummeret, hvor du er, og et menneske hos os, der får besked med det samme. Vi kan ikke ringe opkaldet for dig, og det siger vi også.",
+        },
+        { lab: "Ryd op" },
+        {
+          p: "Du kan fjerne en samtale fra din liste når som helst med skraldespandsikonet ved siden af. En lille note ved *Indsend en sag* tæller, hvor mange du har ryddet, så en tråd, der er forsvundet, aldrig er et mysterium.",
+        },
+        {
+          p: "På en fælles familieenhed beder Support-sektionen om PIN for voksne, før den åbner — supporttråde er kontoens sag, og den, der øver, er ikke altid den, der oprettede kontoen.",
         },
       ],
     },

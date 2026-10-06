@@ -5,6 +5,55 @@ document for the in-app release notes shown from the About page — keep
 `packages/page-static/lib/release-notes.ts` in sync whenever this file
 changes.
 
+## 02.01.00 — 2026-10-06 23:16 UTC
+
+### Added
+
+- **Time Keepers**: the seven-shop market row with wooden shutters, each
+  shop on its own hours (the tea shop opens at 6); new v2 houses in all
+  four chapters, facing the road on levelled plots; a day voice and a
+  night voice; Kuttichathan confined to his own lessons and kept away from
+  sacred places.
+- **Hero Trail / Dino Run**: bog boardwalk, landmarks in view, mist, frost
+  and seasons; Dino Run landmarks and rain; bigger cast; the companion
+  grows with the player.
+- Kids-page PIN: optional PIN to leave the kids page (Account → Security),
+  confirmed on and off.
+- Guests on Guided practice and the KeyLearn keyboard; other choices are
+  locked, with a notice inside the settings window.
+- Round Graphite default for account holders; black legends on its yellow
+  keys.
+- Passkey step-up ("confirm it's you"); the owner is emailed and notified
+  when an account deletion is cancelled.
+- Support: closure notices with a return date; human check before sending.
+- Control Centre: a switch for the learner's own progress page
+  (`pages.profile.state`); the Practice menu link follows its switch.
+
+### Changed
+
+- Kids game and background sounds default to off.
+- The first-run tour shows once per browser; nothing floats on the page a
+  sign-out lands on.
+- Kids loading: the picker opens in seconds instead of after the whole
+  village; villagers 38% smaller on the wire.
+- The support desk (QDesk) is served at keylearn.org/desk.
+- Translations: 29 new interface messages and the User Guide's Getting
+  help section plus nine updated sections, in all 53 other languages.
+  The kids and practice pages stay English.
+
+### Fixed
+
+- MySQL: learner progress snapshots over 64 KB failed to save
+  (`profile_data.payload` is now LONGBLOB); the QDesk outbox never marked
+  a row delivered, and four desk dashboard figures read undefined, because
+  raw rows come back camelCase on MySQL.
+- The outbox index name was 65 characters, over MySQL's limit.
+- Hero Trail no longer hatches eggs; it has its own companion.
+- The kids-page PIN confirm dialog rendered message ids: its messages
+  were never extracted for translation.
+- 2FA recovery codes share the per-account lockout.
+- The tea shop is lit at night; nothing grows inside the market.
+
 ## 02.00.00 — 2026-10-03 11:49 UTC
 
 First recorded 7 Sep 2026; updated 3 Oct 2026 with everything shipped since.

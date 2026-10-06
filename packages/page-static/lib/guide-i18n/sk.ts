@@ -22,28 +22,22 @@ export const sk: GuideTranslation = {
       nav: "Prihlásenie a heslá",
       heading: "Registrácia, prihlásenie a heslá",
       blocks: [
-        { p: "Všetko nájdeš v ponuke vpravo hore." },
-        { lab: "Vytvorenie účtu" },
         {
-          steps: [
-            "Otvor ponuku (vpravo hore).",
-            "Zvoľ Registrácia.",
-            "Zadaj e-mail a heslo.",
-            "Potvrď — a si vnútri.",
-          ],
+          p: "Všetko nájdeš v ponuke vpravo hore, pod Prihlásiť sa alebo zaregistrovať — sú to tie isté dvere, či už účet máš, alebo nie.",
         },
-        { lab: "Prihlásenie" },
+        { lab: "Vytvorenie účtu alebo prihlásenie" },
         {
           steps: [
-            "Otvor ponuku a zvoľ Prihlásiť sa.",
-            "Zadaj svoj e-mail a heslo.",
+            "Otvor ponuku a zvoľ Prihlásiť sa alebo zaregistrovať.",
+            "Pokračuj cez Google, Facebook alebo prístupový kľúč — alebo zadaj svoj e-mail a stlač Pokračovať.",
+            "Pri novom e-maile si nastavíš heslo; pri existujúcom ťa oň požiadame.",
           ],
         },
         { lab: "Obnovenie zabudnutého hesla" },
         {
           steps: [
-            "Na prihlasovacej obrazovke zvoľ Zabudnuté heslo.",
-            "Zadaj svoju e-mailovú adresu.",
+            "Na prihlasovacej obrazovke zadaj svoj e-mail a stlač Pokračovať.",
+            "Zvoľ Zabudli ste heslo?",
             "Otvor odkaz na obnovenie, ktorý ti pošleme.",
             "Zvoľ nové heslo a prihlás sa.",
           ],
@@ -117,6 +111,12 @@ export const sk: GuideTranslation = {
         {
           p: "Kým píšeš, plávajúci panel ukazuje tvoju aktuálnu rýchlosť a presnosť, malý graf posledných behov, plnenie tvojich cieľov a tvoju sériu. Je tu na to, aby ťa povzbudzoval, nie aby ťa otravoval.",
         },
+        {
+          p: "Tlačidlá *− a +* vedľa cieľa hneď zvýšia alebo znížia dnešný cieľ, bez otvárania Nastavení. Zníž ho, ak sa tých istých pár písmen prestalo hýbať; rýchlosť, ktorú musí písmeno dosiahnuť, je to jediné, čo rozhoduje o tom, ako rýchlo sa odomykajú nové.",
+        },
+        {
+          p: "Ak si si vybral profilový obrázok, jeho ilustrácia môže jemne presvitať za týmito číslami — Účet, Vzhľad, *Vaša ilustrácia za číslami*, s posuvníkom pre silu efektu. Je vypnutá, kým ju nezapneš.",
+        },
       ],
     },
     {
@@ -141,10 +141,11 @@ export const sk: GuideTranslation = {
           tips: [
             "*Vedené precvičovanie* — adaptívny východiskový režim, ktorý rozširuje tvoju abecedu kláves po klávese.",
             "*Klasický kurz* — pevný, usporiadaný pochod klávesmi.",
+            "*Zdrojový kód* — skutočný kód zo skutočných frameworkov.",
             "*Časté slová* — najbežnejšie slová tvojho jazyka.",
             "*Text z knihy* — prepíš sa cez naozajstné knihy zabudované v aplikácii.",
+            "*Citáty* — krátke, ucelené myšlienky so skutočnými veľkými písmenami a interpunkciou.",
             "*Vlastný text* — vlož si čokoľvek chceš a precvičuj na tom.",
-            "*Úryvky kódu* — zátvorky, symboly a rytmus kódu.",
             "*Cvičenia s číslami* — číselný riadok a numerická klávesnica.",
           ],
         },
@@ -201,6 +202,9 @@ export const sk: GuideTranslation = {
         {
           p: "Na tej istej obrazovke si môžeš vybrať tvar klávesnice, zafarbiť klávesy podľa prstových zón a zvýrazniť ďalší kláves, kým sa ešte učíš, kde čo je.",
         },
+        {
+          p: "*Povrch* klávesnice — vzhľad klávesov — prichádza s účtom. Po prihlásení máš na výber päť a okrúhly existuje v šiestich farbách; jedna z nich sa riadi farbou tvojej témy. Všetko vyššie je tvoje tak či tak: jazyk, rozloženie, tvar ani prstové zóny nie sú nikdy zamknuté, pretože práve vďaka nim aplikácia sedí ku klávesnici, ktorú máš pred sebou.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const sk: GuideTranslation = {
       blocks: [
         {
           p: "Nastavenia Zobrazenie a Zadávanie textu ti umožnia ukazovať rýchlosť v slovách alebo v znakoch za minútu a doladiť, ako písanie pôsobí. Obnoviť predvolené je vždy na jedno kliknutie, keby si chcel začať odznova.",
+        },
+        {
+          p: "Vzhľad celej stránky nájdeš v Účet, Vzhľad: svetlý, tmavý alebo podľa systému, farba témy a veľkosť textu, ktorá platí na každej stránke. Každý žiak v domácnosti má svoje vlastné nastavenia a tie putujú s ním — pozri *Starostlivosť o tvoje údaje*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const sk: GuideTranslation = {
           steps: [
             "Otvor ponuku.",
             "Zvoľ Profil.",
-            "Pomocou riadka filtrov sa zameraj na Písmená, Číslice, Interpunkciu alebo Symboly.",
           ],
         },
       ],
@@ -240,19 +246,22 @@ export const sk: GuideTranslation = {
         {
           steps: [
             "Otvor Profil žiaka, ktorého chceš vynulovať.",
-            "Zroluj dolu k ovládaciemu prvku na vynulovanie na konci stránky.",
-            "Potvrď „Vymazať všetko“ — vymaže sa len tento profil.",
+            "Prejdi nadol k ovládaču vynulovania na konci stránky.",
+            "Potvrď „Vymazať všetko“ — vymaže sa iba tento profil.",
           ],
         },
-        { lab: "Stiahnutie tvojich údajov" },
+        { lab: "Stiahnutie údajov" },
         {
           steps: [
             "Otvor Profil.",
-            "Pomocou možnosti stiahnutia ulož svoju históriu ako súbor.",
+            "Pomocou možnosti stiahnutia si ulož históriu do súboru.",
           ],
         },
         {
-          p: "Prihlás sa, ak chceš, aby sa tvoja história synchronizovala medzi zariadeniami a aby si mohol zdieľať verejný odkaz na profil. Nie sú tu žiadne reklamy ani sledovacie nástroje a svoje údaje — alebo celý účet — môžeš zmazať, kedykoľvek sa ti zachce.",
+          p: "Prihlás sa, ak chceš, aby sa história synchronizovala medzi zariadeniami, a aby si mohol zdieľať verejný odkaz na profil. Nie sú tu žiadne reklamné siete ani sledovače a svoje údaje — alebo celý účet — môžeš vymazať, kedykoľvek chceš.",
+        },
+        {
+          p: "Prihlásenie teraz prenáša viac než len výsledky. Tvoje nastavenia, téma a veľkosť textu, zvolené možnosti prístupnosti aj vlastné predvoľby každého žiaka idú s profilom, nie s prehliadačom — takže žiak, ktorý otvorí KeyLearn na novom počítači, pokračuje tam, kde prestal, na tej istej obrazovke a s rovnakým nastavením, namiesto toho, aby začínal odznova s predvolenými hodnotami.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const sk: GuideTranslation = {
         },
         {
           p: "Vnútri nastavíš svet a postavu, Veľké písmená, Zvuky, Pomocné ruky (žiariaceho sprievodcu prstami), Klávesnicu (skrytú, jednoduchú alebo celú pre dospelých), Písmená na chodníku (slová zobrazené ako kocky priamo v hre), Časovač sedenia, Povzbudzovanie (malé pochvalné odkazy) a — schované pod Pokročilými nastaveniami — posuvníky pre Jas, Farbu a to, ako živo svet pôsobí. Okrem jasného denného vzhľadu je tu aj pokojný nočný.",
+        },
+        {
+          p: "*Key style* mení, ako sú klávesy vymaľované, a samotné klávesy sa nepohnú: *Crayon* je biely kláves orámovaný farbou svojho prsta a *Rainbow* je učebná klávesnica v základných farbách — zelený rám, červené čísla, modré písmená s odlíšenými samohláskami — kde sú klávesy rámu šípky namiesto slov, pre dieťa, ktoré ešte nevie prečítať „enter“. Všetci začínajú so štýlom Crayon. *Finger colours* hneď vedľa úplne vypne zafarbenie pre dieťa, ktoré ho už nepotrebuje.",
         },
       ],
     },
@@ -479,10 +491,51 @@ export const sk: GuideTranslation = {
     {
       id: "privacy",
       nav: "Súkromie",
-      heading: "Súkromie, v jednej vete",
+      heading: "Súkromie v jednej vete",
       blocks: [
         {
-          p: "Žiadne reklamy a žiadne sledovacie nástroje. Profil dieťaťa nikdy neopustí tvoj prehliadač. Prihlás sa len vtedy, keď chceš synchronizovať alebo zdieľať; inak všetko zostane na tomto zariadení a môžeš to kedykoľvek zmazať.",
+          p: "Žiadne reklamné siete a žiadne sledovače. Detský profil nikdy neopustí tvoj prehliadač. Prihlás sa iba vtedy, ak chceš synchronizáciu alebo zdieľanie; inak všetko zostane v tomto zariadení a môžeš to kedykoľvek vymazať.",
+        },
+        {
+          p: "Na niektorých stránkach môžeš vidieť *sponzorovaný riadok*. Predali sme ho a zobrazujeme ho sami — nie je tu žiadna reklamná sieť a nič ťa nesleduje mimo stránky. Vyberá ho stránka, na ktorej práve si, nikdy nič, čo o tebe vieme, a nikdy sa nezobrazí dieťaťu, v detskom svete, na školskom účte ani počas lekcie. Ťukni pri ktoromkoľvek z nich na *Prečo to vidím?* a to isté vysvetlenie sa ukáže priamo tam; ľudia, ktorí projekt podporili, ho neuvidia vôbec.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Pomoc",
+      heading: "Ako získať pomoc",
+      blocks: [
+        {
+          p: "Každá správa, ktorú nám pošleš, sa stane *konverzáciou, ku ktorej sa môžeš vrátiť*, nie e-mailom, ktorý zmizne. Nájdeš ju v Účte a má vlastné referenčné číslo — to, ktoré uvedieš, ak niekedy znova zavoláš alebo napíšeš.",
+        },
+        { lab: "Požiadaj o pomoc" },
+        {
+          steps: [
+            "Otvor ponuku a zvoľ Účet, potom Podpora.",
+            "Zvoľ Podať žiadosť a napíš, čo sa deje.",
+            "Ak to pomôže, prilož snímku obrazovky — PNG, JPG alebo PDF, každý do 10 MB.",
+          ],
+        },
+        {
+          p: "Odpovede sa zobrazujú v tejto konverzácii a zvonček v hlavičke sa rozsvieti, keď nejaká príde, takže nemusíš sedieť a sledovať stránku. Všetko vybavené sa zbalí pod Vyriešené, ktoré je na začiatku zatvorené — vidíš to, na čo ešte čakáš.",
+        },
+        { lab: "Kto odpovedá" },
+        {
+          p: "Najprv ju prečíta asistent menom Tab a odpovie na to, na čo vie. Povie ti, že je AI — nikdy nepredstiera opak — a priamo povie, keď niečo nevie.",
+        },
+        {
+          p: "Vždy, keď je to lepšia odpoveď, to prevezme človek: všetko, čo sa týka peňazí, tvojich údajov, bezpečnosti, alebo jednoducho preto, že si o to požiadal. Nikdy nemusíš žiadať dvakrát ani sa opakovať — ten, kto to prevezme, už vidí všetko, čo si napísal.",
+        },
+        {
+          p: "Ak správa niekedy vyzerá ako skutočná núdzová situácia, odpoveď je zakaždým rovnaká a pochádza z pevného textu, nie od asistenta: tiesňové číslo tam, kde sa nachádzaš, a okamžite upozornený človek na našej strane. Zavolať za teba nemôžeme a hovoríme to otvorene.",
+        },
+        { lab: "Upratovanie" },
+        {
+          p: "Konverzáciu môžeš kedykoľvek odstrániť zo zoznamu ikonou koša vedľa nej. Malá poznámka pri *Podať žiadosť* počíta, koľko si ich odstránil, takže zmiznuté vlákno nikdy nie je záhadou.",
+        },
+        {
+          p: "Na spoločnom rodinnom zariadení si sekcia Podpora pred otvorením vypýta PIN pre dospelých — vlákna podpory sú záležitosťou účtu a ten, kto precvičuje, nie je vždy ten, kto účet založil.",
         },
       ],
     },

@@ -171,6 +171,8 @@ const BASE_REGISTRY: readonly SettingDef[] = [
   page("forSchools", "For schools page", "/for-schools", { default: "404" }),
   page("verify", "Certificate check", "/verify, /verify/:number"),
   page("publicProfiles", "Public profiles", "/profile/:userId"),
+  // The learner's own progress page, a main-menu link (owner, 7 Oct 2026).
+  page("profile", "Your progress page", "/profile"),
   // The drawer's own links. These are pages a visitor reaches from the menu
   // rather than the main nav, and they were missing a switch entirely until
   // 3 Sep 2026 — an admin could not take the layouts reference or the guide

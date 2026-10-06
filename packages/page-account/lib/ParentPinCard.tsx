@@ -1,12 +1,38 @@
 import { type UserDetails } from "@keylearn/pages-shared";
 import { ConfirmDialog, FloatingShell, PinField } from "@keylearn/widget";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import * as styles from "./AccountPage.module.less";
 import { PasswordField } from "./AuthPage.tsx";
 import { Toggle } from "./controls.tsx";
 import { useParentPinGate } from "./pin-gate.tsx";
 import { AccountService } from "./service.ts";
+
+// Declared here, not inline: `fm(...)` is not a name the extractor knows, so
+// messages written straight into it never reached the catalogue and rendered
+// as their id in every language (release check, 7 Oct 2026).
+const exitMsgs = defineMessages({
+  onTitle: {
+    id: "sec.pin.kidsExit.onTitle",
+    defaultMessage: "Lock the kids page?",
+  },
+  offTitle: {
+    id: "sec.pin.kidsExit.offTitle",
+    defaultMessage: "Unlock the kids page?",
+  },
+  onMessage: {
+    id: "sec.pin.kidsExit.onMessage",
+    defaultMessage:
+      "Switching from a child’s profile to a grown-up’s will need the grown-up PIN.",
+  },
+  offMessage: {
+    id: "sec.pin.kidsExit.offMessage",
+    defaultMessage:
+      "Anyone on a child’s profile will be able to switch to a grown-up’s without the PIN.",
+  },
+  onConfirm: { id: "sec.pin.kidsExit.onConfirm", defaultMessage: "Turn on" },
+  offConfirm: { id: "sec.pin.kidsExit.offConfirm", defaultMessage: "Turn off" },
+});
 
 /**
  * The grown-up PIN.
@@ -107,7 +133,7 @@ export function ParentPinCard({
             {user.parentPinSet ? (
               <FormattedMessage
                 id="sec.pin.kidsExit.sub"
-                defaultMessage="Switching from a child's profile to a grown-up's needs the PIN."
+                defaultMessage="Switching from a child’s profile to a grown-up’s needs the PIN."
               />
             ) : (
               <FormattedMessage
@@ -125,38 +151,11 @@ export function ParentPinCard({
       </div>
       {confirmExit != null && (
         <ConfirmDialog
-          title={
-            confirmExit
-              ? fm({
-                  id: "sec.pin.kidsExit.onTitle",
-                  defaultMessage: "Lock the kids page?",
-                })
-              : fm({
-                  id: "sec.pin.kidsExit.offTitle",
-                  defaultMessage: "Unlock the kids page?",
-                })
-          }
-          message={
-            confirmExit
-              ? fm({
-                  id: "sec.pin.kidsExit.onMessage",
-                  defaultMessage:
-                    "Switching from a child's profile to a grown-up's will need the grown-up PIN.",
-                })
-              : fm({
-                  id: "sec.pin.kidsExit.offMessage",
-                  defaultMessage:
-                    "Anyone on a child's profile will be able to switch to a grown-up's without the PIN.",
-                })
-          }
-          confirmLabel={
-            confirmExit
-              ? fm({ id: "sec.pin.kidsExit.onConfirm", defaultMessage: "Turn on" })
-              : fm({
-                  id: "sec.pin.kidsExit.offConfirm",
-                  defaultMessage: "Turn off",
-                })
-          }
+          title={fm(confirmExit ? exitMsgs.onTitle : exitMsgs.offTitle)}
+          message={fm(confirmExit ? exitMsgs.onMessage : exitMsgs.offMessage)}
+          confirmLabel={fm(
+            confirmExit ? exitMsgs.onConfirm : exitMsgs.offConfirm,
+          )}
           danger={!confirmExit}
           onConfirm={() => {
             const next = confirmExit;

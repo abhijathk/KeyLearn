@@ -35,6 +35,7 @@ export const PAGE_KEYS = {
   forSchools: "pages.forSchools.state",
   verify: "pages.verify.state",
   publicProfiles: "pages.publicProfiles.state",
+  profile: "pages.profile.state",
   layouts: "pages.layouts.state",
   guide: "pages.guide.state",
   about: "pages.about.state",
@@ -87,6 +88,8 @@ export function pageNameOf(page: PageInfo): PageName | null {
       return "verify";
     case Pages.layouts.path:
       return "layouts";
+    case Pages.profile.path:
+      return "profile";
     case Pages.guide.path:
       return "guide";
     case Pages.about.path:

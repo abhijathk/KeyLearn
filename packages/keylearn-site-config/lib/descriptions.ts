@@ -54,6 +54,8 @@ export const DESCRIPTIONS: Readonly<Record<string, string>> = {
     "Where anybody can check that a certificate number is genuine.",
   "pages.publicProfiles.state":
     "A learner's own progress page as other people see it.",
+  "pages.profile.state":
+    "A learner's own progress page: speed, accuracy and every key over time.",
   "pages.layouts.state":
     "The reference of every keyboard layout KeyLearn can teach.",
   "pages.guide.state": "The written guide to using KeyLearn.",

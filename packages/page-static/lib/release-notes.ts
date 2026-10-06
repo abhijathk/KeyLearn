@@ -15,6 +15,29 @@ export type ReleaseNote = {
 // surface, and 54-locale translation churn on every release isn't worth it.
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    version: "02.01.00",
+    date: "2026-10-06T23:16:00Z",
+    changes: [
+      "Time Keepers has a new market: seven shops, each opening and closing at its own hours, with wooden shutters when it is shut.",
+      "New houses in every chapter of Time Keepers, and the village now speaks differently by day and by night.",
+      "Hero Trail has a bog boardwalk, mist and frost; Dino Run has volcanoes, tar pits, arches and rain. The characters are a little bigger.",
+      "The kids worlds open much faster: you can pick who is walking within seconds.",
+      "Game and background sounds in the kids worlds now start switched off. Turn them on in the kids settings under Sounds.",
+      "A grown-up can ask for the PIN before anyone leaves the kids page. Find it in Account, Security.",
+      "Round Graphite is the keyboard for account holders, with black letters on its yellow keys so they are easy to read.",
+      "Guests practise with Guided practice and the KeyLearn keyboard. Other practice and keyboards are shown with a lock and open when you sign in.",
+      "The welcome tour shows once in each browser, and a first visit no longer opens several windows at once. You can always reopen the tour from the practice tools.",
+      "Importing your typing progress shows that it is working while the file opens and is read.",
+      "Before you add a passkey, we ask you to confirm it is you.",
+      "If a request to delete your account is cancelled, we email you and tell you in the bell.",
+      "Support tells you when it is closed and when it will be back, and asks for a quick human check before sending.",
+      "The User Guide has a new Getting help section, and its updated sections are translated into every language.",
+      "Fixed: progress from very active learners could stop saving to their account.",
+      "Fixed: Hero Trail no longer hatches eggs. It has its own companion.",
+      "Fixed: the confirm window for the kids-page PIN setting showed codes instead of words.",
+    ],
+  },
+  {
     version: "02.00.00",
     date: "2026-10-03T11:49:00Z",
     changes: [

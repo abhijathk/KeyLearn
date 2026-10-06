@@ -20,31 +20,25 @@ export const de: GuideTranslation = {
     {
       id: "signin",
       nav: "Anmelden und Passwörter",
-      heading: "Registrieren, anmelden und Passwörter",
+      heading: "Registrieren, Anmelden und Passwörter",
       blocks: [
-        { p: "Alles findest du im Menü oben rechts." },
-        { lab: "Ein Konto erstellen" },
         {
-          steps: [
-            "Öffne das Menü (oben rechts).",
-            "Wähle Registrieren.",
-            "Gib eine E-Mail-Adresse und ein Passwort ein.",
-            "Bestätige — und schon bist du drin.",
-          ],
+          p: "Alles findest du im Menü oben rechts unter Anmelden oder registrieren — dieselbe Tür, ob du schon ein Konto hast oder nicht.",
         },
-        { lab: "Anmelden" },
+        { lab: "Ein Konto erstellen oder dich anmelden" },
         {
           steps: [
-            "Öffne das Menü und wähle Anmelden.",
-            "Gib deine E-Mail-Adresse und dein Passwort ein.",
+            "Öffne das Menü und wähle Anmelden oder registrieren.",
+            "Mach mit Google, Facebook oder einem Passkey weiter — oder gib deine E-Mail-Adresse ein und tippe auf Weiter.",
+            "Bei einer neuen E-Mail-Adresse legst du ein Passwort fest; bei einer bekannten wirst du danach gefragt.",
           ],
         },
         { lab: "Ein vergessenes Passwort zurücksetzen" },
         {
           steps: [
-            "Wähle auf der Anmeldeseite Passwort vergessen.",
-            "Gib deine E-Mail-Adresse ein.",
-            "Öffne den Link zum Zurücksetzen, den wir dir senden.",
+            "Gib auf dem Anmeldebildschirm deine E-Mail-Adresse ein und tippe auf Weiter.",
+            "Wähle Passwort vergessen?",
+            "Öffne den Link zum Zurücksetzen, den wir dir schicken.",
             "Wähle ein neues Passwort und melde dich an.",
           ],
         },
@@ -111,11 +105,17 @@ export const de: GuideTranslation = {
     },
     {
       id: "readout",
-      nav: "Live-Statistiken",
+      nav: "Live-Statistik",
       heading: "Die Live-Anzeige",
       blocks: [
         {
-          p: "Während du tippst, zeigt das schwebende Panel deine aktuelle Geschwindigkeit und Genauigkeit, eine kleine Sparkline der letzten Durchläufe, deine Ziel-Fortschritte und deine Serie. Sie ist da, um dich zu ermutigen, nicht um zu nörgeln.",
+          p: "Während du tippst, zeigt das schwebende Feld dein aktuelles Tempo und deine Genauigkeit, eine kleine Verlaufslinie deiner letzten Runden, deine Ziele und deine Serie. Es soll dich ermutigen, nicht nerven.",
+        },
+        {
+          p: "Mit *− und +* neben dem Ziel kannst du das heutige Ziel sofort etwas höher oder niedriger stellen, ohne die Einstellungen zu öffnen. Stell es niedriger, wenn dieselben paar Buchstaben nicht mehr vorankommen; das Tempo, das ein Buchstabe erreichen muss, entscheidet ganz allein darüber, wie schnell neue freigeschaltet werden.",
+        },
+        {
+          p: "Wenn du ein Profilbild ausgewählt hast, kann sein Motiv ganz zart hinter diesen Zahlen liegen — Konto, Erscheinungsbild, *Dein Bild hinter der Statistik*, mit einem Regler für die Stärke. Ausgeschaltet, bis du es einschaltest.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const de: GuideTranslation = {
           tips: [
             "*Geführte Übung* — die adaptive Standardeinstellung, die dein Alphabet Taste für Taste erweitert.",
             "*Klassischer Kurs* — ein fester, geordneter Marsch durch die Tasten.",
+            "*Quellcode* — echter Code aus echten Frameworks.",
             "*Häufige Wörter* — die gebräuchlichsten Wörter deiner Sprache.",
             "*Buchtext* — tippe dich durch echte Bücher, die in der App eingebaut sind.",
+            "*Zitate* — kurze, abgeschlossene Gedanken mit ihren echten Großbuchstaben und Satzzeichen.",
             "*Eigener Text* — füge alles ein, was dir gefällt, und übe damit.",
-            "*Code-Schnipsel* — Klammern, Symbole und der Rhythmus des Codes.",
             "*Zahlenübungen* — die Zahlenreihe und der Ziffernblock.",
           ],
         },
@@ -182,34 +183,40 @@ export const de: GuideTranslation = {
     },
     {
       id: "keyboard",
-      nav: "Tastatur-Einrichtung",
+      nav: "Tastatur einrichten",
       heading: "Deine Tastatur einrichten",
       blocks: [
         {
-          p: "In den Einstellungen unter Tastatur-Einrichtung passt du KeyLearn an deine Tastatur und an das Layout an, das du lernen möchtest.",
+          p: "Unter Einstellungen, Tastatur-Einrichtung passt du KeyLearn an deine Tastatur und an das Layout an, das du lernen möchtest.",
         },
         { lab: "Dein Tastaturlayout ändern" },
         {
           steps: [
             "Öffne die Einstellungen.",
-            "Gehe zu Tastatur-Einrichtung.",
-            "Wähle deine Sprache, dann dein Layout (QWERTY, Dvorak, Colemak und mehr).",
-            "Lass „Dieses Layout simulieren“ aktiviert, damit du es üben kannst, egal wie dein Computer eingestellt ist.",
-            "Beobachte die Live-Vorschau zur Bestätigung.",
+            "Geh zu Tastatur-Einrichtung.",
+            "Wähle deine Sprache und dann dein Layout (QWERTZ, QWERTY, Dvorak, Colemak und mehr).",
+            "Lass „Dieses Layout simulieren“ eingeschaltet, damit du es üben kannst, egal wie dein Computer eingestellt ist.",
+            "Prüfe es in der Live-Vorschau.",
           ],
         },
         {
-          p: "Auf demselben Bildschirm kannst du die Tastaturform wählen, die Tasten nach Fingerzonen einfärben und die nächste Taste hervorheben, solange du noch lernst, wo alles liegt.",
+          p: "Auf derselben Seite kannst du die Form der Tastatur wählen, die Tasten nach Fingerzonen einfärben und die nächste Taste hervorheben lassen, solange du noch lernst, wo alles liegt.",
+        },
+        {
+          p: "Die *Oberfläche* der Tastatur — wie die Tasten aussehen — gibt es mit einem Konto. Angemeldet hast du fünf zur Auswahl, und die runde gibt es in sechs Farben; eine davon folgt der Farbe deines Designs. Alles andere bleibt dir so oder so: Sprache, Layout, Form und Fingerzonen werden nie zurückgehalten, denn sie sorgen dafür, dass die App zu der Tastatur vor dir passt.",
         },
       ],
     },
     {
       id: "display",
-      nav: "Darstellung",
-      heading: "Darstellung und Gefühl",
+      nav: "Anzeige",
+      heading: "Anzeige und Gefühl",
       blocks: [
         {
-          p: "Mit den Einstellungen für Darstellung und Texteingabe kannst du deine Geschwindigkeit in Wörtern oder Zeichen pro Minute anzeigen und genau abstimmen, wie sich das Tippen anfühlt. Standardwerte wiederherstellen ist immer nur einen Klick entfernt, falls du neu beginnen möchtest.",
+          p: "In den Einstellungen für Anzeige und Texteingabe kannst du dein Tempo in Wörtern oder Zeichen pro Minute anzeigen lassen und genau einstellen, wie sich das Tippen anfühlt. Standard wiederherstellen ist immer nur einen Klick entfernt, wenn du neu anfangen willst.",
+        },
+        {
+          p: "Wie die ganze Seite aussieht, stellst du unter Konto, Erscheinungsbild ein: hell, dunkel oder wie das System, eine Designfarbe und eine Schriftgröße, die auf jeder Seite gilt. Jedes Kind und jeder Erwachsene im Haushalt behält die eigenen Einstellungen, und sie reisen mit — siehe *Gut auf deine Daten achten*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const de: GuideTranslation = {
           steps: [
             "Öffne das Menü.",
             "Wähle Profil.",
-            "Nutze die Filterzeile, um dich auf Buchstaben, Ziffern, Satzzeichen oder Symbole zu konzentrieren.",
           ],
         },
       ],
@@ -234,25 +240,28 @@ export const de: GuideTranslation = {
     {
       id: "data",
       nav: "Deine Daten",
-      heading: "Auf deine Daten achten",
+      heading: "Gut auf deine Daten achten",
       blocks: [
-        { lab: "Die Statistiken eines Profils löschen" },
+        { lab: "Die Statistik eines Profils löschen" },
         {
           steps: [
-            "Öffne Profil für den Lernenden, den du zurücksetzen möchtest.",
-            "Scrolle zum Zurücksetzen-Steuerelement am Ende der Seite.",
-            "Bestätige „Alles löschen“ — nur dieses Profil wird gelöscht.",
+            "Öffne das Profil der Person, die du zurücksetzen möchtest.",
+            "Scrolle ganz nach unten zum Zurücksetzen.",
+            "Bestätige „Alles löschen“ — nur dieses Profil wird geleert.",
           ],
         },
         { lab: "Deine Daten herunterladen" },
         {
           steps: [
-            "Öffne Profil.",
-            "Nutze die Download-Option, um deinen Verlauf als Datei zu speichern.",
+            "Öffne das Profil.",
+            "Speichere deinen Verlauf über die Download-Option als Datei.",
           ],
         },
         {
-          p: "Melde dich an, wenn du möchtest, dass dein Verlauf über Geräte hinweg synchronisiert wird und du einen öffentlichen Profil-Link teilen kannst. Es gibt keine Werbung und keine Tracker, und du kannst deine Daten — oder dein gesamtes Konto — löschen, wann immer du willst.",
+          p: "Melde dich an, wenn dein Verlauf zwischen Geräten synchronisiert werden soll oder du einen öffentlichen Profil-Link teilen möchtest. Es gibt keine Werbenetzwerke und keine Tracker, und du kannst deine Daten — oder dein ganzes Konto — jederzeit löschen.",
+        },
+        {
+          p: "Wer angemeldet ist, nimmt inzwischen mehr mit als nur die Ergebnisse. Deine Einstellungen, dein Design und deine Schriftgröße, deine Barrierefreiheits-Einstellungen und die eigenen Vorlieben jeder Person im Haushalt hängen am Profil statt am Browser — wer KeyLearn auf einem neuen Computer öffnet, macht also genau dort weiter, wo er aufgehört hat, auf demselben Bildschirm und genauso eingerichtet, statt wieder bei den Standardwerten anzufangen.",
         },
       ],
     },
@@ -278,17 +287,20 @@ export const de: GuideTranslation = {
     },
     {
       id: "toybox",
-      nav: "Kinder-Spielkiste",
-      heading: "Die Kinder-Spielkiste",
+      nav: "Spielzeugkiste",
+      heading: "Die Spielzeugkiste für Kinder",
       blocks: [
-        { lab: "Die Spielkiste öffnen" },
+        { lab: "Die Spielzeugkiste öffnen" },
         {
           steps: [
             "Tippe auf dem Kinderbildschirm auf das Zahnrad oben im Spielbereich.",
           ],
         },
         {
-          p: "Darin kannst du Welt und Figur einstellen, Große Buchstaben, Töne, Helferhände (die leuchtende Fingerführung), die Tastatur (versteckt, einfach oder das volle Erwachsenenbrett), Buchstaben auf dem Pfad (die als Blöcke direkt im Spiel gezeigten Wörter), einen Sitzungs-Timer, Jubel (ermutigende kleine Nachrichten) und — versteckt unter Erweitert — Regler für Helligkeit, Farbe und wie lebendig sich die Welt anfühlt. Es gibt auch ein ruhiges Nacht-Erscheinungsbild neben dem hellen Tag-Look.",
+          p: "Darin kannst du die Welt und die Figur einstellen, Große Buchstaben, Töne, Helferhände (die leuchtende Fingerführung), die Tastatur (versteckt, einfach oder die volle Erwachsenen-Tastatur), Buchstaben auf dem Weg (die Wörter als Blöcke direkt im Spiel), einen Sitzungs-Timer, Jubel (kleine aufmunternde Botschaften) und — versteckt unter Erweitert — Regler für Helligkeit, Farbe und wie lebendig sich die Welt anfühlt. Neben dem hellen Tag gibt es auch eine ruhige Nacht.",
+        },
+        {
+          p: "*Key style* ändert, wie die Tasten bemalt sind; die Tasten selbst bleiben, wo sie sind: *Crayon* ist die weiße Kappe mit einem Ring in ihrer Fingerfarbe, und *Rainbow* ist die Lerntastatur in Grundfarben — grüner Rahmen, rote Zahlen, blaue Buchstaben, die Vokale abgesetzt —, auf der die Rahmentasten Pfeile statt Wörter zeigen, für ein Kind, das „Enter“ noch nicht lesen kann. Alle beginnen mit Crayon. *Finger colours* daneben schaltet die Färbung ganz ab, wenn ein Kind sie nicht mehr braucht.",
         },
       ],
     },
@@ -485,7 +497,48 @@ export const de: GuideTranslation = {
       heading: "Datenschutz, in einem Satz",
       blocks: [
         {
-          p: "Keine Werbung und keine Tracker. Das Profil eines Kindes verlässt niemals deinen Browser. Melde dich nur an, wenn du synchronisieren oder teilen möchtest; ansonsten bleibt alles auf diesem Gerät, und du kannst es jederzeit löschen.",
+          p: "Keine Werbenetzwerke und keine Tracker. Das Profil eines Kindes verlässt niemals deinen Browser. Melde dich nur an, wenn du synchronisieren oder teilen möchtest; ansonsten bleibt alles auf diesem Gerät, und du kannst es jederzeit löschen.",
+        },
+        {
+          p: "Auf manchen Seiten siehst du vielleicht eine *gesponserte Zeile*. Die haben wir selbst verkauft und zeigen sie selbst an — hier gibt es kein Werbenetzwerk, und nichts folgt dir von der Seite weg. Sie richtet sich nach der Seite, auf der du bist, nie nach etwas, das wir über dich wissen, und sie erscheint nie einem Kind, nie in der Kinderwelt, nie bei einem Schulkonto und nie während einer laufenden Lektion. Tippe bei jeder auf *Warum sehe ich das?*, um dieselbe Erklärung direkt dort zu lesen — und wer das Projekt unterstützt hat, sieht nie eine.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Hilfe bekommen",
+      heading: "Hilfe bekommen",
+      blocks: [
+        {
+          p: "Jede Nachricht an uns wird zu einem *Gespräch, zu dem du zurückkehren kannst*, nicht zu einer E-Mail, die verschwindet. Es liegt unter Konto und hat seine eigene Referenznummer — die gibst du an, wenn du je wieder anrufst oder schreibst.",
+        },
+        { lab: "Um Hilfe bitten" },
+        {
+          steps: [
+            "Öffne das Menü und wähle Konto, dann Support.",
+            "Wähle Anfrage stellen und beschreibe, was passiert.",
+            "Häng einen Screenshot an, wenn das hilft — PNG, JPG oder PDF, jeweils bis zu 10 MB.",
+          ],
+        },
+        {
+          p: "Antworten erscheinen in diesem Gespräch, und die Glocke oben leuchtet auf, wenn eine eintrifft, damit du nicht vor der Seite sitzen und warten musst. Was schon erledigt ist, wandert unter Erledigt, das zugeklappt beginnt — du siehst also das, worauf du noch wartest.",
+        },
+        { lab: "Wer antwortet" },
+        {
+          p: "Ein Assistent namens Tab liest es zuerst und beantwortet, was er kann. Er sagt dir, dass er eine KI ist — er tut nie so, als wäre er etwas anderes, und sagt offen, wenn er etwas nicht weiß.",
+        },
+        {
+          p: "Ein Mensch übernimmt, wann immer das die bessere Antwort ist: bei allem, was mit Geld, deinen Daten oder Sicherheit zu tun hat, oder einfach, weil du darum gebeten hast. Du musst nie zweimal fragen und dich nie wiederholen — wer es übernimmt, sieht schon alles, was du geschrieben hast.",
+        },
+        {
+          p: "Wenn eine Nachricht je nach einem echten Notfall klingt, ist die Antwort jedes Mal dieselbe und kommt aus einem festen Text statt vom Assistenten: die Notrufnummer dort, wo du bist, und ein Mensch auf unserer Seite wird sofort benachrichtigt. Diesen Anruf können wir nicht für dich machen, und das sagen wir auch.",
+        },
+        { lab: "Aufräumen" },
+        {
+          p: "Du kannst ein Gespräch jederzeit mit dem Papierkorb-Symbol daneben aus deiner Liste entfernen. Ein kleiner Hinweis bei *Anfrage stellen* zählt mit, wie viele du entfernt hast, damit ein verschwundener Verlauf nie ein Rätsel ist.",
+        },
+        {
+          p: "Auf einem gemeinsam genutzten Familiengerät fragt der Support-Bereich vor dem Öffnen nach der Erwachsenen-PIN — Support-Verläufe sind Kontosache, und wer gerade übt, ist nicht immer die Person, die das Konto eingerichtet hat.",
         },
       ],
     },

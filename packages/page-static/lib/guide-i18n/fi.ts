@@ -22,29 +22,23 @@ export const fi: GuideTranslation = {
       nav: "Kirjautuminen ja salasanat",
       heading: "Rekisteröityminen, kirjautuminen ja salasanat",
       blocks: [
-        { p: "Kaikki löytyy oikean yläkulman valikosta." },
-        { lab: "Luo tili" },
+        {
+          p: "Kaikki löytyy oikean yläkulman valikosta kohdasta Kirjaudu sisään tai luo tili — sama ovi, oli sinulla jo tili tai ei.",
+        },
+        { lab: "Luo tili tai kirjaudu sisään" },
         {
           steps: [
-            "Avaa valikko (oikeasta yläkulmasta).",
-            "Valitse Rekisteröidy.",
-            "Anna sähköpostiosoite ja salasana.",
-            "Vahvista — ja olet sisällä.",
+            "Avaa valikko ja valitse Kirjaudu sisään tai luo tili.",
+            "Jatka Googlella, Facebookilla tai pääsyavaimella — tai kirjoita sähköpostiosoitteesi ja paina Jatka.",
+            "Uudella osoitteella pääset asettamaan salasanan; jo käytössä olevalla sitä kysytään.",
           ],
         },
-        { lab: "Kirjaudu sisään" },
+        { lab: "Unohtuneen salasanan vaihtaminen" },
         {
           steps: [
-            "Avaa valikko ja valitse Kirjaudu sisään.",
-            "Anna sähköpostiosoitteesi ja salasanasi.",
-          ],
-        },
-        { lab: "Nollaa unohtunut salasana" },
-        {
-          steps: [
-            "Valitse kirjautumisnäytöllä Unohditko salasanan.",
-            "Anna sähköpostiosoitteesi.",
-            "Avaa lähettämämme nollauslinkki.",
+            "Kirjoita kirjautumisnäytöllä sähköpostiosoitteesi ja paina Jatka.",
+            "Valitse Unohditko salasanasi?",
+            "Avaa lähettämämme palautuslinkki.",
             "Valitse uusi salasana ja kirjaudu sisään.",
           ],
         },
@@ -117,6 +111,12 @@ export const fi: GuideTranslation = {
         {
           p: "Kirjoittaessasi kelluva paneeli näyttää nykyisen nopeutesi ja tarkkuutesi, pienen viivakaavion viime suorituksista, tavoitteesi ja putkesi. Se on siellä kannustamassa sinua, ei nalkuttamassa.",
         },
+        {
+          p: "Tavoitteen vieressä olevat *− ja +* nostavat tai laskevat tämän päivän tavoitetta saman tien, avaamatta Asetuksia. Laske sitä, jos samat muutamat kirjaimet ovat jääneet jumiin; nopeus, joka kirjaimen on saavutettava, on ainoa asia, joka ratkaisee, kuinka nopeasti uusia avautuu.",
+        },
+        {
+          p: "Jos olet valinnut profiilikuvan, sen kuva voi näkyä himmeänä noiden lukujen takana — Tili, Ulkoasu, *Kuvasi lukujen takana*, ja liukusäätimellä valitset sen voimakkuuden. Pois päältä, ellet kytke sitä päälle.",
+        },
       ],
     },
     {
@@ -141,10 +141,11 @@ export const fi: GuideTranslation = {
           tips: [
             "*Opastettu harjoitus* — mukautuva oletus, joka kasvattaa aakkostoasi näppäin kerrallaan.",
             "*Klassinen kurssi* — kiinteä, järjestyksessä etenevä marssi näppäinten läpi.",
+            "*Lähdekoodi* — oikeaa koodia oikeista sovelluskehyksistä.",
             "*Yleiset sanat* — kielesi yleisimmät sanat.",
             "*Kirjateksti* — kirjoita itsesi läpi sovellukseen sisältyvien oikeiden kirjojen.",
+            "*Sitaatit* — lyhyitä, kokonaisia ajatuksia oikeine isoine kirjaimineen ja välimerkkeineen.",
             "*Oma teksti* — liitä mitä tahansa haluat ja harjoittele sillä.",
-            "*Koodinpätkät* — sulkeet, symbolit ja koodin rytmi.",
             "*Numeroharjoitukset* — numerorivi ja numeronäppäimistö.",
           ],
         },
@@ -201,6 +202,9 @@ export const fi: GuideTranslation = {
         {
           p: "Samalla näytöllä voit valita näppäimistön muodon, värittää näppäimet sormialueittain ja korostaa seuraavan näppäimen, kun vielä opettelet, missä mikäkin on.",
         },
+        {
+          p: "Näppäimistön *viimeistely* — näppäinten ulkonäkö — tulee tilin mukana. Kirjautuneena valittavana on viisi, ja pyöreä on saatavilla kuutena värinä; niistä yksi seuraa teemasi väriä. Kaikki edellä mainittu on sinun joka tapauksessa: kieltä, asettelua, muotoa ja sormialueita ei koskaan pidätetä, sillä juuri ne saavat sovelluksen vastaamaan edessäsi olevaa näppäimistöä.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const fi: GuideTranslation = {
       blocks: [
         {
           p: "Ulkoasun ja Tekstinsyötön asetuksilla voit näyttää nopeutesi sanoina tai merkkeinä minuutissa ja hienosäätää sitä, miltä kirjoittaminen tuntuu. Palauta oletukset on aina napin päässä, jos haluat aloittaa puhtaalta pöydältä.",
+        },
+        {
+          p: "Koko sivuston ulkoasu löytyy kohdasta Tili, Ulkoasu: vaalea, tumma tai järjestelmän mukainen, teemaväri ja tekstikoko, joka pysyy samana joka sivulla. Jokaisella perheen oppijalla on omansa, ja ne kulkevat hänen mukanaan — katso *Tiedoistasi huolehtiminen*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const fi: GuideTranslation = {
           steps: [
             "Avaa valikko.",
             "Valitse Profiili.",
-            "Käytä suodatinriviä keskittyäksesi kirjaimiin, numeroihin, välimerkkeihin tai symboleihin.",
           ],
         },
       ],
@@ -252,7 +258,10 @@ export const fi: GuideTranslation = {
           ],
         },
         {
-          p: "Kirjaudu sisään, jos haluat historiasi synkronoituvan laitteiden välillä ja haluat jakaa julkisen profiililinkin. Mainoksia tai seuraimia ei ole, ja voit poistaa tietosi — tai koko tilisi — milloin tahansa.",
+          p: "Kirjaudu sisään, jos haluat historiasi synkronoituvan laitteiden välillä ja jakaa julkisen profiililinkin. Mainosverkostoja ja seurantaa ei ole, ja voit poistaa tietosi — tai koko tilisi — milloin vain.",
+        },
+        {
+          p: "Kirjautuminen kuljettaa nyt mukanaan muutakin kuin tuloksesi. Asetuksesi, teemasi ja tekstikokosi, tekemäsi saavutettavuusvalinnat ja jokaisen oppijan omat mieltymykset seuraavat profiilia eivätkä selainta — joten oppija, joka avaa KeyLearnin uudella tietokoneella, jatkaa siitä mihin jäi, samalla näytöllä ja samoin asetuksin, sen sijaan että aloittaisi taas oletusarvoista.",
         },
       ],
     },
@@ -283,10 +292,15 @@ export const fi: GuideTranslation = {
       blocks: [
         { lab: "Avaa leikkilaatikko" },
         {
-          steps: ["Napauta lastennäytöllä pelialueen yläreunan ratasta."],
+          steps: [
+            "Napauta lastennäytöllä pelialueen yläreunan ratasta.",
+          ],
         },
         {
           p: "Sisältä voit asettaa maailman ja hahmon, Isot kirjaimet, Äänet, Auttavat kädet (hehkuvan sormiopastuksen), Näppäimistön (piilotettu, yksinkertainen tai täysi aikuisten näppäimistö), Kirjaimet polulla (sanat näytettynä palikoina suoraan pelissä), istunnon Ajastimen, Kannustukset (rohkaisevat pienet viestit) ja — Lisäasetusten alle kätkettynä — liukurit Kirkkaudelle, Värille ja sille, kuinka eloisalta maailma tuntuu. Tarjolla on rauhallinen yöilme kirkkaan päiväilmeen rinnalla.",
+        },
+        {
+          p: "*Key style* muuttaa sitä, miten näppäimet on maalattu, eivätkä itse näppäimet liiku: *Crayon* on valkoinen näppäin, jota kiertää sen sormen väri, ja *Rainbow* on perusvärien opettelunäppäimistö — vihreä kehys, punaiset numerot, siniset kirjaimet ja vokaalit erikseen — jossa kehyksen näppäimet ovat sanojen sijaan nuolia lapselle, joka ei vielä osaa lukea sanaa ”enter”. Kaikki aloittavat Crayon-tyylillä. Sen vieressä oleva *Finger colours* poistaa värityksen kokonaan lapselta, joka ei sitä enää tarvitse.",
         },
       ],
     },
@@ -480,7 +494,48 @@ export const fi: GuideTranslation = {
       heading: "Yksityisyys yhdellä lauseella",
       blocks: [
         {
-          p: "Ei mainoksia eikä seuraimia. Lapsen profiili ei koskaan poistu selaimestasi. Kirjaudu sisään vain, jos haluat synkronointia tai jakamista; muuten kaikki pysyy tässä laitteessa, ja voit vapaasti poistaa sen milloin tahansa.",
+          p: "Ei mainosverkostoja eikä seurantaa. Lapsen profiili ei koskaan poistu selaimestasi. Kirjaudu sisään vain, jos haluat synkronointia tai jakamista; muuten kaikki pysyy tällä laitteella, ja voit poistaa sen milloin tahansa.",
+        },
+        {
+          p: "Saatat nähdä joillakin sivuilla *sponsoroidun rivin*. Sen olemme myyneet ja näytämme itse — täällä ei ole mainosverkostoa, eikä mikään seuraa sinua sivuston ulkopuolelle. Sen valitsee sivu, jolla olet, ei koskaan mikään, mitä tiedämme sinusta, eikä sitä koskaan näytetä lapselle, lasten maailmassa, koulutilillä tai kesken oppitunnin. Napauta minkä tahansa kohdalla *Miksi näen tämän?*, niin saat saman selityksen siinä paikassa, eivätkä projektia tukeneet näe niitä lainkaan.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Avun saaminen",
+      heading: "Avun saaminen",
+      blocks: [
+        {
+          p: "Jokaisesta meille lähettämästäsi viestistä tulee *keskustelu, johon voit palata*, eikä katoava sähköposti. Se löytyy Tililtä, ja sillä on oma viitenumeronsa — se, joka kannattaa mainita, jos joskus soitat tai kirjoitat uudelleen.",
+        },
+        { lab: "Pyydä apua" },
+        {
+          steps: [
+            "Avaa valikko ja valitse Tili ja sitten Tuki.",
+            "Valitse Jätä pyyntö ja kerro, mitä tapahtuu.",
+            "Liitä kuvakaappaus, jos siitä on apua — PNG, JPG tai PDF, enintään 10 Mt kukin.",
+          ],
+        },
+        {
+          p: "Vastaukset näkyvät siinä keskustelussa, ja otsikkopalkin kello syttyy, kun vastaus saapuu, joten sinun ei tarvitse istua tuijottamassa sivua. Kaikki jo ratkaistu siirtyy kohtaan Ratkaistu, joka on aluksi suljettu — näet sen, mitä vielä odotat.",
+        },
+        { lab: "Kuka vastaa" },
+        {
+          p: "Tab-niminen avustaja lukee viestin ensin ja vastaa siihen, mihin pystyy. Se kertoo olevansa tekoäly — se ei koskaan teeskentele muuta — ja sanoo suoraan, kun se ei tiedä jotakin.",
+        },
+        {
+          p: "Ihminen ottaa asian hoitaakseen aina, kun se on parempi vastaus: kaikki, mikä koskee rahaa, tietojasi tai turvallisuutta, tai yksinkertaisesti siksi, että pyysit. Sinun ei koskaan tarvitse pyytää kahdesti eikä toistaa itseäsi — asian ottava näkee jo kaiken, mitä olet sanonut.",
+        },
+        {
+          p: "Jos viesti joskus vaikuttaa todelliselta hätätilanteelta, vastaus on joka kerta sama ja tulee kiinteästä tekstistä eikä avustajalta: sijaintisi hätänumero, ja meidän puolellamme ihminen hälytetään heti. Emme voi soittaa sitä puhelua puolestasi, ja sanomme sen.",
+        },
+        { lab: "Siivoaminen" },
+        {
+          p: "Voit poistaa keskustelun luettelostasi milloin tahansa sen vieressä olevalla roskakorikuvakkeella. Pieni merkintä kohdan *Jätä pyyntö* vieressä laskee, montako olet poistanut, joten kadonnut keskustelu ei ole koskaan arvoitus.",
+        },
+        {
+          p: "Perheen yhteisellä laitteella Tuki-osio kysyy aikuisen PIN-koodia ennen avautumista — tukikeskustelut ovat tilin asioita, eikä harjoittelija ole aina se, joka tilin loi.",
         },
       ],
     },

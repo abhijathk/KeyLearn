@@ -22,30 +22,24 @@ export const id: GuideTranslation = {
       nav: "Masuk dan kata sandi",
       heading: "Mendaftar, masuk, dan kata sandi",
       blocks: [
-        { p: "Semuanya ada di menu di kanan atas." },
-        { lab: "Membuat akun" },
+        {
+          p: "Semuanya ada di menu kanan atas, di bawah Masuk atau daftar — pintu yang sama, entah kamu sudah punya akun atau belum.",
+        },
+        { lab: "Membuat akun atau masuk" },
         {
           steps: [
-            "Buka menu (kanan atas).",
-            "Pilih Daftar.",
-            "Masukkan email dan kata sandi.",
-            "Konfirmasi — kamu sudah masuk.",
+            "Buka menu dan pilih Masuk atau daftar.",
+            "Lanjutkan dengan Google, Facebook, atau kunci sandi — atau ketik email-mu lalu tekan Lanjutkan.",
+            "Email baru akan memandumu membuat kata sandi; email yang sudah terdaftar akan memintanya.",
           ],
         },
-        { lab: "Masuk" },
+        { lab: "Mengatur ulang kata sandi yang terlupa" },
         {
           steps: [
-            "Buka menu dan pilih Masuk.",
-            "Masukkan email dan kata sandimu.",
-          ],
-        },
-        { lab: "Mengatur ulang kata sandi yang lupa" },
-        {
-          steps: [
-            "Di layar Masuk, pilih Lupa Kata Sandi.",
-            "Masukkan alamat emailmu.",
-            "Buka tautan pengaturan ulang yang kami kirim.",
-            "Pilih kata sandi baru lalu masuk.",
+            "Di layar masuk, masukkan email-mu lalu tekan Lanjutkan.",
+            "Pilih Lupa kata sandi?",
+            "Buka tautan pengaturan ulang yang kami kirimkan.",
+            "Pilih kata sandi baru dan masuk.",
           ],
         },
       ],
@@ -115,7 +109,13 @@ export const id: GuideTranslation = {
       heading: "Tampilan langsung",
       blocks: [
         {
-          p: "Saat kamu mengetik, panel melayang menampilkan kecepatan dan akurasimu saat ini, grafik mungil dari sesi-sesi terakhir, capaian targetmu, dan rentetan harianmu. Ia ada untuk menyemangatimu, bukan untuk mengomel.",
+          p: "Saat kamu mengetik, panel mengambang menampilkan kecepatan dan akurasimu saat ini, grafik kecil dari putaran-putaran terakhir, target-targetmu, dan rentetan harianmu. Panel itu ada untuk menyemangatimu, bukan untuk mengomelimu.",
+        },
+        {
+          p: "Tombol *− dan +* di samping target langsung menaikkan atau menurunkan target hari ini, tanpa membuka Pengaturan. Turunkan jika beberapa huruf yang sama sudah tidak bergerak maju; kecepatan yang harus dicapai sebuah huruf adalah satu-satunya hal yang menentukan seberapa cepat huruf baru terbuka.",
+        },
+        {
+          p: "Jika kamu sudah memilih gambar profil, karya senimu bisa tampil samar di balik angka-angka itu — Akun, Tampilan, *Karya seni Anda di balik statistik*, dengan penggeser untuk mengatur seberapa kuat tampilannya. Nonaktif kecuali kamu menyalakannya.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const id: GuideTranslation = {
           tips: [
             "*Latihan berpemandu* — mode adaptif bawaan yang menumbuhkan abjadmu tombol demi tombol.",
             "*Kursus klasik* — langkah tetap dan berurutan melewati tombol-tombol.",
+            "*Sumber Kode* — kode sungguhan dari framework sungguhan.",
             "*Kata sering dipakai* — kata-kata paling umum dalam bahasamu.",
             "*Teks Buku* — ketiklah menyusuri buku sungguhan yang tersedia di aplikasi.",
+            "*Kutipan* — pemikiran singkat yang utuh, lengkap dengan huruf kapital dan tanda bacanya yang asli.",
             "*Teksmu Sendiri* — tempel apa pun yang kamu suka dan berlatihlah dengannya.",
-            "*Cuplikan Kode* — kurung, simbol, dan irama kode.",
             "*Latihan Angka* — baris angka dan papan angka.",
           ],
         },
@@ -182,34 +183,40 @@ export const id: GuideTranslation = {
     },
     {
       id: "keyboard",
-      nav: "Penyiapan papan ketik",
+      nav: "Pengaturan papan ketik",
       heading: "Menyiapkan papan ketikmu",
       blocks: [
         {
-          p: "Pengaturan, Penyiapan Papan Ketik adalah tempat kamu menyelaraskan KeyLearn dengan papan ketikmu dan dengan tata letak yang ingin kamu pelajari.",
+          p: "Di Pengaturan, bagian Papan ketik, kamu menyesuaikan KeyLearn dengan papan ketikmu dan dengan tata letak yang ingin kamu pelajari.",
         },
-        { lab: "Mengubah tata letak papan ketikmu" },
+        { lab: "Mengganti tata letak papan ketik" },
         {
           steps: [
             "Buka Pengaturan.",
-            "Ke Penyiapan Papan Ketik.",
+            "Masuk ke Papan ketik.",
             "Pilih bahasamu, lalu tata letakmu (QWERTY, Dvorak, Colemak, dan lainnya).",
-            "Biarkan “Simulasikan tata letak ini” menyala supaya kamu bisa berlatih apa pun pengaturan komputermu.",
-            "Perhatikan pratinjau langsung untuk memastikan.",
+            "Biarkan “Emulasi Tata Letak” tetap aktif agar kamu bisa melatihnya apa pun pengaturan komputermu.",
+            "Lihat pratinjau langsung untuk memastikannya.",
           ],
         },
         {
-          p: "Di layar yang sama kamu bisa memilih bentuk papan ketik, mewarnai tombol menurut zona jari, dan menyorot tombol berikutnya selagi kamu masih belajar letak segalanya.",
+          p: "Di layar yang sama kamu bisa memilih bentuk papan ketik, mewarnai tombol menurut zona jari, dan menyorot tombol berikutnya selama kamu masih belajar letak semuanya.",
+        },
+        {
+          p: "*Hiasan* papan ketik — tampilan tombol-tombolnya — tersedia bersama akun. Setelah masuk, ada lima pilihan, dan yang bulat tersedia dalam enam warna; salah satunya mengikuti warna temamu. Semua hal lain tetap milikmu apa pun yang terjadi: bahasa, tata letak, bentuk, dan zona jari tidak pernah ditahan, karena hal-hal itulah yang membuat aplikasi cocok dengan papan ketik di depanmu.",
         },
       ],
     },
     {
       id: "display",
       nav: "Tampilan",
-      heading: "Tampilan dan rasa",
+      heading: "Tampilan dan nuansa",
       blocks: [
         {
-          p: "Pengaturan Tampilan dan Masukan Teks memungkinkanmu menampilkan kecepatan sebagai kata atau karakter per menit dan menyetel halus bagaimana rasanya mengetik. Kembalikan Bawaan selalu hanya sejauh satu klik kalau kamu ingin mulai dari awal.",
+          p: "Pengaturan Lain-lain dan Mengetik memungkinkanmu menampilkan kecepatan sebagai kata atau karakter per menit dan menyetel rasa mengetik dengan cermat. Setel Ulang selalu hanya sejauh satu klik jika kamu ingin mulai dari awal.",
+        },
+        {
+          p: "Tampilan seluruh situs ada di Akun, Tampilan: terang, gelap, atau mengikuti sistem, warna tema, dan ukuran teks yang berlaku di setiap halaman. Setiap pelajar di rumah menyimpan pengaturannya sendiri, dan pengaturan itu ikut bersamanya — lihat *Menjaga datamu*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const id: GuideTranslation = {
           steps: [
             "Buka menu.",
             "Pilih Profil.",
-            "Gunakan baris filter untuk fokus pada Huruf, Angka, Tanda Baca, atau Simbol.",
           ],
         },
       ],
@@ -239,20 +245,23 @@ export const id: GuideTranslation = {
         { lab: "Menghapus statistik sebuah profil" },
         {
           steps: [
-            "Buka Profil untuk pelajar yang ingin kamu setel ulang.",
+            "Buka Profil pelajar yang ingin kamu setel ulang.",
             "Gulir ke kontrol setel ulang di bagian bawah halaman.",
-            "Konfirmasi “Hapus semuanya” — hanya profil ini yang dibersihkan.",
+            "Konfirmasi “Hapus semuanya” — hanya profil ini yang dikosongkan.",
           ],
         },
         { lab: "Mengunduh datamu" },
         {
           steps: [
             "Buka Profil.",
-            "Gunakan pilihan unduh untuk menyimpan riwayatmu sebagai berkas.",
+            "Gunakan opsi unduh untuk menyimpan riwayatmu sebagai file.",
           ],
         },
         {
-          p: "Masuklah kalau kamu ingin riwayatmu tersinkron antarperangkat dan ingin membagikan tautan profil publik. Tidak ada iklan dan tidak ada pelacak, dan kamu bisa menghapus datamu — atau seluruh akunmu — kapan pun kamu mau.",
+          p: "Masuklah jika kamu ingin riwayatmu tersinkron di berbagai perangkat dan ingin membagikan tautan profil publik. Tidak ada jaringan iklan dan tidak ada pelacak, dan kamu bisa menghapus datamu — atau seluruh akunmu — kapan saja kamu mau.",
+        },
+        {
+          p: "Kini masuk membawa lebih dari sekadar hasilmu. Pengaturanmu, tema dan ukuran teksmu, pilihan aksesibilitas yang sudah kamu buat, dan preferensi masing-masing pelajar semuanya mengikuti profil, bukan peramban — jadi pelajar yang membuka KeyLearn di komputer baru bisa melanjutkan dari tempat terakhirnya, di layar yang sama, dengan pengaturan yang sama, alih-alih mulai lagi dari pengaturan bawaan.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const id: GuideTranslation = {
         },
         {
           p: "Di dalamnya kamu bisa mengatur dunia dan karakter, Huruf besar, Suara, Tangan pembantu (panduan jari yang bercahaya), Papan ketik (tersembunyi, sederhana, atau papan lengkap untuk orang dewasa), Huruf di jalur (kata-kata yang tampil sebagai balok langsung di dalam permainan), Pengatur waktu sesi, Sorakan (pesan-pesan kecil yang menyemangati), dan — terselip di bawah Lanjutan — penggeser untuk Kecerahan, Warna, dan seberapa hidup dunia terasa. Ada juga tampilan malam yang tenang selain tampilan siang yang cerah.",
+        },
+        {
+          p: "*Key style* mengubah cara tombol-tombol diwarnai, sementara tombolnya sendiri tidak berpindah: *Crayon* adalah tombol putih yang dilingkari warna jarinya, dan *Rainbow* adalah papan belajar berwarna primer — bingkai hijau, angka merah, huruf biru dengan huruf vokal dipisahkan — di mana tombol-tombol bingkai berupa panah, bukan kata, untuk anak yang belum bisa membaca “enter”. Semua orang mulai dari Crayon. *Finger colours* di sebelahnya mematikan pewarnaan sepenuhnya untuk anak yang sudah tidak membutuhkannya.",
         },
       ],
     },
@@ -482,7 +494,48 @@ export const id: GuideTranslation = {
       heading: "Privasi, dalam satu kalimat",
       blocks: [
         {
-          p: "Tidak ada iklan, dan tidak ada pelacak. Profil seorang anak tidak pernah keluar dari peramban kamu. Masuklah hanya kalau kamu ingin sinkronisasi atau berbagi; selain itu semuanya tetap di perangkat ini, dan kamu bebas menghapusnya kapan saja.",
+          p: "Tanpa jaringan iklan dan tanpa pelacak. Profil anak tidak pernah meninggalkan perambanmu. Masuklah hanya jika kamu ingin sinkronisasi atau berbagi; selain itu semuanya tetap di perangkat ini, dan kamu bebas menghapusnya kapan saja.",
+        },
+        {
+          p: "Kamu mungkin melihat sebuah *baris bersponsor* di beberapa halaman. Itu slot yang kami jual dan tayangkan sendiri — tidak ada jaringan iklan di sini dan tidak ada yang mengikutimu keluar dari situs. Baris itu dipilih berdasarkan halaman yang sedang kamu buka, tidak pernah berdasarkan apa pun yang kami ketahui tentangmu, dan tidak pernah muncul untuk anak, di dalam dunia anak, di akun sekolah, atau saat pelajaran sedang berlangsung. Ketuk *Mengapa saya melihat ini?* pada salah satunya untuk penjelasan yang sama di tempat, dan orang yang pernah mendukung proyek ini tidak akan pernah melihatnya sama sekali.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Mendapatkan bantuan",
+      heading: "Mendapatkan bantuan",
+      blocks: [
+        {
+          p: "Setiap pesan yang kamu kirim kepada kami menjadi *percakapan yang bisa kamu buka lagi*, bukan email yang menghilang. Percakapan itu ada di bawah Akun dan punya nomor referensinya sendiri — nomor yang perlu kamu sebutkan jika suatu saat kamu menelepon atau menulis lagi.",
+        },
+        { lab: "Meminta bantuan" },
+        {
+          steps: [
+            "Buka menu dan pilih Akun, lalu Dukungan.",
+            "Pilih Catat tiket dan ceritakan apa yang terjadi.",
+            "Lampirkan tangkapan layar jika membantu — PNG, JPG, atau PDF, masing-masing hingga 10 MB.",
+          ],
+        },
+        {
+          p: "Balasan muncul di percakapan itu, dan lonceng di bagian atas menyala saat ada balasan masuk, jadi kamu tidak perlu duduk menunggui halaman. Apa pun yang sudah beres terlipat di bawah Terselesaikan, yang awalnya tertutup — yang kamu lihat adalah hal yang masih kamu tunggu.",
+        },
+        { lab: "Siapa yang menjawab" },
+        {
+          p: "Asisten bernama Tab membacanya lebih dulu dan menjawab apa yang bisa ia jawab. Ia akan memberitahumu bahwa ia AI — ia tidak pernah berpura-pura sebaliknya — dan ia akan mengatakan terus terang saat tidak mengetahui sesuatu.",
+        },
+        {
+          p: "Seorang manusia mengambil alih setiap kali itu jawaban yang lebih baik: apa pun yang menyangkut uang, datamu, keselamatan, atau sekadar karena kamu memintanya. Kamu tidak perlu meminta dua kali, dan kamu tidak perlu mengulang ceritamu — siapa pun yang menanganinya sudah bisa melihat semua yang kamu katakan.",
+        },
+        {
+          p: "Jika sebuah pesan terbaca seperti keadaan darurat sungguhan, balasannya selalu sama dan berasal dari naskah tetap, bukan dari asisten: nomor darurat di tempatmu berada, dan seseorang di pihak kami langsung diberi tahu. Kami tidak bisa melakukan panggilan itu untukmu, dan kami mengatakannya dengan jelas.",
+        },
+        { lab: "Merapikan" },
+        {
+          p: "Kamu bisa menghapus percakapan dari daftarmu kapan saja dengan ikon tempat sampah di sampingnya. Catatan kecil di dekat *Catat tiket* menghitung berapa banyak yang sudah kamu hapus, jadi percakapan yang hilang tidak pernah menjadi misteri.",
+        },
+        {
+          p: "Di perangkat keluarga yang dipakai bersama, bagian Dukungan meminta PIN orang dewasa sebelum terbuka — percakapan dukungan adalah urusan akun, dan orang yang sedang berlatih belum tentu orang yang membuat akun itu.",
         },
       ],
     },

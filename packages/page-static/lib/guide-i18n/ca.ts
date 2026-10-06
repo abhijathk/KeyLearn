@@ -22,29 +22,23 @@ export const ca: GuideTranslation = {
       nav: "Inici de sessió i contrasenyes",
       heading: "Registrar-se, iniciar la sessió i contrasenyes",
       blocks: [
-        { p: "Ho trobaràs tot al menú de dalt a la dreta." },
-        { lab: "Crear un compte" },
         {
-          steps: [
-            "Obre el menú (a dalt a la dreta).",
-            "Tria Registra't.",
-            "Introdueix un correu electrònic i una contrasenya.",
-            "Confirma — ja hi ets.",
-          ],
+          p: "Tot és al menú de dalt a la dreta, a Inicia la sessió o registra’t — la mateixa porta tant si ja tens compte com si no.",
         },
-        { lab: "Iniciar la sessió" },
+        { lab: "Crear un compte o iniciar la sessió" },
         {
           steps: [
-            "Obre el menú i tria Inicia la sessió.",
-            "Introdueix el teu correu i la teva contrasenya.",
+            "Obre el menú i tria Inicia la sessió o registra’t.",
+            "Continua amb Google, Facebook o una clau d’accés — o escriu el teu correu i prem Continua.",
+            "Amb un correu nou et crees una contrasenya; amb un que ja coneixem, te la demanem.",
           ],
         },
         { lab: "Restablir una contrasenya oblidada" },
         {
           steps: [
-            "A la pantalla d'inici de sessió, tria He oblidat la contrasenya.",
-            "Introdueix la teva adreça de correu.",
-            "Obre l'enllaç de restabliment que t'enviem.",
+            "A la pantalla d’inici de sessió, escriu el teu correu i prem Continua.",
+            "Tria Has oblidat la contrasenya?",
+            "Obre l’enllaç de restabliment que t’enviem.",
             "Tria una contrasenya nova i inicia la sessió.",
           ],
         },
@@ -117,6 +111,12 @@ export const ca: GuideTranslation = {
         {
           p: "Mentre escrius, el plafó flotant mostra la teva velocitat i precisió actuals, un petit gràfic de les últimes sessions, els teus objectius i la teva ratxa. Hi és per animar-te, no per empipar.",
         },
+        {
+          p: "Els botons *− i +* al costat de l’objectiu pugen o baixen l’objectiu d’avui allà mateix, sense obrir la Configuració. Abaixa’l si les mateixes poques lletres ja no avancen; la velocitat que ha d’assolir una lletra és l’única cosa que decideix com de ràpid se’n desbloquegen de noves.",
+        },
+        {
+          p: "Si has triat una imatge de perfil, la seva il·lustració pot quedar-se, ben suau, darrere d’aquests números — Compte, Aparença, *La teva il·lustració darrere de les estadístiques*, amb un control lliscant per a la intensitat. Desactivat fins que l’activis.",
+        },
       ],
     },
     {
@@ -141,10 +141,11 @@ export const ca: GuideTranslation = {
           tips: [
             "*Pràctica guiada* — l'opció adaptativa per defecte, que fa créixer el teu abecedari tecla a tecla.",
             "*Curs clàssic* — un recorregut fix i ordenat per les tecles.",
+            "*Codi font* — codi real de frameworks reals.",
             "*Paraules freqüents* — les paraules més habituals de la teva llengua.",
             "*Text de llibre* — escriu-te llibres de veritat, dels que porta l'aplicació.",
+            "*Citacions* — pensaments curts i complets, amb les seves majúscules i la seva puntuació reals.",
             "*El teu propi text* — enganxa el que vulguis i practica-hi.",
-            "*Fragments de codi* — parèntesis, símbols i el ritme del codi.",
             "*Exercicis de números* — la fila de números i el teclat numèric.",
           ],
         },
@@ -201,6 +202,9 @@ export const ca: GuideTranslation = {
         {
           p: "A la mateixa pantalla pots triar la forma del teclat, acolorir les tecles per zona de dit i il·luminar la tecla següent mentre encara estàs aprenent on és cada cosa.",
         },
+        {
+          p: "L’*acabat* del teclat — l’aspecte de les tecles — ve amb un compte. Amb la sessió iniciada en tens cinc per triar, i el rodó ve en sis colors; un d’ells segueix el color del teu tema. Tot el que hi ha a dalt és teu igualment: l’idioma, la disposició, la forma i les zones dels dits no es reserven mai, perquè són el que fa que l’aplicació coincideixi amb el teclat que tens al davant.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const ca: GuideTranslation = {
       blocks: [
         {
           p: "La configuració de Visualització i Entrada de text et deixa mostrar la velocitat en paraules o en caràcters per minut i afinar com se sent l'escriptura. Restaura els valors per defecte sempre és a un clic si vols començar de nou.",
+        },
+        {
+          p: "L’aspecte de tot el lloc es tria a Compte, Aparença: clar, fosc o segons el sistema, un color de tema i una mida de text que es manté a totes les pàgines. Cada aprenent de la casa té el seu, i se l’emporta allà on va — mira *Tenir cura de les teves dades*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const ca: GuideTranslation = {
           steps: [
             "Obre el menú.",
             "Tria Perfil.",
-            "Fes servir la fila de filtres per centrar-te en Lletres, Xifres, Puntuació o Símbols.",
           ],
         },
       ],
@@ -252,7 +258,10 @@ export const ca: GuideTranslation = {
           ],
         },
         {
-          p: "Inicia la sessió si vols que el teu historial se sincronitzi entre dispositius i poder compartir un enllaç de perfil públic. No hi ha anuncis ni rastrejadors, i pots esborrar les teves dades — o tot el compte — quan vulguis.",
+          p: "Inicia la sessió si vols que el teu historial se sincronitzi entre dispositius i compartir un enllaç públic al teu perfil. No hi ha xarxes publicitàries ni rastrejadors, i pots esborrar les teves dades — o tot el compte — quan vulguis.",
+        },
+        {
+          p: "Ara, iniciar la sessió porta més que els teus resultats. La teva configuració, el tema i la mida del text, les opcions d’accessibilitat que has triat i les preferències de cada aprenent segueixen el perfil i no el navegador — així, un aprenent que obre KeyLearn en un ordinador nou continua on ho havia deixat, a la mateixa pantalla i configurat igual, en lloc de tornar a començar des dels valors per defecte.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const ca: GuideTranslation = {
         },
         {
           p: "A dins pots triar el món i el personatge, Lletres grans, Sons, Mans ajudants (la guia lluminosa dels dits), el Teclat (amagat, senzill o el complet de persones grans), Lletres al camí (les paraules mostrades com a blocs dins del joc mateix), un Temporitzador de sessió, Ànims (missatgets d'encoratjament) i — amagats sota Avançat — controls de Brillantor, Color i com de viu es veu el món. Hi ha un aspecte nocturn tranquil a més del diürn ben lluminós.",
+        },
+        {
+          p: "*Key style* canvia com es pinten les tecles, i les tecles en si no es mouen: *Crayon* és la tecla blanca envoltada del color del seu dit, i *Rainbow* és el teclat d’aprenentatge en colors primaris — marc verd, números vermells, lletres blaves amb les vocals a part — on les tecles del marc són fletxes en lloc de paraules, per a un infant que encara no sap llegir «enter». Tothom comença amb Crayon. *Finger colours*, al costat, desactiva del tot el tenyit per a un infant que ja no el necessita.",
         },
       ],
     },
@@ -482,7 +494,48 @@ export const ca: GuideTranslation = {
       heading: "La privadesa, en una frase",
       blocks: [
         {
-          p: "Ni anuncis ni rastrejadors. El perfil d'un infant no surt mai del teu navegador. Inicia la sessió només si vols sincronitzar o compartir; si no, tot es queda en aquest dispositiu, i el pots esborrar quan vulguis.",
+          p: "Cap xarxa publicitària i cap rastrejador. El perfil d’un infant no surt mai del teu navegador. Inicia la sessió només si vols sincronitzar o compartir; si no, tot es queda en aquest dispositiu, i el pots esborrar quan vulguis.",
+        },
+        {
+          p: "És possible que vegis una *línia patrocinada* en algunes pàgines. És una que hem venut i mostrem nosaltres mateixos — aquí no hi ha cap xarxa publicitària i res no et segueix fora del lloc. La tria la pàgina on ets, mai res que sapiguem de tu, i no apareix mai a un infant, dins del món dels infants, en un compte d’escola ni mentre hi ha una lliçó en marxa. Toca *Per què veig això?* a qualsevol d’elles per llegir la mateixa explicació allà mateix, i qui ha donat suport al projecte no en veu mai cap.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Obtenir ajuda",
+      heading: "Obtenir ajuda",
+      blocks: [
+        {
+          p: "Cada missatge que ens envies es converteix en una *conversa a la qual pots tornar*, no en un correu que desapareix. És a Compte i té el seu propi número de referència — el que has de citar si mai ens tornes a trucar o escriure.",
+        },
+        { lab: "Demanar ajuda" },
+        {
+          steps: [
+            "Obre el menú i tria Compte, després Suport.",
+            "Tria Registra un tiquet i explica què passa.",
+            "Adjunta una captura de pantalla si ajuda — PNG, JPG o PDF, fins a 10 MB cadascuna.",
+          ],
+        },
+        {
+          p: "Les respostes apareixen en aquesta conversa, i la campaneta de la capçalera s’encén quan n’arriba una, així que no cal que et quedis mirant la pàgina. Tot el que ja s’ha resolt es plega a Resolt, que comença tancat — el que encara esperes és el que veus.",
+        },
+        { lab: "Qui respon" },
+        {
+          p: "Un assistent que es diu Tab la llegeix primer i respon el que pot. Et dirà que és una IA — mai no fa veure el contrari, i diu clarament quan no sap alguna cosa.",
+        },
+        {
+          p: "Una persona s’hi posa sempre que aquesta sigui la millor resposta: qualsevol cosa sobre diners, les teves dades, la seguretat, o simplement perquè ho has demanat. No has de demanar res dues vegades ni repetir-te mai — qui ho agafi ja pot veure tot el que has dit.",
+        },
+        {
+          p: "Si mai un missatge sembla una emergència real, la resposta és sempre la mateixa i surt d’un text fix, no de l’assistent: el número d’emergències d’on ets, i una persona del nostre equip avisada de seguida. No podem fer aquesta trucada per tu, i t’ho diem.",
+        },
+        { lab: "Endreçar" },
+        {
+          p: "Pots treure una conversa de la teva llista en qualsevol moment amb la icona de la paperera que hi ha al costat. Una nota petita al costat de *Registra un tiquet* compta quantes n’has tret, perquè un fil que ha desaparegut no sigui mai un misteri.",
+        },
+        {
+          p: "En un dispositiu familiar compartit, la secció de Suport demana el PIN d’adult abans d’obrir-se — els fils de suport són cosa del compte, i qui practica no sempre és qui va crear el compte.",
         },
       ],
     },

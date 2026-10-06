@@ -22,28 +22,22 @@ export const ptPt: GuideTranslation = {
       nav: "Iniciar sessão e palavras-passe",
       heading: "Registo, início de sessão e palavras-passe",
       blocks: [
-        { p: "Está tudo no menu no canto superior direito." },
-        { lab: "Criar uma conta" },
         {
-          steps: [
-            "Abre o menu (canto superior direito).",
-            "Escolhe Registar.",
-            "Introduz um e-mail e uma palavra-passe.",
-            "Confirma — e já está.",
-          ],
+          p: "Está tudo no menu no canto superior direito, em Iniciar sessão ou registar-se — a mesma porta, quer já tenhas conta quer não.",
         },
-        { lab: "Iniciar sessão" },
+        { lab: "Criar uma conta ou iniciar sessão" },
         {
           steps: [
-            "Abre o menu e escolhe Iniciar Sessão.",
-            "Introduz o teu e-mail e a tua palavra-passe.",
+            "Abre o menu e escolhe Iniciar sessão ou registar-se.",
+            "Continua com o Google, o Facebook ou uma chave de acesso — ou escreve o teu e-mail e carrega em Continuar.",
+            "Um e-mail novo leva-te a criar uma palavra-passe; um já registado pede-ta.",
           ],
         },
         { lab: "Repor uma palavra-passe esquecida" },
         {
           steps: [
-            "No ecrã de início de sessão, escolhe Esqueci-me da palavra-passe.",
-            "Introduz o teu endereço de e-mail.",
+            "No ecrã de início de sessão, escreve o teu e-mail e carrega em Continuar.",
+            "Escolhe Esqueceste-te da palavra-passe?",
             "Abre a ligação de reposição que te enviamos.",
             "Escolhe uma nova palavra-passe e inicia sessão.",
           ],
@@ -117,6 +111,12 @@ export const ptPt: GuideTranslation = {
         {
           p: "Enquanto escreves, o painel flutuante mostra a tua velocidade e a tua precisão atuais, um pequeno gráfico das últimas voltas, o avanço dos teus objetivos e a tua sequência de dias. Está ali para te encorajar, não para te chatear.",
         },
+        {
+          p: "Os botões *− e +* ao lado do objetivo sobem ou descem o objetivo de hoje no momento, sem abrires as Definições. Baixa-o se as mesmas poucas letras deixaram de avançar; a velocidade que uma letra tem de atingir é a única coisa que decide a rapidez com que as novas se desbloqueiam.",
+        },
+        {
+          p: "Se escolheste uma imagem de perfil, a ilustração dela pode ficar suavemente por trás desses números — Conta, Aspeto, *A tua ilustração atrás dos números*, com um cursor para a intensidade. Fica desligado até o ligares.",
+        },
       ],
     },
     {
@@ -141,10 +141,11 @@ export const ptPt: GuideTranslation = {
           tips: [
             "*Prática guiada* — a opção adaptativa por omissão, que faz crescer o teu alfabeto tecla a tecla.",
             "*Curso clássico* — uma marcha fixa e ordenada pelas teclas.",
+            "*Código Fonte* — código real de frameworks reais.",
             "*Palavras frequentes* — as palavras mais comuns da tua língua.",
             "*Texto de Livros* — escreve ao longo de livros a sério, incluídos na aplicação.",
+            "*Citações* — pensamentos curtos e completos, com as maiúsculas e a pontuação verdadeiras.",
             "*O Teu Próprio Texto* — cola o que quiseres e pratica com isso.",
-            "*Excertos de Código* — parênteses, símbolos e o ritmo do código.",
             "*Exercícios de Números* — a linha dos números e o teclado numérico.",
           ],
         },
@@ -201,6 +202,9 @@ export const ptPt: GuideTranslation = {
         {
           p: "No mesmo ecrã podes escolher a forma do teclado, colorir as teclas por zona de dedo e destacar a tecla seguinte enquanto ainda estás a aprender onde fica cada coisa.",
         },
+        {
+          p: "O *acabamento* do teclado — o aspeto das teclas — vem com uma conta. Com sessão iniciada, há cinco à escolha e o redondo existe em seis cores; uma delas acompanha a cor do teu tema. Tudo o que está acima é teu de qualquer forma: a língua, o esquema, a forma e as zonas dos dedos nunca ficam bloqueados, porque são eles que fazem a aplicação corresponder ao teclado que tens à tua frente.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const ptPt: GuideTranslation = {
       blocks: [
         {
           p: "As definições de Apresentação e de Introdução de Texto deixam-te mostrar a tua velocidade em palavras ou em caracteres por minuto e afinar ao pormenor a sensação de escrever. Repor Predefinições está sempre a um clique, se quiseres recomeçar do zero.",
+        },
+        {
+          p: "O aspeto de todo o site fica em Conta, Aspeto: claro, escuro ou igual ao sistema, uma cor de tema e um tamanho de texto que se mantém em todas as páginas. Cada aprendiz da casa tem as suas escolhas, e elas vão com ele — vê *Cuidar dos teus dados*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const ptPt: GuideTranslation = {
           steps: [
             "Abre o menu.",
             "Escolhe Perfil.",
-            "Usa a linha de filtros para te concentrares em Letras, Dígitos, Pontuação ou Símbolos.",
           ],
         },
       ],
@@ -239,7 +245,7 @@ export const ptPt: GuideTranslation = {
         { lab: "Limpar as estatísticas de um perfil" },
         {
           steps: [
-            "Abre o Perfil do aluno que queres reiniciar.",
+            "Abre o Perfil do aprendiz que queres repor.",
             "Desce até ao controlo de reposição no fundo da página.",
             "Confirma “Apagar tudo” — só este perfil é limpo.",
           ],
@@ -248,11 +254,14 @@ export const ptPt: GuideTranslation = {
         {
           steps: [
             "Abre o Perfil.",
-            "Usa a opção de descarregar para guardares o teu histórico num ficheiro.",
+            "Usa a opção de transferência para guardar o teu histórico num ficheiro.",
           ],
         },
         {
-          p: "Inicia sessão se quiseres que o teu histórico sincronize entre dispositivos e para partilhares uma ligação pública para o teu perfil. Não há publicidade nem rastreadores, e podes apagar os teus dados — ou a conta inteira — quando quiseres.",
+          p: "Inicia sessão se quiseres que o teu histórico se sincronize entre dispositivos e para partilhares uma ligação pública do perfil. Não há redes de publicidade nem rastreadores, e podes eliminar os teus dados — ou a conta inteira — sempre que quiseres.",
+        },
+        {
+          p: "Iniciar sessão leva agora mais do que os teus resultados. As tuas definições, o tema e o tamanho do texto, as opções de acessibilidade que escolheste e as preferências de cada aprendiz acompanham o perfil e não o navegador — por isso, quem abre o KeyLearn num computador novo continua onde parou, no mesmo ecrã e com tudo configurado da mesma forma, em vez de recomeçar das predefinições.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const ptPt: GuideTranslation = {
         },
         {
           p: "Lá dentro podes definir o mundo e a personagem, as Letras grandes, os Sons, as Mãos ajudantes (o guia luminoso dos dedos), o Teclado (escondido, simples ou o teclado completo dos adultos), as Letras no trilho (as palavras mostradas em blocos dentro do próprio jogo), um Cronómetro de sessão, os Aplausos (pequenas mensagens de incentivo) e — arrumados em Avançado — cursores para o Brilho, a Cor e o quanto o mundo é animado. Há também um aspeto de noite, calmo, além do aspeto claro de dia.",
+        },
+        {
+          p: "*Key style* muda a forma como as teclas são pintadas, e as teclas em si não saem do lugar: *Crayon* é a tecla branca contornada na cor do seu dedo, e *Rainbow* é o teclado de aprendizagem em cores primárias — moldura verde, números vermelhos, letras azuis com as vogais destacadas — onde as teclas da moldura são setas em vez de palavras, para a criança que ainda não sabe ler “enter”. Toda a gente começa no Crayon. *Finger colours*, ao lado, desliga por completo as cores para a criança que já não precisa delas.",
         },
       ],
     },
@@ -479,10 +491,51 @@ export const ptPt: GuideTranslation = {
     {
       id: "privacy",
       nav: "Privacidade",
-      heading: "Privacidade, numa frase",
+      heading: "A privacidade, numa frase",
       blocks: [
         {
-          p: "Sem publicidade e sem rastreadores. O perfil de uma criança nunca sai do teu navegador. Inicia sessão só se quiseres sincronizar ou partilhar; de resto fica tudo neste dispositivo, e podes apagá-lo quando quiseres.",
+          p: "Sem redes de publicidade e sem rastreadores. O perfil de uma criança nunca sai do teu navegador. Inicia sessão só se quiseres sincronizar ou partilhar; caso contrário, fica tudo neste dispositivo, e podes apagá-lo quando quiseres.",
+        },
+        {
+          p: "Podes ver uma *linha patrocinada* nalgumas páginas. É uma que nós próprios vendemos e mostramos — aqui não há rede de publicidade e nada te segue para fora do site. É escolhida pela página onde estás, nunca por algo que saibamos sobre ti, e nunca aparece a uma criança, dentro do mundo das crianças, numa conta escolar ou durante uma lição. Toca em *Porque estou a ver isto?* em qualquer uma delas para teres a mesma explicação ali mesmo; quem já apoiou o projeto nunca vê nenhuma.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Obter ajuda",
+      heading: "Obter ajuda",
+      blocks: [
+        {
+          p: "Cada mensagem que nos envias passa a ser uma *conversa à qual podes voltar*, e não um e-mail que desaparece. Fica em Conta e tem o seu próprio número de referência — o que deves indicar se algum dia voltares a ligar ou a escrever.",
+        },
+        { lab: "Pedir ajuda" },
+        {
+          steps: [
+            "Abre o menu e escolhe Conta e depois Apoio.",
+            "Escolhe Abrir um pedido e diz o que está a acontecer.",
+            "Anexa uma captura de ecrã se ajudar — PNG, JPG ou PDF, até 10 MB cada.",
+          ],
+        },
+        {
+          p: "As respostas aparecem nessa conversa, e o sino no cabeçalho acende-se quando chega uma, por isso não precisas de ficar a olhar para a página. O que já está resolvido recolhe-se em Resolvida, que começa fechada — o que ainda estás à espera é o que vês.",
+        },
+        { lab: "Quem responde" },
+        {
+          p: "Um assistente chamado Tab lê primeiro e responde ao que consegue. Vai dizer-te que é uma IA — nunca finge o contrário — e diz com franqueza quando não sabe alguma coisa.",
+        },
+        {
+          p: "Uma pessoa assume sempre que essa for a melhor resposta: tudo o que tenha a ver com dinheiro, com os teus dados, com segurança, ou simplesmente porque pediste. Nunca precisas de pedir duas vezes nem de te repetir — quem pegar no assunto já vê tudo o que disseste.",
+        },
+        {
+          p: "Se uma mensagem alguma vez parecer uma verdadeira emergência, a resposta é sempre a mesma e vem de um texto fixo, e não do assistente: o número de emergência do sítio onde estás, e uma pessoa do nosso lado alertada de imediato. Não podemos fazer essa chamada por ti, e dizemo-lo.",
+        },
+        { lab: "Arrumar" },
+        {
+          p: "Podes tirar uma conversa da tua lista a qualquer momento com o ícone do caixote do lixo ao lado dela. Uma pequena nota junto a *Abrir um pedido* conta quantas já limpaste, por isso uma conversa que desapareceu nunca é um mistério.",
+        },
+        {
+          p: "Num dispositivo partilhado pela família, a secção Apoio pede o PIN de adulto antes de abrir — as conversas de apoio são assuntos da conta, e quem está a praticar nem sempre é quem criou a conta.",
         },
       ],
     },

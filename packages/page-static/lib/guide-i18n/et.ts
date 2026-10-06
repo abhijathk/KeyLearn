@@ -21,28 +21,22 @@ export const et: GuideTranslation = {
       nav: "Sisselogimine ja paroolid",
       heading: "Registreerumine, sisselogimine ja paroolid",
       blocks: [
-        { p: "Kõik on üleval paremal asuvas menüüs." },
-        { lab: "Loo konto" },
+        {
+          p: "Kõik asub paremas ülanurgas menüüs, valiku Logi sisse või registreeru all — sama uks, olgu sul konto juba olemas või mitte.",
+        },
+        { lab: "Loo konto või logi sisse" },
         {
           steps: [
-            "Ava menüü (üleval paremal).",
-            "Vali Registreeru.",
-            "Sisesta e-posti aadress ja parool.",
-            "Kinnita — oledki sees.",
+            "Ava menüü ja vali Logi sisse või registreeru.",
+            "Jätka Google’i, Facebooki või pääsuvõtmega — või sisesta oma e-posti aadress ja vajuta Jätka.",
+            "Uue aadressiga saad määrata parooli; olemasoleva aadressi puhul küsitakse sinult parooli.",
           ],
         },
-        { lab: "Logi sisse" },
+        { lab: "Lähtesta unustatud parool" },
         {
           steps: [
-            "Ava menüü ja vali Logi sisse.",
-            "Sisesta oma e-posti aadress ja parool.",
-          ],
-        },
-        { lab: "Unustatud parooli lähtestamine" },
-        {
-          steps: [
-            "Vali sisselogimise ekraanil Unustasid parooli.",
-            "Sisesta oma e-posti aadress.",
+            "Sisesta sisselogimisekraanil oma e-posti aadress ja vajuta Jätka.",
+            "Vali Unustasid parooli?",
             "Ava lähtestuslink, mille sulle saadame.",
             "Vali uus parool ja logi sisse.",
           ],
@@ -116,6 +110,12 @@ export const et: GuideTranslation = {
         {
           p: "Kirjutamise ajal näitab hõljuv paneel sinu praegust kiirust ja täpsust, väikest viimaste katsete graafikut, sinu eesmärkide edenemist ja seeriat. See on olemas selleks, et sind julgustada, mitte selleks, et nokkida.",
         },
+        {
+          p: "Sihi kõrval olevad *− ja +* tõstavad või langetavad tänast eesmärki kohe samas, ilma seadeid avamata. Sea see madalamaks, kui samad paar tähte on paigale jäänud; kiirus, mille täht peab saavutama, on ainus asi, mis otsustab, kui kiiresti uued tähed avanevad.",
+        },
+        {
+          p: "Kui oled valinud profiilipildi, võib selle pilt nende numbrite taga tuhmilt paista — Konto, Välimus, *Sinu pilt numbrite taga*, koos liuguriga selle tugevuse jaoks. Väljas, kuni sa selle sisse lülitad.",
+        },
       ],
     },
     {
@@ -140,10 +140,11 @@ export const et: GuideTranslation = {
           tips: [
             "*Juhendatud harjutamine* — kohanduv vaikevalik, mis kasvatab su tähestikku klahv klahvi haaval.",
             "*Klassikaline kursus* — kindel ja järjestatud marss läbi klahvide.",
+            "*Lähtekood* — päris kood päris raamistikest.",
             "*Sagedased sõnad* — sinu keele kõige tavalisemad sõnad.",
             "*Raamatutekst* — kirjuta end läbi rakendusse sisse ehitatud päris raamatute.",
+            "*Tsitaadid* — lühikesed terviklikud mõtted koos nende päris suurtähtede ja kirjavahemärkidega.",
             "*Sinu oma tekst* — kleebi sisse, mida soovid, ja harjuta sellega.",
-            "*Koodijupid* — sulud, sümbolid ja koodi rütm.",
             "*Numbriharjutused* — numbririda ja numbriklahvistik.",
           ],
         },
@@ -200,6 +201,9 @@ export const et: GuideTranslation = {
         {
           p: "Samal ekraanil saad valida klaviatuuri kuju, värvida klahvid sõrmetsoonide järgi ja tõsta esile järgmise klahvi, kuni alles õpid, kus mis asub.",
         },
+        {
+          p: "Klaviatuuri *viimistlus* — klahvide välimus — käib kontoga kaasas. Sisse logituna on valida viie vahel ja ümar klaviatuur on saadaval kuues värvis; üks neist järgib sinu teema värvi. Kõik eelnev on sinu igal juhul: keelt, paigutust, kuju ja sõrmetsoone ei hoita kunagi kinni, sest just need panevad rakenduse sobima sinu ees oleva klaviatuuriga.",
+        },
       ],
     },
     {
@@ -209,6 +213,9 @@ export const et: GuideTranslation = {
       blocks: [
         {
           p: "Seaded Kuvamine ja Tekstisisestus lasevad näidata kiirust sõnades või märkides minutis ja peenhäälestada seda, kuidas kirjutamine tundub. Taasta vaikeseaded on alati ühe klõpsu kaugusel, kui soovid puhtalt lehelt alustada.",
+        },
+        {
+          p: "Kogu saidi välimus asub jaotises Konto, Välimus: hele, tume või süsteemi järgi, teemavärv ja teksti suurus, mis kehtib igal lehel. Iga pereliige hoiab oma seadeid ja need liiguvad temaga kaasa — vaata *Oma andmete eest hoolitsemine*.",
         },
       ],
     },
@@ -225,7 +232,6 @@ export const et: GuideTranslation = {
           steps: [
             "Ava menüü.",
             "Vali Profiil.",
-            "Kasuta filtririba, et keskenduda tähtedele, numbritele, kirjavahemärkidele või sümbolitele.",
           ],
         },
       ],
@@ -251,7 +257,10 @@ export const et: GuideTranslation = {
           ],
         },
         {
-          p: "Logi sisse, kui soovid, et su ajalugu sünkroonitaks seadmete vahel ja saaksid jagada avalikku profiililinki. Reklaame ega jälgijaid ei ole ning võid oma andmed — või kogu konto — kustutada millal iganes soovid.",
+          p: "Logi sisse, kui soovid, et sinu ajalugu sünkroonitaks seadmete vahel, ja jagada avalikku profiililinki. Reklaamivõrgustikke ega jälgijaid ei ole ning saad oma andmed — või kogu konto — kustutada millal iganes soovid.",
+        },
+        {
+          p: "Sisselogimine hoiab nüüd alles rohkemat kui sinu tulemused. Sinu seaded, teema ja teksti suurus, tehtud ligipääsetavuse valikud ja iga õppija enda eelistused järgivad profiili, mitte brauserit — nii jätkab õppija, kes avab KeyLearni uues arvutis, sealt, kus pooleli jäi, samal ekraanil ja samamoodi seadistatuna, selle asemel et alustada uuesti vaikeseadetest.",
         },
       ],
     },
@@ -288,6 +297,9 @@ export const et: GuideTranslation = {
         },
         {
           p: "Sealt saad määrata maailma ja tegelase, Suured tähed, Helid, Abikäed (helendav sõrmejuhis), Klaviatuuri (peidetud, lihtne või täielik täiskasvanute oma), Tähed rajal (sõnad, mida näidatakse plokkidena otse mängus), harjutuskorra Taimeri, Hõisked (julgustavad väikesed sõnumid) ja — peidus jaotises Täpsemalt — liugurid Heleduse, Värvi ja selle jaoks, kui elav maailm tundub. Peale ereda päevavaate on olemas ka rahulik öövaade.",
+        },
+        {
+          p: "*Key style* muudab, kuidas klahvid on värvitud, ja klahvid ise ei liigu: *Crayon* on valge klahv, mille ümber on tema sõrme värv, ja *Rainbow* on põhivärvides õppeklaviatuur — roheline raam, punased numbrid, sinised tähed, täishäälikud eraldi —, kus raami klahvid on sõnade asemel nooled, lapsele, kes ei oska veel lugeda sõna „enter”. Kõik alustavad valikuga Crayon. Selle kõrval olev *Finger colours* lülitab toonimise täiesti välja lapsele, kes seda enam ei vaja.",
         },
       ],
     },
@@ -481,7 +493,48 @@ export const et: GuideTranslation = {
       heading: "Privaatsus ühe lausega",
       blocks: [
         {
-          p: "Reklaame ei ole ja jälgijaid ei ole. Lapse profiil ei lahku kunagi sinu brauserist. Logi sisse ainult siis, kui soovid sünkroonimist või jagamist; muidu jääb kõik siia seadmesse ja võid selle igal ajal kustutada.",
+          p: "Ei mingeid reklaamivõrgustikke ega jälgijaid. Lapse profiil ei lahku kunagi sinu brauserist. Logi sisse ainult siis, kui soovid sünkroonimist või jagamist; muidu jääb kõik sellesse seadmesse ja võid selle igal ajal kustutada.",
+        },
+        {
+          p: "Mõnel lehel võid näha *sponsoreeritud rida*. See on rida, mille oleme ise müünud ja ise näitame — siin pole ühtki reklaamivõrgustikku ja miski ei jälgi sind väljaspool saiti. Selle valib leht, millel oled, mitte miski, mida me sinu kohta teame, ning seda ei näidata kunagi lapsele, lastemaailmas, koolikontol ega tunni ajal. Puuduta ükskõik millise juures *Miks ma seda näen?*, et näha sama selgitust kohapeal, ja need, kes on projekti toetanud, ei näe seda kunagi.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Abi saamine",
+      heading: "Abi saamine",
+      blocks: [
+        {
+          p: "Iga sõnum, mille meile saadad, muutub *vestluseks, mille juurde saad tagasi tulla*, mitte kaduvaks e-kirjaks. See asub jaotises Konto ja sellel on oma viitenumber — see, mida nimetada, kui kunagi uuesti helistad või kirjutad.",
+        },
+        { lab: "Küsi abi" },
+        {
+          steps: [
+            "Ava menüü ja vali Konto, seejärel Tugi.",
+            "Vali Registreeri pilet ja kirjuta, mis toimub.",
+            "Lisa kuvatõmmis, kui see aitab — PNG, JPG või PDF, igaüks kuni 10 MB.",
+          ],
+        },
+        {
+          p: "Vastused ilmuvad sellesse vestlusesse ja päises olev kelluke süttib, kui mõni saabub, nii et sa ei pea lehte valvama. Kõik juba lahendatu koondub jaotisesse Lahendatud, mis on alguses suletud — see, mida sa veel ootad, on see, mida näed.",
+        },
+        { lab: "Kes vastab" },
+        {
+          p: "Esimesena loeb selle assistent nimega Tab ja vastab sellele, mida oskab. Ta ütleb sulle, et on tehisintellekt — ta ei teeskle kunagi muud — ja ütleb otse, kui ta midagi ei tea.",
+        },
+        {
+          p: "Inimene võtab üle alati, kui see on parem vastus: kõik, mis puudutab raha, sinu andmeid või turvalisust, või lihtsalt siis, kui sa seda palusid. Sa ei pea kunagi kaks korda küsima ega end kordama — kes iganes selle üle võtab, näeb juba kõike, mida oled öelnud.",
+        },
+        {
+          p: "Kui mõni sõnum näib tõelise hädaolukorrana, on vastus alati sama ja tuleb kindlast tekstist, mitte assistendilt: sinu asukoha hädaabinumber ja meie poolel kohe teavitatud inimene. Me ei saa seda kõnet sinu eest teha ja ütleme seda ka.",
+        },
+        { lab: "Korrastamine" },
+        {
+          p: "Saad vestluse oma loendist igal ajal eemaldada selle kõrval oleva prügikasti ikooniga. Väike märge valiku *Registreeri pilet* juures loeb, mitu oled eemaldanud, nii et kadunud vestlus pole kunagi mõistatus.",
+        },
+        {
+          p: "Jagatud pereseadmes küsib tugijaotis enne avanemist täiskasvanu PIN-koodi — tugivestlused on konto asi ja see, kes harjutab, pole alati see, kes konto lõi.",
         },
       ],
     },

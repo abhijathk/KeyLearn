@@ -22,28 +22,22 @@ export const pl: GuideTranslation = {
       nav: "Logowanie i hasła",
       heading: "Rejestracja, logowanie i hasła",
       blocks: [
-        { p: "Wszystko znajdziesz w menu w prawym górnym rogu." },
-        { lab: "Załóż konto" },
         {
-          steps: [
-            "Otwórz menu (prawy górny róg).",
-            "Wybierz Zarejestruj się.",
-            "Podaj adres e-mail i hasło.",
-            "Potwierdź — i już jesteś w środku.",
-          ],
+          p: "Wszystko znajdziesz w menu w prawym górnym rogu, pod Zaloguj się lub załóż konto — to te same drzwi, niezależnie od tego, czy masz już konto, czy nie.",
         },
-        { lab: "Zaloguj się" },
+        { lab: "Załóż konto albo zaloguj się" },
         {
           steps: [
-            "Otwórz menu i wybierz Zaloguj się.",
-            "Wpisz swój e-mail i hasło.",
+            "Otwórz menu i wybierz Zaloguj się lub załóż konto.",
+            "Kontynuuj przez Google, Facebooka albo klucz dostępu — albo wpisz swój e-mail i naciśnij Dalej.",
+            "Nowy adres e-mail poprowadzi cię do ustawienia hasła; przy istniejącym zostaniesz o nie poproszony.",
           ],
         },
         { lab: "Zresetuj zapomniane hasło" },
         {
           steps: [
-            "Na ekranie logowania wybierz Nie pamiętam hasła.",
-            "Podaj swój adres e-mail.",
+            "Na ekranie logowania wpisz swój e-mail i naciśnij Dalej.",
+            "Wybierz Nie pamiętasz hasła?",
             "Otwórz link do resetowania, który do ciebie wyślemy.",
             "Wybierz nowe hasło i zaloguj się.",
           ],
@@ -112,10 +106,16 @@ export const pl: GuideTranslation = {
     {
       id: "readout",
       nav: "Statystyki na żywo",
-      heading: "Podgląd na żywo",
+      heading: "Odczyt na żywo",
       blocks: [
         {
           p: "W trakcie pisania pływający panel pokazuje twoją aktualną szybkość i dokładność, mały wykres ostatnich przebiegów, postęp celów i twoją serię. Jest po to, żeby cię zachęcać, a nie zrzędzić.",
+        },
+        {
+          p: "Przyciski *− i +* obok celu od razu podnoszą albo obniżają dzisiejszy cel, bez otwierania Ustawień. Obniż go, jeśli te same kilka liter przestało się ruszać; to szybkość, jaką litera musi osiągnąć, jako jedyna decyduje o tym, jak szybko odblokowują się nowe.",
+        },
+        {
+          p: "Jeśli wybrałeś zdjęcie profilowe, jego grafika może delikatnie przebijać spod tych liczb — Konto, Wygląd, *Twoja grafika za liczbami*, z suwakiem siły efektu. Domyślnie wyłączone, dopóki tego nie włączysz.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const pl: GuideTranslation = {
           tips: [
             "*Ćwiczenie prowadzone* — adaptacyjne ustawienie domyślne, które rozbudowuje twój alfabet klawisz po klawiszu.",
             "*Kurs klasyczny* — stały, uporządkowany marsz przez klawisze.",
+            "*Kod źródłowy* — prawdziwy kod z prawdziwych frameworków.",
             "*Częste słowa* — najczęstsze słowa w twoim języku.",
             "*Tekst z książki* — przepisuj prawdziwe książki wbudowane w aplikację.",
+            "*Cytaty* — krótkie, pełne myśli z prawdziwymi wielkimi literami i interpunkcją.",
             "*Własny tekst* — wklej cokolwiek chcesz i ćwicz na tym.",
-            "*Fragmenty kodu* — nawiasy, symbole i rytm kodu.",
             "*Ćwiczenia z liczbami* — rząd cyfr i klawiatura numeryczna.",
           ],
         },
@@ -201,6 +202,9 @@ export const pl: GuideTranslation = {
         {
           p: "Na tym samym ekranie wybierzesz kształt klawiatury, pokolorujesz klawisze według stref palców i podświetlisz następny klawisz, dopóki jeszcze uczysz się, gdzie co leży.",
         },
+        {
+          p: "*Wykończenie* klawiatury — wygląd klawiszy — przychodzi razem z kontem. Po zalogowaniu masz do wyboru pięć, a okrągłe występuje w sześciu kolorach; jeden z nich podąża za kolorem twojego motywu. Wszystko powyżej jest twoje tak czy inaczej: język, układ, kształt i strefy palców nigdy nie są blokowane, bo to one sprawiają, że aplikacja pasuje do klawiatury, która stoi przed tobą.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const pl: GuideTranslation = {
       blocks: [
         {
           p: "Ustawienia Wygląd i Wprowadzanie tekstu pozwalają pokazywać szybkość w słowach albo w znakach na minutę i dopieścić to, jak pisanie się odczuwa. Przywróć domyślne jest zawsze o jedno kliknięcie stąd, jeśli chcesz zacząć od zera.",
+        },
+        {
+          p: "To, jak wygląda cała strona, ustawisz w Konto, Wygląd: jasny, ciemny albo zgodny z systemem, kolor motywu i rozmiar tekstu, który obowiązuje na każdej stronie. Każda ucząca się osoba w domu ma własne ustawienia i zabiera je ze sobą — zobacz *Dbanie o twoje dane*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const pl: GuideTranslation = {
           steps: [
             "Otwórz menu.",
             "Wybierz Profil.",
-            "Użyj wiersza filtrów, aby skupić się na Literach, Cyfrach, Interpunkcji lub Symbolach.",
           ],
         },
       ],
@@ -252,7 +258,10 @@ export const pl: GuideTranslation = {
           ],
         },
         {
-          p: "Zaloguj się, jeśli chcesz, żeby historia synchronizowała się między urządzeniami i żeby udostępniać publiczny link do profilu. Nie ma reklam ani śledzenia, a swoje dane — albo całe konto — możesz usunąć, kiedy tylko zechcesz.",
+          p: "Zaloguj się, jeśli chcesz, żeby historia synchronizowała się między urządzeniami i żeby udostępniać publiczny link do profilu. Nie ma sieci reklamowych ani śledzenia, a swoje dane — albo całe konto — możesz usunąć, kiedy tylko zechcesz.",
+        },
+        {
+          p: "Logowanie przenosi teraz coś więcej niż wyniki. Twoje ustawienia, motyw i rozmiar tekstu, wybrane ułatwienia dostępu i preferencje każdej uczącej się osoby podążają za profilem, a nie za przeglądarką — więc kto otworzy KeyLearn na nowym komputerze, zacznie tam, gdzie skończył, na tym samym ekranie i tak samo ustawionym, zamiast od nowa z ustawień domyślnych.",
         },
       ],
     },
@@ -283,10 +292,15 @@ export const pl: GuideTranslation = {
       blocks: [
         { lab: "Otwórz skrzynię zabawek" },
         {
-          steps: ["Na ekranie dla dzieci dotknij zębatki u góry pola zabawy."],
+          steps: [
+            "Na ekranie dla dzieci dotknij zębatki u góry pola zabawy.",
+          ],
         },
         {
           p: "W środku ustawisz świat i postać, Duże litery, Dźwięki, Pomocne dłonie (świecącą prowadnicę palców), Klawiaturę (ukrytą, prostą albo pełną, dla dorosłych), Litery na szlaku (słowa pokazywane jako klocki wprost w grze), Minutnik sesji, Doping (małe zachęcające wiadomości) oraz — schowane w sekcji Zaawansowane — suwaki Jasności, Koloru i tego, jak żywy jest świat. Obok jasnej wersji dziennej jest też spokojna nocna.",
+        },
+        {
+          p: "*Key style* zmienia sposób, w jaki klawisze są pomalowane, a same klawisze się nie przesuwają: *Crayon* to biała nakładka obwiedziona kolorem swojego palca, a *Rainbow* to tablica do nauki w kolorach podstawowych — zielona ramka, czerwone cyfry, niebieskie litery z wyróżnionymi samogłoskami — gdzie klawisze ramki to strzałki zamiast słów, dla dziecka, które jeszcze nie umie przeczytać „enter”. Wszyscy zaczynają od stylu Crayon. *Finger colours* obok całkowicie wyłącza zabarwienie dla dziecka, które już go nie potrzebuje.",
         },
       ],
     },
@@ -480,7 +494,48 @@ export const pl: GuideTranslation = {
       heading: "Prywatność w jednym zdaniu",
       blocks: [
         {
-          p: "Żadnych reklam ani śledzenia. Profil dziecka nigdy nie opuszcza twojej przeglądarki. Zaloguj się tylko wtedy, gdy chcesz synchronizacji albo udostępniania; poza tym wszystko zostaje na tym urządzeniu, a ty możesz to skasować, kiedy tylko zechcesz.",
+          p: "Żadnych sieci reklamowych i żadnego śledzenia. Profil dziecka nigdy nie opuszcza twojej przeglądarki. Zaloguj się tylko wtedy, gdy chcesz synchronizacji albo udostępniania; w przeciwnym razie wszystko zostaje na tym urządzeniu i możesz to w każdej chwili usunąć.",
+        },
+        {
+          p: "Na niektórych stronach możesz zobaczyć *linijkę sponsorowaną*. Sami ją sprzedaliśmy i sami ją wyświetlamy — nie ma tu żadnej sieci reklamowej i nic nie podąża za tobą poza stronę. Dobiera ją strona, na której jesteś, nigdy nic, co o tobie wiemy, i nigdy nie pokazuje się dziecku, w dziecięcym świecie, na koncie szkolnym ani w trakcie lekcji. Dotknij *Dlaczego to widzę?* przy dowolnej z nich, a to samo wyjaśnienie pojawi się na miejscu; osoby, które wsparły projekt, w ogóle ich nie widzą.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Pomoc",
+      heading: "Jak uzyskać pomoc",
+      blocks: [
+        {
+          p: "Każda wiadomość, którą do nas wysyłasz, staje się *rozmową, do której możesz wrócić*, a nie e-mailem, który znika. Znajdziesz ją w Koncie i ma własny numer referencyjny — ten, który warto podać, jeśli kiedyś zadzwonisz albo napiszesz ponownie.",
+        },
+        { lab: "Poproś o pomoc" },
+        {
+          steps: [
+            "Otwórz menu i wybierz Konto, a potem Wsparcie.",
+            "Wybierz Zgłoś sprawę i opisz, co się dzieje.",
+            "Dołącz zrzut ekranu, jeśli to pomoże — PNG, JPG lub PDF, do 10 MB każdy.",
+          ],
+        },
+        {
+          p: "Odpowiedzi pojawiają się w tej rozmowie, a dzwonek w nagłówku zapala się, gdy jakaś nadejdzie, więc nie musisz siedzieć i pilnować strony. Wszystko, co już załatwione, chowa się w sekcji Rozwiązane, która jest domyślnie zwinięta — widzisz to, na co wciąż czekasz.",
+        },
+        { lab: "Kto odpowiada" },
+        {
+          p: "Najpierw czyta ją asystent o imieniu Tab i odpowiada na to, na co potrafi. Powie ci, że jest AI — nigdy nie udaje, że jest inaczej, i wprost przyzna, kiedy czegoś nie wie.",
+        },
+        {
+          p: "Człowiek przejmuje sprawę zawsze wtedy, gdy to lepsza odpowiedź: przy wszystkim, co dotyczy pieniędzy, twoich danych, bezpieczeństwa, albo po prostu dlatego, że o to poprosiłeś. Nigdy nie musisz prosić dwa razy ani się powtarzać — kto przejmie sprawę, widzi już wszystko, co napisałeś.",
+        },
+        {
+          p: "Jeśli wiadomość kiedykolwiek wygląda na prawdziwy nagły wypadek, odpowiedź jest za każdym razem taka sama i pochodzi ze stałego scenariusza, a nie od asystenta: numer alarmowy w twoim miejscu pobytu i natychmiast powiadomiona osoba po naszej stronie. Nie możemy zadzwonić za ciebie i mówimy to wprost.",
+        },
+        { lab: "Porządki" },
+        {
+          p: "W każdej chwili możesz usunąć rozmowę z listy ikoną kosza obok niej. Mała notka przy *Zgłoś sprawę* liczy, ile ich wyczyściłeś, więc zniknięty wątek nigdy nie jest zagadką.",
+        },
+        {
+          p: "Na wspólnym rodzinnym urządzeniu sekcja Wsparcie prosi o PIN dla dorosłych, zanim się otworzy — wątki wsparcia to sprawy konta, a osoba, która ćwiczy, nie zawsze jest tą, która konto założyła.",
         },
       ],
     },

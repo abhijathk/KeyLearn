@@ -1,14 +1,14 @@
 # English
 
-Translated: 2497 messages, 23170 words
+Translated: 2529 messages, 23420 words
 
 Untranslated: 0 messages, 0 words
 
 # Afrikaans
 
-Translated: 2463 messages, 23129 words
+Translated: 2486 messages, 23301 words
 
-Untranslated: 26 messages, 27 words
+Untranslated: 35 messages, 105 words
 
 * *s*
 * *as*
@@ -27,83 +27,119 @@ Untranslated: 26 messages, 27 words
 * *Medium*
 * *Letters*
 * *Premium*
-* *KeyLearn*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * ...
 
 # Arabic
 
-Translated: 2487 messages, 23158 words
+Translated: 2510 messages, 23330 words
 
-Untranslated: 8 messages, 9 words
+Untranslated: 17 messages, 87 words
 
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Assamese
 
-Translated: 2481 messages, 23149 words
+Translated: 2504 messages, 23321 words
 
-Untranslated: 12 messages, 13 words
+Untranslated: 21 messages, 91 words
 
 * *PIN*
 * *Maya*
 * *Theo*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* ...
 
 # Bulgarian
 
-Translated: 2486 messages, 23157 words
+Translated: 2509 messages, 23329 words
 
-Untranslated: 9 messages, 10 words
+Untranslated: 18 messages, 88 words
 
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Bangla
 
-Translated: 2485 messages, 23155 words
+Translated: 2508 messages, 23327 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Catalan
 
-Translated: 2466 messages, 23134 words
+Translated: 2489 messages, 23306 words
 
-Untranslated: 23 messages, 23 words
+Untranslated: 32 messages, 101 words
 
 * *s*
 * *Arc*
@@ -121,17 +157,17 @@ Untranslated: 23 messages, 23 words
 * *Recent*
 * *Classes*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
-* *Key<em>Learn</em>*
 * ...
 
 # Czech
 
-Translated: 2473 messages, 23140 words
+Translated: 2496 messages, 23312 words
 
-Untranslated: 18 messages, 19 words
+Untranslated: 27 messages, 97 words
 
 * *s*
 * *PIN*
@@ -144,19 +180,22 @@ Untranslated: 18 messages, 19 words
 * *Shift*
 * *Trend*
 * *Avatar*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* *Lock the kids page?*
+* ...
 
 # Danish
 
-Translated: 2452 messages, 23118 words
+Translated: 2475 messages, 23290 words
 
-Untranslated: 39 messages, 41 words
+Untranslated: 48 messages, 119 words
 
 * *s*
 * *PIN*
@@ -182,9 +221,9 @@ Untranslated: 39 messages, 41 words
 
 # German
 
-Translated: 2454 messages, 23124 words
+Translated: 2477 messages, 23296 words
 
-Untranslated: 39 messages, 39 words
+Untranslated: 48 messages, 117 words
 
 * *s*
 * *PIN*
@@ -210,9 +249,9 @@ Untranslated: 39 messages, 39 words
 
 # Greek
 
-Translated: 2481 messages, 23151 words
+Translated: 2504 messages, 23323 words
 
-Untranslated: 13 messages, 14 words
+Untranslated: 22 messages, 92 words
 
 * *PIN*
 * *Email*
@@ -220,19 +259,27 @@ Untranslated: 13 messages, 14 words
 * *Shift*
 * *Cookies*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* ...
 
 # Spanish
 
-Translated: 2471 messages, 23139 words
+Translated: 2494 messages, 23311 words
 
-Untranslated: 19 messages, 19 words
+Untranslated: 28 messages, 97 words
 
 * *s*
 * *PIN*
@@ -246,19 +293,21 @@ Untranslated: 19 messages, 19 words
 * *Zigzag*
 * *Cookies*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Chocolate*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* ...
 
 # Estonian
 
-Translated: 2470 messages, 23137 words
+Translated: 2493 messages, 23309 words
 
-Untranslated: 21 messages, 22 words
+Untranslated: 30 messages, 100 words
 
 * *s*
 * *PIN*
@@ -272,36 +321,45 @@ Untranslated: 21 messages, 22 words
 * *Avatar*
 * *Number*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Pip (5–8)*
 * *Shift AltGr*
 * *Robin (9–13)*
-* *Key<em>Learn</em>*
-* *Key<em>Learn</em>*
 * ...
 
 # Persian
 
-Translated: 2488 messages, 23159 words
+Translated: 2511 messages, 23331 words
 
-Untranslated: 8 messages, 9 words
+Untranslated: 17 messages, 87 words
 
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Finnish
 
-Translated: 2475 messages, 23143 words
+Translated: 2498 messages, 23315 words
 
-Untranslated: 16 messages, 16 words
+Untranslated: 25 messages, 94 words
 
 * *s*
 * *PIN*
@@ -311,20 +369,25 @@ Untranslated: 16 messages, 16 words
 * *Enter*
 * *Avatar*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Pip (5–8)*
 * *Robin (9–13)*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
+* ...
 
 # French
 
-Translated: 2453 messages, 23121 words
+Translated: 2476 messages, 23293 words
 
-Untranslated: 38 messages, 38 words
+Untranslated: 47 messages, 116 words
 
 * *s*
 * *Arc*
@@ -345,64 +408,91 @@ Untranslated: 38 messages, 38 words
 * *Classes*
 * *Cookies*
 * *Premium*
-* *Version*
+* *Turn on*
 * ...
 
 # Gujarati
 
-Translated: 2485 messages, 23155 words
+Translated: 2508 messages, 23327 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Hebrew
 
-Translated: 2486 messages, 23157 words
+Translated: 2509 messages, 23329 words
 
-Untranslated: 9 messages, 10 words
+Untranslated: 18 messages, 88 words
 
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Hindi
 
-Translated: 2485 messages, 23155 words
+Translated: 2508 messages, 23327 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Croatian
 
-Translated: 2473 messages, 23140 words
+Translated: 2496 messages, 23312 words
 
-Untranslated: 18 messages, 19 words
+Untranslated: 27 messages, 97 words
 
 * *s*
 * *PIN*
@@ -415,38 +505,50 @@ Untranslated: 18 messages, 19 words
 * *Avatar*
 * *indigo*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* *Lock the kids page?*
+* ...
 
 # Hungarian
 
-Translated: 2481 messages, 23150 words
+Translated: 2504 messages, 23322 words
 
-Untranslated: 12 messages, 13 words
+Untranslated: 21 messages, 91 words
 
 * *Zen*
 * *Maya*
 * *Theo*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* ...
 
 # Indonesian
 
-Translated: 2467 messages, 23137 words
+Translated: 2490 messages, 23309 words
 
-Untranslated: 26 messages, 27 words
+Untranslated: 35 messages, 105 words
 
 * *PIN*
 * *Zen*
@@ -467,14 +569,14 @@ Untranslated: 26 messages, 27 words
 * *Avatar*
 * *Zigzag*
 * *Premium*
-* *KeyLearn*
+* *Turn on*
 * ...
 
 # Icelandic
 
-Translated: 2477 messages, 23146 words
+Translated: 2500 messages, 23318 words
 
-Untranslated: 16 messages, 17 words
+Untranslated: 25 messages, 95 words
 
 * *Sun*
 * *Maya*
@@ -483,21 +585,26 @@ Untranslated: 16 messages, 17 words
 * *Enter*
 * *Shift*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Pip (5–8)*
 * *Shift AltGr*
 * *Robin (9–13)*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
+* ...
 
 # Italian
 
-Translated: 2473 messages, 23141 words
+Translated: 2496 messages, 23313 words
 
-Untranslated: 18 messages, 18 words
+Untranslated: 27 messages, 96 words
 
 * *s*
 * *PIN*
@@ -509,20 +616,23 @@ Untranslated: 18 messages, 18 words
 * *Zigzag*
 * *Account*
 * *Account*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
 * *Password*
 * *Password*
+* *Turn off*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* *Lock the kids page?*
+* ...
 
 # Japanese
 
-Translated: 2480 messages, 23148 words
+Translated: 2503 messages, 23320 words
 
-Untranslated: 13 messages, 14 words
+Untranslated: 22 messages, 92 words
 
 * *PIN*
 * *wpm*
@@ -530,54 +640,80 @@ Untranslated: 13 messages, 14 words
 * *Theo*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* ...
 
 # Kannada
 
-Translated: 2484 messages, 23153 words
+Translated: 2507 messages, 23325 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Korean
 
-Translated: 2484 messages, 23154 words
+Translated: 2507 messages, 23326 words
 
-Untranslated: 11 messages, 12 words
+Untranslated: 20 messages, 90 words
 
 * *PIN*
 * *Maya*
 * *Theo*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Lithuanian
 
-Translated: 2479 messages, 23148 words
+Translated: 2502 messages, 23320 words
 
-Untranslated: 14 messages, 15 words
+Untranslated: 23 messages, 93 words
 
 * *s*
 * *Maya*
@@ -586,19 +722,26 @@ Untranslated: 14 messages, 15 words
 * *Shift*
 * *indigo*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* ...
 
 # Latvian
 
-Translated: 2477 messages, 23144 words
+Translated: 2500 messages, 23316 words
 
-Untranslated: 14 messages, 15 words
+Untranslated: 23 messages, 93 words
 
 * *s*
 * *Maya*
@@ -607,68 +750,102 @@ Untranslated: 14 messages, 15 words
 * *Shift*
 * *indigo*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* ...
 
 # Malayalam
 
-Translated: 2483 messages, 23151 words
+Translated: 2506 messages, 23323 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Mongolian
 
-Translated: 2486 messages, 23156 words
+Translated: 2509 messages, 23328 words
 
-Untranslated: 9 messages, 10 words
+Untranslated: 18 messages, 88 words
 
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Marathi
 
-Translated: 2486 messages, 23156 words
+Translated: 2509 messages, 23328 words
 
-Untranslated: 9 messages, 10 words
+Untranslated: 18 messages, 88 words
 
 * *PIN*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Norwegian Bokmål
 
-Translated: 2464 messages, 23131 words
+Translated: 2487 messages, 23303 words
 
-Untranslated: 27 messages, 28 words
+Untranslated: 36 messages, 106 words
 
 * *s*
 * *PIN*
@@ -688,32 +865,41 @@ Untranslated: 27 messages, 28 words
 * *Avatar*
 * *indigo*
 * *Premium*
-* *KeyLearn*
+* *Turn on*
 * *KeyLearn*
 * ...
 
 # Nepali
 
-Translated: 2483 messages, 23151 words
+Translated: 2506 messages, 23323 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Dutch
 
-Translated: 2447 messages, 23113 words
+Translated: 2470 messages, 23285 words
 
-Untranslated: 43 messages, 44 words
+Untranslated: 52 messages, 122 words
 
 * *s*
 * *wpm*
@@ -739,43 +925,61 @@ Untranslated: 43 messages, 44 words
 
 # Odia
 
-Translated: 2483 messages, 23151 words
+Translated: 2506 messages, 23323 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Punjabi
 
-Translated: 2483 messages, 23151 words
+Translated: 2506 messages, 23323 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Polish
 
-Translated: 2474 messages, 23141 words
+Translated: 2497 messages, 23313 words
 
-Untranslated: 17 messages, 18 words
+Untranslated: 26 messages, 96 words
 
 * *s*
 * *PIN*
@@ -787,19 +991,23 @@ Untranslated: 17 messages, 18 words
 * *Shift*
 * *Trend*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* ...
 
 # Brazilian Portuguese
 
-Translated: 2470 messages, 23137 words
+Translated: 2493 messages, 23309 words
 
-Untranslated: 21 messages, 22 words
+Untranslated: 30 messages, 100 words
 
 * *s*
 * *PIN*
@@ -814,20 +1022,20 @@ Untranslated: 21 messages, 22 words
 * *Cookies*
 * *Layouts*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Chocolate*
 * *Shift AltGr*
-* *Key<em>Learn</em>*
-* *Key<em>Learn</em>*
 * ...
 
 # European Portuguese
 
-Translated: 2472 messages, 23139 words
+Translated: 2495 messages, 23311 words
 
-Untranslated: 19 messages, 20 words
+Untranslated: 28 messages, 98 words
 
 * *s*
 * *PIN*
@@ -840,20 +1048,22 @@ Untranslated: 19 messages, 20 words
 * *Avatar*
 * *Cookies*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Chocolate*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* ...
 
 # Romanian
 
-Translated: 2464 messages, 23131 words
+Translated: 2487 messages, 23303 words
 
-Untranslated: 27 messages, 28 words
+Untranslated: 36 messages, 106 words
 
 * *s*
 * *Arc*
@@ -873,31 +1083,40 @@ Untranslated: 27 messages, 28 words
 * *indigo*
 * *Zigzag*
 * *Premium*
+* *Turn on*
 * *Incident*
-* *KeyLearn*
 * ...
 
 # Russian
 
-Translated: 2486 messages, 23157 words
+Translated: 2509 messages, 23329 words
 
-Untranslated: 9 messages, 10 words
+Untranslated: 18 messages, 88 words
 
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Slovak
 
-Translated: 2472 messages, 23139 words
+Translated: 2495 messages, 23311 words
 
-Untranslated: 19 messages, 20 words
+Untranslated: 28 messages, 98 words
 
 * *s*
 * *PIN*
@@ -911,19 +1130,21 @@ Untranslated: 19 messages, 20 words
 * *Trend*
 * *Avatar*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* ...
 
 # Slovenian
 
-Translated: 2473 messages, 23140 words
+Translated: 2496 messages, 23312 words
 
-Untranslated: 18 messages, 19 words
+Untranslated: 27 messages, 97 words
 
 * *s*
 * *PIN*
@@ -936,19 +1157,22 @@ Untranslated: 18 messages, 19 words
 * *Avatar*
 * *indigo*
 * *Premium*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* *Lock the kids page?*
+* ...
 
 # Albanian
 
-Translated: 2472 messages, 23139 words
+Translated: 2495 messages, 23311 words
 
-Untranslated: 19 messages, 20 words
+Untranslated: 28 messages, 98 words
 
 * *s*
 * *PIN*
@@ -961,20 +1185,22 @@ Untranslated: 19 messages, 20 words
 * *Shift*
 * *indigo*
 * *Premium*
+* *Turn on*
 * *Incident*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
-* *<key>Key</key><learn>Learn</learn>*
+* ...
 
 # Swedish
 
-Translated: 2457 messages, 23125 words
+Translated: 2480 messages, 23297 words
 
-Untranslated: 34 messages, 34 words
+Untranslated: 43 messages, 112 words
 
 * *s*
 * *PIN*
@@ -1000,59 +1226,86 @@ Untranslated: 34 messages, 34 words
 
 # Tamil
 
-Translated: 2484 messages, 23153 words
+Translated: 2507 messages, 23325 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Telugu
 
-Translated: 2484 messages, 23153 words
+Translated: 2507 messages, 23325 words
 
-Untranslated: 10 messages, 11 words
+Untranslated: 19 messages, 89 words
 
 * *PIN*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Thai
 
-Translated: 2486 messages, 23156 words
+Translated: 2509 messages, 23328 words
 
-Untranslated: 9 messages, 10 words
+Untranslated: 18 messages, 88 words
 
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Turkish
 
-Translated: 2481 messages, 23151 words
+Translated: 2504 messages, 23323 words
 
-Untranslated: 14 messages, 15 words
+Untranslated: 23 messages, 93 words
 
 * *PIN*
 * *Zen*
@@ -1061,94 +1314,146 @@ Untranslated: 14 messages, 15 words
 * *Enter*
 * *Shift*
 * *Avatar*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* ...
 
 # Ukrainian
 
-Translated: 2486 messages, 23157 words
+Translated: 2509 messages, 23329 words
 
-Untranslated: 9 messages, 10 words
+Untranslated: 18 messages, 88 words
 
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Urdu
 
-Translated: 2487 messages, 23158 words
+Translated: 2510 messages, 23330 words
 
-Untranslated: 9 messages, 10 words
+Untranslated: 18 messages, 88 words
 
 * *PIN*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Vietnamese
 
-Translated: 2481 messages, 23150 words
+Translated: 2504 messages, 23322 words
 
-Untranslated: 12 messages, 13 words
+Untranslated: 21 messages, 91 words
 
 * *Maya*
 * *Theo*
 * *Email*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* ...
 
 # Simplified Chinese
 
-Translated: 2487 messages, 23157 words
+Translated: 2510 messages, 23329 words
 
-Untranslated: 8 messages, 9 words
+Untranslated: 17 messages, 87 words
 
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*
 
 # Traditional Chinese
 
-Translated: 2484 messages, 23154 words
+Translated: 2507 messages, 23326 words
 
-Untranslated: 11 messages, 12 words
+Untranslated: 20 messages, 90 words
 
 * *Maya*
 * *Theo*
 * *Enter*
 * *Shift*
+* *Turn on*
 * *KeyLearn*
 * *KeyLearn*
 * *KeyLearn*
+* *Turn off*
 * *Shift AltGr*
 * *Key<em>Learn</em>*
 * *Key<em>Learn</em>*
+* *Lock the kids page?*
+* *Unlock the kids page?*
+* *Sign in to choose a keyboard.*
 * *<key>Key</key><learn>Learn</learn>*
+* *Sign in to choose what you practise.*
+* *Switching from a child’s profile to a grown-up’s will need t...*
+* *Anyone on a child’s profile will be able to switch to a grow...*
+* *Sign in to choose a keyboard. Round, Flat Silver, Flat Midni...*

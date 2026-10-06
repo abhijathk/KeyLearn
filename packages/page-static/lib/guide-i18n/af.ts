@@ -22,30 +22,24 @@ export const af: GuideTranslation = {
       nav: "Aanmelding en wagwoorde",
       heading: "Registreer, meld aan, en wagwoorde",
       blocks: [
-        { p: "Alles is in die kieslys regs bo." },
-        { lab: "Skep 'n rekening" },
+        {
+          p: "Alles is in die kieslys regs bo, onder Meld aan of registreer — dieselfde deur of jy al ’n rekening het of nie.",
+        },
+        { lab: "Skep ’n rekening of meld aan" },
         {
           steps: [
-            "Maak die kieslys oop (regs bo).",
-            "Kies Registreer.",
-            "Voer 'n e-posadres en 'n wagwoord in.",
-            "Bevestig — en jy is binne.",
+            "Maak die kieslys oop en kies Meld aan of registreer.",
+            "Gaan voort met Google, Facebook of ’n toegangsleutel — of tik jou e-posadres in en druk Gaan voort.",
+            "Met ’n nuwe e-posadres stel jy ’n wagwoord op; met een wat ons reeds ken, word jy daarvoor gevra.",
           ],
         },
-        { lab: "Meld aan" },
+        { lab: "Stel ’n vergete wagwoord terug" },
         {
           steps: [
-            "Maak die kieslys oop en kies Meld aan.",
-            "Voer jou e-posadres en jou wagwoord in.",
-          ],
-        },
-        { lab: "Stel 'n vergete wagwoord terug" },
-        {
-          steps: [
-            "Kies Wagwoord vergeet op die aanmeldskerm.",
-            "Voer jou e-posadres in.",
+            "Voer op die aanmeldskerm jou e-posadres in en druk Gaan voort.",
+            "Kies Wagwoord vergeet?",
             "Maak die terugstelskakel oop wat ons vir jou stuur.",
-            "Kies 'n nuwe wagwoord en meld aan.",
+            "Kies ’n nuwe wagwoord en meld aan.",
           ],
         },
       ],
@@ -111,11 +105,17 @@ export const af: GuideTranslation = {
     },
     {
       id: "readout",
-      nav: "Lewendige statistiek",
-      heading: "Die lewendige aflesing",
+      nav: "Regstreekse statistiek",
+      heading: "Die regstreekse uitlesing",
       blocks: [
         {
-          p: "Terwyl jy tik, wys die swewende paneel jou huidige spoed en akkuraatheid, 'n klein grafiekie van onlangse lopies, jou doelwitspore en jou reeks. Dit is daar om jou aan te moedig, nie om te neul nie.",
+          p: "Terwyl jy tik, wys die swewende paneel jou huidige spoed en akkuraatheid, ’n klein vonklyn van onlangse rondtes, jou doelwitte en jou reeks. Dit is daar om jou aan te moedig, nie om te kerm nie.",
+        },
+        {
+          p: "Die *− en +* langs die teiken skuif vandag se doelwit sommer daar en dan op of af, sonder om Instellings oop te maak. Stel dit laer as dieselfde paar letters nie meer vorder nie; die spoed wat ’n letter moet bereik, is die enigste ding wat bepaal hoe vinnig nuwes oopgesluit word.",
+        },
+        {
+          p: "As jy ’n profielprent gekies het, kan sy kunswerk dof agter daardie syfers sit — Rekening, Voorkoms, *Jou kunswerk agter die statistiek*, met ’n skuifbalk vir hoe sterk dit is. Af tensy jy dit aanskakel.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const af: GuideTranslation = {
           tips: [
             "*Begeleide oefening* — die aanpasbare verstek wat jou alfabet sleutel vir sleutel laat groei.",
             "*Klassieke kursus* — 'n vaste, geordende opmars deur die sleutels.",
+            "*Bronkode* — werklike kode uit werklike raamwerke.",
             "*Algemene woorde* — die mees algemene woorde in jou taal.",
             "*Boekteks* — tik jou pad deur werklike boeke wat in die app ingebou is.",
+            "*Aanhalings* — kort, volledige gedagtes met hul werklike hoofletters en leestekens.",
             "*Jou eie teks* — plak enigiets in wat jy wil en oefen daarop.",
-            "*Kodebrokkies* — hakies, simbole en die ritme van kode.",
             "*Syferoefeninge* — die syferry en die syferblok.",
           ],
         },
@@ -186,20 +187,23 @@ export const af: GuideTranslation = {
       heading: "Stel jou sleutelbord op",
       blocks: [
         {
-          p: "Instellings, Sleutelbordopstelling is waar jy KeyLearn by jou sleutelbord en by die uitleg wat jy wil leer, laat pas.",
+          p: "Instellings, Sleutelbordopstelling is waar jy KeyLearn by jou sleutelbord pas, en by die uitleg wat jy wil leer.",
         },
         { lab: "Verander jou sleutelborduitleg" },
         {
           steps: [
             "Maak Instellings oop.",
             "Gaan na Sleutelbordopstelling.",
-            "Kies jou taal, dan jou uitleg (QWERTY, Dvorak, Colemak en meer).",
-            "Los “Simuleer hierdie uitleg” aan sodat jy dit kan oefen, ongeag waarop jou rekenaar gestel is.",
-            "Kyk na die lewendige voorskou om seker te maak.",
+            "Kies jou taal en dan jou uitleg (QWERTY, Dvorak, Colemak en meer).",
+            "Laat „Simuleer hierdie uitleg” aan sodat jy dit kan oefen, maak nie saak hoe jou rekenaar opgestel is nie.",
+            "Kyk na die regstreekse voorskou om te bevestig.",
           ],
         },
         {
-          p: "Op dieselfde skerm kan jy die sleutelbordvorm kies, die sleutels volgens vingersone kleur, en die volgende sleutel uitlig terwyl jy nog leer waar alles lê.",
+          p: "Op dieselfde skerm kan jy die sleutelbord se vorm kies, die sleutels volgens vingersone inkleur, en die volgende sleutel uitlig terwyl jy nog leer waar alles is.",
+        },
+        {
+          p: "Die bord se *afwerking* — hoe die sleutels lyk — kom saam met ’n rekening. As jy aangemeld is, is daar vyf om van te kies, en die ronde een kom in ses kleure; een daarvan volg jou tema se kleur. Alles hierbo is joune in elk geval: die taal, die uitleg, die vorm en die vingersones word nooit teruggehou nie, want dit is wat die app laat pas by die sleutelbord voor jou.",
         },
       ],
     },
@@ -210,6 +214,9 @@ export const af: GuideTranslation = {
       blocks: [
         {
           p: "Met die instellings vir Vertoning en Teksinvoer kan jy jou spoed as woorde- of karakters-per-minuut wys en fyn instel hoe die tik voel. Herstel verstekwaardes is altyd net een klik weg as jy vars wil begin.",
+        },
+        {
+          p: "Hoe die hele werf lyk, is onder Rekening, Voorkoms: lig, donker of volg-die-stelsel, ’n temakleur, en ’n teksgrootte wat op elke bladsy geld. Elke leerder in die huishouding hou hul eie, en dit reis saam met hulle — sien *Pas jou data op*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const af: GuideTranslation = {
           steps: [
             "Maak die kieslys oop.",
             "Kies Profiel.",
-            "Gebruik die filterry om op Letters, Syfers, Leestekens of Simbole te fokus.",
           ],
         },
       ],
@@ -234,25 +240,28 @@ export const af: GuideTranslation = {
     {
       id: "data",
       nav: "Jou data",
-      heading: "Sorg vir jou data",
+      heading: "Pas jou data op",
       blocks: [
-        { lab: "Vee 'n profiel se statistiek uit" },
+        { lab: "Vee ’n profiel se statistiek uit" },
         {
           steps: [
             "Maak Profiel oop vir die leerder wat jy wil terugstel.",
-            "Rollees na die terugstelknoppie onderaan die bladsy.",
-            "Bevestig “Vee alles uit” — net hierdie profiel word skoongemaak.",
+            "Rol af na die terugstelkontrole onderaan die bladsy.",
+            "Bevestig „Vee alles uit” — net hierdie profiel word skoongemaak.",
           ],
         },
         { lab: "Laai jou data af" },
         {
           steps: [
             "Maak Profiel oop.",
-            "Gebruik die aflaai-opsie om jou geskiedenis as 'n lêer te stoor.",
+            "Gebruik die aflaai-opsie om jou geskiedenis as ’n lêer te stoor.",
           ],
         },
         {
-          p: "Meld aan as jy wil hê jou geskiedenis moet oor toestelle heen sinkroniseer en as jy 'n openbare profielskakel wil deel. Daar is geen advertensies en geen spoorsnyers nie, en jy kan jou data — of jou hele rekening — uitvee wanneer jy wil.",
+          p: "Meld aan as jy wil hê jou geskiedenis moet tussen toestelle sinkroniseer en om ’n openbare profielskakel te deel. Daar is geen advertensienetwerke en geen spoorsnyers nie, en jy kan jou data — of jou hele rekening — uitvee wanneer jy wil.",
+        },
+        {
+          p: "Aanmelding dra nou meer as net jou resultate. Jou instellings, jou tema en teksgrootte, die toeganklikheidskeuses wat jy gemaak het en elke leerder se eie voorkeure volg almal die profiel eerder as die blaaier — so ’n leerder wat KeyLearn op ’n nuwe rekenaar oopmaak, gaan voort waar hulle opgehou het, op dieselfde skerm, op dieselfde manier opgestel, in plaas daarvan om weer by die verstekwaardes te begin.",
         },
       ],
     },
@@ -283,10 +292,15 @@ export const af: GuideTranslation = {
       blocks: [
         { lab: "Maak die speelgoedkis oop" },
         {
-          steps: ["Tik op die kinderskerm op die ratjie boaan die speelarea."],
+          steps: [
+            "Tik op die kinderskerm op die ratjie boaan die speelarea.",
+          ],
         },
         {
-          p: "Binne kan jy die wêreld en die karakter stel, Groot letters, Klanke, Helperhande (die gloeiende vingergids), die Sleutelbord (versteek, eenvoudig, of die volle grootmensbord), Letters op die spoor (die woorde wat as blokke reg in die speletjie gewys word), 'n sessie-Tydhouer, Toejuigings (aanmoedigende boodskappies), en — weggesteek onder Gevorderd — skuiwers vir Helderheid, Kleur en hoe lewendig die wêreld voel. Daar is 'n rustige naglook sowel as die helder daglook.",
+          p: "Binne kan jy die wêreld en die karakter stel, Groot letters, Klanke, Helperhande (die gloeiende vingergids), die Sleutelbord (versteek, eenvoudig, of die volle grootmensbord), Letters op die spoor (die woorde wat as blokke reg in die speletjie gewys word), ’n sessie-Tydhouer, Toejuigings (aanmoedigende boodskappies), en — weggesteek onder Gevorderd — skuiwers vir Helderheid, Kleur en hoe lewendig die wêreld voel. Daar is ’n kalm nagvoorkoms sowel as die helder dagvoorkoms.",
+        },
+        {
+          p: "*Key style* verander hoe die sleutels geverf is, en die sleutels self skuif nie: *Crayon* is die wit dop met ’n ring in sy vingerkleur, en *Rainbow* is die leerbord in primêre kleure — groen raam, rooi syfers, blou letters met die klinkers apart — waar die raamsleutels pyltjies eerder as woorde is, vir ’n kind wat nog nie „enter” kan lees nie. Almal begin by Crayon. *Finger colours* langsaan skakel die inkleur heeltemal af vir ’n kind wat dit nie meer nodig het nie.",
         },
       ],
     },
@@ -480,7 +494,48 @@ export const af: GuideTranslation = {
       heading: "Privaatheid, in een sin",
       blocks: [
         {
-          p: "Geen advertensies, en geen spoorsnyers nie. 'n Kind se profiel verlaat nooit jou blaaier nie. Meld net aan as jy wil sinkroniseer of deel; andersins bly alles op hierdie toestel, en jy is vry om dit enige tyd uit te vee.",
+          p: "Geen advertensienetwerke, en geen spoorsnyers nie. ’n Kind se profiel verlaat nooit jou blaaier nie. Meld net aan as jy wil sinkroniseer of deel; andersins bly alles op hierdie toestel, en jy kan dit enige tyd uitvee.",
+        },
+        {
+          p: "Jy sien dalk ’n *geborgde reël* op sommige bladsye. Dit is een wat ons self verkoop en self wys — daar is geen advertensienetwerk hier nie en niks volg jou van die werf af nie. Dit word gekies deur die bladsy waarop jy is, nooit deur iets wat ons van jou weet nie, en dit verskyn nooit vir ’n kind nie, nie in die kinderwêreld nie, nie op ’n skoolrekening nie, en nie terwyl ’n les loop nie. Tik op *Hoekom sien ek dit?* by enige van hulle vir dieselfde verduideliking net daar, en mense wat die projek ondersteun het, sien nooit een nie.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Kry hulp",
+      heading: "Kry hulp",
+      blocks: [
+        {
+          p: "Elke boodskap wat jy vir ons stuur, word ’n *gesprek waarna jy kan terugkeer*, nie ’n e-pos wat verdwyn nie. Dit is onder Rekening, en dit hou sy eie verwysingsnommer — die een om te noem as jy ooit weer bel of skryf.",
+        },
+        { lab: "Vra vir hulp" },
+        {
+          steps: [
+            "Maak die kieslys oop en kies Rekening, dan Ondersteuning.",
+            "Kies Registreer ’n kaartjie en sê wat aan die gang is.",
+            "Heg ’n skermskoot aan as dit help — PNG, JPG of PDF, tot 10 MB elk.",
+          ],
+        },
+        {
+          p: "Antwoorde verskyn in daardie gesprek, en die klokkie bo-aan lig op wanneer een aankom, so jy hoef nie te sit en na die bladsy kyk nie. Enigiets wat reeds uitgesorteer is, vou weg onder Opgelos, wat toe begin — die ding waarvoor jy nog wag, is die ding wat jy sien.",
+        },
+        { lab: "Wie antwoord" },
+        {
+          p: "’n Assistent genaamd Tab lees dit eerste en beantwoord wat dit kan. Dit sal vir jou sê dat dit ’n KI is — dit maak nooit anders voor nie, en dit sal reguit sê wanneer dit iets nie weet nie.",
+        },
+        {
+          p: "’n Mens neem oor wanneer dit die beter antwoord is: enigiets oor geld, jou data, veiligheid, of bloot omdat jy gevra het. Jy hoef nooit twee keer te vra nie, en jy hoef jouself nooit te herhaal nie — wie dit ook al oorneem, kan reeds alles sien wat jy gesê het.",
+        },
+        {
+          p: "As ’n boodskap ooit soos ’n regte noodgeval lees, is die antwoord elke keer dieselfde en kom dit uit ’n vaste teks eerder as van die assistent: die noodnommer waar jy is, en ’n mens aan ons kant wat dadelik gewaarsku word. Ons kan nie daardie oproep vir jou maak nie, en ons sê dit ook.",
+        },
+        { lab: "Ruim op" },
+        {
+          p: "Jy kan enige tyd ’n gesprek uit jou lys verwyder met die asblik-ikoon langsaan. ’n Klein nota by *Registreer ’n kaartjie* hou tel van hoeveel jy verwyder het, sodat ’n gesprek wat verdwyn het nooit ’n raaisel is nie.",
+        },
+        {
+          p: "Op ’n gedeelde gesinstoestel vra die Ondersteuning-afdeling vir die grootmens-PIN voordat dit oopmaak — ondersteuningsgesprekke is rekeningsake, en die persoon wat oefen, is nie altyd die persoon wat die rekening opgestel het nie.",
         },
       ],
     },

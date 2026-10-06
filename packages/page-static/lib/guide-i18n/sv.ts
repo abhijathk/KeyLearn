@@ -22,28 +22,22 @@ export const sv: GuideTranslation = {
       nav: "Inloggning och lösenord",
       heading: "Registrering, inloggning och lösenord",
       blocks: [
-        { p: "Allt finns i menyn uppe till höger." },
-        { lab: "Skapa ett konto" },
         {
-          steps: [
-            "Öppna menyn (uppe till höger).",
-            "Välj Registrera dig.",
-            "Ange en e-postadress och ett lösenord.",
-            "Bekräfta — nu är du inne.",
-          ],
+          p: "Allt finns i menyn uppe till höger, under Logga in eller skapa konto — samma dörr oavsett om du redan har ett konto eller inte.",
         },
-        { lab: "Logga in" },
+        { lab: "Skapa ett konto eller logga in" },
         {
           steps: [
-            "Öppna menyn och välj Logga in.",
-            "Ange din e-postadress och ditt lösenord.",
+            "Öppna menyn och välj Logga in eller skapa konto.",
+            "Fortsätt med Google, Facebook eller en passkey — eller skriv din e-postadress och tryck på Fortsätt.",
+            "En ny e-postadress låter dig välja ett lösenord; en befintlig ber dig om det.",
           ],
         },
         { lab: "Återställ ett glömt lösenord" },
         {
           steps: [
-            "På inloggningssidan väljer du Glömt lösenord.",
-            "Ange din e-postadress.",
+            "På inloggningssidan skriver du din e-postadress och trycker på Fortsätt.",
+            "Välj Glömt ditt lösenord?",
             "Öppna återställningslänken som vi skickar till dig.",
             "Välj ett nytt lösenord och logga in.",
           ],
@@ -111,11 +105,17 @@ export const sv: GuideTranslation = {
     },
     {
       id: "readout",
-      nav: "Livestatistik",
-      heading: "Liveavläsningen",
+      nav: "Statistik i realtid",
+      heading: "Realtidspanelen",
       blocks: [
         {
           p: "Medan du skriver visar den svävande panelen din hastighet och träffsäkerhet just nu, en liten kurva över de senaste omgångarna, dina målspår och din svit. Den finns där för att peppa dig, inte för att tjata.",
+        },
+        {
+          p: "*− och +* bredvid målet höjer eller sänker dagens mål direkt, utan att du behöver öppna Inställningar. Sänk det om samma fåtal bokstäver har slutat röra sig; den hastighet en bokstav måste nå är det enda som avgör hur snabbt nya låses upp.",
+        },
+        {
+          p: "Om du har valt en profilbild kan dess bild synas svagt bakom siffrorna — Konto, Utseende, *Din bild bakom siffrorna*, med ett reglage för hur stark den är. Avstängt tills du slår på det.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const sv: GuideTranslation = {
           tips: [
             "*Guidad övning* — det adaptiva standardvalet som bygger ut ditt alfabet tangent för tangent.",
             "*Klassisk kurs* — en fast, ordnad marsch genom tangenterna.",
+            "*Källkod* — riktig kod från riktiga ramverk.",
             "*Vanliga ord* — de vanligaste orden på ditt språk.",
             "*Boktext* — skriv dig genom riktiga böcker som finns inbyggda i appen.",
+            "*Citat* — korta, hela tankar med sina riktiga versaler och skiljetecken.",
             "*Din egen text* — klistra in vad du vill och öva på det.",
-            "*Kodsnuttar* — parenteser, symboler och kodens rytm.",
             "*Sifferövningar* — sifferraden och det numeriska tangentbordet.",
           ],
         },
@@ -201,6 +202,9 @@ export const sv: GuideTranslation = {
         {
           p: "På samma skärm kan du välja tangentbordets form, färga tangenterna efter fingerzon och lysa upp nästa tangent medan du fortfarande lär dig var allt sitter.",
         },
+        {
+          p: "Tangentbordets *finish* — hur tangenterna ser ut — följer med ett konto. Inloggad kan du välja mellan fem, och det runda finns i sex färger; en av dem följer färgen på ditt tema. Allt ovan är ditt i vilket fall: språket, layouten, formen och fingerzonerna låses aldrig, eftersom det är de som får appen att stämma med tangentbordet framför dig.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const sv: GuideTranslation = {
       blocks: [
         {
           p: "Inställningarna för Utseende och Textinmatning låter dig visa din hastighet som ord eller tecken per minut och finjustera hur skrivandet känns. Återställ standardvärden är alltid ett klick bort om du vill börja om från början.",
+        },
+        {
+          p: "Hur hela webbplatsen ser ut ställer du in under Konto, Utseende: ljust, mörkt eller enligt systemet, en temafärg och en textstorlek som gäller på alla sidor. Varje elev i hushållet har sina egna val, och de följer med dem — se *Ta hand om dina data*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const sv: GuideTranslation = {
           steps: [
             "Öppna menyn.",
             "Välj Profil.",
-            "Använd filterraden för att fokusera på Bokstäver, Siffror, Skiljetecken eller Symboler.",
           ],
         },
       ],
@@ -239,8 +245,8 @@ export const sv: GuideTranslation = {
         { lab: "Rensa en profils statistik" },
         {
           steps: [
-            "Öppna Profil för den elev du vill nollställa.",
-            "Bläddra till nollställningsknappen längst ner på sidan.",
+            "Öppna Profil för eleven du vill nollställa.",
+            "Skrolla ner till återställningsknappen längst ned på sidan.",
             "Bekräfta ”Radera allt” — bara den här profilen rensas.",
           ],
         },
@@ -248,11 +254,14 @@ export const sv: GuideTranslation = {
         {
           steps: [
             "Öppna Profil.",
-            "Använd nedladdningsvalet för att spara din historik som en fil.",
+            "Använd nedladdningsalternativet för att spara din historik som en fil.",
           ],
         },
         {
-          p: "Logga in om du vill att din historik ska synkas mellan enheter och för att kunna dela en publik profillänk. Det finns inga annonser och inga spårare, och du kan radera dina data — eller hela ditt konto — när du vill.",
+          p: "Logga in om du vill att din historik ska synkas mellan enheter och för att dela en offentlig profillänk. Det finns inga annonsnätverk och inga spårare, och du kan radera dina data — eller hela ditt konto — när du vill.",
+        },
+        {
+          p: "Att logga in tar med mer än dina resultat nu. Dina inställningar, ditt tema och din textstorlek, de tillgänglighetsval du har gjort och varje elevs egna inställningar följer profilen i stället för webbläsaren — så en elev som öppnar KeyLearn på en ny dator fortsätter där hen slutade, på samma skärm och inställd på samma sätt, i stället för att börja om från standardvärdena.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const sv: GuideTranslation = {
         },
         {
           p: "Inuti kan du ställa in värld och figur, Stora bokstäver, Ljud, Hjälpande händer (den lysande fingerguiden), Tangentbordet (dolt, enkelt, eller hela vuxenbrädan), Bokstäver på stigen (orden som visas som klossar mitt i spelet), en pass-Timer, Hejarop (uppmuntrande små meddelanden) och — undanstoppat under Avancerat — reglage för Ljusstyrka, Färg och hur livlig världen känns. Det finns ett lugnt nattutseende vid sidan av det ljusa dagutseendet.",
+        },
+        {
+          p: "*Key style* ändrar hur tangenterna är målade, och själva tangenterna flyttar sig inte: *Crayon* är den vita tangenten med en ring i fingrets färg, och *Rainbow* är inlärningsbrädan i grundfärger — grön ram, röda siffror, blå bokstäver med vokalerna särskilda — där ramens tangenter är pilar i stället för ord, för ett barn som ännu inte kan läsa ”enter”. Alla börjar med Crayon. *Finger colours* bredvid stänger av färgningen helt för ett barn som inte behöver den längre.",
         },
       ],
     },
@@ -482,10 +494,51 @@ export const sv: GuideTranslation = {
     {
       id: "privacy",
       nav: "Integritet",
-      heading: "Integritet, i en enda mening",
+      heading: "Integritet, i en mening",
       blocks: [
         {
-          p: "Inga annonser och inga spårare. Ett barns profil lämnar aldrig din webbläsare. Logga in bara om du vill synka eller dela; annars stannar allt på den här enheten, och du är fri att radera det när som helst.",
+          p: "Inga annonsnätverk och inga spårare. Ett barns profil lämnar aldrig din webbläsare. Logga bara in om du vill synka eller dela; annars stannar allt på den här enheten, och du kan radera det när du vill.",
+        },
+        {
+          p: "Du kan se en *sponsrad rad* på vissa sidor. Det är en som vi själva har sålt och visar — här finns inget annonsnätverk och inget följer dig utanför webbplatsen. Den väljs av sidan du är på, aldrig av något vi vet om dig, och den visas aldrig för ett barn, i barnvärlden, på ett skolkonto eller medan en lektion pågår. Tryck på *Varför ser jag det här?* på vilken som helst av dem för samma förklaring på plats, och den som har stöttat projektet ser aldrig någon alls.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Få hjälp",
+      heading: "Få hjälp",
+      blocks: [
+        {
+          p: "Varje meddelande du skickar till oss blir en *konversation du kan komma tillbaka till*, inte ett mejl som försvinner. Den finns under Konto och har ett eget referensnummer — det du uppger om du någon gång ringer eller skriver igen.",
+        },
+        { lab: "Be om hjälp" },
+        {
+          steps: [
+            "Öppna menyn och välj Konto och sedan Support.",
+            "Välj Lämna ett ärende och berätta vad som händer.",
+            "Bifoga en skärmbild om det hjälper — PNG, JPG eller PDF, upp till 10 MB styck.",
+          ],
+        },
+        {
+          p: "Svaren dyker upp i den konversationen, och klockan i sidhuvudet tänds när ett kommer, så du behöver inte sitta och bevaka sidan. Allt som redan är löst fälls ihop under Löst, som börjar stängd — det du fortfarande väntar på är det du ser.",
+        },
+        { lab: "Vem svarar" },
+        {
+          p: "En assistent som heter Tab läser först och svarar på det den kan. Den säger att den är en AI — den låtsas aldrig något annat — och den säger rakt ut när den inte vet något.",
+        },
+        {
+          p: "En människa tar över närhelst det är det bättre svaret: allt som rör pengar, dina data, säkerhet, eller helt enkelt för att du bad om det. Du behöver aldrig fråga två gånger och aldrig upprepa dig — den som tar över ser redan allt du har skrivit.",
+        },
+        {
+          p: "Om ett meddelande någon gång låter som en verklig nödsituation är svaret detsamma varje gång och kommer från ett fast manus i stället för från assistenten: nödnumret där du befinner dig, och en person hos oss larmas direkt. Vi kan inte ringa det samtalet åt dig, och det säger vi.",
+        },
+        { lab: "Städa upp" },
+        {
+          p: "Du kan när som helst ta bort en konversation från din lista med papperskorgsikonen bredvid den. En liten notis vid *Lämna ett ärende* håller räkningen på hur många du har rensat, så en tråd som försvann är aldrig ett mysterium.",
+        },
+        {
+          p: "På en delad familjeenhet ber avsnittet Support om vuxen-PIN-koden innan det öppnas — supporttrådar är kontoärenden, och den som övar är inte alltid den som skapade kontot.",
         },
       ],
     },

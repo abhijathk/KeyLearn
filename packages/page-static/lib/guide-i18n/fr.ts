@@ -22,28 +22,22 @@ export const fr: GuideTranslation = {
       nav: "Connexion et mots de passe",
       heading: "Inscription, connexion et mots de passe",
       blocks: [
-        { p: "Tout se trouve dans le menu en haut à droite." },
-        { lab: "Créer un compte" },
         {
-          steps: [
-            "Ouvrez le menu (en haut à droite).",
-            "Choisissez S’inscrire.",
-            "Saisissez une adresse e-mail et un mot de passe.",
-            "Confirmez — vous voilà connecté.",
-          ],
+          p: "Tout se trouve dans le menu en haut à droite, sous Se connecter ou s’inscrire — la même porte, que vous ayez déjà un compte ou non.",
         },
-        { lab: "Se connecter" },
+        { lab: "Créer un compte ou se connecter" },
         {
           steps: [
-            "Ouvrez le menu et choisissez Se connecter.",
-            "Saisissez votre adresse e-mail et votre mot de passe.",
+            "Ouvrez le menu et choisissez Se connecter ou s’inscrire.",
+            "Continuez avec Google, Facebook ou une clé d’accès — ou saisissez votre adresse e-mail et appuyez sur Continuer.",
+            "Une nouvelle adresse vous invite à créer un mot de passe ; une adresse existante vous le demande.",
           ],
         },
         { lab: "Réinitialiser un mot de passe oublié" },
         {
           steps: [
-            "Sur l’écran de connexion, choisissez Mot de passe oublié.",
-            "Saisissez votre adresse e-mail.",
+            "Sur l’écran de connexion, saisissez votre adresse e-mail et appuyez sur Continuer.",
+            "Choisissez Mot de passe oublié?",
             "Ouvrez le lien de réinitialisation que nous vous envoyons.",
             "Choisissez un nouveau mot de passe et connectez-vous.",
           ],
@@ -117,6 +111,12 @@ export const fr: GuideTranslation = {
         {
           p: "Pendant que vous tapez, le panneau flottant montre votre vitesse et votre précision actuelles, une petite courbe de vos dernières séries, la progression de vos objectifs et votre série de jours. Il est là pour vous encourager, pas pour vous harceler.",
         },
+        {
+          p: "Les boutons *− et +* à côté de l’objectif augmentent ou réduisent l’objectif du jour sur-le-champ, sans ouvrir les Réglages. Baissez-le si les mêmes quelques lettres ne progressent plus : la vitesse qu’une lettre doit atteindre est la seule chose qui décide de la rapidité avec laquelle les nouvelles se débloquent.",
+        },
+        {
+          p: "Si vous avez choisi une photo de profil, son illustration peut apparaître discrètement derrière ces chiffres — Compte, Apparence, *Votre illustration derrière les chiffres*, avec un curseur pour régler son intensité. Désactivé tant que vous ne l’activez pas.",
+        },
       ],
     },
     {
@@ -141,10 +141,11 @@ export const fr: GuideTranslation = {
           tips: [
             "*Pratique guidée* — le mode adaptatif par défaut, qui enrichit votre alphabet touche par touche.",
             "*Cours classique* — une progression fixe et ordonnée à travers les touches.",
+            "*Code source* — du vrai code issu de vrais frameworks.",
             "*Mots fréquents* — les mots les plus courants de votre langue.",
             "*Texte de livre* — tapez au fil de vrais livres intégrés à l’application.",
+            "*Citations* — des pensées courtes et complètes, avec leurs vraies majuscules et leur vraie ponctuation.",
             "*Votre propre texte* — collez ce que vous voulez et entraînez-vous dessus.",
-            "*Extraits de code* — parenthèses, symboles et le rythme du code.",
             "*Exercices de chiffres* — la rangée des chiffres et le pavé numérique.",
           ],
         },
@@ -201,6 +202,9 @@ export const fr: GuideTranslation = {
         {
           p: "Sur le même écran, vous pouvez choisir la forme du clavier, colorer les touches par zone de doigt et mettre en lumière la prochaine touche tant que vous apprenez encore où tout se trouve.",
         },
+        {
+          p: "La *finition* du clavier — l’aspect des touches — vient avec un compte. Une fois connecté, vous en avez cinq au choix, et le clavier rond existe en six couleurs ; l’une d’elles suit la couleur de votre thème. Tout ce qui précède vous appartient dans tous les cas : la langue, la disposition, la forme et les zones des doigts ne sont jamais réservées, car ce sont elles qui accordent l’application au clavier que vous avez devant vous.",
+        },
       ],
     },
     {
@@ -210,6 +214,9 @@ export const fr: GuideTranslation = {
       blocks: [
         {
           p: "Les réglages Affichage et Saisie de texte vous permettent d’afficher votre vitesse en mots ou en caractères par minute et d’ajuster finement le ressenti de la frappe. Restaurer les valeurs par défaut est toujours à portée de clic si vous voulez repartir de zéro.",
+        },
+        {
+          p: "L’apparence de tout le site se règle dans Compte, Apparence : clair, sombre ou selon le système, une couleur de thème et une taille de texte qui vaut pour toutes les pages. Chaque apprenant du foyer garde les siens, et ils le suivent partout — voir *Prendre soin de vos données*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const fr: GuideTranslation = {
           steps: [
             "Ouvrez le menu.",
             "Choisissez Profil.",
-            "Utilisez la rangée de filtres pour vous concentrer sur les Lettres, les Chiffres, la Ponctuation ou les Symboles.",
           ],
         },
       ],
@@ -252,7 +258,10 @@ export const fr: GuideTranslation = {
           ],
         },
         {
-          p: "Connectez-vous si vous voulez que votre historique se synchronise sur tous vos appareils et pour partager un lien de profil public. Il n’y a ni publicités ni traqueurs, et vous pouvez supprimer vos données — ou tout votre compte — quand vous le souhaitez.",
+          p: "Connectez-vous si vous voulez que votre historique se synchronise entre vos appareils et partager un lien de profil public. Il n’y a ni régie publicitaire ni traqueur, et vous pouvez supprimer vos données — ou votre compte entier — quand vous le souhaitez.",
+        },
+        {
+          p: "Se connecter conserve désormais bien plus que vos résultats. Vos réglages, votre thème et votre taille de texte, vos choix d’accessibilité et les préférences propres à chaque apprenant suivent le profil plutôt que le navigateur — ainsi, un apprenant qui ouvre KeyLearn sur un nouvel ordinateur reprend là où il s’était arrêté, sur le même écran, réglé de la même façon, au lieu de repartir des réglages par défaut.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const fr: GuideTranslation = {
         },
         {
           p: "À l’intérieur, vous pouvez régler le monde et le personnage, les Grandes lettres, les Sons, les Mains aides (le guide de doigt lumineux), le Clavier (masqué, simplifié, ou le clavier complet des adultes), les Lettres sur le sentier (les mots affichés sous forme de blocs directement dans le jeu), une Minuterie de séance, les Encouragements (de petits messages motivants) et — rangés sous Avancé — des curseurs pour la Luminosité, la Couleur et le degré d’animation du monde. Il y a aussi une ambiance nuit apaisante en plus de l’ambiance jour lumineuse.",
+        },
+        {
+          p: "*Key style* change la façon dont les touches sont peintes, et les touches elles-mêmes ne bougent pas : *Crayon* est la touche blanche cerclée de la couleur de son doigt, et *Rainbow* est le clavier d’apprentissage en couleurs primaires — cadre vert, chiffres rouges, lettres bleues avec les voyelles mises à part — où les touches du cadre sont des flèches plutôt que des mots, pour un enfant qui ne sait pas encore lire « entrée ». Tout le monde commence avec Crayon. *Finger colours*, juste à côté, supprime entièrement la coloration pour un enfant qui n’en a plus besoin.",
         },
       ],
     },
@@ -485,7 +497,48 @@ export const fr: GuideTranslation = {
       heading: "La confidentialité, en une phrase",
       blocks: [
         {
-          p: "Ni publicités, ni traqueurs. Le profil d’un enfant ne quitte jamais votre navigateur. Connectez-vous uniquement si vous voulez la synchronisation ou le partage ; sinon tout reste sur cet appareil, et vous êtes libre de le supprimer à tout moment.",
+          p: "Aucune régie publicitaire, et aucun traqueur. Le profil d’un enfant ne quitte jamais votre navigateur. Connectez-vous seulement si vous voulez synchroniser ou partager ; sinon, tout reste sur cet appareil, et vous êtes libre de tout supprimer à tout moment.",
+        },
+        {
+          p: "Vous verrez peut-être une *ligne sponsorisée* sur certaines pages. C’est une ligne que nous avons vendue et que nous diffusons nous-mêmes — il n’y a pas de régie publicitaire ici et rien ne vous suit en dehors du site. Elle est choisie selon la page où vous êtes, jamais selon ce que nous savons de vous, et elle n’apparaît jamais à un enfant, dans le monde des enfants, sur un compte scolaire ou pendant une leçon. Touchez *Pourquoi est-ce que je vois ceci?* sur n’importe laquelle pour lire la même explication sur place, et les personnes qui ont soutenu le projet n’en voient jamais aucune.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Obtenir de l’aide",
+      heading: "Obtenir de l’aide",
+      blocks: [
+        {
+          p: "Chaque message que vous nous envoyez devient une *conversation que vous pouvez retrouver*, et non un e-mail qui disparaît. Elle se trouve dans Compte et garde son propre numéro de référence — celui à indiquer si vous appelez ou écrivez à nouveau.",
+        },
+        { lab: "Demander de l’aide" },
+        {
+          steps: [
+            "Ouvrez le menu et choisissez Compte, puis Assistance.",
+            "Choisissez Ouvrir une demande et décrivez ce qui se passe.",
+            "Joignez une capture d’écran si cela aide — PNG, JPG ou PDF, jusqu’à 10 Mo chacune.",
+          ],
+        },
+        {
+          p: "Les réponses s’affichent dans cette conversation, et la cloche de l’en-tête s’allume quand l’une d’elles arrive : inutile de surveiller la page. Ce qui est déjà réglé se range sous Résolues, qui commence replié — ce que vous attendez encore, c’est ce que vous voyez.",
+        },
+        { lab: "Qui répond" },
+        {
+          p: "Un assistant nommé Tab la lit en premier et répond à ce qu’il peut. Il vous dira qu’il est une IA — il ne prétend jamais le contraire — et il dira clairement quand il ne sait pas quelque chose.",
+        },
+        {
+          p: "Une personne prend le relais dès que c’est la meilleure réponse : tout ce qui concerne l’argent, vos données, la sécurité, ou simplement parce que vous l’avez demandé. Vous n’avez jamais à le demander deux fois, ni à vous répéter — la personne qui reprend voit déjà tout ce que vous avez dit.",
+        },
+        {
+          p: "Si un message ressemble un jour à une véritable urgence, la réponse est toujours la même et vient d’un texte fixe plutôt que de l’assistant : le numéro d’urgence de votre pays, et une personne de notre équipe alertée immédiatement. Nous ne pouvons pas passer cet appel à votre place, et nous le disons.",
+        },
+        { lab: "Faire le tri" },
+        {
+          p: "Vous pouvez retirer une conversation de votre liste à tout moment avec l’icône de corbeille à côté. Une petite note près de *Ouvrir une demande* compte combien vous en avez retiré, pour qu’un fil disparu ne soit jamais un mystère.",
+        },
+        {
+          p: "Sur un appareil familial partagé, la section Assistance demande le code PIN adulte avant de s’ouvrir — les échanges avec l’assistance relèvent du compte, et la personne qui s’entraîne n’est pas toujours celle qui a créé le compte.",
         },
       ],
     },

@@ -22,29 +22,23 @@ export const hu: GuideTranslation = {
       nav: "Bejelentkezés és jelszavak",
       heading: "Regisztráció, bejelentkezés és jelszavak",
       blocks: [
-        { p: "Minden a jobb felső sarokban lévő menüben található." },
-        { lab: "Fiók létrehozása" },
         {
-          steps: [
-            "Nyisd meg a menüt (jobb felül).",
-            "Válaszd a Regisztráció lehetőséget.",
-            "Add meg az e-mail-címed és egy jelszót.",
-            "Erősítsd meg — és már bent is vagy.",
-          ],
+          p: "Minden a jobb felső sarokban lévő menüben található, a Bejelentkezés vagy regisztráció alatt — ugyanaz az ajtó, akár van már fiókod, akár nincs.",
         },
-        { lab: "Bejelentkezés" },
+        { lab: "Fiók létrehozása vagy bejelentkezés" },
         {
           steps: [
-            "Nyisd meg a menüt, és válaszd a Bejelentkezés lehetőséget.",
-            "Add meg az e-mail-címed és a jelszavad.",
+            "Nyisd meg a menüt, és válaszd a Bejelentkezés vagy regisztráció lehetőséget.",
+            "Folytasd Google-lel, Facebookkal vagy azonosítókulccsal — vagy írd be az e-mail-címed, és nyomd meg a Tovább gombot.",
+            "Új e-mail-cím esetén jelszót állítasz be; egy meglévőnél a jelszót kérjük.",
           ],
         },
         { lab: "Elfelejtett jelszó visszaállítása" },
         {
           steps: [
-            "A Bejelentkezés képernyőn válaszd az Elfelejtett jelszó lehetőséget.",
-            "Add meg az e-mail-címed.",
-            "Nyisd meg a küldött visszaállítási linket.",
+            "A bejelentkezési képernyőn add meg az e-mail-címed, és nyomd meg a Tovább gombot.",
+            "Válaszd az Elfelejtetted a jelszavad? lehetőséget.",
+            "Nyisd meg a visszaállító linket, amelyet elküldünk.",
             "Válassz új jelszót, és jelentkezz be.",
           ],
         },
@@ -115,7 +109,13 @@ export const hu: GuideTranslation = {
       heading: "Az élő kijelző",
       blocks: [
         {
-          p: "Gépelés közben a lebegő panel mutatja az aktuális sebességed és pontosságod, egy kis grafikont a legutóbbi körökről, a céljaid állását és a sorozatod. Azért van ott, hogy bátorítson, nem azért, hogy nyaggasson.",
+          p: "Gépelés közben a lebegő panel mutatja a pillanatnyi sebességedet és pontosságodat, egy kis grafikont a legutóbbi körökről, a céljaidat és a sorozatodat. Azért van ott, hogy bátorítson, nem azért, hogy nyaggasson.",
+        },
+        {
+          p: "A cél melletti *− és +* gombbal azonnal feljebb vagy lejjebb viheted a mai célt, a Beállítások megnyitása nélkül. Vedd lejjebb, ha ugyanaz a néhány betű már nem mozdul; egyedül az dönti el, milyen gyorsan nyílnak meg az újak, hogy mekkora sebességet kell egy betűnek elérnie.",
+        },
+        {
+          p: "Ha választottál profilképet, annak rajza halványan ott lehet a számok mögött — Fiók, Megjelenés, *A képed a számok mögött*, egy csúszkával az erősségéhez. Kikapcsolva marad, amíg be nem kapcsolod.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const hu: GuideTranslation = {
           tips: [
             "*Vezetett gyakorlás* — az alkalmazkodó alapbeállítás, amely billentyűről billentyűre bővíti az ábécédet.",
             "*Klasszikus tanfolyam* — kötött, sorrendbe szedett menetelés a billentyűkön át.",
+            "*Forráskód* — valódi kód valódi keretrendszerekből.",
             "*Gyakori szavak* — a nyelved leggyakoribb szavai.",
             "*Könyvszöveg* — gépeld végig magad az alkalmazásba épített igazi könyveken.",
+            "*Idézetek* — rövid, kerek gondolatok a valódi nagybetűikkel és írásjeleikkel.",
             "*Saját szöveg* — illessz be bármit, ami tetszik, és gyakorolj rajta.",
-            "*Kódrészletek* — zárójelek, jelek és a kód ritmusa.",
             "*Számgyakorlatok* — a számsor és a numerikus billentyűzet.",
           ],
         },
@@ -183,23 +184,26 @@ export const hu: GuideTranslation = {
     {
       id: "keyboard",
       nav: "Billentyűzet beállítása",
-      heading: "A billentyűzeted beállítása",
+      heading: "A billentyűzet beállítása",
       blocks: [
         {
-          p: "A Beállítások Billentyűzet beállítása pontjában hangolod össze a KeyLearnt a billentyűzeteddel és azzal a kiosztással, amelyet meg szeretnél tanulni.",
+          p: "A Beállítások Billentyűzet részén igazíthatod a KeyLearnt a billentyűzetedhez és a megtanulni kívánt kiosztáshoz.",
         },
-        { lab: "Billentyűzetkiosztás módosítása" },
+        { lab: "A billentyűzetkiosztás módosítása" },
         {
           steps: [
             "Nyisd meg a Beállításokat.",
-            "Lépj a Billentyűzet beállítása pontra.",
-            "Válaszd ki a nyelved, majd a kiosztásod (QWERTY, Dvorak, Colemak és még sok más).",
-            "Hagyd bekapcsolva a „Kiosztás szimulálása” lehetőséget, hogy attól függetlenül gyakorolhasd, hogyan van beállítva a géped.",
-            "Az élő előnézeten ellenőrizd.",
+            "Lépj a Billentyűzet részre.",
+            "Válaszd ki a nyelvet, majd a kiosztást (QWERTY, Dvorak, Colemak és még sok más).",
+            "Hagyd bekapcsolva „A kiosztás szimulálása” lehetőséget, hogy gyakorolhasd, bárhogy is van beállítva a számítógéped.",
+            "Az élő előnézetben ellenőrizd az eredményt.",
           ],
         },
         {
-          p: "Ugyanezen a képernyőn kiválaszthatod a billentyűzet formáját, ujjzónák szerint színezheted a billentyűket, és kiemelheted a következő billentyűt, amíg még tanulod, hol mi található.",
+          p: "Ugyanezen a képernyőn választhatsz billentyűzetformát, kiszínezheted a billentyűket ujjzónák szerint, és kiemelheted a következő billentyűt, amíg még tanulod, mi hol van.",
+        },
+        {
+          p: "A billentyűzet *kidolgozása* — a billentyűk kinézete — fiókkal jár. Bejelentkezve ötből választhatsz, és a kerek hat színben létezik; ezek egyike a témád színét követi. Minden más mindenképp a tiéd: a nyelv, a kiosztás, a forma és az ujjzónák soha nincsenek visszatartva, mert ezek teszik az alkalmazást az előtted lévő billentyűzethez illővé.",
         },
       ],
     },
@@ -209,7 +213,10 @@ export const hu: GuideTranslation = {
       heading: "Megjelenítés és érzet",
       blocks: [
         {
-          p: "A Megjelenítés és a Szövegbevitel beállításaival percenkénti szóban vagy karakterben mutathatod a sebességed, és finomhangolhatod, milyen érzés a gépelés. Az Alapértelmezések visszaállítása mindig egy kattintásnyira van, ha tiszta lappal indulnál.",
+          p: "A Vegyes és a Gépelés beállításokkal a sebességedet szó/perc vagy karakter/perc formában mutathatod, és finomhangolhatod, milyen érzés gépelni. A Visszaállítás mindig csak egy kattintásnyira van, ha tiszta lappal kezdenél.",
+        },
+        {
+          p: "Az egész oldal megjelenése a Fiók, Megjelenés részen található: világos, sötét vagy a rendszert követő mód, egy témaszín és egy szövegméret, amely minden oldalon érvényes. A háztartás minden tanulója a sajátját tartja meg, és az vele utazik — lásd *Az adataid gondozása*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const hu: GuideTranslation = {
           steps: [
             "Nyisd meg a menüt.",
             "Válaszd a Profil lehetőséget.",
-            "A szűrősorral szűkíthetsz Betűkre, Számjegyekre, Írásjelekre vagy Jelekre.",
           ],
         },
       ],
@@ -234,25 +240,28 @@ export const hu: GuideTranslation = {
     {
       id: "data",
       nav: "Az adataid",
-      heading: "Vigyázz az adataidra",
+      heading: "Az adataid gondozása",
       blocks: [
         { lab: "Egy profil statisztikáinak törlése" },
         {
           steps: [
-            "Nyisd meg a Profilt annál a tanulónál, akit alaphelyzetbe állítanál.",
-            "Görgess az oldal alján lévő visszaállító vezérlőhöz.",
-            "Erősítsd meg a „Minden törlése” lehetőséget — csak ez az egy profil ürül ki.",
+            "Nyisd meg annak a tanulónak a Profilját, akit vissza szeretnél állítani.",
+            "Görgess le az oldal alján lévő visszaállítási vezérlőhöz.",
+            "Erősítsd meg a „Minden törlése” lehetőséget — csak ez a profil törlődik.",
           ],
         },
         { lab: "Az adataid letöltése" },
         {
           steps: [
             "Nyisd meg a Profilt.",
-            "A letöltés lehetőséggel mentsd fájlba az előzményeidet.",
+            "A letöltési lehetőséggel mentsd el az előzményeidet fájlként.",
           ],
         },
         {
-          p: "Jelentkezz be, ha azt szeretnéd, hogy az előzményeid eszközök között szinkronizálódjanak, és hogy megoszthass egy nyilvános profillinket. Nincsenek hirdetések és nyomkövetők, az adataidat — vagy a teljes fiókodat — pedig bármikor törölheted.",
+          p: "Jelentkezz be, ha szeretnéd, hogy az előzményeid szinkronizálódjanak az eszközeid között, és ha nyilvános profillinket szeretnél megosztani. Nincsenek hirdetési hálózatok és nincsenek nyomkövetők, és az adataidat — vagy az egész fiókodat — bármikor törölheted.",
+        },
+        {
+          p: "A bejelentkezés ma már többet visz magával, mint az eredményeidet. A beállításaid, a témád és a szövegméreted, a kisegítő lehetőségeknél megadott választásaid és minden tanuló saját beállításai a profilt követik, nem a böngészőt — így aki új számítógépen nyitja meg a KeyLearnt, ott folytatja, ahol abbahagyta, ugyanazon a képernyőn, ugyanúgy beállítva, ahelyett hogy az alapértékekről kezdené újra.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const hu: GuideTranslation = {
         },
         {
           p: "Belül beállíthatod a világot és a figurát, a Nagy betűket, a Hangokat, a Segítő kezeket (a világító ujjmutatót), a Billentyűzetet (rejtett, egyszerű vagy a teljes felnőtt billentyűzet), a Betűket az ösvényen (a szavak kockákként, egyenesen a játékban), az alkalom Időzítőjét, a Biztatásokat (bátorító kis üzenetek), és — a Speciális rész alá rejtve — csúszkákat a Fényerőhöz, a Színhez és ahhoz, mennyire élénk a világ. Van egy nyugodt éjszakai megjelenés is a világos nappali mellett.",
+        },
+        {
+          p: "A *Key style* azt változtatja meg, hogyan vannak kifestve a billentyűk, maguk a billentyűk nem mozdulnak: a *Crayon* a saját ujja színével körbefuttatott fehér billentyű, a *Rainbow* pedig az alapszínes tanulóbillentyűzet — zöld keret, piros számok, kék betűk, a magánhangzók külön kiemelve —, ahol a keret billentyűin szavak helyett nyilak vannak, annak a gyereknek, aki még nem tudja elolvasni, hogy „enter”. Mindenki a Crayon beállítással kezd. A mellette lévő *Finger colours* teljesen kikapcsolja a színezést annak a gyereknek, akinek már nincs rá szüksége.",
         },
       ],
     },
@@ -482,10 +494,51 @@ export const hu: GuideTranslation = {
     {
       id: "privacy",
       nav: "Adatvédelem",
-      heading: "Adatvédelem, egyetlen mondatban",
+      heading: "Adatvédelem egy mondatban",
       blocks: [
         {
-          p: "Nincsenek hirdetések és nincsenek nyomkövetők. Egy gyerek profilja soha nem hagyja el a böngésződet. Csak akkor jelentkezz be, ha szinkronizálni vagy megosztani szeretnél; egyébként minden ezen az eszközön marad, és bármikor szabadon törölheted.",
+          p: "Nincsenek hirdetési hálózatok és nincsenek nyomkövetők. Egy gyerek profilja soha nem hagyja el a böngésződet. Csak akkor jelentkezz be, ha szinkronizálást vagy megosztást szeretnél; egyébként minden ezen az eszközön marad, és bármikor törölheted.",
+        },
+        {
+          p: "Néhány oldalon láthatsz egy *szponzorált sort*. Ezt mi magunk adtuk el és mi magunk jelenítjük meg — itt nincs hirdetési hálózat, és semmi sem követ téged az oldalon kívül. Az alapján választjuk ki, melyik oldalon vagy, soha nem az alapján, amit rólad tudunk, és soha nem jelenik meg gyereknek, a gyerekvilágban, iskolai fiókban vagy lecke közben. Bármelyiknél koppints a *Miért látom ezt?* gombra, és ott helyben ugyanezt a magyarázatot kapod; akik támogatták a projektet, egyet sem látnak.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Segítségkérés",
+      heading: "Segítségkérés",
+      blocks: [
+        {
+          p: "Minden üzenet, amelyet küldesz nekünk, *beszélgetéssé válik, amelyhez visszatérhetsz*, nem pedig eltűnő e-maillé. A Fiók alatt található, és saját hivatkozási száma van — ezt add meg, ha valaha újra telefonálsz vagy írsz.",
+        },
+        { lab: "Segítség kérése" },
+        {
+          steps: [
+            "Nyisd meg a menüt, és válaszd a Fiók, majd az Ügyfélszolgálat lehetőséget.",
+            "Válaszd a Kérés benyújtása lehetőséget, és írd le, mi történik.",
+            "Csatolj képernyőképet, ha segít — PNG, JPG vagy PDF, egyenként legfeljebb 10 MB.",
+          ],
+        },
+        {
+          p: "A válaszok abban a beszélgetésben jelennek meg, és a fejlécben lévő csengő felvillan, amikor válasz érkezik, így nem kell ülnöd és figyelned az oldalt. Ami már rendeződött, az a Megoldva alá kerül, amely alapból be van csukva — azt látod, amire még vársz.",
+        },
+        { lab: "Ki válaszol" },
+        {
+          p: "Először egy Tab nevű asszisztens olvassa el, és megválaszolja, amit tud. Megmondja, hogy mesterséges intelligencia — soha nem tetteti magát másnak —, és egyenesen megmondja, ha valamit nem tud.",
+        },
+        {
+          p: "Egy ember veszi át, valahányszor az a jobb válasz: bármi, ami pénzzel, az adataiddal vagy biztonsággal kapcsolatos, vagy egyszerűen azért, mert kérted. Soha nem kell kétszer kérned, és soha nem kell ismételned magad — aki átveszi, már látja mindazt, amit mondtál.",
+        },
+        {
+          p: "Ha egy üzenet valódi vészhelyzetnek tűnik, a válasz minden alkalommal ugyanaz, és nem az asszisztenstől, hanem egy rögzített szövegből jön: a segélyhívó szám ott, ahol vagy, és nálunk egy embert azonnal riasztunk. Azt a hívást nem tudjuk helyetted lebonyolítani, és ezt meg is mondjuk.",
+        },
+        { lab: "Rendrakás" },
+        {
+          p: "Bármikor eltávolíthatsz egy beszélgetést a listádról a mellette lévő kuka ikonnal. A *Kérés benyújtása* melletti kis megjegyzés számolja, hányat töröltél, így egy eltűnt beszélgetés sosem rejtély.",
+        },
+        {
+          p: "Közös családi eszközön az Ügyfélszolgálat rész megnyitás előtt kéri a felnőtt PIN-kódot — az ügyfélszolgálati beszélgetések a fiókra tartoznak, és aki gyakorol, nem mindig ugyanaz, aki a fiókot létrehozta.",
         },
       ],
     },

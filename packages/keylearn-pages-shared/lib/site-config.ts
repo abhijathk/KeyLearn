@@ -167,6 +167,7 @@ const PAGE_NAME_BY_PATH: ReadonlyMap<string, string> = new Map([
   [Pages.forSchools.path, "forSchools"],
   [Pages.verify.path, "verify"],
   [Pages.layouts.path, "layouts"],
+  [Pages.profile.path, "profile"],
   [Pages.guide.path, "guide"],
   [Pages.about.path, "about"],
 ]);

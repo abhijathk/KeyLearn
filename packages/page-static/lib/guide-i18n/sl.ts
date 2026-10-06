@@ -21,28 +21,22 @@ export const sl: GuideTranslation = {
       nav: "Prijava in gesla",
       heading: "Registracija, prijava in gesla",
       blocks: [
-        { p: "Vse najdeš v meniju zgoraj desno." },
-        { lab: "Ustvari račun" },
         {
-          steps: [
-            "Odpri meni (zgoraj desno).",
-            "Izberi Registracija.",
-            "Vnesi e-poštni naslov in geslo.",
-            "Potrdi — in že si notri.",
-          ],
+          p: "Vse najdeš v meniju zgoraj desno, pod Prijava ali registracija — to so ista vrata, ne glede na to, ali račun že imaš ali ne.",
         },
-        { lab: "Prijava" },
+        { lab: "Ustvari račun ali se prijavi" },
         {
           steps: [
-            "Odpri meni in izberi Prijava.",
-            "Vnesi svoj e-poštni naslov in geslo.",
+            "Odpri meni in izberi Prijava ali registracija.",
+            "Nadaljuj z Googlom, Facebookom ali ključem za dostop — ali vpiši svoj e-poštni naslov in pritisni Nadaljuj.",
+            "Pri novem naslovu si nastaviš geslo; pri obstoječem te vprašamo zanj.",
           ],
         },
         { lab: "Ponastavitev pozabljenega gesla" },
         {
           steps: [
-            "Na prijavnem zaslonu izberi Pozabljeno geslo.",
-            "Vnesi svoj e-poštni naslov.",
+            "Na prijavnem zaslonu vpiši svoj e-poštni naslov in pritisni Nadaljuj.",
+            "Izberi Ste pozabili geslo?",
             "Odpri povezavo za ponastavitev, ki ti jo pošljemo.",
             "Izberi novo geslo in se prijavi.",
           ],
@@ -116,6 +110,12 @@ export const sl: GuideTranslation = {
         {
           p: "Med tipkanjem lebdeča plošča kaže tvojo trenutno hitrost in natančnost, majhen graf zadnjih poskusov, napredek pri ciljih in tvoj niz dni. Tu je zato, da te spodbuja, ne da te priganja.",
         },
+        {
+          p: "Gumba *− in +* ob cilju današnji cilj takoj zvišata ali znižata, ne da bi odpiral Nastavitve. Znižaj ga, če se istih nekaj črk ne premakne več naprej; hitrost, ki jo mora doseči črka, je edino, kar odloča, kako hitro se odklepajo nove.",
+        },
+        {
+          p: "Če si izbral profilno sliko, lahko njena ilustracija rahlo sije za temi številkami — Račun, Videz, *Vaša ilustracija za številkami*, z drsnikom za moč učinka. Izklopljeno, dokler tega ne vklopiš.",
+        },
       ],
     },
     {
@@ -140,10 +140,11 @@ export const sl: GuideTranslation = {
           tips: [
             "*Vodena vadba* — prilagodljiva privzeta izbira, ki tvojo abecedo širi tipko za tipko.",
             "*Klasični tečaj* — trden, urejen pohod skozi tipke.",
+            "*Izvorna koda* — prava koda iz pravih ogrodij.",
             "*Pogoste besede* — najpogostejše besede tvojega jezika.",
             "*Besedilo iz knjige* — pretipkaj se skozi prave knjige, vgrajene v aplikacijo.",
+            "*Citati* — kratke, zaokrožene misli s pravimi velikimi začetnicami in ločili.",
             "*Lastno besedilo* — prilepi karkoli želiš in vadi na tem.",
-            "*Odlomki kode* — oklepaji, simboli in ritem kode.",
             "*Vaje s števili* — številska vrstica in številčnica.",
           ],
         },
@@ -200,6 +201,9 @@ export const sl: GuideTranslation = {
         {
           p: "Na istem zaslonu lahko izbereš obliko tipkovnice, obarvaš tipke po prstnih conah in osvetliš naslednjo tipko, dokler se še učiš, kje je kaj.",
         },
+        {
+          p: "*Izdelava* tipkovnice — videz tipk — pride z računom. Ko si prijavljen, lahko izbiraš med petimi, okrogla pa je na voljo v šestih barvah; ena od njih sledi barvi tvoje teme. Vse zgoraj je tvoje v vsakem primeru: jezik, razporeditev, oblika in prstne cone niso nikoli zaklenjeni, saj prav ti poskrbijo, da se aplikacija ujema s tipkovnico pred tabo.",
+        },
       ],
     },
     {
@@ -209,6 +213,9 @@ export const sl: GuideTranslation = {
       blocks: [
         {
           p: "Nastavitvi Prikaz in Vnos besedila ti omogočata, da hitrost prikažeš v besedah ali znakih na minuto in natančno uglasiš, kakšen je občutek pri tipkanju. Obnovi privzeto je vedno en klik stran, če želiš začeti na novo.",
+        },
+        {
+          p: "Videz celotnega spletnega mesta nastaviš v Račun, Videz: svetlo, temno ali po sistemu, barva teme in velikost besedila, ki velja na vseh straneh. Vsak učenec v gospodinjstvu ima svoje nastavitve in te gredo z njim — glej *Skrb za tvoje podatke*.",
         },
       ],
     },
@@ -225,7 +232,6 @@ export const sl: GuideTranslation = {
           steps: [
             "Odpri meni.",
             "Izberi Profil.",
-            "Z vrstico filtrov se osredotoči na Črke, Števke, Ločila ali Simbole.",
           ],
         },
       ],
@@ -239,7 +245,7 @@ export const sl: GuideTranslation = {
         {
           steps: [
             "Odpri Profil učenca, ki ga želiš ponastaviti.",
-            "Podrsaj do gumba za ponastavitev na dnu strani.",
+            "Pomakni se do gumba za ponastavitev na dnu strani.",
             "Potrdi „Izbriši vse“ — počisti se samo ta profil.",
           ],
         },
@@ -247,11 +253,14 @@ export const sl: GuideTranslation = {
         {
           steps: [
             "Odpri Profil.",
-            "Z možnostjo prenosa shrani svojo zgodovino kot datoteko.",
+            "Z možnostjo prenosa shrani svojo zgodovino v datoteko.",
           ],
         },
         {
-          p: "Prijavi se, če želiš, da se tvoja zgodovina sinhronizira med napravami in da lahko deliš javno povezavo do profila. Ni oglasov in ni sledilcev, svoje podatke — ali cel račun — pa lahko izbrišeš, kadar koli želiš.",
+          p: "Prijavi se, če želiš, da se zgodovina sinhronizira med napravami, in da lahko deliš javno povezavo do profila. Ni oglaševalskih omrežij in ni sledilnikov, svoje podatke — ali celoten račun — pa lahko izbrišeš, kadar koli želiš.",
+        },
+        {
+          p: "Prijava zdaj prenese več kot le rezultate. Tvoje nastavitve, tema in velikost besedila, izbrane možnosti dostopnosti ter nastavitve vsakega učenca sledijo profilu, ne brskalniku — zato učenec, ki odpre KeyLearn na novem računalniku, nadaljuje, kjer je ostal, na istem zaslonu in enako nastavljen, namesto da bi začel znova s privzetimi nastavitvami.",
         },
       ],
     },
@@ -288,6 +297,9 @@ export const sl: GuideTranslation = {
         },
         {
           p: "Znotraj lahko nastaviš svet in lik, Velike črke, Zvoke, Pomožne roke (svetleče vodilo za prste), Tipkovnico (skrito, preprosto ali celotno za odrasle), Črke na stezi (besede, prikazane kot kocke kar v igri), Časovnik srečanja, Navijanje (male spodbudne besede) in — skrite pod Napredno — drsnike za Svetlost, Barvo in za to, kako živahen je svet. Poleg svetle dnevne je na voljo tudi mirna nočna podoba.",
+        },
+        {
+          p: "*Key style* spremeni, kako so tipke pobarvane, same tipke pa se ne premaknejo: *Crayon* je bela tipka, obrobljena z barvo svojega prsta, *Rainbow* pa je učna tipkovnica v osnovnih barvah — zelen okvir, rdeče številke, modre črke z izpostavljenimi samoglasniki — kjer so tipke okvirja puščice namesto besed, za otroka, ki še ne zna prebrati »enter«. Vsi začnejo s slogom Crayon. *Finger colours* ob njem povsem izklopi barvanje za otroka, ki ga ne potrebuje več.",
         },
       ],
     },
@@ -478,10 +490,51 @@ export const sl: GuideTranslation = {
     {
       id: "privacy",
       nav: "Zasebnost",
-      heading: "Zasebnost, v enem stavku",
+      heading: "Zasebnost v enem stavku",
       blocks: [
         {
-          p: "Brez oglasov in brez sledilcev. Otrokov profil nikoli ne zapusti tvojega brskalnika. Prijavi se samo, če želiš sinhronizacijo ali deljenje; sicer vse ostane na tej napravi in lahko to kadar koli izbrišeš.",
+          p: "Brez oglaševalskih omrežij in brez sledilnikov. Otrokov profil nikoli ne zapusti tvojega brskalnika. Prijavi se le, če želiš sinhronizacijo ali deljenje; sicer vse ostane na tej napravi in lahko to kadar koli izbrišeš.",
+        },
+        {
+          p: "Na nekaterih straneh lahko vidiš *sponzorirano vrstico*. Prodali smo jo in jo prikazujemo sami — tu ni oglaševalskega omrežja in nič ti ne sledi zunaj spletnega mesta. Izbere jo stran, na kateri si, nikoli nekaj, kar vemo o tebi, in nikoli se ne prikaže otroku, v otroškem svetu, na šolskem računu ali med lekcijo. Pri kateri koli tapni *Zakaj vidim to?* in ista razlaga se prikaže kar tam; kdor je projekt podprl, je sploh ne vidi.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Pomoč",
+      heading: "Kako dobiti pomoč",
+      blocks: [
+        {
+          p: "Vsako sporočilo, ki nam ga pošlješ, postane *pogovor, h kateremu se lahko vrneš*, in ne e-pošta, ki izgine. Najdeš ga pod Račun in ima svojo referenčno številko — to navedi, če nas kdaj znova pokličeš ali nam pišeš.",
+        },
+        { lab: "Prosi za pomoč" },
+        {
+          steps: [
+            "Odpri meni in izberi Račun, nato Podpora.",
+            "Izberi Oddaj zahtevo in opiši, kaj se dogaja.",
+            "Priloži posnetek zaslona, če pomaga — PNG, JPG ali PDF, vsak do 10 MB.",
+          ],
+        },
+        {
+          p: "Odgovori se prikažejo v tem pogovoru, zvonec v glavi pa zasveti, ko kakšen prispe, zato ti ni treba sedeti in gledati strani. Vse, kar je že urejeno, se zloži pod Rešeno, ki je na začetku zaprto — vidiš tisto, na kar še čakaš.",
+        },
+        { lab: "Kdo odgovarja" },
+        {
+          p: "Najprej ga prebere pomočnik po imenu Tab in odgovori, kar zna. Povedal ti bo, da je UI — nikoli se ne pretvarja, da ni — in odkrito bo povedal, ko česa ne ve.",
+        },
+        {
+          p: "Človek prevzame vedno, ko je to boljši odgovor: pri vsem, kar zadeva denar, tvoje podatke, varnost, ali preprosto zato, ker si za to prosil. Nikoli ti ni treba prositi dvakrat ali se ponavljati — kdor prevzame, že vidi vse, kar si napisal.",
+        },
+        {
+          p: "Če je sporočilo kdaj videti kot resnična nujna situacija, je odgovor vsakič enak in prihaja iz vnaprej določenega besedila, ne od pomočnika: številka za nujne primere tam, kjer si, in takoj obveščena oseba na naši strani. Namesto tebe ne moremo poklicati, in to tudi povemo.",
+        },
+        { lab: "Pospravljanje" },
+        {
+          p: "Pogovor lahko kadar koli odstraniš s seznama z ikono koša ob njem. Majhna opomba ob *Oddaj zahtevo* šteje, koliko si jih počistil, zato izginula nit nikoli ni uganka.",
+        },
+        {
+          p: "Na skupni družinski napravi razdelek Podpora pred odprtjem zahteva PIN za odrasle — pogovori s podporo so zadeva računa, oseba, ki vadi, pa ni vedno tista, ki je račun ustvarila.",
         },
       ],
     },

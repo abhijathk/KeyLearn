@@ -22,28 +22,22 @@ export const it: GuideTranslation = {
       nav: "Accesso e password",
       heading: "Registrazione, accesso e password",
       blocks: [
-        { p: "Tutto si trova nel menu in alto a destra." },
-        { lab: "Creare un account" },
         {
-          steps: [
-            "Apri il menu (in alto a destra).",
-            "Scegli Registrati.",
-            "Inserisci un'email e una password.",
-            "Conferma — sei dentro.",
-          ],
+          p: "Tutto si trova nel menu in alto a destra, sotto Accedi o registrati: la stessa porta, che tu abbia già un account oppure no.",
         },
-        { lab: "Accedere" },
+        { lab: "Creare un account o accedere" },
         {
           steps: [
-            "Apri il menu e scegli Accedi.",
-            "Inserisci la tua email e la tua password.",
+            "Apri il menu e scegli Accedi o registrati.",
+            "Continua con Google, Facebook o una passkey, oppure scrivi la tua email e premi Continua.",
+            "Con un'email nuova imposti una password; con una già registrata ti viene chiesta.",
           ],
         },
         { lab: "Reimpostare una password dimenticata" },
         {
           steps: [
-            "Nella schermata di Accesso, scegli Password dimenticata.",
-            "Inserisci il tuo indirizzo email.",
+            "Nella schermata di accesso, inserisci la tua email e premi Continua.",
+            "Scegli Hai dimenticato la password?",
             "Apri il link di reimpostazione che ti inviamo.",
             "Scegli una nuova password e accedi.",
           ],
@@ -111,11 +105,17 @@ export const it: GuideTranslation = {
     },
     {
       id: "readout",
-      nav: "Statistiche live",
+      nav: "Statistiche dal vivo",
       heading: "Il pannello in tempo reale",
       blocks: [
         {
-          p: "Mentre digiti, il pannello fluttuante mostra la tua velocità e precisione attuali, un piccolo grafico delle prove recenti, l'andamento dei tuoi obiettivi e la tua serie. È lì per incoraggiarti, non per assillarti.",
+          p: "Mentre digiti, il pannello fluttuante mostra la velocità e la precisione attuali, un piccolo grafico delle ultime prove, i tuoi obiettivi e la tua serie di giorni. È lì per incoraggiarti, non per farti la predica.",
+        },
+        {
+          p: "I pulsanti *− e +* accanto al traguardo alzano o abbassano l'obiettivo di oggi all'istante, senza aprire le Impostazioni. Abbassalo se le stesse poche lettere hanno smesso di migliorare: la velocità che una lettera deve raggiungere è l'unica cosa che decide quanto in fretta se ne sbloccano di nuove.",
+        },
+        {
+          p: "Se hai scelto un'immagine del profilo, puoi far comparire la sua illustrazione, tenue, dietro quei numeri — Account, Aspetto, *La tua illustrazione dietro i numeri*, con un cursore per regolarne l'intensità. Resta spenta finché non la attivi.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const it: GuideTranslation = {
           tips: [
             "*Pratica guidata* — l'impostazione adattiva predefinita che fa crescere il tuo alfabeto tasto dopo tasto.",
             "*Corso classico* — una marcia fissa e ordinata attraverso i tasti.",
+            "*Codice sorgente* — codice vero, da framework veri.",
             "*Parole frequenti* — le parole più comuni nella tua lingua.",
             "*Testi di libri* — digita attraverso veri libri integrati nell'app.",
+            "*Citazioni* — pensieri brevi e completi, con le loro vere maiuscole e la loro punteggiatura.",
             "*Il tuo testo* — incolla ciò che vuoi ed esercitati su di esso.",
-            "*Frammenti di codice* — parentesi, simboli e il ritmo del codice.",
             "*Esercizi con i numeri* — la riga dei numeri e il tastierino.",
           ],
         },
@@ -182,24 +183,27 @@ export const it: GuideTranslation = {
     },
     {
       id: "keyboard",
-      nav: "Configurazione tastiera",
-      heading: "Configurare la tua tastiera",
+      nav: "Configurare la tastiera",
+      heading: "Configurare la tastiera",
       blocks: [
         {
-          p: "Impostazioni, Configurazione tastiera è dove abbini KeyLearn alla tua tastiera e al layout che vuoi imparare.",
+          p: "In Impostazioni, Tastiera, adatti KeyLearn alla tua tastiera e al layout che vuoi imparare.",
         },
         { lab: "Cambiare il layout della tastiera" },
         {
           steps: [
-            "Apri le Impostazioni.",
-            "Vai su Configurazione tastiera.",
-            "Scegli la tua lingua, poi il tuo layout (QWERTY, Dvorak, Colemak e altri).",
-            "Lascia attivo “Simula questo layout” così puoi esercitarti qualunque sia l'impostazione del tuo computer.",
-            "Osserva l'anteprima in tempo reale per confermare.",
+            "Apri Impostazioni.",
+            "Vai a Tastiera.",
+            "Scegli la lingua, poi il layout (QWERTY, Dvorak, Colemak e altri).",
+            "Lascia attivo “Emula layout”, così puoi esercitarti con quel layout qualunque sia l'impostazione del computer.",
+            "Controlla l'anteprima dal vivo per conferma.",
           ],
         },
         {
-          p: "Nella stessa schermata puoi scegliere la forma della tastiera, colorare i tasti per zona delle dita ed evidenziare il tasto successivo mentre stai ancora imparando dove si trovano le cose.",
+          p: "Nella stessa schermata puoi scegliere la forma della tastiera, colorare i tasti per zona delle dita e mettere in risalto il tasto successivo mentre stai ancora imparando dove si trova ogni cosa.",
+        },
+        {
+          p: "La *finitura* della tastiera — l'aspetto dei tasti — arriva con un account. Con l'accesso ce ne sono cinque tra cui scegliere, e quella rotonda esiste in sei colori; uno di questi segue il colore del tuo tema. Tutto il resto è tuo comunque: la lingua, il layout, la forma e le zone delle dita non vengono mai trattenuti, perché sono ciò che fa corrispondere l'app alla tastiera che hai davanti.",
         },
       ],
     },
@@ -209,7 +213,10 @@ export const it: GuideTranslation = {
       heading: "Visualizzazione e sensazione",
       blocks: [
         {
-          p: "Le impostazioni di Visualizzazione e Inserimento testo ti permettono di mostrare la tua velocità in parole o caratteri al minuto e di regolare con precisione la sensazione della digitazione. Ripristina impostazioni predefinite è sempre a un clic di distanza se vuoi ricominciare da capo.",
+          p: "Le impostazioni Varie e Digitando ti permettono di mostrare la velocità in parole o caratteri al minuto e di regolare con precisione come si sente la digitazione. Ripristina è sempre a un clic di distanza, se vuoi ricominciare da capo.",
+        },
+        {
+          p: "L'aspetto dell'intero sito si trova in Account, Aspetto: chiaro, scuro o come il sistema, un colore del tema e una dimensione del testo che vale su ogni pagina. Ogni studente della famiglia ha le proprie scelte, che viaggiano con lui — vedi *Prendersi cura dei tuoi dati*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const it: GuideTranslation = {
           steps: [
             "Apri il menu.",
             "Scegli Profilo.",
-            "Usa la riga dei filtri per concentrarti su Lettere, Cifre, Punteggiatura o Simboli.",
           ],
         },
       ],
@@ -239,20 +245,23 @@ export const it: GuideTranslation = {
         { lab: "Cancellare le statistiche di un profilo" },
         {
           steps: [
-            "Apri il Profilo dell'allievo che vuoi azzerare.",
+            "Apri il Profilo dello studente che vuoi azzerare.",
             "Scorri fino al comando di azzeramento in fondo alla pagina.",
-            "Conferma “Cancella tutto” — viene azzerato solo questo profilo.",
+            "Conferma “Cancella tutto”: viene svuotato solo questo profilo.",
           ],
         },
         { lab: "Scaricare i tuoi dati" },
         {
           steps: [
             "Apri il Profilo.",
-            "Usa l'opzione di download per salvare la tua cronologia come file.",
+            "Usa l'opzione di download per salvare la tua cronologia in un file.",
           ],
         },
         {
-          p: "Accedi se vuoi che la tua cronologia si sincronizzi tra i dispositivi e condividere un link pubblico al profilo. Non ci sono pubblicità né tracker, e puoi eliminare i tuoi dati — o il tuo intero account — quando vuoi.",
+          p: "Accedi se vuoi che la tua cronologia si sincronizzi tra i dispositivi e per condividere un link pubblico al profilo. Non ci sono reti pubblicitarie né tracker, e puoi eliminare i tuoi dati — o l'intero account — quando vuoi.",
+        },
+        {
+          p: "Ora l'accesso porta con sé più dei soli risultati. Le tue impostazioni, il tema e la dimensione del testo, le scelte di accessibilità che hai fatto e le preferenze di ogni studente seguono il profilo anziché il browser: così chi apre KeyLearn su un computer nuovo riprende da dove aveva lasciato, sulla stessa schermata e con le stesse impostazioni, invece di ripartire dai valori predefiniti.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const it: GuideTranslation = {
         },
         {
           p: "All'interno puoi impostare il mondo e il personaggio, Lettere grandi, Suoni, Mani d'aiuto (la guida luminosa delle dita), la Tastiera (nascosta, semplice o la tastiera completa dei grandi), Lettere sul sentiero (le parole mostrate come blocchi proprio nel gioco), un Timer della sessione, Applausi (piccoli messaggi di incoraggiamento) e — nascosti sotto Avanzate — cursori per Luminosità, Colore e quanto è vivace il mondo. C'è anche un aspetto notturno tranquillo oltre a quello luminoso del giorno.",
+        },
+        {
+          p: "*Key style* cambia il modo in cui i tasti sono dipinti, mentre i tasti stessi non si spostano: *Crayon* è il tasto bianco bordato del colore del suo dito, e *Rainbow* è la tastiera didattica a colori primari — cornice verde, numeri rossi, lettere blu con le vocali messe in risalto — dove i tasti della cornice sono frecce invece di parole, per un bambino che non sa ancora leggere “invio”. Tutti partono da Crayon. *Finger colours*, lì accanto, toglie del tutto la colorazione per un bambino che non ne ha più bisogno.",
         },
       ],
     },
@@ -485,7 +497,48 @@ export const it: GuideTranslation = {
       heading: "La privacy, in una frase",
       blocks: [
         {
-          p: "Niente pubblicità e niente tracker. Il profilo di un bambino non lascia mai il tuo browser. Accedi solo se vuoi la sincronizzazione o la condivisione; altrimenti tutto rimane su questo dispositivo, e sei libero di eliminarlo in qualsiasi momento.",
+          p: "Niente reti pubblicitarie e niente tracker. Il profilo di un bambino non lascia mai il tuo browser. Accedi solo se vuoi la sincronizzazione o la condivisione; altrimenti tutto rimane su questo dispositivo, e sei libero di eliminarlo in qualsiasi momento.",
+        },
+        {
+          p: "Su alcune pagine potresti vedere una *riga sponsorizzata*. È uno spazio che abbiamo venduto e che mostriamo noi stessi: qui non c'è nessuna rete pubblicitaria e niente ti segue fuori dal sito. Viene scelta in base alla pagina in cui ti trovi, mai in base a ciò che sappiamo di te, e non compare mai a un bambino, nel mondo dei bambini, su un account scolastico o mentre è in corso una lezione. Tocca *Perché vedo questo?* su una qualsiasi di esse per leggere la stessa spiegazione sul posto; chi ha sostenuto il progetto non ne vede mai nessuna.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Ottenere aiuto",
+      heading: "Ottenere aiuto",
+      blocks: [
+        {
+          p: "Ogni messaggio che ci invii diventa una *conversazione a cui puoi tornare*, non un'email che scompare. Si trova in Account e ha il suo numero di riferimento: quello da citare se mai ci telefoni o ci riscrivi.",
+        },
+        { lab: "Chiedere aiuto" },
+        {
+          steps: [
+            "Apri il menu e scegli Account, poi Assistenza.",
+            "Scegli Apri una richiesta e racconta cosa sta succedendo.",
+            "Allega uno screenshot se può essere utile: PNG, JPG o PDF, fino a 10 MB ciascuno.",
+          ],
+        },
+        {
+          p: "Le risposte compaiono in quella conversazione, e la campanella nell'intestazione si illumina quando ne arriva una, così non devi restare a guardare la pagina. Tutto ciò che è già sistemato si ripiega sotto Risolte, che parte chiusa: ciò che stai ancora aspettando è ciò che vedi.",
+        },
+        { lab: "Chi risponde" },
+        {
+          p: "Un assistente di nome Tab la legge per primo e risponde a ciò che può. Ti dirà che è un'IA — non finge mai il contrario — e ti dirà chiaramente quando non sa qualcosa.",
+        },
+        {
+          p: "Una persona subentra ogni volta che è la risposta migliore: per qualsiasi questione di soldi, dei tuoi dati, di sicurezza, o semplicemente perché l'hai chiesto. Non devi mai chiederlo due volte e non devi mai ripeterti: chiunque la prenda in carico vede già tutto ciò che hai detto.",
+        },
+        {
+          p: "Se un messaggio sembra una vera emergenza, la risposta è sempre la stessa e viene da un testo fisso anziché dall'assistente: il numero di emergenza del luogo in cui ti trovi, e una persona del nostro team avvisata subito. Non possiamo fare quella chiamata al posto tuo, e lo diciamo.",
+        },
+        { lab: "Fare ordine" },
+        {
+          p: "Puoi togliere una conversazione dal tuo elenco in qualsiasi momento con l'icona del cestino accanto. Una piccola nota vicino ad *Apri una richiesta* tiene il conto di quante ne hai eliminate, così una conversazione sparita non è mai un mistero.",
+        },
+        {
+          p: "Su un dispositivo condiviso in famiglia, la sezione Assistenza chiede il PIN degli adulti prima di aprirsi: le conversazioni con l'assistenza riguardano l'account, e chi si esercita non è sempre chi ha creato l'account.",
         },
       ],
     },

@@ -19,33 +19,27 @@ export const tr: GuideTranslation = {
     },
     {
       id: "signin",
-      nav: "Giriş ve şifreler",
-      heading: "Kayıt olma, giriş yapma ve şifreler",
+      nav: "Giriş ve parolalar",
+      heading: "Kaydolma, giriş yapma ve parolalar",
       blocks: [
-        { p: "Her şey sağ üstteki menüde." },
-        { lab: "Hesap oluşturma" },
+        {
+          p: "Her şey sağ üstteki menüde, Giriş yap veya kaydol altında — hesabın olsa da olmasa da aynı kapı.",
+        },
+        { lab: "Hesap oluşturma ya da giriş yapma" },
         {
           steps: [
-            "Menüyü aç (sağ üstte).",
-            "Kayıt Ol’u seç.",
-            "Bir e-posta adresi ve şifre gir.",
-            "Onayla — içeridesin.",
+            "Menüyü aç ve Giriş yap veya kaydol’u seç.",
+            "Google, Facebook ya da bir geçiş anahtarıyla devam et — veya e-postanı yazıp Devam et’e bas.",
+            "Yeni bir e-posta seni bir parolayla kaydeder; kayıtlı bir e-posta ise parolanı sorar.",
           ],
         },
-        { lab: "Giriş yapma" },
+        { lab: "Unutulan parolayı sıfırlama" },
         {
           steps: [
-            "Menüyü aç ve Giriş Yap’ı seç.",
-            "E-posta adresini ve şifreni gir.",
-          ],
-        },
-        { lab: "Unutulan şifreyi sıfırlama" },
-        {
-          steps: [
-            "Giriş ekranında Şifremi Unuttum’u seç.",
-            "E-posta adresini gir.",
+            "Giriş ekranında e-postanı gir ve Devam et’e bas.",
+            "Parolanızı mı unuttunuz? seçeneğini seç.",
             "Sana gönderdiğimiz sıfırlama bağlantısını aç.",
-            "Yeni bir şifre belirle ve giriş yap.",
+            "Yeni bir parola seç ve giriş yap.",
           ],
         },
       ],
@@ -115,7 +109,13 @@ export const tr: GuideTranslation = {
       heading: "Canlı gösterge",
       blocks: [
         {
-          p: "Sen yazarken süzülen panel anlık hızını ve doğruluğunu, son turlarının küçük bir grafiğini, hedef ilerlemelerini ve serini gösterir. Orada seni yüreklendirmek için var, başının etini yemek için değil.",
+          p: "Sen yazarken yüzen panel o anki hızını ve doğruluğunu, son denemelerinin küçük bir çizgi grafiğini, hedef izlerini ve serini gösterir. Seni cesaretlendirmek için orada, başının etini yemek için değil.",
+        },
+        {
+          p: "Hedefin yanındaki *− ve +*, Ayarlar’ı açmadan bugünkü hedefini oracıkta biraz yukarı ya da aşağı çeker. Aynı birkaç harf ilerlemeyi bıraktıysa hedefi düşür; yeni harflerin ne kadar hızlı açılacağını belirleyen tek şey, bir harfin ulaşması gereken hızdır.",
+        },
+        {
+          p: "Bir profil resmi seçtiysen, resmin o sayıların arkasında hafifçe durabilir — Hesap, Görünüm, *İstatistiklerin arkasındaki resminiz*; ne kadar belirgin olacağını bir kaydırıcıyla ayarlarsın. Sen açmadıkça kapalıdır.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const tr: GuideTranslation = {
           tips: [
             "*Rehberli alıştırma* — alfabeni tuş tuş büyüten, uyarlanabilir varsayılan seçenek.",
             "*Klasik kurs* — tuşlar arasında sabit ve sıralı bir yürüyüş.",
+            "*Kod Parçacıkları* — gerçek yazılım çatılarından gerçek kod.",
             "*Sık kullanılan kelimeler* — kendi dilindeki en yaygın kelimeler.",
             "*Kitap Metni* — uygulamanın içinde hazır duran gerçek kitapları yazarak ilerle.",
+            "*Alıntılar* — gerçek büyük harfleri ve noktalamasıyla kısa, eksiksiz düşünceler.",
             "*Kendi Metnin* — istediğin her şeyi yapıştır ve onunla alıştırma yap.",
-            "*Kod Parçacıkları* — parantezler, semboller ve kodun ritmi.",
             "*Sayı Alıştırmaları* — sayı sırası ve sayısal tuş takımı.",
           ],
         },
@@ -186,20 +187,23 @@ export const tr: GuideTranslation = {
       heading: "Klavyeni ayarlamak",
       blocks: [
         {
-          p: "KeyLearn’i klavyene ve öğrenmek istediğin düzene eşlemek için Ayarlar’daki Klavye Kurulumu bölümüne bak.",
+          p: "Ayarlar’daki Klavye bölümü, KeyLearn’ü klavyene ve öğrenmek istediğin düzene uydurduğun yerdir.",
         },
         { lab: "Klavye düzenini değiştirme" },
         {
           steps: [
             "Ayarlar’ı aç.",
-            "Klavye Kurulumu’na git.",
-            "Dilini, ardından düzenini seç (QWERTY, Dvorak, Colemak ve daha fazlası).",
-            "“Bu düzeni benzet” seçeneğini açık bırak; böylece bilgisayarın nasıl ayarlı olursa olsun bu düzenle alıştırma yapabilirsin.",
-            "Doğrulamak için canlı önizlemeyi izle.",
+            "Klavye bölümüne git.",
+            "Önce dilini, sonra düzenini seç (QWERTY, Dvorak, Colemak ve daha fazlası).",
+            "Bilgisayarın hangi düzene ayarlı olursa olsun bu düzeni çalışabilmen için “Bu düzeni simüle et”i açık bırak.",
+            "Doğrulamak için canlı önizlemeye bak.",
           ],
         },
         {
-          p: "Aynı ekranda klavye biçimini seçebilir, tuşları parmak bölgesine göre renklendirebilir ve neyin nerede olduğunu henüz öğrenirken sıradaki tuşu vurgulatabilirsin.",
+          p: "Aynı ekranda klavyenin şeklini seçebilir, tuşları parmak bölgelerine göre renklendirebilir ve tuşların yerini hâlâ öğrenirken sıradaki tuşu öne çıkarabilirsin.",
+        },
+        {
+          p: "Klavyenin *kaplaması* — tuşların görünümü — bir hesapla gelir. Giriş yaptığında seçebileceğin beş tane vardır ve yuvarlak olanın altı rengi bulunur; bunlardan biri temanın rengini izler. Yukarıdaki her şey ise her durumda senindir: dil, düzen, şekil ve parmak bölgeleri hiçbir zaman kısıtlanmaz, çünkü uygulamayı önündeki klavyeye uyduran onlardır.",
         },
       ],
     },
@@ -209,7 +213,10 @@ export const tr: GuideTranslation = {
       heading: "Görünüm ve his",
       blocks: [
         {
-          p: "Görünüm ve Metin Girişi ayarları, hızını dakikada kelime ya da dakikada karakter olarak göstermeni ve yazmanın nasıl hissettirdiğini ince ince ayarlamanı sağlar. Baştan başlamak istersen Varsayılanları Geri Yükle her zaman bir tık uzağında.",
+          p: "Görünüm ve Yazım ayarları, hızını dakikada kelime ya da dakikada karakter olarak göstermeni ve yazmanın nasıl hissettirdiğini ince ayarlamanı sağlar. Baştan başlamak istersen Ayarları sıfırla her zaman bir tık uzağında.",
+        },
+        {
+          p: "Sitenin genel görünümü Hesap, Görünüm altında yer alır: açık, koyu ya da sisteme uy, bir tema rengi ve her sayfada geçerli kalan bir yazı boyutu. Evdeki her öğrenen kendi ayarlarını korur ve bunlar onunla birlikte gider — bkz. *Verilerine göz kulak olmak*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const tr: GuideTranslation = {
           steps: [
             "Menüyü aç.",
             "Profil’i seç.",
-            "Harflere, rakamlara, noktalama işaretlerine ya da sembollere odaklanmak için filtre satırını kullan.",
           ],
         },
       ],
@@ -252,7 +258,10 @@ export const tr: GuideTranslation = {
           ],
         },
         {
-          p: "Geçmişinin cihazlar arasında eşitlenmesini ve herkese açık bir profil bağlantısı paylaşmayı istiyorsan giriş yap. Reklam ve izleyici yok; verilerini — ya da tüm hesabını — istediğin zaman silebilirsin.",
+          p: "Geçmişinin cihazlar arasında eşitlenmesini ve herkese açık bir profil bağlantısı paylaşmayı istiyorsan giriş yap. Reklam ağı da izleyici de yok; verilerini — ya da tüm hesabını — istediğin zaman silebilirsin.",
+        },
+        {
+          p: "Giriş yapmak artık yalnızca sonuçlarını taşımıyor. Ayarların, temanla yazı boyutun, yaptığın erişilebilirlik seçimleri ve her öğrenenin kendi tercihleri tarayıcıya değil profile bağlı kalır — böylece KeyLearn’ü yeni bir bilgisayarda açan bir öğrenen, varsayılanlardan yeniden başlamak yerine kaldığı yerden, aynı ekranda, aynı ayarlarla devam eder.",
         },
       ],
     },
@@ -283,10 +292,15 @@ export const tr: GuideTranslation = {
       blocks: [
         { lab: "Oyuncak kutusunu açma" },
         {
-          steps: ["Çocuk ekranında, oyun alanının üstündeki dişliye dokun."],
+          steps: [
+            "Çocuk ekranında, oyun alanının üstündeki dişliye dokun.",
+          ],
         },
         {
           p: "İçeride dünyayı ve karakteri, Büyük harfler, Sesler, Yardımcı eller (parlayan parmak rehberi), Klavye (gizli, basit ya da tam yetişkin klavyesi), Patikadaki harfler (oyunun içinde blok olarak gösterilen kelimeler), oturum Zamanlayıcısı, Tezahüratlar (cesaret veren küçük mesajlar) ve — Gelişmiş’in altına saklanmış — Parlaklık, Renk ve dünyanın ne kadar canlı hissettirdiği için kaydırıcılar bulunur. Aydınlık gündüz görünümünün yanı sıra sakin bir gece görünümü de var.",
+        },
+        {
+          p: "*Key style* tuşların nasıl boyandığını değiştirir; tuşların kendisi yerinden oynamaz: *Crayon*, parmak rengiyle çevrelenmiş beyaz tuştur; *Rainbow* ise ana renklerle öğrenme klavyesidir — yeşil çerçeve, kırmızı rakamlar, ünlüleri ayrı tutulmuş mavi harfler — ve burada çerçeve tuşları kelime yerine ok gösterir, henüz “enter” okuyamayan bir çocuk için. Herkes Crayon ile başlar. Yanındaki *Finger colours* ise artık ihtiyacı kalmayan bir çocuk için renklendirmeyi tamamen kapatır.",
         },
       ],
     },
@@ -480,7 +494,48 @@ export const tr: GuideTranslation = {
       heading: "Tek cümlede gizlilik",
       blocks: [
         {
-          p: "Reklam yok, izleyici yok. Bir çocuğun profili tarayıcından asla çıkmaz. Yalnızca eşitleme ya da paylaşma istiyorsan giriş yap; aksi hâlde her şey bu cihazda kalır ve istediğin zaman silmekte özgürsün.",
+          p: "Reklam ağı yok, izleyici yok. Bir çocuğun profili tarayıcından hiç çıkmaz. Yalnızca eşitleme ya da paylaşma istiyorsan giriş yap; aksi halde her şey bu cihazda kalır ve istediğin zaman silebilirsin.",
+        },
+        {
+          p: "Bazı sayfalarda bir *sponsorlu satır* görebilirsin. Bunu kendimiz satıyor ve kendimiz gösteriyoruz — burada reklam ağı yok ve hiçbir şey seni site dışında takip etmez. Hangi satırın görüneceğini senin hakkında bildiğimiz herhangi bir şey değil, bulunduğun sayfa belirler; bir çocuğa, çocuk dünyasının içinde, bir okul hesabında ya da ders sürerken asla gösterilmez. Aynı açıklamayı yerinde görmek için herhangi birinde *Bunu neden görüyorum?* seçeneğine dokun; projeyi destekleyenler ise hiçbirini görmez.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Yardım almak",
+      heading: "Yardım almak",
+      blocks: [
+        {
+          p: "Bize gönderdiğin her mesaj, kaybolup giden bir e-posta değil, *dönüp bakabileceğin bir konuşma* olur. Hesap altında durur ve kendine ait bir referans numarası vardır — bir gün yeniden arar ya da yazarsan belirteceğin numara budur.",
+        },
+        { lab: "Yardım isteme" },
+        {
+          steps: [
+            "Menüyü aç, Hesap’ı ve ardından Destek’i seç.",
+            "Talep kaydet’i seç ve neler olduğunu anlat.",
+            "İşe yarayacaksa bir ekran görüntüsü ekle — PNG, JPG ya da PDF, her biri en fazla 10 MB.",
+          ],
+        },
+        {
+          p: "Yanıtlar o konuşmada görünür ve biri geldiğinde üst kısımdaki zil yanar; yani oturup sayfayı izlemen gerekmez. Çözülmüş her şey, kapalı başlayan Çözüldü bölümüne katlanır — hâlâ beklediğin şey, gördüğün şeydir.",
+        },
+        { lab: "Kim yanıtlıyor" },
+        {
+          p: "Mesajını önce Tab adlı bir asistan okur ve yanıtlayabildiklerini yanıtlar. Sana bir yapay zekâ olduğunu söyler — asla aksini iddia etmez ve bir şeyi bilmediğinde bunu açıkça söyler.",
+        },
+        {
+          p: "Daha iyi yanıt bir insansa, işi bir insan devralır: para, verilerin ya da güvenlikle ilgili her şeyde veya sadece sen istediğin için. Asla iki kez istemen gerekmez, kendini tekrarlaman da gerekmez — konuyu kim devralırsa söylediğin her şeyi zaten görür.",
+        },
+        {
+          p: "Bir mesaj gerçek bir acil durum gibi görünürse, yanıt her seferinde aynıdır ve asistandan değil, sabit bir metinden gelir: bulunduğun yerdeki acil durum numarası ve bizim tarafımızda hemen haberdar edilen bir kişi. O aramayı senin yerine yapamayız ve bunu açıkça söyleriz.",
+        },
+        { lab: "Ortalığı toplamak" },
+        {
+          p: "Bir konuşmayı yanındaki çöp kutusu simgesiyle istediğin zaman listenden kaldırabilirsin. *Talep kaydet*’in yanındaki küçük bir not kaç tanesini temizlediğini sayar; böylece kaybolan bir konuşma asla bir muamma olmaz.",
+        },
+        {
+          p: "Ortak kullanılan bir aile cihazında Destek bölümü açılmadan önce yetişkin PIN’ini ister — destek konuşmaları hesapla ilgili işlerdir ve alıştırma yapan kişi her zaman hesabı kuran kişi değildir.",
         },
       ],
     },

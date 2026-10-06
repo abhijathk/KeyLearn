@@ -22,30 +22,24 @@ export const vi: GuideTranslation = {
       nav: "Đăng nhập và mật khẩu",
       heading: "Đăng ký, đăng nhập và mật khẩu",
       blocks: [
-        { p: "Mọi thứ đều nằm trong menu ở góc trên bên phải." },
-        { lab: "Tạo tài khoản" },
         {
-          steps: [
-            "Mở menu (góc trên bên phải).",
-            "Chọn Đăng ký.",
-            "Nhập email và mật khẩu.",
-            "Xác nhận — thế là xong.",
-          ],
+          p: "Mọi thứ đều nằm trong menu ở góc trên bên phải, dưới mục Đăng nhập hoặc đăng ký — cùng một cánh cửa dù bạn đã có tài khoản hay chưa.",
         },
-        { lab: "Đăng nhập" },
+        { lab: "Tạo tài khoản hoặc đăng nhập" },
         {
           steps: [
-            "Mở menu và chọn Đăng nhập.",
-            "Nhập email và mật khẩu của bạn.",
+            "Mở menu và chọn Đăng nhập hoặc đăng ký.",
+            "Tiếp tục với Google, Facebook hoặc mã khóa — hoặc nhập email rồi nhấn Tiếp tục.",
+            "Email mới sẽ giúp bạn tạo mật khẩu; email đã có sẽ hỏi mật khẩu của bạn.",
           ],
         },
         { lab: "Đặt lại mật khẩu đã quên" },
         {
           steps: [
-            "Ở màn hình Đăng nhập, chọn Quên mật khẩu.",
-            "Nhập địa chỉ email của bạn.",
+            "Ở màn hình đăng nhập, nhập email rồi nhấn Tiếp tục.",
+            "Chọn Quên mật khẩu?",
             "Mở liên kết đặt lại mà chúng tôi gửi cho bạn.",
-            "Chọn mật khẩu mới rồi đăng nhập.",
+            "Chọn mật khẩu mới và đăng nhập.",
           ],
         },
       ],
@@ -115,7 +109,13 @@ export const vi: GuideTranslation = {
       heading: "Bảng số liệu trực tiếp",
       blocks: [
         {
-          p: "Khi bạn gõ, bảng nổi hiển thị tốc độ và độ chính xác hiện tại, một biểu đồ nhỏ của những lượt gần đây, tiến độ mục tiêu và chuỗi ngày liên tiếp của bạn. Nó ở đó để động viên bạn, chứ không phải để cằn nhằn.",
+          p: "Khi bạn gõ, bảng nổi hiển thị tốc độ và độ chính xác hiện tại, một biểu đồ nhỏ của các lượt gần đây, các vạch mục tiêu và chuỗi ngày luyện tập của bạn. Nó ở đó để động viên bạn, không phải để cằn nhằn.",
+        },
+        {
+          p: "Nút *− và +* cạnh mục tiêu giúp bạn tăng hoặc giảm mục tiêu hôm nay ngay tại chỗ, không cần mở Cài đặt. Hãy hạ thấp nếu mấy chữ cái quen thuộc mãi không tiến bộ; tốc độ mà một chữ cái phải đạt chính là điều duy nhất quyết định chữ mới được mở khoá nhanh đến đâu.",
+        },
+        {
+          p: "Nếu bạn đã chọn ảnh hồ sơ, bạn có thể để hình vẽ đó hiện mờ mờ phía sau những con số — Tài khoản, Giao diện, *Tác phẩm của bạn phía sau thống kê*, với thanh trượt chỉnh độ đậm nhạt. Tính năng này tắt cho đến khi bạn bật lên.",
         },
       ],
     },
@@ -141,10 +141,11 @@ export const vi: GuideTranslation = {
           tips: [
             "*Luyện tập có hướng dẫn* — chế độ thích ứng mặc định, mở rộng bảng chữ của bạn từng phím một.",
             "*Khoá học cổ điển* — một lộ trình cố định, đi qua các phím theo thứ tự định sẵn.",
+            "*Mã nguồn* — mã thật từ những framework thật.",
             "*Từ thông dụng* — những từ phổ biến nhất trong ngôn ngữ của bạn.",
             "*Văn bản sách* — gõ xuyên qua những cuốn sách thật có sẵn trong ứng dụng.",
+            "*Trích dẫn* — những ý trọn vẹn, ngắn gọn, giữ nguyên chữ hoa và dấu câu thật.",
             "*Văn bản của bạn* — dán bất cứ thứ gì bạn thích rồi luyện với nó.",
-            "*Đoạn mã* — dấu ngoặc, ký hiệu và nhịp điệu của mã nguồn.",
             "*Luyện số* — hàng số và bàn phím số.",
           ],
         },
@@ -186,20 +187,23 @@ export const vi: GuideTranslation = {
       heading: "Thiết lập bàn phím của bạn",
       blocks: [
         {
-          p: "Cài đặt, Thiết lập bàn phím là nơi bạn khớp KeyLearn với bàn phím của mình và với kiểu bố trí bạn muốn học.",
+          p: "Mục Bàn phím trong Cài đặt là nơi bạn làm cho KeyLearn khớp với bàn phím của mình và với bố cục bạn muốn học.",
         },
-        { lab: "Đổi kiểu bố trí bàn phím" },
+        { lab: "Đổi bố cục bàn phím" },
         {
           steps: [
             "Mở Cài đặt.",
-            "Vào Thiết lập bàn phím.",
-            "Chọn ngôn ngữ, rồi chọn kiểu bố trí (QWERTY, Dvorak, Colemak và nhiều kiểu khác).",
-            "Cứ để bật “Mô phỏng kiểu bố trí này” để bạn luyện được nó dù máy tính của bạn đang đặt kiểu nào.",
-            "Xem bản xem trước trực tiếp để chắc chắn.",
+            "Vào mục Bàn phím.",
+            "Chọn ngôn ngữ, rồi chọn bố cục (QWERTY, Dvorak, Colemak và nhiều hơn nữa).",
+            "Để bật “Mô phỏng bố cục” để bạn luyện được bố cục đó dù máy tính đang đặt bố cục nào.",
+            "Xem bản xem trước trực tiếp để kiểm tra.",
           ],
         },
         {
-          p: "Cũng ở màn hình này, bạn có thể chọn hình dáng bàn phím, tô màu phím theo vùng ngón tay, và làm nổi bật phím kế tiếp trong lúc còn đang học xem cái gì nằm ở đâu.",
+          p: "Trên cùng màn hình đó, bạn có thể chọn hình dạng bàn phím, tô màu phím theo vùng ngón tay và làm nổi bật phím tiếp theo trong lúc bạn vẫn đang học vị trí các phím.",
+        },
+        {
+          p: "*Kiểu hoàn thiện* của bàn phím — vẻ ngoài của các phím — đi kèm với tài khoản. Khi đã đăng nhập, bạn có năm kiểu để chọn và kiểu tròn có sáu màu; một trong số đó đi theo màu chủ đề của bạn. Mọi thứ ở trên đều luôn là của bạn: ngôn ngữ, bố cục, hình dạng và vùng ngón tay không bao giờ bị giới hạn, vì chính chúng làm cho ứng dụng khớp với chiếc bàn phím trước mặt bạn.",
         },
       ],
     },
@@ -209,7 +213,10 @@ export const vi: GuideTranslation = {
       heading: "Hiển thị và cảm giác gõ",
       blocks: [
         {
-          p: "Phần cài đặt Hiển thị và Nhập chữ cho phép bạn xem tốc độ theo số từ hay số ký tự mỗi phút và tinh chỉnh cảm giác khi gõ. Khôi phục mặc định luôn chỉ cách một cú nhấp nếu bạn muốn bắt đầu lại từ đầu.",
+          p: "Phần cài đặt Hiển thị và Gõ phím cho phép bạn hiện tốc độ theo từ hoặc ký tự mỗi phút và tinh chỉnh cảm giác khi gõ. Nút Cài lại luôn chỉ cách một cú nhấp nếu bạn muốn bắt đầu lại từ đầu.",
+        },
+        {
+          p: "Giao diện của cả trang web nằm trong Tài khoản, Giao diện: sáng, tối hoặc theo hệ thống, một màu chủ đề và cỡ chữ áp dụng trên mọi trang. Mỗi người học trong nhà giữ thiết lập riêng, và thiết lập ấy đi theo họ — xem *Chăm sóc dữ liệu của bạn*.",
         },
       ],
     },
@@ -226,7 +233,6 @@ export const vi: GuideTranslation = {
           steps: [
             "Mở menu.",
             "Chọn Hồ sơ.",
-            "Dùng hàng bộ lọc để tập trung vào Chữ cái, Chữ số, Dấu câu hoặc Ký hiệu.",
           ],
         },
       ],
@@ -236,23 +242,26 @@ export const vi: GuideTranslation = {
       nav: "Dữ liệu của bạn",
       heading: "Chăm sóc dữ liệu của bạn",
       blocks: [
-        { lab: "Xoá số liệu của một hồ sơ" },
+        { lab: "Xóa số liệu của một hồ sơ" },
         {
           steps: [
             "Mở Hồ sơ của người học bạn muốn đặt lại.",
             "Cuộn xuống nút đặt lại ở cuối trang.",
-            "Xác nhận “Xoá sạch mọi thứ” — chỉ hồ sơ này bị xoá.",
+            "Xác nhận “Xóa tất cả” — chỉ hồ sơ này bị xóa.",
           ],
         },
         { lab: "Tải dữ liệu của bạn về" },
         {
           steps: [
             "Mở Hồ sơ.",
-            "Dùng tuỳ chọn tải về để lưu lịch sử của bạn thành một tệp.",
+            "Dùng tùy chọn tải về để lưu lịch sử của bạn thành một tệp.",
           ],
         },
         {
-          p: "Hãy đăng nhập nếu bạn muốn lịch sử đồng bộ giữa các thiết bị và muốn chia sẻ liên kết hồ sơ công khai. Không quảng cáo, không theo dõi, và bạn có thể xoá dữ liệu — hoặc cả tài khoản — bất cứ lúc nào.",
+          p: "Hãy đăng nhập nếu bạn muốn lịch sử đồng bộ giữa các thiết bị và muốn chia sẻ liên kết hồ sơ công khai. Không có mạng quảng cáo, không có trình theo dõi, và bạn có thể xóa dữ liệu — hoặc cả tài khoản — bất cứ lúc nào.",
+        },
+        {
+          p: "Giờ đây, đăng nhập không chỉ mang theo kết quả của bạn. Cài đặt, chủ đề và cỡ chữ, các lựa chọn trợ năng bạn đã chọn và sở thích riêng của từng người học đều đi theo hồ sơ chứ không theo trình duyệt — nên một người học mở KeyLearn trên máy tính mới sẽ tiếp tục đúng chỗ đã dừng, trên cùng màn hình, với cùng thiết lập, thay vì bắt đầu lại từ mặc định.",
         },
       ],
     },
@@ -289,6 +298,9 @@ export const vi: GuideTranslation = {
         },
         {
           p: "Bên trong, bạn có thể đặt thế giới và nhân vật, Chữ to, Âm thanh, Bàn tay trợ giúp (hướng dẫn ngón tay phát sáng), Bàn phím (ẩn, đơn giản, hoặc bàn phím đầy đủ của người lớn), Chữ cái trên đường đi (các từ hiện thành khối ngay trong trò chơi), Hẹn giờ buổi tập, Lời cổ vũ (những câu động viên nho nhỏ), và — nằm gọn trong mục Nâng cao — các thanh trượt cho Độ sáng, Màu sắc và độ sinh động của thế giới. Ngoài vẻ ban ngày rực rỡ còn có vẻ ban đêm dịu êm.",
+        },
+        {
+          p: "*Key style* thay đổi cách tô màu các phím, còn bản thân các phím thì không dịch chuyển: *Crayon* là phím trắng viền màu của ngón tay, còn *Rainbow* là bàn phím học tập với các màu cơ bản — khung xanh lá, số màu đỏ, chữ cái màu xanh dương với các nguyên âm được tách riêng — trong đó các phím ở khung hiện mũi tên thay vì chữ, dành cho trẻ chưa đọc được chữ “enter”. Ai cũng bắt đầu với Crayon. *Finger colours* bên cạnh sẽ tắt hẳn phần tô màu cho trẻ không còn cần đến nữa.",
         },
       ],
     },
@@ -482,10 +494,51 @@ export const vi: GuideTranslation = {
     {
       id: "privacy",
       nav: "Quyền riêng tư",
-      heading: "Quyền riêng tư, gói trong một câu",
+      heading: "Quyền riêng tư, trong một câu",
       blocks: [
         {
-          p: "Không quảng cáo, không theo dõi. Hồ sơ của trẻ không bao giờ rời khỏi trình duyệt của bạn. Chỉ đăng nhập nếu bạn muốn đồng bộ hoặc chia sẻ; còn lại mọi thứ ở yên trên thiết bị này, và bạn có thể xoá bất cứ lúc nào.",
+          p: "Không mạng quảng cáo, không trình theo dõi. Hồ sơ của trẻ không bao giờ rời khỏi trình duyệt của bạn. Chỉ đăng nhập nếu bạn muốn đồng bộ hoặc chia sẻ; nếu không, mọi thứ ở lại trên thiết bị này và bạn có thể xóa bất cứ lúc nào.",
+        },
+        {
+          p: "Bạn có thể thấy một *dòng tài trợ* trên một số trang. Đó là dòng do chính chúng tôi bán và tự hiển thị — ở đây không có mạng quảng cáo và không có gì theo bạn ra khỏi trang. Dòng đó được chọn theo trang bạn đang xem, không bao giờ theo bất cứ điều gì chúng tôi biết về bạn, và nó không bao giờ hiện với trẻ em, trong thế giới trẻ em, trên tài khoản trường học hay khi đang có bài học. Chạm vào *Tại sao tôi thấy điều này?* trên bất kỳ dòng nào để xem lời giải thích ngay tại chỗ, còn những ai đã ủng hộ dự án sẽ không bao giờ thấy dòng nào cả.",
+        },
+      ],
+    },
+    {
+      id: "support",
+      nav: "Nhận trợ giúp",
+      heading: "Nhận trợ giúp",
+      blocks: [
+        {
+          p: "Mỗi tin nhắn bạn gửi cho chúng tôi đều trở thành *một cuộc trò chuyện bạn có thể quay lại*, chứ không phải một email biến mất. Nó nằm trong Tài khoản và có số tham chiếu riêng — số bạn nên nêu nếu sau này gọi điện hoặc viết thư lại.",
+        },
+        { lab: "Xin trợ giúp" },
+        {
+          steps: [
+            "Mở menu và chọn Tài khoản, rồi chọn Hỗ trợ.",
+            "Chọn Ghi yêu cầu và kể điều đang xảy ra.",
+            "Đính kèm ảnh chụp màn hình nếu có ích — PNG, JPG hoặc PDF, mỗi tệp tối đa 10 MB.",
+          ],
+        },
+        {
+          p: "Câu trả lời sẽ hiện trong cuộc trò chuyện đó, và chiếc chuông ở đầu trang sẽ sáng lên khi có câu trả lời mới, nên bạn không cần ngồi canh trang. Những gì đã xong sẽ được gấp vào mục Đã giải quyết, mục này ban đầu đóng lại — điều bạn vẫn đang chờ chính là điều bạn nhìn thấy.",
+        },
+        { lab: "Ai trả lời" },
+        {
+          p: "Một trợ lý tên là Tab sẽ đọc trước và trả lời những gì nó có thể. Nó sẽ nói cho bạn biết nó là AI — không bao giờ giả vờ khác đi, và sẽ nói thẳng khi nó không biết điều gì đó.",
+        },
+        {
+          p: "Một người thật sẽ tiếp nhận bất cứ khi nào đó là cách trả lời tốt hơn: mọi chuyện về tiền bạc, dữ liệu của bạn, sự an toàn, hoặc đơn giản vì bạn yêu cầu. Bạn không bao giờ phải hỏi hai lần, cũng không phải kể lại từ đầu — người tiếp nhận đã thấy hết những gì bạn nói.",
+        },
+        {
+          p: "Nếu một tin nhắn có vẻ là tình huống khẩn cấp thật sự, câu trả lời lần nào cũng giống nhau và đến từ một kịch bản cố định chứ không phải từ trợ lý: số điện thoại khẩn cấp nơi bạn ở, và một người bên chúng tôi được báo ngay lập tức. Chúng tôi không thể gọi cuộc gọi đó thay bạn, và chúng tôi nói rõ điều ấy.",
+        },
+        { lab: "Dọn dẹp" },
+        {
+          p: "Bạn có thể xóa một cuộc trò chuyện khỏi danh sách bất cứ lúc nào bằng biểu tượng thùng rác bên cạnh. Một ghi chú nhỏ cạnh *Ghi yêu cầu* đếm số cuộc trò chuyện bạn đã xóa, nên một cuộc trò chuyện biến mất sẽ không bao giờ là điều bí ẩn.",
+        },
+        {
+          p: "Trên thiết bị dùng chung trong gia đình, mục Hỗ trợ sẽ hỏi mã PIN của người lớn trước khi mở — các cuộc trò chuyện hỗ trợ là việc của tài khoản, và người đang luyện gõ không phải lúc nào cũng là người đã lập tài khoản.",
         },
       ],
     },
