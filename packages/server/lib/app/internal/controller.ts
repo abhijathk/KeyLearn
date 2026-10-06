@@ -92,6 +92,7 @@ import {
 import { learnerReferenceRows } from "../site-config/learner-reference.ts";
 import { learnerDefaultRows } from "../site-config/readers.ts";
 import { deriveSignInMethod } from "../support/controller.ts";
+import { snakeKeys } from "../raw-rows.ts";
 
 const TStaffAuthVerify = z.object({
   email: z.string().trim().email(),
@@ -2981,11 +2982,13 @@ async function computeAccountStats(): Promise<AccountStats> {
     cursor.setUTCMonth(cursor.getUTCMonth() + 1);
   }
 
-  const countryRows = (await knex(User.tableName)
-    .select("signup_country")
-    .whereNotNull("signup_country")
-    .count({ count: "*" })
-    .groupBy("signup_country")) as {
+  const countryRows = snakeKeys(
+    await knex(User.tableName)
+      .select("signup_country")
+      .whereNotNull("signup_country")
+      .count({ count: "*" })
+      .groupBy("signup_country"),
+  ) as unknown as {
     signup_country: string;
     count: number | string;
   }[];
@@ -3108,11 +3111,16 @@ async function computeAccountStats(): Promise<AccountStats> {
   // asked by name, so each carries a short list beside its count — names
   // only, never addresses; the desk's customer pages hold those behind their
   // own reveal.
-  const lastLoginRows = (await knex("security_event")
-    .select("user_id")
-    .max({ at: "created_at" })
-    .where("type", "login")
-    .groupBy("user_id")) as { user_id: number; at: string | number | Date }[];
+  const lastLoginRows = snakeKeys(
+    await knex("security_event")
+      .select("user_id")
+      .max({ at: "created_at" })
+      .where("type", "login")
+      .groupBy("user_id"),
+  ) as unknown as {
+    user_id: number;
+    at: string | number | Date;
+  }[];
   const lastLoginByUser = new Map(
     lastLoginRows.map((r) => [r.user_id, new Date(r.at).getTime()]),
   );
@@ -3145,17 +3153,19 @@ async function computeAccountStats(): Promise<AccountStats> {
       })),
   };
 
-  const deletionRows = (await knex("account_deletion_request")
-    .select(
-      "user_id",
-      "reason",
-      "execute_at",
-      "cancelled_at",
-      "completed_at",
-      "created_at",
-    )
-    .orderBy("created_at", "desc")
-    .limit(200)) as {
+  const deletionRows = snakeKeys(
+    await knex("account_deletion_request")
+      .select(
+        "user_id",
+        "reason",
+        "execute_at",
+        "cancelled_at",
+        "completed_at",
+        "created_at",
+      )
+      .orderBy("created_at", "desc")
+      .limit(200),
+  ) as {
     user_id: number;
     reason: string | null;
     execute_at: string | number | Date;

@@ -92,6 +92,7 @@ import {
   qdeskConfigured,
 } from "./qdesk-forward.ts";
 import { digestHour } from "./sweep.ts";
+import { snakeKeys } from "../raw-rows.ts";
 
 /**
  * The most any non-upload support request may weigh. Was 4096, which
@@ -625,11 +626,13 @@ async function computeDashboard(now: number): Promise<DashboardData> {
   // existing account has `signupCountry: null` today (the registration-path
   // write is a separate task), so this legitimately returns nothing but
   // "other" for now.
-  const countryRows = (await knex(User.tableName)
-    .select("signup_country")
-    .whereNotNull("signup_country")
-    .count({ count: "*" })
-    .groupBy("signup_country")) as {
+  const countryRows = snakeKeys(
+    await knex(User.tableName)
+      .select("signup_country")
+      .whereNotNull("signup_country")
+      .count({ count: "*" })
+      .groupBy("signup_country"),
+  ) as {
     signup_country: string;
     count: number | string;
   }[];
@@ -827,10 +830,12 @@ async function computeAutomationStats(
   let reopened = 0;
   if (replied.size > 0) {
     const repliedIds = [...replied];
-    const messages = (await knex("support_message")
-      .select("ticket_id", "sender", "created_at")
-      .whereIn("ticket_id", repliedIds)
-      .where("created_at", ">=", since)) as {
+    const messages = snakeKeys(
+      await knex("support_message")
+        .select("ticket_id", "sender", "created_at")
+        .whereIn("ticket_id", repliedIds)
+        .where("created_at", ">=", since),
+    ) as {
       ticket_id: number;
       sender: string;
       created_at: string | Date;
