@@ -15,6 +15,7 @@ import {
 import { legalDate } from "./legal-dates.ts";
 import { ReleaseNotesDialog } from "./ReleaseNotesDialog.tsx";
 import * as styles from "./road.module.less";
+import { RELEASE_NOTES } from "./release-notes.ts";
 
 // The legal pages, written to be read: plain words, honest promises, and the
 // same road design language as the rest of the app.
@@ -178,8 +179,10 @@ function Sect({ children }: { readonly children: ReactNode }) {
   return <div className={styles.sect}>{children}</div>;
 }
 
-// Bump on every release. Format: MAJOR.MINOR.PATCH, zero-padded.
-export const APP_VERSION = "02.00.00";
+// The newest release-notes entry, so the version on the About page cannot
+// fall behind the notes again (it said 02.00.00 after 02.01.00 shipped).
+// Format: MAJOR.MINOR.PATCH, zero-padded.
+export const APP_VERSION = RELEASE_NOTES[0]?.version ?? "";
 
 export function AboutPage() {
   const { formatMessage } = useIntl();
