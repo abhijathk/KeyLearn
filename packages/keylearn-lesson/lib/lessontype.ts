@@ -32,6 +32,16 @@ export class LessonType implements EnumItem {
     Object.freeze(this);
   }
 
+  /**
+   * Whether a visitor who is not signed in may practise this (owner, 6 Oct
+   * 2026). Only Guided: every other kind keeps its own state in the browser,
+   * and on a machine many people share that state belongs to nobody. By id,
+   * not identity, for the same bundler reason the practice page compares by id.
+   */
+  get openToGuests(): boolean {
+    return this.id === "guided";
+  }
+
   toString() {
     return this.id;
   }

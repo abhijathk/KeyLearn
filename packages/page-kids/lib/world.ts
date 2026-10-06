@@ -2816,6 +2816,12 @@ export type WorldTheme = {
   readonly flagGuard?: readonly string[];
   /** Show the floating game-style pointer ring over the hero (Hero Trail). */
   readonly pointerRing?: boolean;
+  /**
+   * The ring over the player's head on its own, without the rest of what
+   * `pointerRing` brings (the spin on a win, the red flash for a roar).
+   * Dino Run's rider had nothing to find them by in a herd.
+   */
+  readonly headRing?: boolean;
   /** Companions turn to watch the hero pass (Hero Trail). Off = they just
    * carry on with their own idle, like the original dino herd. */
   readonly companionsWatch?: boolean;
@@ -3179,6 +3185,7 @@ export const DINO_PERSPECTIVE: NonNullable<WorldTheme["perspective"]> = {
 
 export const DINO_THEME: WorldTheme = {
   modelDir: "dino",
+  headRing: true,
   sign: "dino/Sign",
   sceneryDir: "nature",
   defaultPlayer: "TRex",
@@ -5117,6 +5124,18 @@ function setRiver(cut: RiverCut | null): void {
   RIVER = cut;
   RIVER_SURFACE = bank - 0.9;
   RIVER_BED = bank - cut.depth;
+}
+
+/**
+ * WHETHER A PLANT HERE WOULD STAND IN WATER: a Hero Trail lake or stream
+ * (`waterCarve`), or the village's carved river below its surface. The
+ * roadside clusters only knew the first, so lessons 37 and 38 grew foliage
+ * on the bed of the wide river (owner, 6 Oct 2026).
+ */
+function wetForPlants(x: number, z: number): boolean {
+  if (waterCarve(x, z) > 0.02) return true;
+  if (RIVER == null && WILD == null) return false;
+  return terrainY(x, z) < RIVER_SURFACE + 0.15;
 }
 
 const terrainYBase = (x: number, z: number) => {
@@ -22604,6 +22623,10 @@ export function createKidsWorld(
                 const plo = spec.lo ?? 0.8;
                 const phi = spec.hi ?? 1.25;
                 const scl = (plo + rand() * (phi - plo)) * theme.sceneryScale;
+                if (wetForPlants(px, pz)) {
+                  rejected += 1;
+                  continue;
+                }
                 if (onRoad(px, pz, spec.file, half * scl * 0.66)) {
                   rejected += 1;
                   continue;
@@ -22652,7 +22675,7 @@ export function createKidsWorld(
               : sideSign * depth;
             // NOTHING GROWS IN THE WATER: a lake planted over with flowers
             // and trees was a lake nobody could see (owner, 4 Oct 2026).
-            if (waterCarve(x, z) > 0.02) continue;
+            if (wetForPlants(x, z)) continue;
             const lo = spec.lo ?? 0.7;
             const hi = spec.hi ?? 1.4;
             // AND THE DEPTH CUE, which this path did not have.
@@ -32077,10 +32100,12 @@ export function createKidsWorld(
         player.wrap.rotation.y += turn * 0.12;
         player.wrap.rotation.z = 0;
       }
-      // Float the pointer just above the hero's head (Hero Trail only) — a
-      // ring for the knight, a bobbing pumpkin for the skeleton.
-      if (theme.pointerRing) {
-        const top = playerH * player.wrap.scale.y;
+      // Float the pointer just above the hero's head — a ring for the
+      // knight, a bobbing pumpkin for the skeleton.
+      if (theme.pointerRing || theme.headRing) {
+        // CAST_SCALE: the model is fitted to playerH times that (Hero Trail
+        // stands its cast 15% taller), so without it the ring sat in the hair.
+        const top = playerH * CAST_SCALE * player.wrap.scale.y;
         const py = p.y + top + 0.7 + Math.sin(clock.elapsedTime * 2) * 0.12;
         heroRing.visible = !playerGhostly;
         heroPumpkin.visible = playerGhostly;

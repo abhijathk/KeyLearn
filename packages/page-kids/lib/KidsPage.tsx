@@ -2972,6 +2972,12 @@ function KidsSettings({ children }: { readonly children: ReactNode }) {
 
 function KidsGame({ lesson }: { readonly lesson: Lesson }) {
   const { settings } = useSettings();
+  // THIS LEARNER'S KEYS, FIXED FOR THE MOUNT. Worked out at write time, a
+  // save made during unmount — after the active profile had already
+  // switched — landed the old learner's prefs under the new learner's key.
+  // The page remounts per profile, so one lookup per mount is the right one.
+  const prefsKey = useMemo(PREFS_KEY, []);
+  const bestKey = useMemo(BEST_KEY, []);
   const { results, appendResults, namespace } = useResults();
   const kidsPageData = usePageData();
 
@@ -3012,7 +3018,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       return;
     }
     const profileId = profileIdOfNamespace(namespace);
-    if (Number(localStorage.getItem(BEST_KEY()) ?? 0) > 0) {
+    if (Number(localStorage.getItem(bestKey) ?? 0) > 0) {
       clearProfileProgress(profileId);
       setBest(0);
     }
@@ -3361,7 +3367,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     setPrefs((old) => {
       const next = { ...old, ...patch };
       try {
-        localStorage.setItem(PREFS_KEY(), JSON.stringify(next));
+        localStorage.setItem(prefsKey, JSON.stringify(next));
       } catch {
         // Storage may be unavailable.
       }
@@ -4507,7 +4513,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     setBest((b) => {
       if (s > b) {
         try {
-          localStorage.setItem(BEST_KEY(), String(s));
+          localStorage.setItem(bestKey, String(s));
         } catch {
           // Storage may be unavailable.
         }
@@ -6917,7 +6923,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // letter-spacing and capitals (fonts/index.less) leaves it alone.
       lang="en"
     >
-      <div className={clsx(styles.oneWindow, onVillage && styles.joined)}>
+      {/* One window in every world (owner, 6 Oct 2026): Hero Trail and Dino
+          Run had the scene, the coach's line and the keyboard as three
+          pieces; they now share Time Keepers' window, fade and sizing. */}
+      <div className={clsx(styles.oneWindow, styles.joined)}>
         {/*
           BOTH, AND IN THIS ORDER. The picker is mounted from the first
           frame so its canvas exists and its model can start downloading;

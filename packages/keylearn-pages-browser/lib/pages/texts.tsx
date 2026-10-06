@@ -1,9 +1,17 @@
 import { Book } from "@keylearn/content";
 import { lessonProps, LessonType } from "@keylearn/lesson";
-import { Pages, Screen } from "@keylearn/pages-shared";
+import { LockIcon } from "@keylearn/page-practice";
+import { Pages, Screen, usePageData } from "@keylearn/pages-shared";
 import { type Settings, useSettings } from "@keylearn/settings";
+import { Alert, toast } from "@keylearn/widget";
+import { clsx } from "clsx";
 import { type ReactNode, useMemo, useState } from "react";
-import { defineMessage, type MessageDescriptor, useIntl } from "react-intl";
+import {
+  defineMessage,
+  FormattedMessage,
+  type MessageDescriptor,
+  useIntl,
+} from "react-intl";
 import { useNavigate } from "react-router";
 import { recentPractice } from "../library-recent.ts";
 import * as styles from "./texts.module.less";
@@ -145,6 +153,53 @@ const BLURB: Record<string, MessageDescriptor> = {
 };
 
 /**
+ * A "Practise this" button. For a visitor who is not signed in, everything but
+ * Guided practice is locked (owner, 6 Oct 2026): still shown, so they know it
+ * is there, padlocked, and a click says that signing in opens it. A toast is
+ * right here — unlike the settings window, nothing covers this page.
+ */
+function Go({
+  type,
+  disabled,
+  onClick,
+  children,
+}: {
+  readonly type: LessonType;
+  readonly disabled?: boolean;
+  readonly onClick: () => void;
+  readonly children: ReactNode;
+}): ReactNode {
+  const locked = usePageData().publicUser.id == null && !type.openToGuests;
+  return (
+    <button
+      type="button"
+      className={clsx(styles.go, locked && styles.goLocked)}
+      aria-disabled={locked ? true : undefined}
+      disabled={disabled}
+      onClick={() => {
+        if (locked) {
+          // In an Alert: the toaster draws only what it is given, and bare
+          // text landed on the page with no box behind it.
+          toast(
+            <Alert severity="info">
+              <FormattedMessage
+                id="lessonType.lockedToast"
+                defaultMessage="Sign in to choose what you practise."
+              />
+            </Alert>,
+          );
+        } else {
+          onClick();
+        }
+      }}
+    >
+      {children}
+      {locked && <LockIcon />}
+    </button>
+  );
+}
+
+/**
  * The library's memory: pick up where you left off.
  *
  * A "continue reading" card whenever a book has a saved position, then the
@@ -201,15 +256,14 @@ function JumpBackIn({
                 )}
               </p>
             </div>
-            <button
-              type="button"
-              className={styles.go}
+            <Go
+              type={LessonType.BOOKS}
               onClick={() =>
                 practise((s) => s.set(lessonProps.type, LessonType.BOOKS))
               }
             >
               {practiseLabel}
-            </button>
+            </Go>
           </article>
         )}
         {cards.map((entry) => {
@@ -234,9 +288,8 @@ function JumpBackIn({
                   })}
                 </p>
               </div>
-              <button
-                type="button"
-                className={styles.go}
+              <Go
+                type={LessonType.ALL.get(entry.type, LessonType.GUIDED)}
                 onClick={() =>
                   practise((s) => {
                     let next = s.set(
@@ -263,7 +316,7 @@ function JumpBackIn({
                 }
               >
                 {practiseLabel}
-              </button>
+              </Go>
             </article>
           );
         })}
@@ -326,9 +379,8 @@ export default function TextsPage(): ReactNode {
                     {BLURB[book.id] ? formatMessage(BLURB[book.id]) : ""}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className={styles.go}
+                <Go
+                  type={LessonType.BOOKS}
                   onClick={() =>
                     practise((s) =>
                       s
@@ -338,7 +390,7 @@ export default function TextsPage(): ReactNode {
                   }
                 >
                   {practiseLabel}
-                </button>
+                </Go>
               </article>
             ))}
           </div>
@@ -360,15 +412,14 @@ export default function TextsPage(): ReactNode {
                   </div>
                   <p className={styles.cardDesc}>{formatMessage(m.desc)}</p>
                 </div>
-                <button
-                  type="button"
-                  className={styles.go}
+                <Go
+                  type={m.type}
                   onClick={() =>
                     practise((s) => s.set(lessonProps.type, m.type))
                   }
                 >
                   {practiseLabel}
-                </button>
+                </Go>
               </article>
             ))}
           </div>
@@ -399,9 +450,8 @@ export default function TextsPage(): ReactNode {
             rows={5}
           />
           <div className={styles.buttonRow}>
-            <button
-              type="button"
-              className={styles.go}
+            <Go
+              type={LessonType.CUSTOM}
               disabled={text.trim().length === 0}
               onClick={() =>
                 practise((s) =>
@@ -412,13 +462,12 @@ export default function TextsPage(): ReactNode {
               }
             >
               {practiseLabel}
-            </button>
+            </Go>
             {/* The same paste, a different drill: the words shuffled and
                 repeated by the word-list engine instead of typed in order —
                 a spelling list rather than an article. */}
-            <button
-              type="button"
-              className={styles.go}
+            <Go
+              type={LessonType.WORDLIST}
               disabled={text.trim().length === 0}
               onClick={() =>
                 practise((s) =>
@@ -433,7 +482,7 @@ export default function TextsPage(): ReactNode {
                 id: "texts.drillAsWords",
                 defaultMessage: "Drill as words",
               })}
-            </button>
+            </Go>
           </div>
         </section>
       </div>

@@ -224,6 +224,18 @@
   }
 }
 
+// Locked until the visitor signs in: dimmed like a disabled tile, but it
+// still takes the click, which is answered with why.
+.tileLocked {
+  .is-disabled();
+
+  cursor: not-allowed;
+
+  &:hover {
+    border-color: var(--separator-color, rgba(128, 128, 128, 0.2));
+  }
+}
+
 // Name and description move together, by the same 0.1rem. Raising only the
 // description would have closed the gap between them to 0.02rem and left the
 // tile with no hierarchy at all.

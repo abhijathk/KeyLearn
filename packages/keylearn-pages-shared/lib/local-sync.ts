@@ -272,6 +272,28 @@ function bootDone(): void {
 }
 
 /**
+ * Opens the boot window again, for a pull that is about to replace what the
+ * page has just read.
+ *
+ * A PROFILE SWITCH IS A BOOT FOR THE LEARNER BEING SWITCHED TO. The tree
+ * remounts under the new profile, reads that learner's keys from this device,
+ * and the kids page writes its preferences blob back within moments — all
+ * before the pull for that learner has answered. Outside a boot window those
+ * writes are stamped "now", which is newer than anything on the server, so the
+ * pull skipped the account's copy and the next push sent this device's stale
+ * copy up over it. A child who had walked ten more lessons on the laptop came
+ * back to the family tablet, switched to their profile, and the tablet quietly
+ * wound the laptop's progress back. Treated as a boot, those writes are the
+ * defaults they are and the account's copy wins.
+ */
+function reopenBootWindow(): void {
+  booting = true;
+  bootKeys.clear();
+  const timer = setTimeout(bootDone, 10_000);
+  (timer as { unref?: () => void }).unref?.();
+}
+
+/**
  * Starts recording changes and sending them up.
  *
  * ## Why this patches the prototype and not the object
@@ -331,6 +353,15 @@ export function installLocalSync(): void {
   window.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       flushNow(true);
+    } else if (document.visibilityState === "visible") {
+      void pullOnReturn();
+    }
+  });
+  // A page restored from the back-forward cache is a page that has been away,
+  // exactly like a tab brought back to the front.
+  window.addEventListener("pageshow", (event) => {
+    if ((event as PageTransitionEvent).persisted) {
+      void pullOnReturn();
     }
   });
   // Back online: whatever did not land while the connection was down goes now,
@@ -764,51 +795,136 @@ async function pullScope(profileId: string | null): Promise<boolean> {
  * reload at all — and at most once per scope per tab, so a pull that somehow
  * kept reporting changes could not put the page in a loop.
  */
+let started = false;
+
 export function startLocalSync(): void {
   installLocalSync();
+  if (started) {
+    return;
+  }
+  started = true;
   void adopt("boot");
   if (typeof window === "object") {
     // A household switches learners on one device all day. Each one has their
     // own scope to bring down.
     window.addEventListener(PROFILE_CHANGED_EVENT, () => {
-      void adopt(`profile:${activeProfileId() ?? ""}`);
+      void onProfileSwitched();
     });
   }
 }
 
-async function adopt(scope: string): Promise<void> {
+/**
+ * The learner at the keyboard has just changed: bring their copy down, with
+ * anything the remounting page writes meanwhile treated as a default (see
+ * {@link reopenBootWindow}), and reload if the account had something newer.
+ */
+export async function onProfileSwitched(): Promise<boolean> {
+  reopenBootWindow();
+  return await adopt(`profile:${activeProfileId() ?? ""}`);
+}
+
+/** When this tab last came back to the front and asked the account. */
+let lastReturnPull = 0;
+
+/** At most one pull per this long when a tab keeps being brought back. */
+const RETURN_PULL_GAP_MS = 30_000;
+
+/**
+ * A tab coming back to the front asks the account what changed while it was
+ * away.
+ *
+ * WITHOUT THIS A LONG-OPEN TAB WAS THE MOST DANGEROUS DEVICE IN THE HOUSE.
+ * The kids page holds the learner's whole preferences blob in memory — which
+ * lesson of which road, the stones on Time Keepers, the first-evers already
+ * met — and writes all of it back on every milestone. A tablet left open on
+ * the trail overnight, while the child walked five more lessons on the
+ * laptop, wrote its overnight copy back on the first flag reached the next
+ * morning, stamped newer than the laptop's, and the laptop's five lessons
+ * were gone from every device. Pulling on return adopts the newer copy and
+ * reloads before the first key can be typed against the old one.
+ */
+export async function pullOnReturn(now = Date.now()): Promise<boolean> {
+  if (now - lastReturnPull < RETURN_PULL_GAP_MS) {
+    return false;
+  }
+  lastReturnPull = now;
+  return await adopt("return");
+}
+
+/** The page reload, replaceable where there is no page to reload (tests). */
+let reloadPage = (): void => {
+  window.location.reload();
+};
+
+/** For tests: what to call instead of reloading the page. */
+export function setReloadForTests(reload: () => void): void {
+  reloadPage = reload;
+}
+
+/** Pulls, and reloads if anything on screen is no longer current. */
+async function adopt(scope: string): Promise<boolean> {
   let changed = false;
   try {
     changed = await pullLocal();
   } catch {
-    return; // pullLocal does not throw, but nothing here may take the page down.
+    return false; // pullLocal does not throw, but nothing here may take the page down.
   }
   if (!changed || !claimReload(scope)) {
-    return;
+    return changed;
   }
   try {
-    window.location.reload();
+    reloadPage();
   } catch {
     // Nothing else to try; the settings are on the device for the next load.
   }
+  return changed;
 }
 
-/** True the first time a scope asks to reload in this tab, false after. */
-function claimReload(scope: string): boolean {
+/**
+ * How long one reason to reload stays spent.
+ *
+ * The guard is against a loop — a pull that somehow kept reporting changes
+ * would otherwise reload the page for ever — and a loop comes round in a
+ * second or two. It used to be once per scope for the life of the TAB, and
+ * session storage outlives a refresh and a restored tab: a tablet that had
+ * reloaded once on Monday never reloaded for that reason again, so on
+ * Wednesday the pull put the laptop's newer progress into storage and left
+ * the page showing Monday's, which the page then wrote back over it.
+ */
+const RELOAD_GAP_MS = 60_000;
+
+/**
+ * True when this reason to reload has not been used in the last minute, and
+ * marks it used. Exported for its tests.
+ */
+export function claimReload(scope: string, now = Date.now()): boolean {
   const key = "keylearn.sync.reloaded";
   try {
-    const done = new Set<string>(
-      JSON.parse(sessionStorage.getItem(key) ?? "[]"),
-    );
-    if (done.has(scope)) {
+    const parsed: unknown = JSON.parse(sessionStorage.getItem(key) ?? "{}");
+    // The old shape was a list of scopes, each spent for good. Read as spent
+    // now, so an upgrade cannot itself cause a second reload.
+    const done: Record<string, number> = {};
+    if (Array.isArray(parsed)) {
+      for (const s of parsed) {
+        done[String(s)] = now;
+      }
+    } else if (parsed != null && typeof parsed === "object") {
+      for (const [s, t] of Object.entries(parsed)) {
+        if (typeof t === "number" && Number.isFinite(t)) {
+          done[s] = t;
+        }
+      }
+    }
+    const last = done[scope];
+    if (last != null && now - last < RELOAD_GAP_MS && now >= last) {
       return false;
     }
-    done.add(scope);
-    sessionStorage.setItem(key, JSON.stringify([...done]));
+    done[scope] = now;
+    sessionStorage.setItem(key, JSON.stringify(done));
     return true;
   } catch {
     // No session storage means no way to remember, and no way to guarantee the
-    // reload happens only once. Not reloading is the safe side of that.
+    // reload does not loop. Not reloading is the safe side of that.
     return false;
   }
 }

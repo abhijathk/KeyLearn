@@ -436,3 +436,143 @@ test("a learner's documents are in the database as soon as they are written", as
     "an erased document survived in the database",
   );
 });
+
+test("all three kids games resume where the child left off, on any device, for that child only", async () => {
+  // The owner's requirement, in the shape a household meets it: a child plays
+  // Time Keepers, Hero Trail and Dino Run on the family laptop, then opens the
+  // tablet. Each game must open on the same lesson with the same scores.
+  //
+  // Where each game keeps its place:
+  // - Time Keepers: `roadStones` in the kids preferences blob. The chapter,
+  //   the lesson inside it, the chapter lap and the lesson names are all read
+  //   off that one count; `villageFlags`, `seen` and `storyRead` sit beside it.
+  // - Hero Trail and Dino Run: `lessonsByWorld.hero` / `.dino` in the same
+  //   blob — ten lessons to a scene, so it decides which scene opens.
+  // - All three: the best score, the sticker album, the days practised and
+  //   the lands crossed, each its own per-learner key.
+  // - The letters unlocked, and the growth (dino age, hero rank) that follows
+  //   them, come from the practice history, which is the per-profile results.
+  const request = startApp(context.get(Application, kMain));
+  const user = (await findUser("user1@keylearn.org"))!;
+  await request.become(user.id!);
+  const child = await Profile.query().insert({
+    userId: user.id!,
+    firstName: "Mia",
+    kind: "kid",
+    birthYear: 2018,
+  } as any);
+  const sibling = await Profile.query().insert({
+    userId: user.id!,
+    firstName: "Leo",
+    kind: "kid",
+    birthYear: 2016,
+  } as any);
+  const pid = child.id!;
+  const k = (base: string) => `profile-${pid}.${base}`;
+
+  // ── the laptop ──
+  const prefs = {
+    world: "village",
+    village: "Peeli",
+    hero: "Knight",
+    dino: "TRex",
+    roadStones: 23,
+    villageFlags: 31,
+    villageGap: 5,
+    lessonsByWorld: { hero: 14, dino: 9 },
+    seen: ["first-buffalo", "chapter-2"],
+    storyRead: 3,
+  };
+  const keys = {
+    [k("kids.prefs")]: { v: JSON.stringify(prefs), t: 1_700_000_100_000 },
+    [k("kids.best")]: { v: "412", t: 1_700_000_100_001 },
+    [k("kids.album")]: {
+      v: JSON.stringify({
+        "first-run": "2026-10-01",
+        "streak-10": "2026-10-02",
+      }),
+      t: 1_700_000_100_002,
+    },
+    [k("kids.days")]: {
+      v: JSON.stringify(["2026-10-01", "2026-10-02"]),
+      t: 1_700_000_100_003,
+    },
+    [k("kids.land")]: { v: "3", t: 1_700_000_100_004 },
+  };
+  equal(
+    (await request.POST(`/_/sync/doc/profile/${pid}/local`).send({ keys }))
+      .status,
+    204,
+  );
+  // The practice itself: what unlocks the next letter and grows the runner.
+  equal(
+    (
+      await request
+        .POST(`/_/sync/data/profile/${pid}`)
+        .send(formatMessage([faker.nextResult(), faker.nextResult()]))
+    ).status,
+    204,
+  );
+  await request.become(null);
+
+  // ── the tablet: nothing but the account ──
+  const tablet = startApp(context.get(Application, kMain));
+  await tablet.become(user.id!);
+  const doc = JSON.parse(
+    await (
+      await tablet.GET(`/_/sync/doc/profile/${pid}/local`).send()
+    ).body.text(),
+  );
+  const back = JSON.parse(doc.keys[k("kids.prefs")].v);
+  equal(back.roadStones, 23, "Time Keepers did not resume at its stone");
+  equal(back.villageFlags, 31);
+  deepEqual(back.seen, ["first-buffalo", "chapter-2"]);
+  equal(back.storyRead, 3);
+  equal(back.lessonsByWorld.hero, 14, "Hero Trail did not resume its scene");
+  equal(back.lessonsByWorld.dino, 9, "Dino Run did not resume its scene");
+  equal(doc.keys[k("kids.best")].v, "412", "the best score did not travel");
+  isTrue(String(doc.keys[k("kids.album")].v).includes("streak-10"));
+  equal(JSON.parse(doc.keys[k("kids.days")].v).length, 2);
+  equal(doc.keys[k("kids.land")].v, "3");
+  // Stamps travel with the values, so the tablet adopts them as the newer copy.
+  equal(doc.keys[k("kids.prefs")].t, 1_700_000_100_000);
+  const history = await tablet.GET(`/_/sync/data/profile/${pid}`).send();
+  equal(history.status, 200);
+  isTrue(
+    (await history.body.buffer()).length > 0,
+    "the practice history did not travel, so no letter would be unlocked",
+  );
+
+  // In the database, not only in this machine's data directory.
+  const row = await ProfileData.query()
+    .where("userId", user.id!)
+    .where("profileId", pid)
+    .where("kind", "local")
+    .first();
+  isTrue(
+    row?.payload != null &&
+      String(row.payload).includes("roadStones") &&
+      String(row.payload).includes("lessonsByWorld"),
+    "the games' progress was not stored in the database",
+  );
+
+  // ── the sibling, on the same tablet ──
+  const theirs = JSON.parse(
+    await (
+      await tablet.GET(`/_/sync/doc/profile/${sibling.id}/local`).send()
+    ).body.text(),
+  );
+  deepEqual(
+    Object.keys(theirs.keys ?? {}),
+    [],
+    "one child's game progress reached their sibling",
+  );
+  const theirHistory = await tablet
+    .GET(`/_/sync/data/profile/${sibling.id}`)
+    .send();
+  isTrue(
+    theirHistory.status !== 200 ||
+      (await theirHistory.body.buffer()).length === 0,
+    "one child's practice reached their sibling",
+  );
+});

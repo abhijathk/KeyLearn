@@ -287,10 +287,10 @@
    those wrong and it reads as two cards pushed together, which looks
    worse than leaving them apart.
 
-   `display: contents` is what keeps this from touching Dino Run and
-   Hero Trial at all: unjoined, the wrapper has no box and its three
-   children sit in `.root`'s flex column exactly as they always did, so
-   the other two worlds cannot be affected by a layout they do not use.
+   Every world is joined now (owner, 6 Oct 2026: Hero Trail and Dino Run
+   take the same window). `.oneWindow` alone, with `display: contents`,
+   is what the wrapper falls back to if `.joined` is ever dropped: no box,
+   and its three children sit in `.root`'s flex column as separate cards.
 
    THE SCENE DOES NOT CHANGE HEIGHT. `.root` used to put a 0.75rem gap
    above and below the coach line; merging would have handed those

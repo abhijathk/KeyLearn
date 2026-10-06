@@ -139,10 +139,13 @@ export function Disclosure({
 export function SettingTiles<T extends string | number>({
   value,
   onChange,
+  onLocked,
   options,
 }: {
   readonly value: T;
   readonly onChange: (id: T) => void;
+  /** A click on a {@link locked} tile, so the caller can say why. */
+  readonly onLocked?: (id: T) => void;
   readonly options: readonly {
     id: T;
     label: ReactNode;
@@ -157,6 +160,12 @@ export function SettingTiles<T extends string | number>({
      */
     disabled?: boolean;
     disabledReason?: string;
+    /**
+     * A mode this visitor may see but not use until they sign in. Unlike
+     * {@link disabled} it still takes the click, which goes to `onLocked`
+     * instead of `onChange` — a click that does nothing explains nothing.
+     */
+    locked?: boolean;
   }[];
 }): ReactNode {
   return (
@@ -167,15 +176,19 @@ export function SettingTiles<T extends string | number>({
           type="button"
           role="radio"
           aria-checked={value === o.id}
+          aria-disabled={o.locked ? true : undefined}
           disabled={o.disabled}
           title={o.disabled ? o.disabledReason : undefined}
           className={clsx(
             styles.tile,
             value === o.id && styles.tileOn,
             o.disabled && styles.tileDisabled,
+            o.locked && styles.tileLocked,
           )}
           onClick={() => {
-            if (!o.disabled) {
+            if (o.locked) {
+              onLocked?.(o.id);
+            } else if (!o.disabled) {
               onChange(o.id);
             }
           }}

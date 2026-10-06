@@ -13,7 +13,7 @@ import {
   type WordListLesson,
 } from "@keylearn/lesson";
 import { LessonLoader } from "@keylearn/lesson-loader";
-import { ManagedSetting } from "@keylearn/pages-shared";
+import { ManagedSetting, usePageData } from "@keylearn/pages-shared";
 import { type Settings, useSettings } from "@keylearn/settings";
 import { SettingTiles } from "@keylearn/widget";
 import { type ReactNode, useEffect } from "react";
@@ -29,7 +29,7 @@ import { NumbersLessonSettings } from "./lesson/NumbersLessonSettings.tsx";
 import { QuotesLessonSettings } from "./lesson/QuotesLessonSettings.tsx";
 import { SkipSettings } from "./lesson/SkipSettings.tsx";
 import { WordListLessonSettings } from "./lesson/WordListLessonSettings.tsx";
-import * as styles from "./SettingsScreen.module.less";
+import { LockedLabel, LockedNotice, useLockedNotice } from "./Locked.tsx";
 
 export function LessonSettings(): ReactNode {
   const { formatMessage } = useIntl();
@@ -56,6 +56,12 @@ export function LessonSettings(): ReactNode {
       updateSettings(settings.set(lessonProps.type, LessonType.GUIDED));
     }
   }, [booksAvailable, settings, updateSettings]);
+  // Guided practice only, until they sign in (owner, 6 Oct 2026). The other
+  // sources stay on screen, locked, the way the keyboard finish does: it is
+  // how a visitor learns they exist. The lesson type itself is forced to
+  // Guided for them (App.tsx), so a source picked before is kept, not run.
+  const signedIn = usePageData().publicUser.id != null;
+  const { shown, say } = useLockedNotice();
   const sources = [
     {
       label: formatMessage({
@@ -159,19 +165,33 @@ export function LessonSettings(): ReactNode {
               settings.set(lessonProps.type, LessonType.ALL.at(index)),
             );
           }}
+          onLocked={say}
           options={sources.map(
             (
               { label, description, badge, disabled, disabledReason },
               index,
-            ) => ({
-              id: index,
-              label,
-              description,
-              badge,
-              disabled,
-              disabledReason,
-            }),
+            ) => {
+              const locked =
+                !signedIn && !LessonType.ALL.at(index).openToGuests;
+              return {
+                id: index,
+                label: <LockedLabel locked={locked}>{label}</LockedLabel>,
+                description,
+                badge,
+                disabled,
+                disabledReason,
+                locked,
+              };
+            },
           )}
+        />
+        <LockedNotice
+          under="tiles"
+          shown={shown}
+          notice={formatMessage({
+            id: "lessonType.lockedToast",
+            defaultMessage: "Sign in to choose what you practise.",
+          })}
         />
       </ManagedSetting>
       <LessonLoader>

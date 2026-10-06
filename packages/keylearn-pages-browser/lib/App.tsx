@@ -155,6 +155,16 @@ function applySiteLearnerDefaults(
   if (boardChoiceLocked) {
     forced["keyboard.style"] = "keylearn";
   }
+  // GUIDED PRACTICE ONLY FOR GUESTS (owner, 6 Oct 2026): everything else
+  // needs an account, because on a machine many people share, practice state
+  // kept in the browser belongs to nobody. Forced for the same reasons as the
+  // board above: the lesson type is read in many places, and the forced layer
+  // sits over a stored choice rather than replacing it, so a guest who had
+  // picked Code gets it back the moment they sign in. The tiles stay on
+  // screen, locked (LessonSettings).
+  if (!signedIn) {
+    forced["lesson.type"] = "guided";
+  }
   Settings.setForced(new Settings(forced as any), hidden);
   const motion = defaults["a11y.motion"];
   const motionValue =

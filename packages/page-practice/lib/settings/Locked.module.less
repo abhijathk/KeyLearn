@@ -1,5 +1,5 @@
 // A setting a visitor can see but not change: dimmed, with a padlock, and the
-// pointer says so. Clicking it explains why (see LockedFor).
+// pointer says so. Clicking it explains why (see Locked.tsx).
 .locked {
   opacity: 0.55;
   cursor: not-allowed;
@@ -52,6 +52,13 @@
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
+}
+
+// Under the lesson-source tiles: as wide as its words, and tucked into the
+// gap the tiles already leave below them.
+.underTiles {
+  inline-size: fit-content;
+  margin-block: -0.3rem 0.7rem;
 }
 
 @keyframes lockedNoticeIn {

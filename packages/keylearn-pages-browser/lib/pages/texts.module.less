@@ -115,6 +115,20 @@
   cursor: default;
 }
 
+// Locked until the visitor signs in (owner, 6 Oct 2026): dimmed, with a
+// padlock, but it still takes the click, which says why.
+.goLocked {
+  display: inline-flex;
+  gap: 0.4em;
+  align-items: center;
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.goLocked:hover {
+  filter: none;
+}
+
 .textarea {
   inline-size: 100%;
   margin-block: 0.4rem 1rem;

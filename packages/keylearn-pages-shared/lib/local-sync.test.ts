@@ -1,10 +1,14 @@
 import { test } from "node:test";
 import { deepEqual, equal, isFalse, isTrue } from "rich-assert";
 import {
+  claimReload,
   installLocalSync,
   isPortable,
+  onProfileSwitched,
   pullLocal,
+  pullOnReturn,
   pushLocal,
+  setReloadForTests,
 } from "./local-sync.ts";
 
 /**
@@ -509,4 +513,178 @@ test("keys a guest wrote on this device are never sent to an account", async () 
   } finally {
     restore();
   }
+});
+
+/**
+ * The kids games, carried learner by learner.
+ *
+ * All three games keep their resume point in one per-learner blob,
+ * `profile-<id>.kids.prefs`: Time Keepers its stones (chapter, lesson and lap
+ * are read off that count), Hero Trail and Dino Run their lessons per road
+ * (which decides the scene). Beside it the best score, the album, the days
+ * practised and the lands crossed. The letters unlocked, and the growth that
+ * follows them, come from the practice history, which has its own route.
+ *
+ * What these tests pin is the client half: a learner's games come down to a
+ * device whose page has already read and rewritten an older copy, and never
+ * into another learner's slot.
+ */
+function asLearner(profiles: readonly string[], active: string | null) {
+  const g = globalThis as any;
+  const had = g.__PAGE_DATA__;
+  g.__PAGE_DATA__ = {
+    user: { id: 1 },
+    publicUser: { id: "u1" },
+    profiles: profiles.map((id) => ({ id, kind: "kid", birthYear: null })),
+  };
+  if (active == null) {
+    localStorage.removeItem("keylearn.activeProfile.u1");
+  } else {
+    localStorage.setItem("keylearn.activeProfile.u1", active);
+  }
+  return () => {
+    g.__PAGE_DATA__ = had;
+  };
+}
+
+const kidsPrefs = (roadStones: number, hero: number, dino: number) =>
+  JSON.stringify({
+    world: "village",
+    roadStones,
+    villageFlags: roadStones,
+    lessonsByWorld: { hero, dino },
+    seen: ["first-buffalo"],
+  });
+
+test("every game's progress reaches a new device for its own learner only", async () => {
+  localStorage.clear();
+  const leave = asLearner(["5", "6"], "5");
+  const { restore } = withFetch((url) =>
+    url === "/_/sync/doc/profile/5/local"
+      ? json(
+          mirror({
+            "profile-5.kids.prefs": { v: kidsPrefs(23, 14, 9), t: 7_000 },
+            "profile-5.kids.best": { v: "412", t: 7_000 },
+            "profile-5.kids.album": {
+              v: '{"first-run":"2026-10-01"}',
+              t: 7_000,
+            },
+            "profile-5.kids.days": { v: '["2026-10-01"]', t: 7_000 },
+            "profile-5.kids.land": { v: "3", t: 7_000 },
+            // Named in profile 5's document but belonging to 6: not adopted.
+            "profile-6.kids.prefs": { v: kidsPrefs(99, 99, 99), t: 9_000 },
+          }),
+        )
+      : empty(),
+  );
+  try {
+    isTrue(await pullLocal());
+    const prefs = JSON.parse(localStorage.getItem("profile-5.kids.prefs")!);
+    equal(prefs.roadStones, 23); // Time Keepers: chapter 3, lesson 3.
+    equal(prefs.lessonsByWorld.hero, 14); // Hero Trail: second scene.
+    equal(prefs.lessonsByWorld.dino, 9); // Dino Run: first scene.
+    equal(localStorage.getItem("profile-5.kids.best"), "412");
+    equal(localStorage.getItem("profile-5.kids.land"), "3");
+    equal(
+      localStorage.getItem("profile-5.kids.album"),
+      '{"first-run":"2026-10-01"}',
+    );
+    equal(localStorage.getItem("profile-6.kids.prefs"), null);
+  } finally {
+    restore();
+    leave();
+  }
+});
+
+test("a profile switch does not let the remounting page beat the account's copy", async () => {
+  // The family tablet. Learner 5 walked to stone 23 on the laptop; the tablet
+  // still holds stone 4 from last week. Switching to 5 remounts the kids page,
+  // which reads stone 4 and writes its blob straight back — stamped now, so
+  // newer than the laptop's. Before the fix the pull then skipped the
+  // laptop's copy and the push sent stone 4 up over it.
+  localStorage.clear();
+  installLocalSync();
+  const leave = asLearner(["5"], "5");
+  localSet("profile-5.kids.prefs", kidsPrefs(4, 2, 1), 1_000);
+  const reloads: number[] = [];
+  setReloadForTests(() => reloads.push(1));
+  sessionStorage.clear();
+  const { calls, restore } = withFetch((url) =>
+    url === "/_/sync/doc/profile/5/local"
+      ? json(
+          mirror({
+            "profile-5.kids.prefs": { v: kidsPrefs(23, 14, 9), t: 2_000 },
+          }),
+        )
+      : url.endsWith("/local")
+        ? empty()
+        : new Response(null, { status: 204 }),
+  );
+  try {
+    const switched = onProfileSwitched();
+    // The remounted page writing what it read, before the pull answers.
+    localStorage.setItem("profile-5.kids.prefs", kidsPrefs(4, 2, 1));
+    isTrue(await switched);
+    equal(
+      JSON.parse(localStorage.getItem("profile-5.kids.prefs")!).roadStones,
+      23,
+      "the tablet's stale copy beat the laptop's progress",
+    );
+    // And the page is reloaded onto it rather than left showing stone 4.
+    equal(reloads.length, 1);
+    // Nothing pushed stone 4 back up.
+    for (const c of calls.filter((c) => c.method === "POST")) {
+      const v = c.body?.keys?.["profile-5.kids.prefs"]?.v;
+      isTrue(v == null || JSON.parse(v).roadStones === 23);
+    }
+  } finally {
+    restore();
+    leave();
+    setReloadForTests(() => {});
+  }
+});
+
+test("a tab brought back to the front picks up progress made elsewhere", async () => {
+  localStorage.clear();
+  const leave = asLearner(["5"], "5");
+  localSet("profile-5.kids.prefs", kidsPrefs(4, 2, 1), 1_000);
+  const reloads: number[] = [];
+  setReloadForTests(() => reloads.push(1));
+  sessionStorage.clear();
+  const { restore } = withFetch((url) =>
+    url === "/_/sync/doc/profile/5/local"
+      ? json(
+          mirror({
+            "profile-5.kids.prefs": { v: kidsPrefs(9, 2, 1), t: 3_000 },
+          }),
+        )
+      : empty(),
+  );
+  try {
+    isTrue(await pullOnReturn(1_000_000));
+    equal(
+      JSON.parse(localStorage.getItem("profile-5.kids.prefs")!).roadStones,
+      9,
+    );
+    equal(reloads.length, 1);
+    // Flicking between tabs does not hammer the account.
+    isFalse(await pullOnReturn(1_000_000 + 1_000));
+  } finally {
+    restore();
+    leave();
+    setReloadForTests(() => {});
+  }
+});
+
+test("a reload is refused only inside the loop window, not for the life of the tab", () => {
+  sessionStorage.clear();
+  isTrue(claimReload("boot", 100_000));
+  // A second change seconds later is a loop, not news.
+  isFalse(claimReload("boot", 105_000));
+  // Two days later, in the same restored tab, it is news again.
+  isTrue(claimReload("boot", 100_000 + 2 * 86_400_000));
+  // A tab carrying the old once-for-ever list is not reloaded by the upgrade.
+  sessionStorage.setItem("keylearn.sync.reloaded", '["boot"]');
+  isFalse(claimReload("boot", 500_000));
+  isTrue(claimReload("profile:5", 500_000));
 });

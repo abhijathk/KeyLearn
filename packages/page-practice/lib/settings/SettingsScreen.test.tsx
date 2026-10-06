@@ -6,7 +6,7 @@ import { PhoneticModelLoader } from "@keylearn/phonetic-model-loader";
 import { FakeResultContext, ResultFaker } from "@keylearn/result";
 import { FakeSettingsContext } from "@keylearn/settings";
 import { fireEvent, render } from "@testing-library/react";
-import { isNotNull } from "rich-assert";
+import { equal, isNotNull, isNull } from "rich-assert";
 import { SettingsScreen } from "./SettingsScreen.tsx";
 
 const faker = new ResultFaker();
@@ -59,6 +59,54 @@ test("render", async () => {
   fireEvent.click(r.getByText("Display"));
 
   isNotNull(await r.findByText("Display preferences"));
+
+  r.unmount();
+});
+
+function renderAs(id: string | null) {
+  PhoneticModelLoader.loader = FakePhoneticModel.loader;
+  return render(
+    <FakeIntlProvider>
+      <PageDataContext.Provider value={{ publicUser: { id } } as PageData}>
+        <FakeSettingsContext>
+          <FakeResultContext initialResults={faker.nextResultList(100)}>
+            <SettingsScreen />
+          </FakeResultContext>
+        </FakeSettingsContext>
+      </PageDataContext.Provider>
+    </FakeIntlProvider>,
+  );
+}
+
+const tile = (r: ReturnType<typeof render>, name: string) =>
+  r.getByText(name).closest("button")!;
+
+test("a guest sees every source but guided locked", async () => {
+  const r = renderAs(null);
+
+  await r.findByText("Guided practice");
+  equal(tile(r, "Guided practice").getAttribute("aria-disabled"), null);
+  for (const name of ["Classic course", "Code craft", "Number Drills"]) {
+    equal(tile(r, name).getAttribute("aria-disabled"), "true");
+  }
+
+  // A click on a locked source changes nothing, and says why.
+  fireEvent.click(tile(r, "Code craft"));
+  isNotNull(await r.findByText("Sign in to choose what you practise."));
+  equal(tile(r, "Code craft").getAttribute("aria-checked"), "false");
+  equal(tile(r, "Guided practice").getAttribute("aria-checked"), "true");
+
+  r.unmount();
+});
+
+test("an account holder can pick any source", async () => {
+  const r = renderAs("abc");
+
+  await r.findByText("Code craft");
+  equal(tile(r, "Code craft").getAttribute("aria-disabled"), null);
+  fireEvent.click(tile(r, "Code craft"));
+  equal(tile(r, "Code craft").getAttribute("aria-checked"), "true");
+  isNull(r.queryByText("Sign in to choose what you practise."));
 
   r.unmount();
 });

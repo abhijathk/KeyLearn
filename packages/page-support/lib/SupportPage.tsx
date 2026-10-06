@@ -4,7 +4,7 @@ import {
   PROFILE_CHANGED_EVENT,
   usePageData,
 } from "@keylearn/pages-shared";
-import { Button, Icon, TextField, toast } from "@keylearn/widget";
+import { Alert, Button, Icon, TextField, toast } from "@keylearn/widget";
 import { mdiEmailFastOutline } from "@mdi/js";
 import { type ReactNode, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -425,17 +425,19 @@ export function SupportPage({
       .then(() => {
         setSent(true);
         toast(
-          signedIn ? (
-            <FormattedMessage
-              id="support.form.sentToast.app"
-              defaultMessage="Sent — thanks, we’ll reply here and the bell will light up."
-            />
-          ) : (
-            <FormattedMessage
-              id="support.form.sentToast.email"
-              defaultMessage="Sent — thanks, we’ll reply by email."
-            />
-          ),
+          <Alert severity="success">
+            {signedIn ? (
+              <FormattedMessage
+                id="support.form.sentToast.app"
+                defaultMessage="Sent — thanks, we’ll reply here and the bell will light up."
+              />
+            ) : (
+              <FormattedMessage
+                id="support.form.sentToast.email"
+                defaultMessage="Sent — thanks, we’ll reply by email."
+              />
+            )}
+          </Alert>,
         );
       })
       .catch((err: any) => {

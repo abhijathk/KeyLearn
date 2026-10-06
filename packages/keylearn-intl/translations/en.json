@@ -1120,6 +1120,7 @@
   "lessonType.curriculum.summary": "A fixed sequence of lessons, the same order for everyone.",
   "lessonType.customText.summary": "Paste in anything you would rather practise.",
   "lessonType.guided.summary": "KeyLearn picks the letters and adds a new one as each is mastered.",
+  "lessonType.lockedToast": "Sign in to choose what you practise.",
   "lessonType.numbers.summary": "Digits and the number row on their own.",
   "lessonType.quotes.name": "Quotes",
   "lessonType.quotes.summary": "Short, complete thoughts with their real capitals and punctuation.",
