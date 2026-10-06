@@ -5,7 +5,10 @@ import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
-import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
+import {
+  deinterleaveGeometry,
+  mergeVertices,
+} from "three/addons/utils/BufferGeometryUtils.js";
 import { clone as skinnedClone } from "three/addons/utils/SkeletonUtils.js";
 import { ASSETS, versioned } from "./asset-url.ts";
 import {
@@ -12237,6 +12240,20 @@ export function createKidsWorld(
    */
   function weldAndShade(m: THREE.Mesh): void {
     const before = m.geometry;
+    // A PACKED FILE HAS NO NORMALS AND INTERLEAVED, QUANTIZED POSITIONS, and
+    // `mergeVertices` throws on interleaved attributes — the catch at the
+    // call site then kept the bare geometry with GLTFLoader's flatShading on,
+    // so the packed cattle were drawn faceted. Only normal-less meshes are
+    // taken apart: those are the ones that need this weld to be shaded at all.
+    if (
+      before.attributes.normal == null &&
+      Object.values(before.attributes).some(
+        (a) =>
+          (a as THREE.InterleavedBufferAttribute).isInterleavedBufferAttribute,
+      )
+    ) {
+      deinterleaveGeometry(before);
+    }
     m.geometry = mergeVertices(before, 1e-4);
     m.geometry.computeVertexNormals();
     // Welding returns a new geometry; without this the parsed one is

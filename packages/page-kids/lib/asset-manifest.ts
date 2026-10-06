@@ -3,7 +3,7 @@
 // Every file under kids-assets, and the content-hashed URL it is also
 // reachable at. See the script for why, and `versioned()` in world.ts
 // for where it is spent.
-export const ASSET_VERSION = "c3245f18f0ae";
+export const ASSET_VERSION = "6e28a5c0f23a";
 export const ASSET_MAP: Readonly<
   Record<string, { readonly u: string; readonly b: number; readonly g: string }>
 > = {
@@ -863,8 +863,8 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "models/village-folk/Blacksmith.glb": {
-    "u": "ve05f2f33/models/village-folk/Blacksmith.glb",
-    "b": 1091816,
+    "u": "vd2506782/models/village-folk/Blacksmith.glb",
+    "b": 645532,
     "g": "village"
   },
   "models/village-folk/Cow.glb": {
@@ -878,23 +878,23 @@ export const ASSET_MAP: Readonly<
     "g": "village"
   },
   "models/village-folk/FarmerWoman.glb": {
-    "u": "v40f7bff6/models/village-folk/FarmerWoman.glb",
-    "b": 1248384,
+    "u": "v5adb8228/models/village-folk/FarmerWoman.glb",
+    "b": 772684,
     "g": "village"
   },
   "models/village-folk/Headman.glb": {
-    "u": "vab2aebf9/models/village-folk/Headman.glb",
-    "b": 977024,
+    "u": "v22b463fc/models/village-folk/Headman.glb",
+    "b": 670712,
     "g": "village"
   },
   "models/village-folk/TeaStall.glb": {
-    "u": "vb19966e7/models/village-folk/TeaStall.glb",
-    "b": 1401392,
+    "u": "vff54ad24/models/village-folk/TeaStall.glb",
+    "b": 830472,
     "g": "village"
   },
   "models/village-folk/VillageBoy.glb": {
-    "u": "vdab889af/models/village-folk/VillageBoy.glb",
-    "b": 1277640,
+    "u": "v4b2c6f65/models/village-folk/VillageBoy.glb",
+    "b": 822200,
     "g": "village"
   },
   "models/village-houses/01_large_nalukettu.glb": {
