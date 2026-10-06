@@ -28,6 +28,11 @@ export const SupportQdeskOutbox = {
     table.bigInteger("delivered_at").nullable();
     table.bigInteger("failed_at").nullable();
     table.integer("last_status").nullable();
-    table.index(["delivered_at", "failed_at", "next_attempt_at"]);
+    // Named: knex's generated name is 65 characters, and MySQL refuses
+    // identifiers over 64 (SQLite does not care, so only production saw it).
+    table.index(
+      ["delivered_at", "failed_at", "next_attempt_at"],
+      "support_qdesk_outbox_due_index",
+    );
   },
 } as const;
