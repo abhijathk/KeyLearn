@@ -128,6 +128,12 @@ import { Scoreboard, useTypingFade } from "./scoreboard.tsx";
 import { configureSettingsSheet, SettingsSheet } from "./settings-sheet.tsx";
 import { STORY, type StoryPart } from "./story.ts";
 import { useFlash } from "./use-flash.ts";
+import {
+  VILLAGE_DAY,
+  VILLAGE_NIGHT,
+  VILLAGE_SLICES,
+  villageSlice,
+} from "./village-voice.ts";
 import { isSpoken, speakLine, stopSpeaking, unlockVoice } from "./voice.ts";
 import {
   createKidsWorld,
@@ -1219,7 +1225,9 @@ type SayKey =
   | "buffaloSafe"
   | "stared"
   | "nightfall"
-  | "village";
+  | "village"
+  | "daybreak"
+  | "clock";
 const yearsBack = () =>
   String(Math.max(1, new Date().getFullYear() - VILLAGE_YEAR));
 
@@ -1296,398 +1304,15 @@ export function villagePool(
 }
 
 /**
- * Time Keepers' own voice.
+ * Time Keepers' own voice, by day and by night — see `village-voice.ts`.
  *
- * Generated from the script document rather than typed out, so what ships is
- * exactly what was reviewed. Suffixes: `First` is said once ever, `B1`/`B2`/`B3`
- * are the familiarity bands, and a bare key is said at any distance.
+ * Both are spread over the shared table so the age-variant lookups still
+ * find something for every shared key; every key the village resolves is its
+ * own. Suffixes: `First` is said once ever, `B1`/`B2`/`B3` are the
+ * familiarity bands, and a bare key is said at any distance.
  */
-export const VILLAGE_SAYS = {
-  ...SAYS,
-  startFirst: [
-    "You're {years} years from home, and the road only goes one way. Off we go.",
-  ],
-  startB1: [
-    "No cars, no phones, no wires — just a red road. Off we go!",
-    "{name} steps onto the road. None of this has been invented yet!",
-    "Coconut palms, red earth, and not one screen anywhere. Let's walk!",
-  ],
-  startB2: [
-    "Back on the red road. Every letter is a step.",
-    "{guide} is waiting up ahead. Every letter is a step towards him.",
-    "The paddy is up again. Let's walk!",
-  ],
-  startB3: [
-    "You know the way by now. Off we go.",
-    "{guide} doesn't even wave any more — he just falls in beside you.",
-    "Same road, same stones. Let's see how far today.",
-  ],
-  cheer: [
-    "Lovely steady walking!",
-    "You kept going — that's the whole trick!",
-    "Nice and steady, just like that!",
-    "The road is easy when you walk it like that!",
-    "{guide} can barely keep up with you!",
-  ],
-  cheerYoung: [
-    "WOW! Look at those fingers go!",
-    "You did that all by yourself!",
-    "{guide} has never seen anybody move like that!",
-    "{name} does a little skip down the red road!",
-    "Super typing! The village is getting closer!",
-  ],
-  cheerCool: [
-    "Clean. Keep that rhythm.",
-    "Smooth — {guide} is jogging to keep up.",
-    "Nice run building.",
-    "{name} nods, impressed.",
-    "That's the pace. Steady and sharp.",
-  ],
-  streak: [
-    "TEN perfect steps down the red road!",
-    "Ten in a row! {guide} is counting on his fingers.",
-    "Ten straight — your fingers know {year} by heart!",
-    "Ten in a row. Even the buffalo looked up.",
-  ],
-  miss: [
-    "Whoops — {name} stopped. The glowing key shows the way.",
-    "Oops! No rush — find the glowing key.",
-    "{name} stubbed a toe on a stone. {guide} helps them up!",
-    "Not that one — but you're SO close. Look for the glow!",
-    "Wrong step! Peek at the glowing key and try again.",
-  ],
-  stumble: [
-    "Oof! Take a breath — then look for the glowing key.",
-    "That one got away. Shake your hands out and try the glow.",
-    "{guide} waits. Nobody hurries anybody on this road.",
-    "Everybody stumbles here. Breathe, then find the glow.",
-  ],
-  stuck: [
-    "Look — the {letter} key! Your {finger} presses it.",
-    "The {letter} key is right there, under your {finger}.",
-    "Try this: find your {finger}, then press {letter} gently.",
-  ],
-  stuckSpace: [
-    "Look — the space bar! A thumb presses it.",
-    "The big long key at the bottom — give it a thumb tap.",
-    "The gap between two words is the space bar. Thumb!",
-  ],
-  wake: [
-    "The {letter} key is awake — back to the road!",
-    "{letter} is your friend now. Onward!",
-    "You woke {letter} up! The road carries on.",
-  ],
-  wave: [
-    "{name} waves. Hello — still there?",
-    "{name} stops and waves. Ready when you are!",
-    "{guide} waves from further up the road. Shall we?",
-    "{name} turns round and gives you a big wave.",
-    "{name} waves, just in case you were looking.",
-  ],
-  waveYoung: [
-    "Hiiii! {name} is waving BOTH arms!",
-    "{name} waves and waves and waves!",
-    "Yoo-hoo! {name} can see you!",
-    "{name} is doing a great big hello wave!",
-  ],
-  waveOld: [
-    "{name} waves. Still with me?",
-    "A wave from {name}. Ready when you are.",
-    "{name} looks back up the road and waves.",
-  ],
-  crouch: [
-    "{name} crouches down at the roadside. No rush!",
-    "{name} is having a little rest. Press a key when you're ready.",
-    "{name} kneels in the red earth — they've never seen soil this colour.",
-    "A breather by the road. {guide} waits too.",
-    "{name} rests on one knee and watches the paddy.",
-  ],
-  crouchYoung: [
-    "{name} is waiting for youuu!",
-    "{name} sits on their heels by the road. Ready?",
-    "{name} is being very, very patient!",
-  ],
-  crouchOld: [
-    "{name} settles by the roadside. Take your time.",
-    "{name} drops to a crouch. In your own time.",
-    "No hurry. {name} will hold this spot.",
-  ],
-  sit: [
-    "{name} sits down in the shade. Press any key when you're ready!",
-    "Comfy here! One key and we're off again.",
-    "{name} is sitting under a palm, watching the fields.",
-    "{name} crosses their legs by the road. Come back whenever.",
-    "{name} watches the paddy shift in the wind. One key wakes them.",
-  ],
-  sitYoung: [
-    "{name} is sitting down! Press a key and we can go!",
-    "{name} is having a sit-down in the shade. Wake them with a key!",
-    "Plonk! {name} sits in the red earth. Press a key when you want to walk!",
-  ],
-  sitOld: [
-    "{name} takes a seat. Press a key whenever you want to carry on.",
-    "{name} sits down to wait it out. No rush.",
-    "{name} settles cross-legged in the shade. Pick it up whenever.",
-  ],
-  idleFirst: [
-    "{name} is staring at a lamp burning on a stone. No switch. No wire.",
-  ],
-  idleB1: [
-    "{name} is staring at an oil lamp. They've only ever seen bulbs.",
-    "{guide} is showing {name} something. One key and you're off.",
-    "{name} is trying to work out where the wires go. There aren't any.",
-  ],
-  idleB2: [
-    "{name} is waiting — press the glowing key!",
-    "{name} looks back at you. Ready to walk on?",
-    "A dragonfly lands on {name}'s shoulder. Press a key to shoo it!",
-  ],
-  idleB3: [
-    "{name} knows the next vazhivilakku is round the bend. Press a key.",
-    "Still here. {name} could walk this stretch with their eyes shut.",
-    "{name} is counting the stones to the market. One key and off you go.",
-  ],
-  idleYoung: [
-    "{name} peeps up at you — press the glowing key!",
-    "{name} is poking a stick into the red mud. Press a key!",
-    "{name} chews a blade of grass and blinks — one glowing key, please!",
-    "{name} plops down in the dust. Press a key to bounce them up!",
-    "{name} is counting coconuts. The glowing key stops them!",
-  ],
-  idleOld: [
-    "{name} stands tall, waiting for your next key.",
-    "{name} scans the road ahead. One glowing key and you walk on.",
-    "{name} watches smoke rise from a cooking fire. Press the glowing key.",
-    "{name} gives a slow, steady nod. Ready when you are.",
-    "{name} shades their eyes and waits, calm and patient.",
-  ],
-  milestoneFirst: [
-    "Your first milestone! +10. Somebody carved that number by hand.",
-    "Your first milestone! +10. {guide} explains: the number is how far you have come.",
-  ],
-  milestoneB1: [
-    "You reached the stone! +10. Older than all of you, that stone.",
-    "MILESTONE! +10 — {guide} reads the number out loud.",
-    "That number was carved long before you were born. +10!",
-  ],
-  milestoneB2: [
-    "Another milestone behind you. +10!",
-    "Stone passed! {name} looks back at how far you've come. +10.",
-    "That's another one. +10.",
-  ],
-  milestoneB3: [
-    "Stone {stone}. +10. You know this road now.",
-    "{name} touches the stone as they pass, the way {guide} does. +10.",
-    "Another one down. +10. The market is two stones ahead.",
-  ],
-  grow: [
-    "A new key joined your trail — the road opens up!",
-    "New key! You're a {stage} now.",
-    "Another letter is yours. {stage} suits you.",
-    "A new key — the road ahead just got longer.",
-    "One more letter learned. {guide} is impressed, and says so.",
-  ],
-  growYoung: [
-    "A NEW KEY! That's another letter you know!",
-    "Look — a brand new key on your road!",
-    "One more letter! You're a {stage} now!",
-  ],
-  growOld: [
-    "Another key. Not many left on this road now.",
-    "A new letter — {stage}, and earning it.",
-    "One more key. The whole board is nearly yours.",
-  ],
-  joins: [
-    "{friend} has come to walk with you!",
-    "Look who's caught up — {friend}!",
-    "{friend} falls in beside you. The village has never seen anything like it.",
-  ],
-  crossed: [
-    "A whole new stretch of road, and nobody here has a map.",
-    "Chapter {chapter}! New palms, new stones, same brave typist.",
-    "You crossed over — welcome to {land}!",
-    "New land, new road. The next stone is waiting.",
-  ],
-  graduate: [
-    "That's the WHOLE alphabet — every letter on this road is yours.",
-    "You know every single letter! {guide} has never met anyone who could.",
-    "Twenty-six letters, learned {years} years before you were born.",
-  ],
-  timerEnd: [
-    "Time to head home — all the way home. Wonderful walking today!",
-    "The lamps are being lit. You did wonderfully today.",
-    "{guide} waves goodbye from the roadside. Same time tomorrow?",
-    "That's the day's walking done. Rest those fingers!",
-  ],
-  nightfallFirst: [
-    "The lamps are being lit, one by one, all down the road. Nobody flicked a switch.",
-  ],
-  nightfallB1: [
-    "It's getting dark. Somebody is going round lighting the lamps.",
-    "{name} has never seen a road this dark. Or this full of little fires.",
-    "No street lights. Just oil, in stone.",
-  ],
-  nightfallB2: [
-    "Lamps are going on down the road. Keep walking.",
-    "Evening. The market is still open, though.",
-    "The paddy has gone dark. The road has not.",
-  ],
-  nightfallB3: [
-    "Lamps are lit. You know the way in the dark by now.",
-    "Evening on the road. Same as always.",
-    "{name} doesn't even slow down when the light goes.",
-  ],
-  villageFirst: [
-    "A village! Houses, a market, a temple behind the big tree. People live here.",
-  ],
-  villageB1: [
-    "A temple, behind the banyan. You only see it through the branches.",
-    "There's the market. {guide} says the bright hissing lamp is a petromax.",
-    "The stone bench round the tree is called an althara.",
-  ],
-  villageB2: [
-    "The market is up ahead. Mind the cart.",
-    "Past the althara, then the temple. You know this bit.",
-    "The petromax is lit. Somebody is still trading.",
-  ],
-  villageB3: [
-    "Same cart, same spot, still half unloaded.",
-    "The village again. {guide} nods at somebody outside the market.",
-    "Through the village and out the other side. You barely look up.",
-  ],
-  buffaloNoticeFirst: [
-    "{name} has stopped dead. They have never been near anything this big.",
-  ],
-  buffaloNoticeB1: [
-    "The buffalo has looked up. {name} has only seen these in books.",
-    "A head comes up in the field. {guide} says: don't run.",
-    "{name} goes very quiet. It is much bigger up close.",
-  ],
-  buffaloNoticeB2: [
-    "That buffalo is watching you. Steady now.",
-    "Head up in the paddy. You know this one.",
-    "{guide} has already stopped walking. So should you.",
-  ],
-  buffaloNoticeB3: [
-    "Here we go. It always does this by the third stone.",
-    "The buffalo looks up. {name} barely glances at it.",
-    "Same buffalo, same field, same look.",
-  ],
-  buffaloWarn: [
-    "Head down — keep typing!",
-    "{guide} is shouting something — GO!",
-    "Hooves shifting in the mud — go, go, go!",
-    "Don't stop now — type!",
-    "It's coming. Fingers moving!",
-  ],
-  buffaloCharge: [
-    "It's running! Keep going — don't look back!",
-    "The buffalo is charging — type!",
-    "Hooves behind you — faster!",
-    "Go, {name}, go!",
-  ],
-  buffaloSafeFirst: [
-    "It stopped. It was never going to reach you — but nobody told {name} that.",
-    "It stopped. {guide} is laughing — he knew all along it would.",
-  ],
-  buffaloSafeB1: [
-    "The buffalo stops short and snorts. You're fine.",
-    "Back to the grass it goes. {guide} says they always do that.",
-    "{name} is still shaking. {guide} is not.",
-  ],
-  buffaloSafeB2: [
-    "It pulled up. Just showing off.",
-    "All that fuss — and it only wanted the field. Walk on.",
-    "Back to the grass. You barely broke step.",
-  ],
-  buffaloSafeB3: [
-    "Told you. Walk on.",
-    "It never gets any further than that. Never has.",
-    "{name} does not even look round this time.",
-  ],
-  staredFirst: [
-    "Everyone has stopped to look at you. Nobody here dresses like that.",
-  ],
-  staredB1: [
-    "Two women by the well have stopped talking to watch you pass.",
-    "A boy is staring at your shoes. He has never seen shoes like that.",
-    "They are all looking at the robot. Of course they are.",
-  ],
-  staredB2: [
-    "They know the dog by now. The robot, never.",
-    "Somebody at the market points at the robot and says something to {guide}.",
-    "Heads turn as you pass. You are getting used to it.",
-  ],
-  // ── PLAIN KEYS FOR THE BANDED CONTEXTS ────────────────────────────────
-  //
-  // `VILLAGE_SAYS` spreads `...SAYS`, so any context this table does not name
-  // still answers with the dinosaur valley's words. The three banded contexts
-  // below had no plain key of their own — and while the resolver always finds
-  // a band first, "always" is doing a lot of work there: one missing band, one
-  // typo in a suffix, and a child on a Kerala road is told the herd is walking
-  // home to the Green Valley. These are the safety net, set to what band 2
-  // says, which is the version that reads correctly at any distance.
-  start: [
-    "Back on the red road. Every letter is a step.",
-    "The paddy is up again. Let's walk!",
-  ],
-  idle: [
-    "{name} is waiting — press the glowing key!",
-    "{name} looks back at you. Ready to walk on?",
-  ],
-  milestone: [
-    "Another milestone behind you. +10!",
-    "Stone passed! {name} looks back at how far you've come. +10.",
-  ],
-  staredB3: [
-    "Nobody looks up any more. You are just the children from the road.",
-    "Somebody waves at {name} by name. That's new.",
-    "Only the robot still turns heads, and only the small ones.",
-  ],
-} as const;
-
-/**
- * WHAT A KERALA ROAD SAYS AFTER DARK.
- *
- * Time Keepers used to borrow the Hero Trail's night lines, because the test
- * that adds them is `world !== "dino"` — so half of what a child heard after
- * dark on this road was about lanterns, a party and mist, and if the night
- * style was not quiet it also pulled in the Lost Travellers, who do not exist
- * here. Its night is a real and specific thing now: eight in the evening, the
- * lamps lit one at a time, the market still trading, and a buffalo somewhere
- * out in the black.
- */
-const VILLAGE_NIGHT_SAYS: Partial<Record<string, readonly string[]>> = {
-  startB1: [
-    "It is dark already, and the lamps are lit. Off we go.",
-    "The road is a line of little fires tonight. Every letter is a step.",
-  ],
-  startB2: [
-    "Lamps lit, road open. Let's walk.",
-    "Evening on the red road. Off we go!",
-  ],
-  startB3: ["You know this road in the dark by now. Off we go."],
-  idleB1: [
-    "{name} is watching a flame in a stone. It has not gone out yet.",
-    "It is very dark out past the lamps. Press the glowing key.",
-  ],
-  idleB2: [
-    "The road waits between one lamp and the next. One glowing key.",
-    "{name} looks back down the line of lamps. Ready?",
-  ],
-  idleB3: ["{name} could walk this in the dark. Nearly is. Press a key."],
-  wave: [
-    "{name} waves in the lamplight. Still there?",
-    "A wave out of the dark — {name} is still with you.",
-  ],
-  crouch: ["{name} crouches down inside a pool of lamplight, and waits."],
-  sit: ["{name} sits down under a lamp. Press a key when you're ready."],
-  milestoneB2: ["Another stone, found in the dark. +10!"],
-  timerEnd: [
-    "The lamps will burn a while yet. Wonderful walking today!",
-    "Time to stop. The road keeps its lights on.",
-  ],
-};
+export const VILLAGE_SAYS = { ...SAYS, ...VILLAGE_DAY } as const;
+export const VILLAGE_NIGHT_TABLE = { ...SAYS, ...VILLAGE_NIGHT } as const;
 
 /**
  * The dry version, for the Cheeky coach setting — this world's own.
@@ -1718,9 +1343,9 @@ const VILLAGE_PLAYFUL_SAYS: Partial<Record<string, readonly string[]>> = {
 const defaultWhoName = (w: WorldId) =>
   w === "village" ? "Your friend" : w === "hero" ? "Your hero" : "Your dino";
 
-const saysOf = (world: WorldId) =>
+const saysOf = (world: WorldId, night = false) =>
   world === "village"
-    ? (VILLAGE_SAYS as unknown as typeof SAYS)
+    ? ((night ? VILLAGE_NIGHT_TABLE : VILLAGE_SAYS) as unknown as typeof SAYS)
     : world === "hero"
       ? (HERO_SAYS as unknown as typeof SAYS)
       : SAYS;
@@ -1810,6 +1435,21 @@ const pickSay = (list: readonly string[]) =>
 
 const fillSay = (t: string, vars: Record<string, string>) =>
   t.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
+
+/**
+ * THE LINE FOLLOWS THE KEYBOARD SETTING (owner, 6 Oct 2026). With the
+ * on-screen keyboard switched off there is no glowing key to look at — the
+ * next letter on the road is what glows — so the line says that instead of
+ * pointing at something that is not on the screen.
+ */
+export function keyboardWords(t: string, keyboardShown: boolean): string {
+  if (keyboardShown) {
+    return t;
+  }
+  return t
+    .replace(/glowing key/g, "glowing letter")
+    .replace(/\bthe glow\b/g, "the glowing letter");
+}
 
 // One calibrating line for parents: kids' speeds are NOT adult speeds, and
 // most worry evaporates once the realistic range for the age is on screen.
@@ -3655,6 +3295,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // A guide who cannot be swapped is not worth taking the road down for.
     });
   }, [prefs.guide, prefs.world, loaded, regenNonce]);
+  const roadHourRef = useRef(12);
   const roadClock = useMemo(() => {
     void clockTick;
     // REVIEW ONLY: `?hour=` pins the staged hour, and the board has to be
@@ -3701,6 +3342,8 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           )
         : stagedHours();
     const h24 = prefs.night ? at.night : at.day;
+    // The hour the voice speaks for, the same one this board prints.
+    roadHourRef.current = h24;
     const hour = Math.floor(h24);
     const mins = Math.round((h24 - hour) * 60);
     // 12-hour, because that is the clock a child reads and the one the whole
@@ -4214,6 +3857,23 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * Returns "" when this world has nothing to say for the key, which is the
    * right answer rather than a fallback: a dinosaur valley has no buffalo.
    */
+  /** The last line `sayLine` picked, before its tokens were filled. */
+  const lastPickRef = useRef("");
+  /**
+   * What the coach line is showing because `speak` put it there, kept with
+   * the unfilled line behind it so a change in the settings can redo it.
+   */
+  const shownRef = useRef<{
+    key: SayKey;
+    vars: Record<string, string>;
+    template: string;
+    line: string;
+  } | null>(null);
+  const fillLine = (template: string, vars: Record<string, string>) =>
+    fillSay(
+      keyboardWords(template, prefsRef.current.kbMode !== "off"),
+      sayVars(vars),
+    );
   const sayLine = (key: SayKey, vars: Record<string, string> = {}): string => {
     const age = dinoAgeRef.current;
     const p = prefsRef.current;
@@ -4226,7 +3886,10 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // age variants, then the plain key. Everywhere else is untouched.
     const stones = p.roadStones ?? 0;
     const bandNo = bandOf(stones);
-    const table = saysOf(world) as unknown as Record<
+    // DAY OR NIGHT, A WHOLE BANK EACH (owner, 6 Oct 2026). Time Keepers
+    // reads its night lines instead of its day ones, not as well as.
+    const villageNight = village && p.night === true;
+    const table = saysOf(world, villageNight) as unknown as Record<
       string,
       readonly string[] | undefined
     >;
@@ -4248,7 +3911,11 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     if (pool.length === 0 && key in SAYS) {
       // The age variants only exist for the shared contexts; the village-only
       // keys are banded instead and have already been resolved above.
-      pool = agedPool(saysOf(world), key as keyof typeof SAYS, age);
+      pool = agedPool(
+        saysOf(world, villageNight),
+        key as keyof typeof SAYS,
+        age,
+      );
     }
     // The banded pools were already filtered inside `villagePool`; this
     // catches the shared ones that fell through to it — the age variants and
@@ -4262,20 +3929,29 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // The after-dark lines. Time Keepers has its own; the Hero Trail's are
     // about lanterns, a party and mist, and were being handed to a Kerala
     // cart road because the test for them is only "not the dino world".
-    if (childCast(world) && p.night) {
-      const nightKeys = village ? [`${key}B${bandNo}`, key] : [key];
-      const extra = village
-        ? nightKeys.flatMap((k) => VILLAGE_NIGHT_SAYS[k] ?? [])
-        : [
-            ...(HERO_NIGHT_SAYS[key] ?? []),
-            ...(resolveNightStyle(band, nightStyleOf(p)) !== "quiet"
-              ? (HERO_NIGHT_TRAVELLER_SAYS[key] ?? [])
-              : []),
-          ];
+    if (childCast(world) && p.night && !village) {
+      const extra = [
+        ...(HERO_NIGHT_SAYS[key] ?? []),
+        ...(resolveNightStyle(band, nightStyleOf(p)) !== "quiet"
+          ? (HERO_NIGHT_TRAVELLER_SAYS[key] ?? [])
+          : []),
+      ];
       if (extra.length > 0) {
         // Half night lines, half the usual pool, so the dark changes the
         // voice without replacing it.
         pool = [...pool, ...extra, ...extra];
+      }
+    }
+    // WHAT IS ONLY TRUE AT THIS HOUR. The banks hold for any hour of their
+    // half; the temple's lamp-lighting, the shutters coming down and the
+    // tea shop opening at six are true for a slice of it, and come up often
+    // then and never otherwise. Twice over, so the hour is heard. Not on a
+    // once-ever line: that one is the moment's own.
+    if (village && firstEver === "") {
+      const slice =
+        VILLAGE_SLICES[villageSlice(roadHourRef.current, villageNight)][key];
+      if (slice != null && slice.length > 0) {
+        pool = [...pool, ...slice, ...slice];
       }
     }
     // The drier lines sit alongside the plain ones rather than replacing
@@ -4318,7 +3994,9 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     // the playful lines were merged in, so anything either of those added
     // slipped past it — neither names him today, and neither has to keep not
     // naming him for this to stay correct.
-    return fillSay(pickSay(withoutGuide(pool)), sayVars(vars));
+    const template = pickSay(withoutGuide(pool));
+    lastPickRef.current = template;
+    return fillLine(template, vars);
   };
 
   /**
@@ -4344,6 +4022,7 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
     if (line === "") {
       return;
     }
+    shownRef.current = { key, vars, template: lastPickRef.current, line };
     setSay(line);
     // And read it out, for the bands who cannot read it themselves. Only the
     // moments — see `voice.ts` for why the cheers are excluded.
@@ -4375,6 +4054,61 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
    * is worse than silence.
    */
   const pendingSpeechRef = useRef<{ line: string; at: number } | null>(null);
+
+  /**
+   * THE LINE ON SCREEN FOLLOWS THE SETTINGS (owner, 6 Oct 2026).
+   *
+   * A rename, the guide switched off or the keyboard hidden used to leave the
+   * old wording up until the next line came along — the old name, a guide who
+   * had gone, a glowing key that was no longer drawn. Redone in place from the
+   * line behind it, and re-picked only when the guide it names has been
+   * switched off. Not spoken again: the child heard it once already.
+   */
+  useEffect(() => {
+    const shown = shownRef.current;
+    if (shown == null || say !== shown.line) {
+      return;
+    }
+    let template = shown.template;
+    if (prefs.guide === false && template.includes("{guide}")) {
+      if (sayLine(shown.key, shown.vars) === "") {
+        return;
+      }
+      template = lastPickRef.current;
+    }
+    const next = fillLine(template, shown.vars);
+    if (next !== say) {
+      shownRef.current = { ...shown, template, line: next };
+      setSay(next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefs.guide, prefs.name, prefs.names, prefs.kbMode, prefs.village]);
+
+  /**
+   * THE TIME OF DAY, CHANGED IN THE SETTINGS, IS SAID (owner, 6 Oct 2026).
+   *
+   * Night falling announces itself from the world. Day coming back and the
+   * hour being moved did not, so the road changed in front of the child and
+   * the voice carried on as if nothing had. Time Keepers only: its lines are
+   * the ones written to the hour.
+   */
+  const timeOfDayRef = useRef<{
+    night: boolean;
+    hour: Prefs["dayHour"];
+  } | null>(null);
+  useEffect(() => {
+    const before = timeOfDayRef.current;
+    timeOfDayRef.current = { night: prefs.night, hour: prefs.dayHour };
+    if (before == null || !loaded || prefs.world !== "village") {
+      return;
+    }
+    if (before.night && !prefs.night) {
+      speak("daybreak");
+    } else if (before.night === prefs.night && before.hour !== prefs.dayHour) {
+      speak("clock");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefs.night, prefs.dayHour, loaded, prefs.world]);
   useEffect(() => {
     const id = setInterval(() => {
       const pending = pendingSpeechRef.current;
@@ -5427,7 +5161,16 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
           setSay(
             fillSay(
               pickSay(
-                withoutGuide(cheerPool(saysOf(prefsRef.current.world), band)),
+                withoutGuide(
+                  cheerPool(
+                    saysOf(
+                      prefsRef.current.world,
+                      prefsRef.current.world === "village" &&
+                        prefsRef.current.night === true,
+                    ),
+                    band,
+                  ),
+                ),
               ),
               sayVars(),
             ),

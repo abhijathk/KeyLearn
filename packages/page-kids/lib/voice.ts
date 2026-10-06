@@ -57,6 +57,14 @@ const SPOKEN = new Set([
   "crouch",
   "sit",
   "graduate",
+  // Time Keepers' moments (owner, 6 Oct 2026: these are read aloud too).
+  // Each fires once per occurrence — night falling, the village reached,
+  // being stared at — or when the time of day is changed in the settings.
+  "nightfall",
+  "village",
+  "stared",
+  "daybreak",
+  "clock",
 ]);
 
 export function isSpoken(key: string): boolean {
