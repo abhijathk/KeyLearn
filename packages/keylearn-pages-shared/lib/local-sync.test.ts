@@ -286,6 +286,8 @@ test("what stays on the device is a decision, with a reason", () => {
   // travels by default. Each of these would be a bug if carried.
   isFalse(isPortable("keylearn.sync.stamps")); // Its own bookkeeping.
   isFalse(isPortable("keylearn.activeProfile.42")); // Who is at THIS device.
+  isFalse(isPortable("qdesk-desk-theme")); // The support desk shares the host.
+  isFalse(isPortable("qdesk:last-input"));
   isFalse(isPortable("profile-9.settings")); // Has its own route.
   isFalse(isPortable("profile-9.keylearn.a11y")); // Has its own route.
   isFalse(isPortable("profile-9.keylearn.braille.progress")); // Merges, not copies.

@@ -147,6 +147,13 @@ export function isPortable(key: string): boolean {
   if (key.startsWith("keylearn.activeProfile.")) {
     return false;
   }
+  // THE SUPPORT DESK SHARES THIS HOST (keylearn.org/desk, Oct 2026), and so
+  // this browser storage. Its keys all start with `qdesk` and belong to a
+  // staffer's desk, not to a learner: never mirrored into a learner account,
+  // and never cleared when a learner signs out of this app.
+  if (key.startsWith("qdesk")) {
+    return false;
+  }
   const base = key.replace(/^profile-[^.]+\./, "");
   // Already carried, by mechanisms that do more than copy bytes.
   //
