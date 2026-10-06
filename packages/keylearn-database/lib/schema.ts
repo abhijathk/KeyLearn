@@ -886,6 +886,7 @@ export async function ensureCertificateSchema(
     });
   }
   await migrateCertificateRetention(knex);
+  await widenProfileDataPayload(knex);
 }
 
 /**
@@ -1002,4 +1003,29 @@ async function canonicalIndexNames(knex: Knex): Promise<void> {
     await knex.raw(`DROP INDEX \`${name}\``);
     await knex.raw(sql.replace(`\`${name}\``, `\`${canonical}\``));
   }
+}
+
+/**
+ * A learner's saved progress outgrew MySQL's BLOB (release, 7 Oct 2026).
+ *
+ * `table.binary()` is a BLOB on MySQL, which holds 64 KB, and one learner's
+ * snapshot was already over it: every save of it failed with
+ * ER_DATA_TOO_LONG, so the copy that backups and other devices read stopped
+ * moving while the learner kept practising. LONGBLOB holds 4 GB. SQLite has
+ * no such limit, which is why nothing local ever showed it. Idempotent.
+ */
+async function widenProfileDataPayload(knex: Knex): Promise<void> {
+  const client = (knex.client.config as { __client?: string }).__client;
+  if (client !== "mysql") {
+    return;
+  }
+  const [cols] = (await knex.raw(
+    `SELECT DATA_TYPE AS t FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'profile_data'
+        AND COLUMN_NAME = 'payload'`,
+  )) as unknown as [{ t: string }[]];
+  if (cols.length === 0 || cols[0]!.t.toLowerCase() === "longblob") {
+    return;
+  }
+  await knex.raw("ALTER TABLE `profile_data` MODIFY `payload` LONGBLOB NULL");
 }

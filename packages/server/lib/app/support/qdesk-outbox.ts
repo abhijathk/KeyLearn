@@ -71,6 +71,27 @@ function knex(): Knex {
   return SupportMessage.knex();
 }
 
+/**
+ * A raw row, with its column names as the table spells them.
+ *
+ * The MySQL connection maps result keys to camelCase (`knexSnakeCaseMappers`)
+ * and the SQLite one does not (its own `postProcessResponse` replaces the
+ * mapper's), so this file, written and tested on SQLite, read `idem_key`,
+ * `delivered_at` and the rest as undefined in production and never settled
+ * a row (release, 7 Oct 2026). Accepts either spelling.
+ */
+function snakeRow<T extends Record<string, unknown>>(
+  row: T | undefined,
+): Record<string, unknown> | undefined {
+  if (row == null) return row;
+  return Object.fromEntries(
+    Object.entries(row).map(([key, value]) => [
+      key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`),
+      value,
+    ]),
+  );
+}
+
 let ensured: { knex: Knex; done: Promise<void> } | null = null;
 
 /** Creates the table if it is missing. Memoised per database handle. */
@@ -228,7 +249,7 @@ export async function attempt(id: number): Promise<boolean> {
     return false;
   }
   const k = knex();
-  const row = (await k(OUTBOX_TABLE).where("id", id).first()) as
+  const row = snakeRow(await k(OUTBOX_TABLE).where("id", id).first()) as
     | Row
     | undefined;
   if (row == null || row.delivered_at != null || row.failed_at != null) {
