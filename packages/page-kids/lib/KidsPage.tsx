@@ -541,10 +541,11 @@ function defaultPrefs(): Prefs {
     cheers: true,
     night: false,
     soundAsked: false,
-    // Both on, so that saying yes to sound gives a child the whole thing;
-    // whoever wants half of it goes and takes half away.
+    // Saying yes to sound gives a child the key clicks. The game and
+    // background sounds (jumps, chimes, the road) stay off until somebody
+    // turns them on in the settings (owner, 7 Oct 2026).
     clickSounds: true,
-    worldSounds: true,
+    worldSounds: false,
     readAloud: cfg.readAloud,
     readAloudChosen: false,
     grownupKeys: "off",
@@ -3652,8 +3653,12 @@ function KidsGame({ lesson }: { readonly lesson: Lesson }) {
       // Did the trail reach an egg? The creature arrives here, in the scene
       // the child is looking at — the old line told them to go and find it in
       // a settings menu, which is not a reward, it is an errand.
+      //
+      // NOT ON HERO TRAIL (owner, 7 Oct 2026): it has its own companion,
+      // chosen from its main cast, so an egg hatching a stranger mid-trail
+      // - the line, the burst and the card - contradicts it.
       const world = prefsRef.current.world;
-      for (const hatchling of HATCHLINGS[world]) {
+      for (const hatchling of world === "hero" ? [] : HATCHLINGS[world]) {
         const { id, label, at } = hatchling;
         if (prevIncluded.current < at && included >= at) {
           speak("joins", { friend: label });
