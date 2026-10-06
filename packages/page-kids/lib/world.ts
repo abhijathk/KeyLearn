@@ -16345,6 +16345,12 @@ export function createKidsWorld(
       const side = Math.abs(Math.sin(p.turn ?? 0)) > 0.5;
       return { ...p, depth: (side ? dim.w : dim.d) * p.h * perspective(p.z) };
     });
+  /** Where the temples and shrines stand, for his 25-unit clearance. */
+  let sacredXsMemo: number[] | null = null;
+  const sacredXs = (): number[] =>
+    (sacredXsMemo ??= chapterPlacements()
+      .filter((pl) => /Temple|Shrine/i.test(pl.model))
+      .map((pl) => pl.x));
   const kuttiArea = (n: number): boolean => {
     if (CHAPTER_N === 3) return n === 4 || n === 7 || n === 8;
     if (CHAPTER_N === 4) return n === 2 || n === 5 || n === 6;
@@ -17287,7 +17293,19 @@ export function createKidsWorld(
         // — so the stand-off has to be applied here as well, or the one kind
         // of spot that CAN land on top of the children is the one kind that
         // is invented near them.
-        if (Math.abs(px - playerX) > KEEP_OFF && isClear(px, pz, 1.2)) {
+        // ONLY IN HIS OWN LESSONS, AND NEVER NEAR A TEMPLE. "Inside the
+        // corridor's x range" assumed the corridor was one stretch. In
+        // Chapters 3 and 4 it is not (4, 7, 8 and 2, 5, 6), so the range ran
+        // straight through the Great Market and Temple Street, and he was
+        // being invented on the road outside the temple (release check,
+        // 6 Oct 2026). The sacred rule is absolute, so a road spot keeps the
+        // same 25-unit clearance the fixed haunts are given.
+        if (
+          Math.abs(px - playerX) > KEEP_OFF &&
+          isClear(px, pz, 1.2) &&
+          (CHAPTER == null || kuttiArea(lessonAt(px, CHAPTER).n)) &&
+          sacredXs().every((tx) => Math.abs(tx - px) > 25)
+        ) {
           out.push({ x: px, z: pz, haunt: "road" });
         }
       }
@@ -18027,6 +18045,25 @@ export function createKidsWorld(
           if (grad > 1e-4) {
             bx += (-0.62 - n0) / grad;
           }
+        }
+        // HE DOES NOT FOLLOW THEM OUT OF HIS STRETCH. This is the one move
+        // placed by the party rather than by a place, so it was the one way
+        // he could step over a lesson border: begun at a haunt at the end of
+        // Lesson 24, it brought him up behind children who had just entered
+        // the Great Market (release check, 6 Oct 2026). If "behind them" is
+        // not his ground, or is near a temple, he simply does not come back.
+        if (
+          CHAPTER != null &&
+          (!kuttiArea(lessonAt(bx, CHAPTER).n) ||
+            sacredXs().some((tx) => Math.abs(tx - bx) <= 25))
+        ) {
+          k.routine = null;
+          k.beat = -1;
+          k.wrap.visible = false;
+          k.hidden = true;
+          k.glowWant = 0;
+          k.wait = 20 + Math.random() * 30;
+          return;
         }
         k.wrap.position.set(bx, terrainY(bx, bz), bz);
         // At their backs, and taken from where they actually are rather than
