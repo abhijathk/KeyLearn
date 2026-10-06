@@ -4965,6 +4965,108 @@ export const MARKET_ROW_HOURS: readonly (readonly [number, number])[] = [
   [6, 20],
   [8, 18],
 ];
+/**
+ * THE TEA SHOP'S BRIGHTWORK (owner, 6 Oct 2026: "add more reflective things
+ * inside the tea shop"). Its stock is matte wood and cloth in the atlas, so
+ * the lamp lit a dark room. A Kerala tea stall's counter is mostly polished
+ * steel and glass: the urn, the tumblers, the jars of snacks, and a brass
+ * plate or two on the shelf. Built in metres, origin on the counter top at
+ * the shop's middle, +z towards the road.
+ */
+function teaStallBrightwork(): THREE.Group {
+  const g = new THREE.Group();
+  g.name = "TeaStall_Brightwork";
+  const steel = new THREE.MeshStandardMaterial({
+    color: 0xdfe3e6,
+    metalness: 0.55,
+    roughness: 0.2,
+  });
+  const brass = new THREE.MeshStandardMaterial({
+    color: 0xd4a347,
+    metalness: 0.55,
+    roughness: 0.28,
+  });
+  const glass = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    metalness: 0,
+    roughness: 0.05,
+    transparent: true,
+    opacity: 0.3,
+    depthWrite: false,
+  });
+  const lidRed = new THREE.MeshStandardMaterial({
+    color: 0xb03a2e,
+    roughness: 0.5,
+  });
+  const put = (
+    geo: THREE.BufferGeometry,
+    mat: THREE.Material,
+    x: number,
+    y: number,
+    z: number,
+  ) => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    m.receiveShadow = true;
+    g.add(m);
+    return m;
+  };
+  // The urn, its tap to the road.
+  put(new THREE.CylinderGeometry(0.18, 0.19, 0.04, 20), steel, 0.85, 0.02, 0);
+  put(new THREE.CylinderGeometry(0.16, 0.16, 0.42, 20), steel, 0.85, 0.25, 0);
+  put(
+    new THREE.SphereGeometry(0.16, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+    steel,
+    0.85,
+    0.46,
+    0,
+  ).scale.y = 0.5;
+  put(new THREE.SphereGeometry(0.03, 10, 6), steel, 0.85, 0.56, 0);
+  put(
+    new THREE.CylinderGeometry(0.016, 0.016, 0.1, 8),
+    steel,
+    0.85,
+    0.1,
+    0.2,
+  ).rotation.x = Math.PI / 2;
+  // Tumblers, upside down to drain as they are in every tea shop.
+  const tumbler = new THREE.CylinderGeometry(0.03, 0.036, 0.09, 12);
+  for (const [x, z] of [
+    [0.45, 0.16],
+    [0.53, 0.06],
+    [0.38, 0.02],
+  ] as const) {
+    put(tumbler, steel, x, 0.045, z);
+  }
+  // Glass jars of snacks along the front of the counter.
+  const jar = new THREE.CylinderGeometry(0.085, 0.085, 0.24, 16);
+  const fill = new THREE.CylinderGeometry(0.075, 0.075, 0.17, 12);
+  const lid = new THREE.CylinderGeometry(0.07, 0.07, 0.03, 12);
+  for (const [i, colour] of [
+    0xe2b33c, // banana chips
+    0xb7773a, // murukku
+    0xe4752a, // laddu
+    0xc9a25b, // achappam
+  ].entries()) {
+    const x = -1.0 + i * 0.27;
+    put(
+      fill,
+      new THREE.MeshStandardMaterial({ color: colour, roughness: 0.65 }),
+      x,
+      0.09,
+      0.08,
+    );
+    put(jar, glass, x, 0.12, 0.08).renderOrder = 1;
+    put(lid, lidRed, x, 0.255, 0.08);
+  }
+  // Brass plates standing on the shelf behind, faces to the road.
+  const plate = new THREE.CylinderGeometry(0.13, 0.13, 0.012, 24);
+  for (const x of [-0.55, 0.05]) {
+    const p = put(plate, brass, x, 0.46, -1.02);
+    p.rotation.x = Math.PI / 2 - 0.18;
+  }
+  return g;
+}
 const PAD_BLEND = 4;
 const POND_HW = 7.6;
 const POND_HD = 4.8;
@@ -7102,6 +7204,32 @@ export function createKidsWorld(
   const sightStats = { tall: 0, nearestEdge: -Infinity };
   /** The thickets of a perspective road, in lengths; see where they are built. */
   const clusterLengths: { mesh: THREE.InstancedMesh; cx: number }[] = [];
+  /** Every instanced scatter plant, so a building can clear its own floor. */
+  const scatterPlants: THREE.InstancedMesh[] = [];
+  /**
+   * NOTHING GROWS INSIDE A SHOP (owner, 5 Oct 2026). The roadside scatter is
+   * planted before the village and knows nothing of it, so ferns and taro
+   * stood inside the tea shop and blacked out its lit interior at night.
+   * Once a building is standing and measured, any scatter plant within its
+   * footprint is folded to nothing.
+   */
+  const clearScatterInside = (b: THREE.Box3) => {
+    const m = new THREE.Matrix4();
+    const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+    for (const inst of scatterPlants) {
+      let hit = false;
+      for (let i = 0; i < inst.count; i++) {
+        inst.getMatrixAt(i, m);
+        const x = m.elements[12]!;
+        const z = m.elements[14]!;
+        if (x > b.min.x && x < b.max.x && z > b.min.z && z < b.max.z) {
+          inst.setMatrixAt(i, zero);
+          hit = true;
+        }
+      }
+      if (hit) inst.instanceMatrix.needsUpdate = true;
+    }
+  };
   /** Review-only dials with no home elsewhere (sky layer heights and so on). */
   const tuned: Record<string, number> = {};
   /**
@@ -8907,6 +9035,11 @@ export function createKidsWorld(
        * the carving was for.
        */
       aim?: THREE.Vector3;
+      /**
+       * Where the real light stands, when that is not the flame. The glow
+       * stays on the lantern; only the light that falls on things moves.
+       */
+      lightAt?: readonly [number, number, number];
     } = {},
   ): void {
     const kind = opts.kind ?? "oil";
@@ -9020,7 +9153,7 @@ export function createKidsWorld(
         kind === "oil" ? 34 : 26,
         kind === "oil" ? 1.15 : 1.6,
       );
-      light.position.set(x, y, z);
+      light.position.set(...(opts.lightAt ?? ([x, y, z] as const)));
       // A POINT LAMP NEVER CASTS. Its shadow would be a CUBE — six depth
       // passes for one lamp — and the budget grants six lamps, so switching
       // this on cost thirty-six shadow renders a frame against the sun's
@@ -22807,6 +22940,7 @@ export function createKidsWorld(
             part.receiveShadow = true;
             part.computeBoundingSphere();
             scene.add(part);
+            scatterPlants.push(part);
             clusterLengths.push({ mesh: part, cx: (key + 0.5) * CH });
           }
         }
@@ -22833,6 +22967,7 @@ export function createKidsWorld(
         // left the frustum.
         inst.frustumCulled = false;
         scene.add(inst);
+        scatterPlants.push(inst);
       }
     }
 
@@ -23417,8 +23552,20 @@ export function createKidsWorld(
                   {
                     at: 0,
                     closes: MARKET_ROW_HOURS[5]![1],
-                    kind: "petromax",
+                    // AN OIL LAMP, NOT A PETROMAX (owner, 6 Oct 2026): a warm
+                    // wick at the tea stall, like the shops either side.
+                    kind: "oil",
                     spot: rowAt(6.11, 2.23, 0.7),
+                    // THE TEA SHOP'S LIGHT STANDS AT ITS COUNTER (owner, 5 Oct
+                    // 2026: "a dark room with a light"). Its lamp hangs deep
+                    // in the shop, and after seven both neighbours are shut,
+                    // so nothing lit the counter's road-facing side. The
+                    // light comes forward and down to it; the flame stays
+                    // where the model hangs it.
+                    lightAt: rowAt(6.11, 1.76, 2.05),
+                    // Twice an ordinary wick: measured, this is what brings
+                    // the stall level with the shops lit by two lamps.
+                    lit: 9,
                   },
                   {
                     at: 0,
@@ -23472,6 +23619,8 @@ export function createKidsWorld(
             kind: "petromax" | "oil";
             up?: number;
             spot?: readonly [number, number, number];
+            lightAt?: readonly [number, number, number];
+            lit?: number;
           }[];
           for (const shop of SHOPS) {
             // EVERY shop's lamp is built; whether it BURNS is decided in the
@@ -23592,9 +23741,25 @@ export function createKidsWorld(
                     peak: 0.98,
                     lit: 7.5,
                     closes: shop.closes,
+                    lightAt: shop.lightAt,
                   }
-                : { size: 1.9, peak: 0.9, lit: 4.6, closes: shop.closes },
+                : {
+                    size: 1.9,
+                    peak: 0.9,
+                    lit: shop.lit ?? 4.6,
+                    closes: shop.closes,
+                    lightAt: shop.lightAt,
+                  },
             );
+          }
+          if (ROW) {
+            // On the tea shop's counter (6.11 m along, 1.29 m up, 1.0 m in,
+            // measured off the model), so the lamp has something to catch.
+            const bright = teaStallBrightwork();
+            bright.scale.setScalar(MS);
+            bright.position.set(...rowAt(6.11, 1.29, 1.0));
+            wrap.updateWorldMatrix(true, false);
+            wrap.attach(bright);
           }
 
           // ── THE GROVES THAT FRAME THE ROW ─────────────────────────────
@@ -25019,6 +25184,7 @@ export function createKidsWorld(
               const cx = (b.min.x + b.max.x) / 2;
               const cz = (b.min.z + b.max.z) / 2;
               blockers.push({ x: cx, z: cz, r: 1, hw, hd });
+              if (/Market/.test(p.model)) clearScatterInside(b);
               if (/village-houses\/Mana$/.test(p.model)) {
                 // THE MANA'S FORECOURT IS SWEPT (owner, 3 Oct 2026): nothing
                 // grows between its gate and its poomukham.
@@ -25290,6 +25456,7 @@ export function createKidsWorld(
               const cx = (b.min.x + b.max.x) / 2;
               const cz = (b.min.z + b.max.z) / 2;
               blockers.push({ x: cx, z: cz, r: 1, hw, hd });
+              if (/Market/.test(p.model)) clearScatterInside(b);
               if (/village-houses\/Mana$/.test(p.model)) {
                 // THE MANA'S FORECOURT IS SWEPT (owner, 3 Oct 2026): nothing
                 // grows between its gate and its poomukham.
@@ -27069,6 +27236,24 @@ export function createKidsWorld(
                 1
               );
             })
+          ) {
+            refused++;
+            continue;
+          }
+          // NOTHING GROWS INSIDE A SHOP (owner, 5 Oct 2026). The market row is
+          // not claimed as a footprint (its name misses the building test), so
+          // the field planted shrubs in the tea shop and it read as a dark
+          // room at night. Refused here, every layer, ground included.
+          if (
+            CHAPTER_N === 3 &&
+            whisperStructures.some(
+              (s) =>
+                /Market/.test(s.model) &&
+                spot.x > s.box.min.x - 0.5 &&
+                spot.x < s.box.max.x + 0.5 &&
+                spot.z > s.box.min.z - 0.5 &&
+                spot.z < s.box.max.z + 0.5,
+            )
           ) {
             refused++;
             continue;
