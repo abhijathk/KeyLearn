@@ -96,7 +96,8 @@ test("1.3 a page off is 404 to everyone, 200 to an admin who asks to preview, an
     "off is off for an admin too",
   );
   equal(
-    (await request.GET("/kids?preview").header("accept", html.accept).send()).status,
+    (await request.GET("/kids?preview").header("accept", html.accept).send())
+      .status,
     200,
     "an admin previews it on request",
   );

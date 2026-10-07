@@ -281,7 +281,8 @@ test("2.2 certificates: gates, attempts per day, and a version the certificate k
     "off for an admin too",
   );
   equal(
-    (await request.GET("/verify?preview").header("accept", "text/html").send()).status,
+    (await request.GET("/verify?preview").header("accept", "text/html").send())
+      .status,
     200,
     "an admin previews the page on request",
   );

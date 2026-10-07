@@ -252,7 +252,8 @@ test("a page that is off is off for an admin too, unless they ask to preview it"
     "off is off for the admin as well",
   );
   equal(
-    (await request.GET("/kids?preview").header("accept", "text/html").send()).status,
+    (await request.GET("/kids?preview").header("accept", "text/html").send())
+      .status,
     200,
     "the admin previews it on request",
   );
