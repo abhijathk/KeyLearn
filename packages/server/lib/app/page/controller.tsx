@@ -698,8 +698,15 @@ export class Controller {
       if (gate === "verify" && !certificatesPublicVerify()) {
         state = "404";
       }
+      // AN ADMIN SEES IT ONLY WHEN THEY ASK TO (owner, 7 Oct 2026). Off had
+      // meant "off for everybody else": the owner switched Multiplayer to
+      // 404 and, signed in as an admin, kept getting the page. Off is off;
+      // `?preview` on the address is how an admin checks one first.
       const { user } = ctx.state;
-      const admin = user?.email != null && isAdminEmail(user.email);
+      const admin =
+        user?.email != null &&
+        isAdminEmail(user.email) &&
+        ctx.request.query.has("preview");
       if (state !== "live" && !admin) {
         if (state === "404") {
           throw new NotFoundError();

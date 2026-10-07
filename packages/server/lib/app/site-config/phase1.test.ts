@@ -70,7 +70,7 @@ async function fresh() {
 
 const html = { accept: "text/html" };
 
-test("1.3 a page off is 404 to the public, 200 to an admin, and gone from the nav data", async () => {
+test("1.3 a page off is 404 to everyone, 200 to an admin who asks to preview, and gone from the nav data", async () => {
   const { admin, service, request } = await fresh();
   equal(
     (await request.GET("/kids").header("accept", html.accept).send()).status,
@@ -92,8 +92,13 @@ test("1.3 a page off is 404 to the public, 200 to an admin, and gone from the na
   await request.become("user1@keylearn.org");
   equal(
     (await request.GET("/kids").header("accept", html.accept).send()).status,
+    404,
+    "off is off for an admin too",
+  );
+  equal(
+    (await request.GET("/kids?preview").header("accept", html.accept).send()).status,
     200,
-    "an admin previews it",
+    "an admin previews it on request",
   );
   const page = await (
     await request.GET("/").header("accept", html.accept).send()

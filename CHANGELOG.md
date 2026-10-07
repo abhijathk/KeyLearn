@@ -41,6 +41,14 @@ changes.
   help section plus nine updated sections, in all 53 other languages.
   The kids and practice pages stay English.
 
+### Changed after release (7 Oct)
+
+- A page switched off in the Control Centre is off for admins too. An admin
+  checks one with `?preview` on its address. It had stayed visible to an
+  admin, so switching Multiplayer off seemed not to work.
+- Live: the leftover `MULTIPLAYER_ENABLED=false` was removed from the
+  server env, so the Control Centre switch drives Multiplayer.
+
 ### Fixed
 
 - MySQL: learner progress snapshots over 64 KB failed to save

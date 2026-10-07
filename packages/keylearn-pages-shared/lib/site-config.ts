@@ -108,8 +108,22 @@ export function usePageOffered(): (name: string) => boolean {
   const pages = usePageStates();
   return (name) => {
     const state = pages?.[name] ?? "live";
-    return admin === true || state === "live" || state === "soon";
+    return adminPreview(admin) || state === "live" || state === "soon";
   };
+}
+
+/**
+ * An admin looking at pages that are not open — only when they ask to, with
+ * `?preview` on the address (owner, 7 Oct 2026). Without it an admin gets
+ * exactly what everybody else gets, so switching a page off is seen to work.
+ * The server applies the same rule.
+ */
+function adminPreview(admin: boolean | undefined): boolean {
+  return (
+    admin === true &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("preview")
+  );
 }
 
 /**
@@ -121,7 +135,7 @@ export function usePageOffered(): (name: string) => boolean {
 export function usePageComingSoon(): (name: string) => boolean {
   const { admin } = usePageData();
   const pages = usePageStates();
-  return (name) => admin !== true && (pages?.[name] ?? "live") === "soon";
+  return (name) => !adminPreview(admin) && (pages?.[name] ?? "live") === "soon";
 }
 
 /**
@@ -138,7 +152,7 @@ export function usePageRefused(): (path: string) => boolean {
   const pages = usePageStates();
   return (path) => {
     const name = pageNameOfPath(path);
-    return name != null && admin !== true && pages[name] === "404";
+    return name != null && !adminPreview(admin) && pages[name] === "404";
   };
 }
 

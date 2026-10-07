@@ -237,7 +237,7 @@ test("every page state gates its own URL, in all three states", async () => {
   deepEqual([...problems], []);
 });
 
-test("a page that is off is still open to an admin, so it can be checked", async () => {
+test("a page that is off is off for an admin too, unless they ask to preview it", async () => {
   const { admin, service, request } = await fresh();
   await service.set("pages.kids.state", "404", { userId: admin });
   equal(
@@ -248,8 +248,13 @@ test("a page that is off is still open to an admin, so it can be checked", async
   await request.become("user1@keylearn.org");
   equal(
     (await request.GET("/kids").header("accept", "text/html").send()).status,
+    404,
+    "off is off for the admin as well",
+  );
+  equal(
+    (await request.GET("/kids?preview").header("accept", "text/html").send()).status,
     200,
-    "the admin previews it",
+    "the admin previews it on request",
   );
   await request.become(null);
 });
