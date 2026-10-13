@@ -13,9 +13,9 @@ import {
   renderRich,
 } from "./guide-content.tsx";
 import { legalDate } from "./legal-dates.ts";
+import { RELEASE_NOTES } from "./release-notes.ts";
 import { ReleaseNotesDialog } from "./ReleaseNotesDialog.tsx";
 import * as styles from "./road.module.less";
-import { RELEASE_NOTES } from "./release-notes.ts";
 
 // The legal pages, written to be read: plain words, honest promises, and the
 // same road design language as the rest of the app.
@@ -963,7 +963,7 @@ export function PrivacyPolicyPage() {
       <p>
         <FormattedMessage
           id="privacy.cookies.p"
-          defaultMessage="KeyLearn uses only what’s strictly necessary: a session cookie that keeps you signed in, and local preference storage for things like your theme and settings. There are no marketing or tracking cookies — which is why you don’t see a cookie banner here."
+          defaultMessage="KeyLearn uses very little: a session cookie that keeps you signed in, and local preference storage for things like your theme and settings. If you arrive through a link we shared, such as one in a newsletter or a parents’ group, one more cookie remembers only that link’s name, so we can count how many accounts each link brings. It holds nothing about you, is never shared, and is deleted when you create an account or after 30 days. There are no advertising cookies and no third-party trackers."
         />
       </p>
 

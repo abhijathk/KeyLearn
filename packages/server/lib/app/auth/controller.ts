@@ -82,6 +82,7 @@ import {
 } from "../site-config/readers.ts";
 import { SiteConfigService } from "../site-config/service.ts";
 import { reference } from "../support/my-controller.ts";
+import { countSignup } from "../visits/controller.ts";
 import { isBreached } from "./breached.ts";
 import {
   messageWithCode,
@@ -281,6 +282,8 @@ async function captureSignupContext(
   if (settingsDatabase != null) {
     await seedTimeZone(userId, signupCountry, settingsDatabase);
   }
+  // And which link or page brought them, for the desk's traffic widgets.
+  await countSignup(ctx);
 }
 
 /**
@@ -891,6 +894,15 @@ export class Controller {
             );
             return;
           case "ok":
+            // `known` was decided before User.ensure ran, so it is the one
+            // reliable sign that this sign-in has just made the account.
+            if (!known) {
+              await captureSignupContext(
+                ctx,
+                result.user.id!,
+                this.settingsDatabase,
+              );
+            }
             // The provider vouches for the address, not for a second factor:
             // an account with two-step on still has to give its code.
             if (
@@ -1272,6 +1284,14 @@ export class Controller {
     ctx.state.session.destroy();
     const user = await UserLoginRequest.login(token);
     if (user != null) {
+      // A link for an address with no account makes the account on click
+      // (User.login), so a row this fresh was made by this request.
+      if (
+        user.createdAt != null &&
+        Date.now() - new Date(user.createdAt).getTime() < 60_000
+      ) {
+        await captureSignupContext(ctx, user.id!, this.settingsDatabase);
+      }
       // Holding the inbox is one factor. An account with two-step on still
       // gives its code before the link opens anything.
       if (finishSignIn(ctx, user, { method: "magic-link" }) === "pending-2fa") {

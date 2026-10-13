@@ -47,6 +47,7 @@ import { SupportMessage } from "./support-message.ts";
 import { SupportPinProof } from "./support-pin-proof.ts";
 import { SupportQdeskOutbox } from "./support-qdesk-outbox.ts";
 import { SupportTicket } from "./support-ticket.ts";
+import { VisitStat } from "./visit-stat.ts";
 
 export async function createSchema(knex: Knex): Promise<void> {
   /** Returns whether the table was created by this call, not whether it exists. */
@@ -126,6 +127,9 @@ export async function createSchema(knex: Knex): Promise<void> {
   });
   await createTable(AdStat);
   await createTable(AdSeen);
+  // Where visitors and new accounts come from (campaign tracking). Daily
+  // counters only; no FK dependencies.
+  await createTable(VisitStat);
   // Control centre phase 1.10: the drift flag needs the default a value was
   // written against; additive for databases created before it.
   // Certificate criteria versioning (control centre phase 2.2).

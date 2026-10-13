@@ -19,6 +19,7 @@ import {
   MyTicketsController,
 } from "./support/index.ts";
 import { Controller as SyncController } from "./sync/index.ts";
+import { VisitController } from "./visits/index.ts";
 
 export function mainRoutes(): Middleware<any> {
   return new Router()
@@ -40,6 +41,7 @@ export function mainRoutes(): Middleware<any> {
         SupportController,
         MyTicketsController,
         SyncController,
+        VisitController,
       ),
     )
     .middleware();

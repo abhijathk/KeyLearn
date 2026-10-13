@@ -47,6 +47,7 @@ import {
   SupportTicket,
   User,
   UserExternalId,
+  VisitStat,
 } from "@keylearn/database";
 import { UserDataFactory } from "@keylearn/result-userdata";
 import {
@@ -82,6 +83,7 @@ import { type AuthState } from "../auth/types.ts";
 import { zod } from "../auth/zod.ts";
 import { numberingKey } from "../certificate/key.ts";
 import { Mailer } from "../mail/index.ts";
+import { snakeKeys } from "../raw-rows.ts";
 import { criteriaVersion } from "../site-config/criteria-version.ts";
 import { impactCounts } from "../site-config/impact.ts";
 import {
@@ -92,7 +94,6 @@ import {
 import { learnerReferenceRows } from "../site-config/learner-reference.ts";
 import { learnerDefaultRows } from "../site-config/readers.ts";
 import { deriveSignInMethod } from "../support/controller.ts";
-import { snakeKeys } from "../raw-rows.ts";
 
 const TStaffAuthVerify = z.object({
   email: z.string().trim().email(),
@@ -2797,6 +2798,99 @@ export class Controller {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * The last thirty days of visits and signups by source, for the desk's
+ * traffic widgets. Daily counters only (see VisitStat); nobody is in here.
+ */
+type TrafficStats = {
+  /** Days covered, oldest first; every trend below has this many entries. */
+  readonly days: readonly string[];
+  readonly visitsTrend: readonly number[];
+  readonly signupsTrend: readonly number[];
+  readonly visitsTotal: number;
+  readonly signupsTotal: number;
+  /** The busiest sources first, at most twenty-five. */
+  readonly bySource: readonly {
+    readonly source: string;
+    readonly medium: string;
+    readonly campaign: string;
+    readonly visits: number;
+    readonly signups: number;
+  }[];
+  /** search, social, referral, (none) and whatever campaign links name. */
+  readonly byMedium: readonly {
+    readonly medium: string;
+    readonly visits: number;
+    readonly signups: number;
+  }[];
+};
+
+const TRAFFIC_DAYS = 30;
+
+async function computeTraffic(now: number): Promise<TrafficStats> {
+  const days: string[] = [];
+  for (let i = TRAFFIC_DAYS - 1; i >= 0; i--) {
+    days.push(new Date(now - i * DAY_MS).toISOString().slice(0, 10));
+  }
+  const rows = await VisitStat.between(days[0]!, days[days.length - 1]!);
+  const index = new Map(days.map((d, i) => [d, i]));
+  const visitsTrend = days.map(() => 0);
+  const signupsTrend = days.map(() => 0);
+  const sources = new Map<
+    string,
+    {
+      source: string;
+      medium: string;
+      campaign: string;
+      visits: number;
+      signups: number;
+    }
+  >();
+  const mediums = new Map<
+    string,
+    { medium: string; visits: number; signups: number }
+  >();
+  for (const row of rows) {
+    const i = index.get(row.day);
+    if (i != null) {
+      visitsTrend[i]! += row.visits;
+      signupsTrend[i]! += row.signups;
+    }
+    const key = `${row.source} ${row.medium} ${row.campaign}`;
+    const s = sources.get(key) ?? {
+      source: row.source,
+      medium: row.medium,
+      campaign: row.campaign,
+      visits: 0,
+      signups: 0,
+    };
+    s.visits += row.visits;
+    s.signups += row.signups;
+    sources.set(key, s);
+    const m = mediums.get(row.medium) ?? {
+      medium: row.medium,
+      visits: 0,
+      signups: 0,
+    };
+    m.visits += row.visits;
+    m.signups += row.signups;
+    mediums.set(row.medium, m);
+  }
+  const busiest = (
+    a: { visits: number; signups: number },
+    b: { visits: number; signups: number },
+  ) => b.visits - a.visits || b.signups - a.signups;
+  return {
+    days,
+    visitsTrend,
+    signupsTrend,
+    visitsTotal: visitsTrend.reduce((a, b) => a + b, 0),
+    signupsTotal: signupsTrend.reduce((a, b) => a + b, 0),
+    bySource: [...sources.values()].sort(busiest).slice(0, 25),
+    byMedium: [...mediums.values()].sort(busiest),
+  };
+}
+
 type AccountStats = {
   readonly accountsTotal: number;
   readonly newLast7Days: number;
@@ -2831,6 +2925,8 @@ type AccountStats = {
   readonly householdsWithKid: number;
   /** The largest number of profiles on any single account. */
   readonly mostProfilesInOne: number;
+  /** Visits and signups by where they came from (campaign tracking). */
+  readonly traffic: TrafficStats;
   /** Ad campaigns by state; "running" means on screen right now. */
   readonly campaignCounts: {
     readonly running: number;
@@ -3249,6 +3345,7 @@ async function computeAccountStats(): Promise<AccountStats> {
     inactive,
     deletions,
     topCountry,
+    traffic: await computeTraffic(now),
     computedAt: new Date(now).toISOString(),
   };
   accountStatsCache = { data, at: now };

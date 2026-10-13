@@ -40,12 +40,14 @@ import { kidRestrictedRedirect, practiceRedirect } from "./surface.ts";
 import { Template } from "./Template.tsx";
 import { ThemeProvider } from "./themes/ThemeProvider.tsx";
 import { Title } from "./Title.tsx";
+import { sendVisitBeacon } from "./visit-beacon.ts";
 
 export function main() {
   // Before the first render, on purpose. Packages write their defaults into
   // storage as they boot, and the mirror has to see those writes to tell a
   // default apart from something the learner chose.
   startLocalSync();
+  sendVisitBeacon();
   createRoot(querySelector(Root.selector)).render(<App />);
 }
 
