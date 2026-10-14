@@ -15,6 +15,16 @@ export type ReleaseNote = {
 // surface, and 54-locale translation churn on every release isn't worth it.
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    version: "02.02.00",
+    date: "2026-10-14T22:19:00Z",
+    changes: [
+      "Kids type only words that suit children, in Classic practice as well as in the kids worlds. Words about adult topics, violence, drink, drugs and the like never come up.",
+      "Kids have far more words to type: about 2,000 everyday words for younger children, and about 4,300 for ages 9 and up, with words from school, books, sport, nature and science.",
+      "Classic practice for kids keeps the grown-up way of unlocking letters, now with children's words.",
+      "We now count how many visits and sign-ups come from each website or campaign. These are daily totals only, and no one is identified. The privacy policy explains the short-lived cookie this uses.",
+    ],
+  },
+  {
     version: "02.01.00",
     date: "2026-10-06T23:16:00Z",
     changes: [

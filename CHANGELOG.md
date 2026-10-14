@@ -5,6 +5,38 @@ document for the in-app release notes shown from the About page — keep
 `packages/page-static/lib/release-notes.ts` in sync whenever this file
 changes.
 
+## 02.02.00 — 2026-10-14 22:19 UTC
+
+### Added
+
+- Kids vocabulary in two age tiers (`kids-words-more.ts`): 1,575 simple
+  words for every child and 3,320 more for ages 9+, sorted by reading every
+  safe word in words-en and words-en-GB. `lesson.guided.olderKidsWords`
+  turns on the 9+ tier; the trail sets it for the 9-10 and 11+ bands.
+  Words typed: trail 559 → 2,004 (5–8) and 4,326 (9+).
+- Unsuitable-word filter (`kids-unsafe.ts`, 367 reviewed English words,
+  whole-word matching) under every kids vocabulary. Real words now also pass
+  keybr's profanity list, which only screened invented words before.
+- Visit and signup counting by source, medium and campaign (`visit_stat`,
+  `POST /_/visit`, 30-day first-party `kl_src` cookie), shown in QDesk.
+  Daily counters only. `captureSignupContext` now also runs for new verified
+  SSO accounts and magic-link accounts.
+
+### Changed
+
+- Kids Classic types the 9+ children's vocabulary (`lesson.guided.safeWords`)
+  instead of the full grown-up list, which could produce words such as
+  "naked" or "murder". Unlock order and rules are still the grown-up engine's.
+- The privacy policy's cookie paragraph describes the visit counting, in
+  every locale.
+
+### Tests
+
+- `kids-unsafe.stress.test.ts` generates every lesson at every stage and
+  focus letter with the real English model, for Classic and the trail at
+  both ages (about 5,700 lessons), and fails on any unsuitable word. A
+  control run without the filter shows that the check can fail.
+
 ## 02.01.00 — 2026-10-06 23:16 UTC
 
 ### Added
