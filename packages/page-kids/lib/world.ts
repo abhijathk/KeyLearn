@@ -8338,7 +8338,7 @@ export function createKidsWorld(
    * pushes it is what a person really puts on a deck:
    *
    * - their WEIGHT, standing or walking: a static sag, deepest mid-span
-   *   (about 2 cm for a grown-up; a child is about half the load);
+   *   (about 3.5 cm for a grown-up; a child is about half the load);
    * - their FOOTFALLS on top of it: about 40% of body weight, once per step,
    *   at the walking pace (about two steps a second, faster running). Near
    *   the deck's own frequency that is what makes a footbridge bounce;
@@ -8356,30 +8356,56 @@ export function createKidsWorld(
     bridgeClock += h;
     const movers: { wrap: THREE.Object3D; mass: number }[] = [];
     if (player != null) movers.push({ wrap: player.wrap, mass: 0.55 });
-    for (const f of followers) movers.push({ wrap: f.rig.wrap, mass: 0.55 });
-    for (const f of roadWalkers)
-      if (f.wrap.visible) movers.push({ wrap: f.wrap, mass: 1 });
+    // Review only (?perf, __bridgeSolo): the lead child alone, for comparing
+    // one walker with a party.
+    if (!(window as unknown as Record<string, unknown>).__bridgeSolo) {
+      for (const f of followers) movers.push({ wrap: f.rig.wrap, mass: 0.55 });
+      for (const f of roadWalkers)
+        if (f.wrap.visible) movers.push({ wrap: f.wrap, mass: 1 });
+    }
     const load = bridgeModules3d.map(() => ({ f: 0, roll: 0 }));
+    // The child at the front sets the step; see "falling into step" below.
+    const lead = player != null ? bridgeStep.get(player.wrap) : undefined;
     for (const { wrap, mass } of movers) {
       const x = wrap.position.x;
       const z = wrap.position.z;
       const prev = bridgeLastX.get(wrap) ?? x;
       bridgeLastX.set(wrap, x);
-      // Speed in road units a second; about 3.4 is a walk.
+      // Speed in road units a second; about 3.4 is a grown-up's walk.
       const speed = Math.abs(x - prev) / h / 3.4;
-      const moving = speed > 0.12;
-      // Steps a second: 1.9 walking, up to 3 running.
-      const cadence = 1.9 + 1.1 * Math.min(1, Math.max(0, speed - 1));
+      const moving = speed > 0.08;
+      // Steps a second: a child's slow walk about 1.8, a brisk one 2.2, a
+      // run up to 3.
+      const cadence =
+        1.8 +
+        0.4 * Math.min(1, speed) +
+        0.8 * Math.min(1, Math.max(0, speed - 1));
       let ph = bridgeStep.get(wrap) ?? Math.random();
-      if (moving) ph += cadence * h;
+      if (moving) {
+        ph += cadence * h;
+        // FALLING INTO STEP. People crossing together drift into step with
+        // each other (and a deck that moves under them pulls them in more),
+        // so a group's footfalls add up instead of cancelling. Gently: a
+        // few seconds to fall in, and never quite all together.
+        if (lead != null && wrap !== player?.wrap) {
+          const gap = lead - ph;
+          ph += 0.35 * h * Math.sin(2 * Math.PI * gap);
+        }
+      }
       bridgeStep.set(wrap, ph);
-      // The heel strike: a sharp rise each step, rounded off (the classic
-      // double-hump of a walking force, reduced to its first harmonic plus
-      // a little of the second).
+      // The heel strike: the walking force's first harmonic and a little of
+      // its second, about 40% of body weight at a normal walk, less at a
+      // dawdle, more running.
       const s = ph * Math.PI * 2;
+      const effort =
+        (0.65 + 0.35 * Math.min(1, speed)) * (speed > 1.3 ? 1.3 : 1);
       const dyn = moving
-        ? (0.4 * Math.sin(s) + 0.1 * Math.sin(2 * s)) * Math.min(1.4, speed)
+        ? (0.4 * Math.sin(s) + 0.1 * Math.sin(2 * s)) * effort
         : 0;
+      // Each foot also pushes a little sideways, left then right: half the
+      // step rate, so about once a second, which is where a footbridge's
+      // own sway is.
+      const side = moving ? 0.12 * Math.sin(s / 2) * effort : 0;
       for (let i = 0; i < bridgeModules3d.length; i++) {
         const m = bridgeModules3d[i]!;
         if (x < m.flex.x0 - 0.5 || x > m.flex.x1 + 0.5) continue;
@@ -8390,32 +8416,37 @@ export function createKidsWorld(
         const shape = Math.cos(Math.max(-1, Math.min(1, u)) * Math.PI * 0.5);
         const f = mass * shape * (1 + dyn);
         load[i]!.f += f;
-        load[i]!.roll += f * (z / 6.8);
+        load[i]!.roll += f * (z / 6.8) * 0.3 + mass * shape * side;
         if (i > 0) load[i - 1]!.f += 0.25 * mass * shape * dyn;
         if (i < bridgeModules3d.length - 1)
           load[i + 1]!.f += 0.25 * mass * shape * dyn;
       }
     }
-    // (2 pi 2.1 Hz)^2 and 8% of critical damping.
+    // Bounce: (2 pi 2.1 Hz)^2, 8% of critical damping. Near a walking pace,
+    // so steps build it a little; light enough to ring for a moment after.
     const K = 174;
     const C = 2 * 0.08 * Math.sqrt(K);
-    // A light village plank bridge: a grown-up standing still sags it about
-    // 2 cm and walking bounces it to about 6 (a child about half).
-    const G = 4.0;
-    const KR = 230;
-    const CR = 2 * 0.09 * Math.sqrt(KR);
+    // A light village plank bridge. One child walking bounces it about
+    // 4-6 cm; a party in step perhaps twice that; never more than 11.
+    const G = 6.5;
+    // Sway: about one cycle a second, 6% damped — the gentle side-to-side
+    // of a footbridge, a few tenths of a degree for a child, more for a
+    // group in step, never more than about 0.7 degrees.
+    const KR = (2 * Math.PI * 1.0) ** 2;
+    const CR = 2 * 0.06 * Math.sqrt(KR);
+    const GR = 0.4;
     for (let i = 0; i < bridgeModules3d.length; i++) {
       const m = bridgeModules3d[i]!;
       if (m.anchored) continue;
-      const force = Math.min(4, load[i]!.f);
+      const force = Math.min(5, load[i]!.f);
       const acc = -K * m.flex.d - C * m.v - G * force;
       m.v += acc * h;
       m.flex.d += m.v * h;
-      m.flex.d = Math.max(-0.1, Math.min(0.04, m.flex.d));
+      m.flex.d = Math.max(-0.11, Math.min(0.05, m.flex.d));
       const rollAcc =
         -KR * m.roll -
         CR * m.rollV +
-        0.9 * Math.max(-3, Math.min(3, load[i]!.roll));
+        GR * Math.max(-3, Math.min(3, load[i]!.roll));
       m.rollV += rollAcc * h;
       m.roll += m.rollV * h;
       m.roll = Math.max(-0.012, Math.min(0.012, m.roll));
