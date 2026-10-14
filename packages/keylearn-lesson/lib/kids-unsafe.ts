@@ -11,9 +11,9 @@ import { getBlacklist } from "@keylearn/phonetic-model";
  * out of context stay in — "battle", "ghost", "poison", "whipped", "sentenced",
  * "army" — because a story for this age uses them.
  *
- * Kids Classic is the grown-up engine with this list taken out; the trail
- * already types from the curated kids vocabulary and gets this as a second
- * layer. Matching is whole-word, so "skill" is never caught by "kill".
+ * Kids Classic and the trail both type from the children's vocabulary
+ * (kids-words.ts); this list is the second layer under it, and the only one
+ * if a vocabulary ever falls back to the full list. Matching is whole-word, so "skill" is never caught by "kill".
  */
 const UNSAFE_EN: ReadonlySet<string> = new Set(
   `

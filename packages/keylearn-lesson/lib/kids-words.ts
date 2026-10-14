@@ -1,4 +1,5 @@
 import { type WordList } from "@keylearn/content";
+import { KIDS_WORDS_OLDER, KIDS_WORDS_SIMPLE } from "./kids-words-more.ts";
 
 /**
  * A curated vocabulary of simple, familiar English words for young learners —
@@ -661,10 +662,22 @@ const KIDS_WORDS: ReadonlySet<string> = new Set([
 
 /**
  * Keeps only kid-friendly words, preserving the word list's frequency order
- * so the generator's weighting works exactly as before.
+ * so the generator's weighting works exactly as before. Every child gets the
+ * hand-picked words above and the simple ones; `older` (9 and up) adds the
+ * words a child that age knows from school, books and games.
  */
-export function filterKidsWords(wordList: WordList): WordList {
-  return wordList.filter((word) => KIDS_WORDS.has(word.toLowerCase()));
+export function filterKidsWords(
+  wordList: WordList,
+  { older = false }: { readonly older?: boolean } = {},
+): WordList {
+  return wordList.filter((word) => {
+    const lower = word.toLowerCase();
+    return (
+      KIDS_WORDS.has(lower) ||
+      KIDS_WORDS_SIMPLE.has(lower) ||
+      (older && KIDS_WORDS_OLDER.has(lower))
+    );
+  });
 }
 
 /**

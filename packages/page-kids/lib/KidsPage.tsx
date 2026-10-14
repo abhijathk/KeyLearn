@@ -2587,6 +2587,11 @@ function KidsSettings({ children }: { readonly children: ReactNode }) {
       settings
         .set(lessonProps.type, LessonType.GUIDED)
         .set(lessonProps.guided.kidsWords, true)
+        // From nine the words grow with the child: school, books, games.
+        .set(
+          lessonProps.guided.olderKidsWords,
+          currentBand() === "9-10" || currentBand() === "11+",
+        )
         .set(lessonProps.targetSpeed, target)
         // Past the alphabet the trail carries on into the keys grown-ups use.
         // Sparse on purpose: a capital costs two hands and a whole new motion,

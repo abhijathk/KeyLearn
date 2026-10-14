@@ -81,6 +81,13 @@ test("the trail: no unsuitable word in any lesson, at any stage", () => {
   check("trail", typedWords(settings, true));
 });
 
+test("the trail at 9+: no unsuitable word in any lesson, at any stage", () => {
+  const settings = new Settings()
+    .set(lessonProps.guided.kidsWords, true)
+    .set(lessonProps.guided.olderKidsWords, true);
+  check("trail 9+", typedWords(settings, true));
+});
+
 test("control: without the filter, the grown-up page does type them", () => {
   const seen = typedWords(new Settings(), false);
   isTrue(

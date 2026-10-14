@@ -42,9 +42,9 @@ export function KidsClassicFrame({
     // offer.
     let s = settings
       .set(lessonProps.type, LessonType.GUIDED)
-      // The grown-up vocabulary and algorithm, minus words unsuitable for a
-      // child. Not kidsWords — that also changes the unlock order, and
-      // Classic must stay the grown-up engine.
+      // Children's words (the 9+ vocabulary, nothing unsuitable) on the
+      // grown-up algorithm. Not kidsWords — that also changes the unlock
+      // order, and Classic must stay the grown-up engine.
       .set(lessonProps.guided.safeWords, true)
       .set(uiProps.tourSeen, true)
       // The kids boards, full size, on the grown-up keyboard — so the grown-up

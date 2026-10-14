@@ -40,7 +40,17 @@ export class GuidedLesson extends Lesson {
       // Same algorithm, kid-sized vocabulary. If the intersection is too
       // small to feed the generator, keep the full list — the phonetic
       // pseudo-word fallback still guards short letter sets either way.
-      const kids = filterKidsWords(wordList);
+      const kids = filterKidsWords(wordList, {
+        older: settings.get(lessonProps.guided.olderKidsWords),
+      });
+      if (kids.length >= 50) {
+        wordList = kids;
+      }
+    } else if (settings.get(lessonProps.guided.safeWords)) {
+      // Kids Classic: the grown-up engine, a 9+ child's words. Its letter
+      // order is the grown-up one, so early sets are thinner than the
+      // trail's; the usual pseudo-word padding (censored) fills the gap.
+      const kids = filterKidsWords(wordList, { older: true });
       if (kids.length >= 50) {
         wordList = kids;
       }

@@ -49,7 +49,7 @@ test("the curated kids vocabulary loses nothing to the filter", () => {
   }
 });
 
-test("Kids Classic: the grown-up list, minus the unsuitable words", () => {
+test("Kids Classic: children's words, never an unsuitable one", () => {
   const keyboard = loadKeyboard(Layout.EN_US);
   const model = new FakePhoneticModel();
   const words = en("words-en.json");
@@ -60,15 +60,23 @@ test("Kids Classic: the grown-up list, minus the unsuitable words", () => {
     words,
   );
   const grownUp = new GuidedLesson(new Settings(), keyboard, model, words);
-  const kept = new Set(classic.dictionary);
-  const all = [...grownUp.dictionary];
-  isTrue(
-    all.some((w) => w === "naked"),
-    "the grown-up list has it",
+  const kept = [...classic.dictionary];
+  for (const word of ["insurance", "investment", "taxes"]) {
+    isTrue([...grownUp.dictionary].includes(word), "the grown-up list has it");
+    isFalse(kept.includes(word), word);
+  }
+  isFalse(kept.includes("naked"));
+  isFalse(kept.some((w) => isUnsafeWord(w)));
+  // The 9+ children's vocabulary, as found in the grown-up list.
+  deepEqual(
+    kept,
+    [...grownUp.dictionary]
+      .filter(
+        (w) =>
+          filterKidsWords([w], { older: true }).length === 1 &&
+          !isUnsafeWord(w),
+      )
+      .filter((w) => filterUnsafeWords([w], Language.EN).length === 1),
   );
-  isFalse(kept.has("naked"));
-  isFalse([...kept].some((w) => isUnsafeWord(w)));
-  // Only the word pool changes: everything else the grown-up page has is kept.
-  deepEqual([...kept], filterUnsafeWords(all, Language.EN));
-  isTrue(kept.size > 9000);
+  isTrue(kept.length > 3000);
 });

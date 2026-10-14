@@ -35,8 +35,11 @@ export const lessonProps = {
     // Kids mode: intersect the dictionary with a curated child vocabulary.
     // The adaptive algorithm is untouched — only the word pool changes.
     kidsWords: booleanProp("lesson.guided.kidsWords", false),
-    // Kids Classic: the grown-up dictionary and algorithm, minus the words a
-    // child should not be handed to type. Only the word pool changes.
+    // Kids aged 9 and up: the children's vocabulary grows to the words a
+    // child that age knows from school, books and games.
+    olderKidsWords: booleanProp("lesson.guided.olderKidsWords", false),
+    // Kids Classic: the grown-up algorithm on children's words — the 9+
+    // vocabulary, never anything unsuitable. Only the word pool changes.
     safeWords: booleanProp("lesson.guided.safeWords", false),
     keyboardOrder: booleanProp("lesson.guided.keyboardOrder", false),
     alphabetSize: numberProp("lesson.guided.alphabetSize", 0, {
