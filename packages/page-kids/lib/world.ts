@@ -93,6 +93,7 @@ import {
   type MarketShutters,
 } from "./market-shutters.ts";
 import { type DeviceTier, nightPlan, type NightStyle } from "./night.ts";
+import { createRiverFish, type RiverFish } from "./river-fish.ts";
 import {
   MAX_UNITS_PER_KEY,
   RUN_LEN,
@@ -5084,11 +5085,18 @@ const pondWorldXZ = (d: PondDef, lx: number, lz: number) => ({
   z: d.z + lz * d.s,
 });
 
-type BridgeFlex = { readonly x0: number; readonly x1: number; d: number };
+/** One springy section: its sag `d` and its roll `r` about the road's line. */
+type BridgeFlex = {
+  readonly x0: number;
+  readonly x1: number;
+  d: number;
+  r: number;
+};
 let BRIDGE_FLEX: BridgeFlex[] = [];
-const flexAt = (x: number): number => {
+/** The deck's movement at a point: sag, and the roll's lift or drop at z. */
+const flexAt = (x: number, z = 0): number => {
   for (const m of BRIDGE_FLEX) {
-    if (x >= m.x0 && x <= m.x1) return m.d;
+    if (x >= m.x0 && x <= m.x1) return m.d - m.r * z;
   }
   return 0;
 };
@@ -5107,7 +5115,7 @@ const deckY = (x: number, z: number): number | null => {
   }
   // Both Wild Crossing spans land on level ground. Blending with the
   // channel underneath their last planks makes feet sink through the deck.
-  if (WILD != null) return BRIDGE.y;
+  if (WILD != null) return BRIDGE.y + flexAt(x, z);
   // THE LAST TWO UNITS AT EACH END BLEND INTO THE BANK. The deck is set to
   // the bank's height, but a bank is not perfectly flat, and a character who
   // steps from a deck at 1.30 onto ground at 1.18 drops through a visible
@@ -5117,9 +5125,9 @@ const deckY = (x: number, z: number): number | null => {
   const into = BRIDGE.halfLen - dx;
   if (into < ramp) {
     const t = into / ramp;
-    return terrainY(x, z) * (1 - t) + (BRIDGE.y + flexAt(x)) * t;
+    return terrainY(x, z) * (1 - t) + (BRIDGE.y + flexAt(x, z)) * t;
   }
-  return BRIDGE.y + flexAt(x);
+  return BRIDGE.y + flexAt(x, z);
 };
 
 /** Where a foot rests: the deck over the water, the ground everywhere else. */
@@ -6652,6 +6660,7 @@ export function createKidsWorld(
       crossing: () => ({ island: WILD, decks: BRIDGES, waterY: RIVER_SURFACE }),
       walker: () => player?.wrap.position.toArray(),
       bridgeFlex: () => BRIDGE_FLEX.map((m) => Number(m.d.toFixed(4))),
+      fish: () => riverFish?.fish() ?? null,
       passage: () => ({ text: wordText, index: wordIdx }),
       night: () => ({ blend: nightBlend, look: nightLook, now: nightNow }),
       // Skips his wait between appearances — up to a minute of game time,
@@ -8317,72 +8326,116 @@ export function createKidsWorld(
   }[] = [];
   const bridgeLastX = new WeakMap<object, number>();
   let bridgeClock = 0;
+  /** Each walker's own footfall clock, so steps land when feet do. */
+  const bridgeStep = new WeakMap<object, number>();
   /**
-   * Who is on the bridge, how fast, and where along each section; then a
-   * damped spring per section (about 3 Hz, lightly damped) pushed by their
-   * footfalls. Heave plus a hair of roll, so a run along it feels it more
-   * than a walk, a pause stills it, and neighbouring sections move a little
-   * differently at the joints. Peak sag is around 4 cm for a child.
+   * A TIMBER FOOTBRIDGE, AS ONE (owner, 15 Oct 2026: the bridge moves when
+   * people walk on it, the people on it move with it, and it is realistic).
+   *
+   * Each section is a mass on a spring: its first bending mode at about
+   * 2.1 Hz, lightly damped as timber is (about 8% of critical), so a step
+   * sets it ringing for a second or two instead of stopping dead. What
+   * pushes it is what a person really puts on a deck:
+   *
+   * - their WEIGHT, standing or walking: a static sag, deepest mid-span
+   *   (about 2 cm for a grown-up; a child is about half the load);
+   * - their FOOTFALLS on top of it: about 40% of body weight, once per step,
+   *   at the walking pace (about two steps a second, faster running). Near
+   *   the deck's own frequency that is what makes a footbridge bounce;
+   * - off-centre load ROLLS the section about the road's line, so a crowd on
+   *   one side tips it a little toward them.
+   *
+   * `deckY` adds both the sag and the roll's lift at the walker's z, so
+   * everybody on a section — walking or standing still — rides it.
+   * Neighbouring sections feel a quarter through the joint; the end sections
+   * sit on the bank and do not move.
    */
   function stepBridge(dt: number): void {
     if (bridgeModules3d.length === 0 || dt <= 0) return;
-    bridgeClock += dt;
-    const movers: THREE.Object3D[] = [];
-    if (player != null) movers.push(player.wrap);
-    for (const f of followers) movers.push(f.rig.wrap);
-    for (const f of roadWalkers) if (f.wrap.visible) movers.push(f.wrap);
+    const h = Math.min(dt, 1 / 30);
+    bridgeClock += h;
+    const movers: { wrap: THREE.Object3D; mass: number }[] = [];
+    if (player != null) movers.push({ wrap: player.wrap, mass: 0.55 });
+    for (const f of followers) movers.push({ wrap: f.rig.wrap, mass: 0.55 });
+    for (const f of roadWalkers)
+      if (f.wrap.visible) movers.push({ wrap: f.wrap, mass: 1 });
     const load = bridgeModules3d.map(() => ({ f: 0, roll: 0 }));
-    for (const wrap of movers) {
+    for (const { wrap, mass } of movers) {
       const x = wrap.position.x;
+      const z = wrap.position.z;
       const prev = bridgeLastX.get(wrap) ?? x;
       bridgeLastX.set(wrap, x);
-      const speed = Math.min(1.5, Math.abs(x - prev) / dt / 3.4);
-      const cadence = 1.9 + 1.1 * Math.min(1, speed);
+      // Speed in road units a second; about 3.4 is a walk.
+      const speed = Math.abs(x - prev) / h / 3.4;
+      const moving = speed > 0.12;
+      // Steps a second: 1.9 walking, up to 3 running.
+      const cadence = 1.9 + 1.1 * Math.min(1, Math.max(0, speed - 1));
+      let ph = bridgeStep.get(wrap) ?? Math.random();
+      if (moving) ph += cadence * h;
+      bridgeStep.set(wrap, ph);
+      // The heel strike: a sharp rise each step, rounded off (the classic
+      // double-hump of a walking force, reduced to its first harmonic plus
+      // a little of the second).
+      const s = ph * Math.PI * 2;
+      const dyn = moving
+        ? (0.4 * Math.sin(s) + 0.1 * Math.sin(2 * s)) * Math.min(1.4, speed)
+        : 0;
       for (let i = 0; i < bridgeModules3d.length; i++) {
         const m = bridgeModules3d[i]!;
         if (x < m.flex.x0 - 0.5 || x > m.flex.x1 + 0.5) continue;
+        if (deckY(x, z) == null) continue;
         const u =
           (x - (m.flex.x0 + m.flex.x1) / 2) / ((m.flex.x1 - m.flex.x0) / 2);
-        const shape = Math.max(0, 1 - u * u * 0.8);
-        // ONLY MOVING FEET MOVE IT. Somebody standing still puts no force on
-        // the deck at all, so it settles within a second of the last step.
-        const drive = speed < 0.12 ? 0 : speed;
-        const step = Math.sin(
-          bridgeClock * cadence * Math.PI * 2 + wrap.position.z + i * 0.6,
-        );
-        load[i]!.f += drive * shape * (0.55 + 0.45 * step);
-        const side = Math.sin(bridgeClock * cadence * Math.PI + i);
-        load[i]!.roll += speed * shape * side;
-        // The neighbours feel a quarter of it through the joint.
-        if (i > 0) load[i - 1]!.f += 0.25 * drive * shape * step;
+        // A simply supported span's first mode: most at mid-span.
+        const shape = Math.cos(Math.max(-1, Math.min(1, u)) * Math.PI * 0.5);
+        const f = mass * shape * (1 + dyn);
+        load[i]!.f += f;
+        load[i]!.roll += f * (z / 6.8);
+        if (i > 0) load[i - 1]!.f += 0.25 * mass * shape * dyn;
         if (i < bridgeModules3d.length - 1)
-          load[i + 1]!.f += 0.25 * drive * shape * step;
+          load[i + 1]!.f += 0.25 * mass * shape * dyn;
       }
     }
-    const K = 150; // (2*pi*1.95 Hz)^2: about two vibrations a second
-    const C = 7.5; // well damped: a stop is a stop
+    // (2 pi 2.1 Hz)^2 and 8% of critical damping.
+    const K = 174;
+    const C = 2 * 0.08 * Math.sqrt(K);
+    // A light village plank bridge: a grown-up standing still sags it about
+    // 2 cm and walking bounces it to about 6 (a child about half).
+    const G = 4.0;
+    const KR = 230;
+    const CR = 2 * 0.09 * Math.sqrt(KR);
     for (let i = 0; i < bridgeModules3d.length; i++) {
       const m = bridgeModules3d[i]!;
       if (m.anchored) continue;
-      const force = Math.min(2.0, load[i]!.f);
-      // Heave: pushed down, springs back.
-      const acc = -K * m.flex.d - C * m.v - 5 * force;
-      m.v += acc * dt;
-      m.flex.d += m.v * dt;
-      m.flex.d = Math.max(-0.035, Math.min(0.01, m.flex.d));
+      const force = Math.min(4, load[i]!.f);
+      const acc = -K * m.flex.d - C * m.v - G * force;
+      m.v += acc * h;
+      m.flex.d += m.v * h;
+      m.flex.d = Math.max(-0.1, Math.min(0.04, m.flex.d));
       const rollAcc =
-        -K * 1.2 * m.roll -
-        C * 1.4 * m.rollV +
-        0.6 * Math.max(-1.5, Math.min(1.5, load[i]!.roll));
-      m.rollV += rollAcc * dt;
-      m.roll += m.rollV * dt;
-      m.roll = Math.max(-0.004, Math.min(0.004, m.roll));
+        -KR * m.roll -
+        CR * m.rollV +
+        0.9 * Math.max(-3, Math.min(3, load[i]!.roll));
+      m.rollV += rollAcc * h;
+      m.roll += m.rollV * h;
+      m.roll = Math.max(-0.012, Math.min(0.012, m.roll));
+      m.flex.r = m.roll;
       m.w.position.y = m.baseY + m.flex.d;
       m.w.rotation.x = m.roll;
     }
   }
+  /** Is any section of the bridge still moving? (The mirror follows it.) */
+  const bridgeMoving = (): boolean =>
+    bridgeModules3d.some(
+      (m) =>
+        !m.anchored && (Math.abs(m.v) > 0.004 || Math.abs(m.rollV) > 0.002),
+    );
   /** Draws the flipped scene for the water's mirror; called just before the frame. Null when this road has no river. */
   let mirrorPass: (() => void) | null = null;
+  /** The wide river's fish (lessons 37-38); see river-fish.ts. */
+  let riverFish: RiverFish | null = null;
+  /** Where each walker was last frame, for the fish to feel footsteps. */
+  const fishLastX = new WeakMap<object, number>();
   /** Village ponds' mirrors, one per pond built; run just before the frame. */
   const pondMirrors: (() => void)[] = [];
   const pondDisposers: (() => void)[] = [];
@@ -11166,6 +11219,8 @@ export function createKidsWorld(
         const markReflectables = () => {
           scene.traverse((o) => {
             if (o === water || o === ground) return;
+            // Fish are under the surface; nothing of theirs is mirrored.
+            if (o.userData.noMirror) return;
             if ((o as THREE.Light).isLight) {
               o.layers.enable(REFLECT_LAYER);
               return;
@@ -11260,7 +11315,14 @@ export function createKidsWorld(
             reflUniforms.uReflAmt.value = 0;
             return;
           }
-          if (frameNo++ % 3 !== 0 && reflUniforms.uReflAmt.value > 0) return;
+          // Every third frame is plenty for still water; while the bridge is
+          // bouncing its reflection must keep up with it, or the two part.
+          // Every other frame keeps up with a bounce at no visible cost.
+          if (
+            frameNo++ % (bridgeMoving() ? 2 : 3) !== 0 &&
+            reflUniforms.uReflAmt.value > 0
+          )
+            return;
           cam.updateMatrixWorld();
           camP.setFromMatrixPosition(cam.matrixWorld);
           view.subVectors(surfP, camP).reflect(nUp).negate().add(surfP);
@@ -11296,8 +11358,8 @@ export function createKidsWorld(
           reflMat.multiply(reflCam.projectionMatrix);
           reflMat.multiply(reflCam.matrixWorldInverse);
           r.getDrawingBufferSize(sz);
-          const w = Math.max(64, Math.min(1024, Math.floor(sz.x * 0.45)));
-          const h = Math.max(32, Math.min(512, Math.floor(sz.y * 0.45)));
+          const w = Math.max(64, Math.min(1024, Math.floor(sz.x * 0.5)));
+          const h = Math.max(32, Math.min(512, Math.floor(sz.y * 0.5)));
           if (reflRT.width !== w || reflRT.height !== h) reflRT.setSize(w, h);
           const prevRT = r.getRenderTarget();
           const prevShadow = r.shadowMap.autoUpdate;
@@ -11331,6 +11393,73 @@ export function createKidsWorld(
           reflUniforms.uReflAmt.value = 1;
         };
         water.userData.disposeReflection = () => reflRT.dispose();
+      }
+
+      // ── FISH IN THE WIDE RIVER (lessons 37-38) ─────────────────────────
+      //
+      // Drawn after the water as light coming up through it (river-fish.ts),
+      // so the surface must not hide what is under it from the depth test:
+      // the bed and the roots under it are opaque and drawn first anyway.
+      if (WILD != null) {
+        const crossing = WILD;
+        wmat.depthWrite = false;
+        const viewDir = new THREE.Vector3();
+        cam.updateMatrixWorld();
+        cam.getWorldDirection(viewDir);
+        const fishVP = new THREE.Matrix4();
+        const fishFrustum = new THREE.Frustum();
+        riverFish = createRiverFish({
+          scene,
+          surfaceY: RIVER_SURFACE,
+          bedY: (x, z) => terrainY(x, z),
+          isWater: (x, z) => {
+            const banks = wildBanks(crossing, z);
+            return (
+              x > banks.left + 1.2 &&
+              x < banks.right - 1.2 &&
+              islandRadius(crossing, x, z) > 1.12 &&
+              terrainY(x, z) < RIVER_SURFACE - 0.3
+            );
+          },
+          scaleAt: (z) => depthScale(z, V.camZ, theme.laneZ ?? 0),
+          // A grown villager is 6.3 units for about 1.65 m.
+          unitsPerMetre: 3.8,
+          bounds: {
+            x0: crossing.revealStart,
+            x1: crossing.exit + 6,
+            z0: -34,
+            z1: 16,
+          },
+          waterTime,
+          rippleScale: reflUniforms.uScale.value,
+          rippleAmt: reflUniforms.uRipple.value,
+          waterColor: reflUniforms.uMid.value,
+          viewDir,
+          onScreen: () => {
+            if ((window as unknown as Record<string, unknown>).__noFish)
+              return false;
+            fishVP.multiplyMatrices(
+              cam.projectionMatrix,
+              cam.matrixWorldInverse,
+            );
+            fishFrustum.setFromProjectionMatrix(fishVP);
+            return fishFrustum.intersectsObject(water);
+          },
+          disturbers: () => {
+            const out: { x: number; z: number; speed: number }[] = [];
+            const feel = (o: THREE.Object3D) => {
+              const { x, z } = o.position;
+              const prev = fishLastX.get(o) ?? x;
+              fishLastX.set(o, x);
+              if (deckY(x, z) == null) return;
+              out.push({ x, z, speed: Math.abs(x - prev) * 60 });
+            };
+            if (player != null) feel(player.wrap);
+            for (const f of followers) feel(f.rig.wrap);
+            for (const f of roadWalkers) if (f.wrap.visible) feel(f.wrap);
+            return out;
+          },
+        });
       }
 
       // ── LILIES, LESSON 16'S RIVER ONLY ──────────────────────────────────
@@ -13837,6 +13966,21 @@ export function createKidsWorld(
   /** This run's length — see runLengthFor. Full until a passage says otherwise. */
   let runLen = RUN_LEN;
   let runEnd = runStart + runLen;
+  // Review only (?perf): put the party at a point on the road, or walk it
+  // there, to look at a place without typing the way to it.
+  if (
+    typeof window !== "undefined" &&
+    window.location.search.includes("perf")
+  ) {
+    (window as unknown as Record<string, unknown>).__goTo = (
+      x: number,
+      walk = false,
+    ) => {
+      if (!walk) playerX = x;
+      targetX = x;
+      runEnd = Math.max(runEnd, x);
+    };
+  }
   let flagPole: THREE.Mesh | null = null;
   let flagCone: THREE.Mesh | null = null;
   /**
@@ -25681,6 +25825,7 @@ export function createKidsWorld(
               x0: module.x - half,
               x1: module.x + half,
               d: 0,
+              r: 0,
             };
             BRIDGE_FLEX.push(flex);
             bridgeModules3d.push({
@@ -34256,6 +34401,7 @@ export function createKidsWorld(
       sun.shadow.needsUpdate = guard.frameNo % guard.shadowEvery === 0;
     }
     stepBridge(dt);
+    riverFish?.update(dt, nightBlend);
     mirrorPass?.();
     for (const m of pondMirrors) m();
     renderer.render(scene, cam);
