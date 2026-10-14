@@ -6,6 +6,7 @@ import { type KeyStatsMap } from "@keylearn/result";
 import { type Settings } from "@keylearn/settings";
 import { Dictionary, filterWordList } from "./dictionary.ts";
 import { LessonKey, LessonKeys } from "./key.ts";
+import { filterUnsafeWords } from "./kids-unsafe.ts";
 import { filterKidsWords, kidsLetterOrder } from "./kids-words.ts";
 import { Lesson } from "./lesson.ts";
 import { lessonProps } from "./settings.ts";
@@ -43,6 +44,15 @@ export class GuidedLesson extends Lesson {
       if (kids.length >= 50) {
         wordList = kids;
       }
+    }
+    if (
+      settings.get(lessonProps.guided.kidsWords) ||
+      settings.get(lessonProps.guided.safeWords)
+    ) {
+      // Whatever the pool ended up being — the kids vocabulary, or the full
+      // list it falls back to in a language the kids list does not cover —
+      // nothing unsuitable for a child reaches the text.
+      wordList = filterUnsafeWords(wordList, model.language);
     }
     // Two-letter words are excluded for grown-ups, where they add nothing. For
     // a child "at", "in", "on", "go" and "me" are among the first things worth

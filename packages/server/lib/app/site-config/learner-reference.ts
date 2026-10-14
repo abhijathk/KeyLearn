@@ -77,6 +77,7 @@ const LABELS: Readonly<Record<string, string>> = {
   "lesson.repeatWords": "Times each word repeats",
   "lesson.guided.naturalWords": "Guided: use real words",
   "lesson.guided.kidsWords": "Guided: children's vocabulary",
+  "lesson.guided.safeWords": "Guided: leave out words unsuitable for children",
   "lesson.guided.keyboardOrder": "Guided: introduce keys in layout order",
   "lesson.guided.alphabetSize": "Guided: letters unlocked",
   "lesson.guided.recoverKeys": "Guided: bring weak keys back",

@@ -1,4 +1,5 @@
 export * from "./Alphabet.tsx";
+export { getBlacklist } from "./blacklist/blacklist.ts";
 export * from "./builder.ts";
 export * from "./censor.ts";
 export * from "./context.ts";
