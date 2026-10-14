@@ -203,7 +203,8 @@ export function AboutPage() {
             id: "about.dateline",
             defaultMessage: "Free · Open source · Version {version}",
           },
-          { version: APP_VERSION },
+          // "v02.02.00", as everywhere else the version is shown.
+          { version: `v${APP_VERSION}` },
         )}
         chip={<ContactChip />}
       />

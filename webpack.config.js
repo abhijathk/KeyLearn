@@ -216,6 +216,16 @@ export default [
           type: "asset/resource",
           generator: { emit: false },
         },
+        {
+          // The same for DRACOLoader's default decoders: world.ts sets its
+          // own decoder path (`${ASSETS}/draco/`), so these are never
+          // fetched. Two of them share the name draco_decoder.wasm (libs/
+          // draco and libs/draco/gltf), which a dev build — unhashed names —
+          // refused to emit side by side.
+          test: /three[\\/]examples[\\/]jsm[\\/]libs[\\/]draco[\\/].*\.(wasm|js)$/,
+          type: "asset/resource",
+          generator: { emit: false },
+        },
       ],
     },
     optimization: {
