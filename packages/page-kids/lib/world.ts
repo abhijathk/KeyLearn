@@ -6661,6 +6661,7 @@ export function createKidsWorld(
       walker: () => player?.wrap.position.toArray(),
       bridgeFlex: () => BRIDGE_FLEX.map((m) => Number(m.d.toFixed(4))),
       fish: () => riverFish?.fish() ?? null,
+      fishLeap: () => riverFish?.leapSoon(),
       passage: () => ({ text: wordText, index: wordIdx }),
       night: () => ({ blend: nightBlend, look: nightLook, now: nightNow }),
       // Skips his wait between appearances — up to a minute of game time,
@@ -11058,6 +11059,23 @@ export function createKidsWorld(
               : new THREE.Vector2(0.6, 0.26),
         },
         uRipple: { value: WILD != null ? 0.032 : 0.026 },
+        // Expanding rings on the surface (a fish rising, a splash): x, z,
+        // the water clock when it began, and its strength. See addRing.
+        uRings: {
+          value: Array.from(
+            { length: 8 },
+            () => new THREE.Vector4(0, 0, -99, 0),
+          ),
+        },
+      };
+      let ringNext = 0;
+      const addRing = (x: number, z: number, amp: number) => {
+        reflUniforms.uRings.value[ringNext++ % 8]!.set(
+          x,
+          z,
+          waterTime.value,
+          amp,
+        );
       };
       const wmat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
@@ -11123,7 +11141,29 @@ export function createKidsWorld(
                return wNoise(q + vec2(t * 0.25, t * 0.7)) * 0.7
                     + wNoise(q * 2.1 - vec2(t * 0.4, t * 1.1)) * 0.3;
              }
-             vec2 rippleG;`,
+             vec2 rippleG;
+             uniform vec4 uRings[8];
+             // A RING ON THE WATER spreads at the speed of a small ripple
+             // (about a third of a metre a second), its band widening and
+             // its height dying away over three seconds; what it changes is
+             // the slope of the surface, so it shows as light and reflection
+             // bending round it, as a real one does.
+             vec2 ringG(vec2 p) {
+               vec2 g = vec2(0.0);
+               for (int i = 0; i < 8; i++) {
+                 vec4 R = uRings[i];
+                 float age = uWave - R.z;
+                 if (R.w <= 0.0 || age < 0.0 || age > 3.5) continue;
+                 vec2 d = p - R.xy;
+                 float r = length(d) + 1e-4;
+                 float front = 0.15 + 1.25 * age;
+                 float band = exp(-pow((r - front) / (0.3 + 0.3 * age), 2.0));
+                 float k = 6.2831853 / 0.42;
+                 float fade = R.w * exp(-age * 1.15) / (1.0 + r * 0.5);
+                 g += (d / r) * (-sin(k * (r - front))) * band * fade;
+               }
+               return g;
+             }`,
           )
           .replace(
             "#include <color_fragment>",
@@ -11149,6 +11189,7 @@ export function createKidsWorld(
                float gx = wHeight(vWave + vec2(e, 0.0)) - wHeight(vWave - vec2(e, 0.0));
                float gz = wHeight(vWave + vec2(0.0, e)) - wHeight(vWave - vec2(0.0, e));
                rippleG = vec2(gx, gz) / (2.0 * e) * uRipple;
+               rippleG += ringG(vWave) * 0.09;
                normal = normalize(normal + vec3(rippleG.x, 0.0, rippleG.y));
              }`,
           )
@@ -11194,7 +11235,7 @@ export function createKidsWorld(
           );
       };
       wmat.customProgramCacheKey = () =>
-        lake ? "village-water-lake-v2" : "village-water-v2";
+        lake ? "village-water-lake-v3" : "village-water-v3";
       const water = new THREE.Mesh(wgeo, wmat);
       water.name = WILD != null ? "chapter4-wide-river" : "chapter2-river";
       water.position.y = RIVER_SURFACE;
@@ -11466,6 +11507,8 @@ export function createKidsWorld(
           rippleAmt: reflUniforms.uRipple.value,
           waterColor: reflUniforms.uMid.value,
           viewDir,
+          ring: addRing,
+          covered: (x, z) => deckY(x, z) != null,
           onScreen: () => {
             if ((window as unknown as Record<string, unknown>).__noFish)
               return false;

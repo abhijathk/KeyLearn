@@ -59,6 +59,10 @@ export type FishHost = {
   readonly waterColor: THREE.Color;
   /** The camera's viewing direction (orthographic: one direction). */
   readonly viewDir: THREE.Vector3;
+  /** Is there a deck overhead at x, z? No leaping or sipping under it. */
+  readonly covered: (x: number, z: number) => boolean;
+  /** Start a ring spreading on the surface at x, z (strength ~0.5-2). */
+  readonly ring: (x: number, z: number, amp: number) => void;
   /** Is the river on screen? Nothing is stepped or drawn while it is not. */
   readonly onScreen: () => boolean;
   /** Anyone moving on the decks above: x, z and speed in units/s. */
@@ -389,11 +393,22 @@ type Fish = {
   cside: number;
   /** The spine's curve this frame, smoothed. */
   bend: number;
+  /** Nose up or down as it climbs or dives, smoothed (radians). */
+  pitch: number;
+  /** Seconds until it next rises to sip at the surface. */
+  riseIn: number;
+  /** Rising: 0 none, 1 going up, 2 at the surface (ringed). */
+  rising: number;
+  /** Mullet only: seconds until the next leap, and the leap under way. */
+  leapIn: number;
+  leap: { t: number; vy: number; dur: number } | null;
 };
 
 export type RiverFish = {
   update(dt: number, night: number): void;
   dispose(): void;
+  /** Review: make the mullet leap within a few seconds. */
+  leapSoon(): void;
   /** Review: positions, for checking they stay in the water. */
   readonly fish: () => readonly {
     x: number;
@@ -539,7 +554,7 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
            {
              vec2 at = vec2(instanceMatrix[3].x, instanceMatrix[3].z);
              float wob = sin(uTime * 2.7 + at.x * 1.3 + aU * 7.0) * 0.6 + sin(uTime * 4.1 - at.y * 1.7 + aU * 11.0) * 0.4;
-             transformed.y += wob * 0.018 * (0.4 + aDepthM);
+             transformed.y += wob * 0.018 * (0.4 + aDepthM) * step(0.0, aDepthM);
            }`,
         )
         .replace(
@@ -595,11 +610,11 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
              // Under water. The light from the fish crosses depth * slant of
              // water to reach the surface, losing red first; what is lost is
              // replaced by the river's own colour, lit like the water is.
-             float path = vDepthM * uPath;
+             float path = max(vDepthM, 0.0) * uPath;
              vec3 T = exp(-uSigma * path);
              // Sun-flecks across the back, shallow fish only.
              float caus = smoothstep(0.62, 0.9, fNoise(vWorldP.xz * 1.9 + vec2(uTime * 0.21, uTime * 0.33)))
-                        * smoothstep(-0.1, 0.6, vV) * exp(-vDepthM * 2.2) * (1.0 - uNight);
+                        * smoothstep(-0.1, 0.6, vV) * exp(-max(vDepthM, 0.0) * 2.2) * (1.0 - uNight) * step(0.0, vDepthM);
              // Light under the ripples comes and goes across the body too.
              float shim = 0.9 + 0.2 * fNoise(vWorldP.xz * 3.0 + vec2(uTime * 0.5, -uTime * 0.4));
              vec3 lit = outgoingLight * shim * (1.0 + 0.55 * caus);
@@ -607,14 +622,16 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
              outgoingLight = mix(river, lit, T);
              // How much of the eye's view of this point the fish is: what the
              // surface lets through, less with depth, and fins see-through.
-             float vis = uTransmit * exp(-0.9 * path) * (vFin > 0.5 ? 0.55 : 1.0);
+             float vis = vDepthM < 0.0
+               ? (vFin > 0.5 ? 0.8 : 1.0) // in the air: seen as it is
+               : uTransmit * exp(-0.9 * path) * (vFin > 0.5 ? 0.55 : 1.0);
              // A fish just under the surface is never perfectly sharp.
              diffuseColor.a = clamp(vis, 0.0, 1.0);
            }
            #include <opaque_fragment>`,
         );
     };
-    mat.customProgramCacheKey = () => `river-fish-${sp.name}-v3`;
+    mat.customProgramCacheKey = () => `river-fish-${sp.name}-v4`;
     mats.push(mat);
     const mesh = new THREE.InstancedMesh(geo, mat, sp.count);
     mesh.name = `river-fish-${sp.name}`;
@@ -668,6 +685,11 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
           cstart: -1,
           cside: 1,
           bend: 0,
+          pitch: 0,
+          riseIn: 20 + rnd() * 70,
+          rising: 0,
+          leapIn: sp.name === "mullet" ? 25 + rnd() * 150 : Infinity,
+          leap: null,
         };
         fish.push(f);
         made++;
@@ -708,6 +730,178 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
     f.wanderX = f.x_;
     f.wanderZ = f.z;
     f.wanderT = 2;
+  }
+
+  // ── SPLASHES: a leap throws up a little water. Droplets fly on their own
+  // arcs and drop back in; a pool, so nothing is made while it plays.
+  const DROPS = 72;
+  const dropPos = new Float32Array(DROPS * 3).fill(-999);
+  const dropVel = new Float32Array(DROPS * 3);
+  let dropNext = 0;
+  const dropGeo = new THREE.BufferGeometry();
+  dropGeo.setAttribute(
+    "position",
+    new THREE.BufferAttribute(dropPos, 3).setUsage(THREE.DynamicDrawUsage),
+  );
+  const dropMat = new THREE.PointsMaterial({
+    color: 0xe9f3f1,
+    size: 2.2,
+    sizeAttenuation: false,
+    transparent: true,
+    opacity: 0.85,
+    depthWrite: false,
+  });
+  const drops = new THREE.Points(dropGeo, dropMat);
+  drops.name = "river-splash";
+  drops.frustumCulled = false;
+  drops.renderOrder = 3;
+  drops.userData.noMirror = true;
+  group.add(drops);
+  function splash(x: number, z: number, n: number) {
+    const k = host.scaleAt(z);
+    for (let i = 0; i < n; i++) {
+      const j = dropNext++ % DROPS;
+      const a = rnd() * Math.PI * 2;
+      const out = (0.25 + rnd() * 0.6) * U * k;
+      dropPos[j * 3] = x;
+      dropPos[j * 3 + 1] = host.surfaceY + 0.02;
+      dropPos[j * 3 + 2] = z;
+      dropVel[j * 3] = Math.cos(a) * out;
+      dropVel[j * 3 + 1] = (1.2 + rnd() * 1.4) * U * k;
+      dropVel[j * 3 + 2] = Math.sin(a) * out * 0.6;
+    }
+  }
+  function stepDrops(step: number) {
+    let live = false;
+    for (let j = 0; j < DROPS; j++) {
+      if (dropPos[j * 3 + 1]! < -900) continue;
+      live = true;
+      dropVel[j * 3 + 1]! -= 9.8 * U * step;
+      dropPos[j * 3]! += dropVel[j * 3]! * step;
+      dropPos[j * 3 + 1]! += dropVel[j * 3 + 1]! * step;
+      dropPos[j * 3 + 2]! += dropVel[j * 3 + 2]! * step;
+      if (dropPos[j * 3 + 1]! < host.surfaceY) dropPos[j * 3 + 1] = -999;
+    }
+    if (live) dropGeo.attributes.position!.needsUpdate = true;
+  }
+
+  // ── LEAVES ON THE CURRENT. A few fallen mangrove leaves drift downstream
+  // (the way the water's ripple pattern runs, about a quarter of a metre a
+  // second), faster mid-channel than by the banks, turning slowly and riding
+  // the ripples; at the end of the reach a new one comes in at the top.
+  const LEAVES = 9;
+  const leafGeo = (() => {
+    // A leaf: pointed oval, a touch cupped, lying flat; 1 unit long.
+    const pts: number[] = [];
+    const ids: number[] = [];
+    const N = 10;
+    pts.push(0.5, 0.0, 0);
+    for (let i = 1; i < N; i++) {
+      const u = i / N;
+      const x = 0.5 - u;
+      const w = 0.21 * Math.sin(u * Math.PI) * (1 - 0.25 * u);
+      pts.push(x, 0.03, w, x, 0.0, 0, x, 0.03, -w);
+    }
+    pts.push(-0.5, 0.0, 0);
+    const tipEnd = 1 + (N - 1) * 3;
+    for (let i = 0; i < N - 1; i++) {
+      const a = i === 0 ? 0 : 1 + (i - 1) * 3;
+      const b = 1 + i * 3;
+      if (i === 0) {
+        ids.push(0, b, b + 1, 0, b + 1, b + 2);
+      } else {
+        ids.push(
+          a,
+          b,
+          a + 1,
+          a + 1,
+          b,
+          b + 1,
+          a + 1,
+          b + 1,
+          a + 2,
+          a + 2,
+          b + 1,
+          b + 2,
+        );
+      }
+    }
+    const last = 1 + (N - 2) * 3;
+    ids.push(last, tipEnd, last + 1, last + 1, tipEnd, last + 2);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    g.setIndex(ids);
+    g.computeVertexNormals();
+    return g;
+  })();
+  const leafMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.75,
+    side: THREE.DoubleSide,
+  });
+  const leaves = new THREE.InstancedMesh(leafGeo, leafMat, LEAVES);
+  leaves.name = "river-leaves";
+  leaves.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  leaves.frustumCulled = false;
+  leaves.userData.noMirror = true;
+  group.add(leaves);
+  const leafTones = [0x6f7f2e, 0x8a7a2c, 0x9b6a2a, 0x5f6b2a, 0xa88b3a];
+  const leaf = Array.from({ length: LEAVES }, (_, i) => ({
+    x: 0,
+    z: 0,
+    yaw: rnd() * Math.PI * 2,
+    spin: (rnd() - 0.5) * 0.25,
+    len: (0.08 + rnd() * 0.06) * U,
+    tone: i % leafTones.length,
+  }));
+  const tone = new THREE.Color();
+  function placeLeaf(l: (typeof leaf)[number], anywhere: boolean) {
+    for (let tries = 0; tries < 40; tries++) {
+      const x = B.x0 + rnd() * (B.x1 - B.x0);
+      const z = anywhere ? B.z0 + rnd() * (B.z1 - B.z0) : B.z1 - rnd() * 3;
+      if (host.isWater(x, z)) {
+        l.x = x;
+        l.z = z;
+        return;
+      }
+    }
+  }
+  leaf.forEach((l, i) => {
+    placeLeaf(l, true);
+    leaves.setColorAt(i, tone.set(leafTones[l.tone]!));
+  });
+  function stepLeaves(step: number, t: number) {
+    for (let i = 0; i < LEAVES; i++) {
+      const l = leaf[i]!;
+      const water = Math.max(0, (host.surfaceY - host.bedY(l.x, l.z)) / U);
+      // Slower in the shallows, as a river runs.
+      const run = 0.26 * U * (0.35 + 0.65 * Math.min(1, water / 1.2));
+      l.z -= run * step;
+      l.x += Math.sin(t * 0.13 + i * 2.1) * 0.05 * U * step;
+      l.yaw += l.spin * step;
+      if (l.z < B.z0 || !host.isWater(l.x, l.z)) placeLeaf(l, false);
+      const k = host.scaleAt(l.z);
+      const e2 = 0.3;
+      const gx =
+        (wHeight(l.x + e2, l.z, host.rippleScale, t) -
+          wHeight(l.x - e2, l.z, host.rippleScale, t)) /
+        (2 * e2);
+      const gz =
+        (wHeight(l.x, l.z + e2, host.rippleScale, t) -
+          wHeight(l.x, l.z - e2, host.rippleScale, t)) /
+        (2 * e2);
+      p.set(
+        l.x,
+        host.surfaceY + 0.012 + wHeight(l.x, l.z, host.rippleScale, t) * 0.01,
+        l.z,
+      );
+      e.set(gz * 0.9, l.yaw, -gx * 0.9);
+      q.setFromEuler(e);
+      sc.set(l.len * k, l.len * k, l.len * k);
+      m4.compose(p, q, sc);
+      leaves.setMatrixAt(i, m4);
+    }
+    leaves.instanceMatrix.needsUpdate = true;
   }
 
   const m4 = new THREE.Matrix4();
@@ -866,13 +1060,80 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
         (wantBend - f.bend) * Math.min(1, step * (f.cstart >= 0 ? 30 : 5));
       f.x_ += Math.cos(f.heading) * f.speed * step;
       f.z += Math.sin(f.heading) * f.speed * step;
-      // Depth: drift toward a preferred depth, never into the bed.
-      if (rnd() < step * 0.08)
-        f.wantDepth = sp.depth[0] + rnd() * (sp.depth[1] - sp.depth[0]);
-      const room = (host.surfaceY - host.bedY(f.x_, f.z)) / U - 0.1;
-      const target = Math.min(f.wantDepth, Math.max(sp.depth[0], room));
-      f.depth += (target - f.depth) * Math.min(1, step * 0.6);
+      const wasDepth = f.depth;
+      // ── A LEAP (mullet): out in an arc, a splash and a ring each way.
+      // Real mullet do it for no reason anyone agrees on, every few minutes,
+      // a body's height or two out of the water.
+      f.leapIn -= step;
+      if (
+        f.leap == null &&
+        f.leapIn <= 0 &&
+        f.fright === 0 &&
+        f.rising === 0 &&
+        f.depth < 0.5 &&
+        !host.covered(f.x_, f.z)
+      ) {
+        const vy = 1.7 + rnd() * 0.7; // m/s up: 15-30 cm high
+        f.leap = { t: 0, vy, dur: (2 * vy) / 9.8 };
+        host.ring(f.x_, f.z, 1.3);
+        splash(f.x_, f.z, 10);
+        f.speed = Math.max(f.speed, 1.5 * U);
+      }
+      if (f.leap != null) {
+        const L = f.leap;
+        L.t += step;
+        if (L.t >= L.dur) {
+          host.ring(f.x_, f.z, 1.9);
+          splash(f.x_, f.z, 18);
+          f.leap = null;
+          f.depth = 0.15;
+          f.leapIn = 90 + rnd() * 200;
+        } else {
+          f.depth = -(L.vy * L.t - 4.9 * L.t * L.t);
+          f.speed = Math.max(f.speed, 1.5 * U);
+        }
+      } else {
+        // ── RISING TO SIP: up to the surface, a small ring, back down.
+        f.riseIn -= step;
+        if (
+          f.rising === 0 &&
+          f.riseIn <= 0 &&
+          sp.name !== "sea-bass" &&
+          f.fright === 0 &&
+          !host.covered(f.x_, f.z)
+        )
+          f.rising = 1;
+        if (f.rising === 1 && f.depth < 0.05) {
+          host.ring(f.x_, f.z, sp.name === "mullet" ? 0.9 : 0.55);
+          f.rising = 0;
+          f.riseIn = 40 + rnd() * 80;
+          f.wantDepth = sp.depth[0] + rnd() * (sp.depth[1] - sp.depth[0]);
+        }
+        // Depth: drift toward a preferred depth, never into the bed.
+        if (f.rising === 0 && rnd() < step * 0.08)
+          f.wantDepth = sp.depth[0] + rnd() * (sp.depth[1] - sp.depth[0]);
+        const room = (host.surfaceY - host.bedY(f.x_, f.z)) / U - 0.1;
+        const rise = f.rising === 1;
+        const want = rise ? 0.02 : f.wantDepth;
+        const target = Math.min(
+          want,
+          Math.max(rise ? 0.02 : sp.depth[0], room),
+        );
+        f.depth += (target - f.depth) * Math.min(1, step * (rise ? 1.6 : 0.6));
+      }
+      // ── Pitch: nose up climbing, down diving, following a leap's arc.
+      const climb = -(f.depth - wasDepth) / step; // m/s, up positive
+      const ahead = Math.max(0.05, f.speed / U);
+      const limit = f.leap != null ? 1.2 : 0.55;
+      const wantPitch = Math.max(
+        -limit,
+        Math.min(limit, Math.atan2(climb, ahead)),
+      );
+      f.pitch +=
+        (wantPitch - f.pitch) * Math.min(1, step * (f.leap != null ? 20 : 4));
     }
+    stepDrops(step);
+    stepLeaves(step, host.waterTime.value);
     // ── Draw.
     const t = host.waterTime.value;
     for (let si = 0; si < SPECIES.length; si++) {
@@ -885,7 +1146,8 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
         const len = f.len * k;
         // Seen through the surface: raised to the apparent depth, and moved
         // by the ripple over it (more the deeper it is).
-        const apparent = (f.depth * U) / 1.33;
+        // Out of the water (a leap) it is where it is; in it, it is seen raised.
+        const apparent = f.depth < 0 ? f.depth * U : (f.depth * U) / 1.33;
         const e2 = 0.25;
         const gx =
           (wHeight(f.x_ + e2, f.z, host.rippleScale, t) -
@@ -895,19 +1157,20 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
           (wHeight(f.x_, f.z + e2, host.rippleScale, t) -
             wHeight(f.x_, f.z - e2, host.rippleScale, t)) /
           (2 * e2);
-        const shift = host.rippleAmt * 22 * f.depth * U;
+        const shift = host.rippleAmt * 22 * Math.max(0, f.depth) * U;
         p.set(f.x_ + gx * shift, host.surfaceY - apparent, f.z + gz * shift);
         // Head toward the heading; pitch with depth change; bank into turns.
         e.set(
           Math.max(-0.35, Math.min(0.35, -f.turnRate * 0.12)),
           -f.heading,
-          0,
+          f.pitch,
         );
         q.setFromEuler(e);
         sc.set(len, len, len);
         m4.compose(p, q, sc);
         mesh.setMatrixAt(f.slot, m4);
-        depthA.setX(f.slot, f.depth);
+        // Below zero means out of the water: no water between it and the eye.
+        depthA.setX(f.slot, f.depth < 0 ? -1 : f.depth);
         // Turn bend: the body curves into the turn.
         // Pectoral activity: braking, hovering and turning work the fins.
         const brake = Math.max(
@@ -934,6 +1197,10 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
 
   return {
     update,
+    leapSoon() {
+      for (const f of fish)
+        if (SPECIES[f.sp]!.name === "mullet") f.leapIn = rnd() * 3;
+    },
     fish: () =>
       fish.map((f) => ({
         x: f.x_,
@@ -946,6 +1213,11 @@ export function createRiverFish(host: FishHost, seed = 3701): RiverFish {
       for (const g of geoms) g.dispose();
       for (const m of mats) m.dispose();
       for (const m of meshes) m.dispose();
+      dropGeo.dispose();
+      dropMat.dispose();
+      leafGeo.dispose();
+      leafMat.dispose();
+      leaves.dispose();
     },
   };
 }
